@@ -23,7 +23,7 @@ godot --headless --path game --import
 # Tests client (GUT 9.7.1)
 godot --headless -d --path game -s addons/gut/gut_cmdln.gd -gexit
 # Lancer la scène d'étalonnage avec une capture d'écran (vérification visuelle)
-godot --path game --rendering-driver opengl3 -- --screenshot=C:/chemin/capture.png --quality=bas
+godot --path game --rendering-driver opengl3 -- --screenshot=C:/chemin/capture.png --quality=tablette
 # API
 uv run --directory api pytest -q
 uv run --directory api ruff check .
@@ -38,7 +38,12 @@ Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-
 - Le gameplay ne connaît jamais le contenu d'une question (TRD §2.3) : il passe par `QuestionService`.
 - Pas de `JavaScriptBridge.eval` : la CSP interdit `eval`. Utiliser `JavaScriptBridge.get_interface`.
 - Géométrie statique d'une salle : un seul matériau partagé + `StaticBatcher.merge` (budget tablette < 100 appels de dessin).
+- Éclairage : la tablette (Android 10) ne tient 30 fps que sans vraies lumières ponctuelles ni ombres
+  (voir `docs/perf-log.md`). Toute scène lit `Quality.settings()` à sa construction : `lights` (`real`/`fake`),
+  `vertex_shading`, `shadows`. En `fake`, utiliser `MobileLighting.make_fake_light` ; si `vertex_shading`,
+  appliquer `MobileLighting.apply_vertex_shading`. Jamais d'`OmniLight3D` en dur dans une scène.
 - Tout asset ajouté est inscrit dans `game/assets/LICENSES.md`.
-- Options de test : `?quality=haut|moyen|bas`, `?perf`, `?merge=0` dans l'URL (web) ou `-- --quality=bas` (PC).
+- Options de test : `?quality=haut|tablette|bas`, `?perf`, `?scale=`, `?lights=fake|real|0`, `?vertex=0|1`,
+  `?shadows=0`, `?merge=0` dans l'URL (web) ou `-- --quality=bas` (PC).
 - JSON en snake_case, dates ISO 8601 UTC, erreurs `{"error": {"code", "message"}}`.
 - Textes visibles par les enfants en français ; aucune donnée personnelle hors du foyer.

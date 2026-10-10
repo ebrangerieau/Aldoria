@@ -93,6 +93,8 @@ Chaque phase se termine par un **critère de passage** testé avec Jules et Tom.
 
 ### Phase 0 – Fondations et levée du risque tablette (≈ 1 semaine)
 
+> ✅ **Terminée le 2026-10-10.** En ligne sur https://aldoria.bandtrack.fr, CI/CD opérationnelle (déploiement à chaque push sur `main`). Tablette (Android 10, Chrome 138) : 30 fps avec le profil `tablette` (fausses lumières, éclairage par sommet, sans ombres, pleine résolution). **Godot 4 confirmé, plan B non déclenché.** Contrainte pour la suite : pas de vraies lumières ponctuelles ni d'ombres temps réel sur tablette (détail et mesures : `docs/perf-log.md`).
+
 Objectif : savoir **avant tout développement de gameplay** si un export Godot 3D tient sur la tablette.
 
 1. Initialiser le dépôt GitHub privé `aldoria` avec l'arborescence, `.gitignore` (Godot, Python, Node), `.editorconfig`, `CLAUDE.md`, et déplacer PRD et TRD dans `docs/`.
