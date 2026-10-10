@@ -19,5 +19,6 @@ Budgets (TRD §2.2) : PC 60 fps, tablette 30 fps minimum ; premier chargement < 
 | 2026-10-10 | PC dev (Intel Arc 140T), natif | — | bas | oui | — | — | 33 | 37 669 | 36 Mo | — | Sans ombres |
 | 2026-10-10 | PC dev, build web local (nginx + CSP) | Edge headless | haut | oui | 58,0 | 60,0 | 59 | 75 242 | 50 Mo | 2,7 s (localhost) | Aucune erreur console ni violation CSP |
 | 2026-10-10 | PC dev, build web local (nginx + CSP) | Edge headless | bas | oui | 57,9 | 60,0 | 33 | 37 695 | 40 Mo | 2,6 s (localhost) | |
+| 2026-10-10 | PC dev, production aldoria.bandtrack.fr | Edge headless | haut | oui | 58,0 | 60,0 | 59 | 75 218 | 50 Mo | 3,6 s (profil vierge) | Via Internet, Traefik + Let's Encrypt |
 
 **Poids de l'export web** (2026-10-10, template officiel) : `index.wasm` 39,5 Mo → 10,1 Mo gzip ; `index.pck` 4,5 Mo → 4,4 Mo ; total **14,5 Mo compressés** (budget 25 Mo).
