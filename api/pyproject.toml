@@ -9,6 +9,10 @@ dependencies = [
     "pydantic-settings>=2.6",
     "sqlalchemy[asyncio]>=2.0.36",
     "asyncpg>=0.30",
+    "ziamath>=0.13",
+    "alembic>=1.20.0",
+    "pyjwt>=2.15.1",
+    "argon2-cffi>=25.1.0",
 ]
 
 [dependency-groups]
@@ -17,6 +21,8 @@ dev = [
     "pytest-asyncio>=0.24",
     "httpx>=0.28",
     "ruff>=0.8",
+    "aiosqlite>=0.22.1",
+    "sympy>=1.14.0",
 ]
 
 [tool.pytest.ini_options]
@@ -30,3 +36,7 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+# Énoncés, indices et explications en français : on ne coupe pas les phrases.
+"app/engine/generators/*.py" = ["E501"]
