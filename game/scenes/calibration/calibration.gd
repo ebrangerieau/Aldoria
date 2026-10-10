@@ -123,6 +123,8 @@ func _build_props() -> void:
 
 
 func _build_characters() -> void:
+	if Quality.option("chars") == "0": # diagnostic : ?chars=0
+		return
 	var hero := _instance(CHARACTERS % "Knight")
 	hero.position = Vector3(-2.6, 0, 1.5)
 	hero.rotation_degrees.y = 90.0
@@ -194,6 +196,8 @@ func _setup_animation(character: Node, idle: String) -> AnimationPlayer:
 
 
 func _exchange_blows() -> void:
+	if _hero_anim == null:
+		return
 	if _hero_anim and _hero_anim.has_animation("1H_Melee_Attack_Chop"):
 		_hero_anim.play("1H_Melee_Attack_Chop")
 	if _enemy_anim and _enemy_anim.has_animation("Hit_A"):
@@ -201,12 +205,13 @@ func _exchange_blows() -> void:
 
 
 func _add_torch_light(pos: Vector3) -> void:
-	var light := OmniLight3D.new()
-	light.position = pos
-	light.light_color = Color(1.0, 0.6, 0.25)
-	light.light_energy = 2.0
-	light.omni_range = 7.0
-	add_child(light)
+	if Quality.option("lights") != "0": # diagnostic : ?lights=0
+		var light := OmniLight3D.new()
+		light.position = pos
+		light.light_color = Color(1.0, 0.6, 0.25)
+		light.light_energy = 2.0
+		light.omni_range = 7.0
+		add_child(light)
 
 	var flame := CPUParticles3D.new()
 	flame.position = pos + Vector3(0, -0.3, -0.2)
@@ -262,6 +267,8 @@ func _apply_quality(_profile: StringName) -> void:
 	var s := Quality.settings()
 	_sun.shadow_enabled = s.shadows
 	for i in _particles.size():
+		_particles[i].emitting = s.particle_ratio > 0.0
+		_particles[i].visible = s.particle_ratio > 0.0
 		_particles[i].amount = maxi(1, int(_particle_base_amounts[i] * s.particle_ratio))
 
 

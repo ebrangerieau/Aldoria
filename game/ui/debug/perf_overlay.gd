@@ -15,6 +15,7 @@ var _boot_ms_engine := -1
 var _boot_ms_browser := -1.0
 var _touches: Dictionary = {}
 var _last_stats: Dictionary = {}
+var _cpu_ms_sum := 0.0
 
 
 func _ready() -> void:
@@ -22,6 +23,7 @@ func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_ui()
 	visible = OS.is_debug_build() or Quality.option("perf") != ""
+	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
 	Quality.changed.connect(func(_p: StringName) -> void: _refresh_quality_button())
 	_refresh_quality_button()
 
@@ -34,11 +36,13 @@ func _process(delta: float) -> void:
 	if _boot_ms_engine < 0:
 		_record_boot_time()
 	_frame_times.append(delta)
+	_cpu_ms_sum += _cpu_frame_ms()
 	_window_elapsed += delta
 	if _window_elapsed >= WINDOW_S:
 		_last_stats = _window_stats()
 		print("%s %s" % [LOG_PREFIX, JSON.stringify(_last_stats)])
 		_frame_times.clear()
+		_cpu_ms_sum = 0.0
 		_window_elapsed = 0.0
 	if visible:
 		_label.text = _format_text()
@@ -73,9 +77,19 @@ func _window_stats() -> Dictionary:
 	var sorted := _frame_times.duplicate()
 	sorted.sort()
 	var worst_index := clampi(int(ceil(count * 0.99)) - 1, 0, count - 1)
+	var frame_ms := _window_elapsed * 1000.0 / count
+	var cpu_ms := _cpu_ms_sum / count
 	return {
 		"quality": String(Quality.current),
+		"options": _active_options(),
 		"fps_avg": snappedf(count / _window_elapsed, 0.1),
+		"frame_ms": snappedf(frame_ms, 0.1),
+		"cpu_ms": snappedf(cpu_ms, 0.1),
+		# Le CPU n'occupe qu'une faible part de l'image : c'est la carte graphique qui limite.
+		# À ~60 fps, l'attente vient de la synchronisation écran : pas de limite.
+		"bound": "aucune" if frame_ms < 18.0 else ("gpu" if cpu_ms < frame_ms * 0.6 else "cpu"),
+		"render_px": _render_resolution(),
+		"dpr": snappedf(DisplayServer.screen_get_scale(), 0.01),
 		"fps_1pct_low": snappedf(1.0 / maxf(sorted[worst_index], 0.0001), 0.1),
 		"draw_calls": int(Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME)),
 		"primitives": int(Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME)),
@@ -94,8 +108,15 @@ func _format_text() -> String:
 	lines.append("FPS %d" % Engine.get_frames_per_second())
 	if not _last_stats.is_empty():
 		lines.append("Moy. 10 s : %.1f   1%% bas : %.1f" % [_last_stats.fps_avg, _last_stats.fps_1pct_low])
+		var bound_label := {"gpu": "carte graphique", "cpu": "processeur", "aucune": "aucune (60 fps)"}
+		lines.append("Image : %.1f ms   dont CPU : %.1f ms → limite : %s" % [
+			_last_stats.frame_ms, _last_stats.cpu_ms, bound_label[_last_stats.bound]])
 	else:
 		lines.append("Moy. 10 s : mesure en cours…")
+	lines.append("Rendu 3D : %s px   (écran x%.2f)" % [_render_resolution(), DisplayServer.screen_get_scale()])
+	var options := _active_options()
+	if not options.is_empty():
+		lines.append("Options : %s" % options)
 	lines.append("Appels de dessin : %d" % Performance.get_monitor(Performance.RENDER_TOTAL_DRAW_CALLS_IN_FRAME))
 	lines.append("Triangles : %d" % Performance.get_monitor(Performance.RENDER_TOTAL_PRIMITIVES_IN_FRAME))
 	var mem := "Mém. vidéo : %.0f Mo" % (Performance.get_monitor(Performance.RENDER_VIDEO_MEM_USED) / 1048576.0)
@@ -108,6 +129,30 @@ func _format_text() -> String:
 	lines.append("Démarrage (moteur) : %.1f s" % (maxi(_boot_ms_engine, 0) / 1000.0))
 	lines.append("%s · %s" % [_platform_label(), RenderingServer.get_video_adapter_name()])
 	return "\n".join(lines)
+
+
+## Temps CPU de l'image : logique (process + physique) + préparation du rendu.
+func _cpu_frame_ms() -> float:
+	var rid := get_viewport().get_viewport_rid()
+	return (Performance.get_monitor(Performance.TIME_PROCESS)
+		+ Performance.get_monitor(Performance.TIME_PHYSICS_PROCESS)) * 1000.0 \
+		+ RenderingServer.viewport_get_measured_render_time_cpu(rid) \
+		+ RenderingServer.get_frame_setup_time_cpu()
+
+
+## Taille réelle (pixels physiques) de l'image 3D, après le facteur scale_3d.
+func _render_resolution() -> String:
+	var size := Vector2(get_window().size) * get_viewport().scaling_3d_scale
+	return "%dx%d" % [size.x, size.y]
+
+
+func _active_options() -> String:
+	var parts: PackedStringArray = []
+	for name in ["scale", "shadows", "lights", "particles", "chars", "merge"]:
+		var value := Quality.option(name)
+		if value != "":
+			parts.append("%s=%s" % [name, value])
+	return " ".join(parts)
 
 
 func _platform_label() -> String:

@@ -37,8 +37,18 @@ func _ready() -> void:
 	apply(_initial_profile())
 
 
+## Réglages du profil courant, après les surcharges de diagnostic de l'URL
+## (`?scale=0.5`, `?shadows=0`, `?particles=0`).
 func settings() -> Dictionary:
-	return PROFILES[current]
+	var p: Dictionary = PROFILES[current].duplicate()
+	var scale := option("scale")
+	if scale.is_valid_float():
+		p.scale_3d = clampf(scale.to_float(), 0.25, 1.0)
+	if option("shadows") == "0":
+		p.shadows = false
+	if option("particles") == "0":
+		p.particle_ratio = 0.0
+	return p
 
 
 func apply(profile: StringName) -> void:
@@ -46,7 +56,7 @@ func apply(profile: StringName) -> void:
 		push_warning("Profil de qualité inconnu : %s" % profile)
 		return
 	current = profile
-	var p: Dictionary = PROFILES[profile]
+	var p := settings()
 	var vp := get_viewport()
 	vp.scaling_3d_scale = p.scale_3d
 	vp.msaa_3d = p.msaa
