@@ -78,7 +78,7 @@ def tokenize(text: str) -> list[Token]:
             func = next((f for f in _FUNCTIONS if word.startswith(f)), None)
             if func:
                 tokens.append(Token("func", func))
-                word = word[len(func):]  # « sqrtx » (issu de « √x ») : sqrt puis x
+                word = word[len(func) :]  # « sqrtx » (issu de « √x ») : sqrt puis x
             # « xy » = x * y : chaque lettre restante est une variable.
             tokens.extend(Token("var", ch) for ch in word)
             i = j

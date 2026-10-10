@@ -36,9 +36,16 @@ def _evolution(difficulty: int, rng: random.Random) -> dict:
     if difficulty == 1:  # hausse → coefficient
         t = Fraction(rng.choice(_RATES), 100)
         correct = fr_number(1 + t)
-        distractors = [fr_number(t), fr_number(1 - t), fr_number(1 + _misread(t)), fr_number(t * 100)]
+        distractors = [
+            fr_number(t),
+            fr_number(1 - t),
+            fr_number(1 + _misread(t)),
+            fr_number(t * 100),
+        ]
         prompt = f"Augmenter une quantité de {_pct(t)} revient à la multiplier par :"
-        explanation = f"Augmenter de {_pct(t)}, c'est multiplier par 1 + {fr_number(t)} = {correct}."
+        explanation = (
+            f"Augmenter de {_pct(t)}, c'est multiplier par 1 + {fr_number(t)} = {correct}."
+        )
         hint = "Le coefficient multiplicateur d'une hausse de t % est 1 + t/100."
         meta = {"case": "hausse", "t": str(t)}
     elif difficulty == 2:  # baisse → coefficient
@@ -61,10 +68,7 @@ def _evolution(difficulty: int, rng: random.Random) -> dict:
             f"une {other} de {_pct(c)}",
         ]
         prompt = f"Multiplier une quantité par {fr_number(c)} revient à appliquer :"
-        explanation = (
-            f"{fr_number(c)} = 1 {'+' if up else '−'} {fr_number(t)} : "
-            f"c'est {correct}."
-        )
+        explanation = f"{fr_number(c)} = 1 {'+' if up else '−'} {fr_number(t)} : c'est {correct}."
         hint = "Compare le coefficient à 1 : au-dessus c'est une hausse, en dessous une baisse."
         meta = {"case": "coefficient", "c": str(c)}
     elif difficulty == 4:  # évolutions successives
@@ -80,8 +84,7 @@ def _evolution(difficulty: int, rng: random.Random) -> dict:
             _evolution_label(rate + Fraction(1, 100)),
         ]
         prompt = (
-            f"Un prix augmente de {_pct(t1)}, puis baisse de {_pct(t2)}. "
-            "Au total, le prix a subi :"
+            f"Un prix augmente de {_pct(t1)}, puis baisse de {_pct(t2)}. Au total, le prix a subi :"
         )
         explanation = (
             f"On multiplie les coefficients : {fr_number(1 + t1)} × {fr_number(1 - t2)} = {fr_number(c)}, "
@@ -93,7 +96,12 @@ def _evolution(difficulty: int, rng: random.Random) -> dict:
         up, down = rng.choice(_RECIPROCALS)
         t = Fraction(up, 100)
         correct = f"{down} %"
-        distractors = [f"{up} %", f"{100 - down} %", f"{fr_number(Fraction(up, 2), 0)} %", f"{down + 5} %"]
+        distractors = [
+            f"{up} %",
+            f"{100 - down} %",
+            f"{fr_number(Fraction(up, 2), 0)} %",
+            f"{down + 5} %",
+        ]
         prompt = (
             f"Un prix augmente de {up} %. De quel pourcentage doit-il baisser "
             "pour revenir à sa valeur initiale ?"

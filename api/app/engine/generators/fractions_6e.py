@@ -145,7 +145,9 @@ def _comparison(difficulty: int, rng: random.Random) -> dict:
     else:
         common = lcm(d1, d2)
         m1, m2 = n1 * (common // d1), n2 * (common // d2)
-        parts = [f"{n}/{d} = {m}/{common}" for n, d, m in ((n1, d1, m1), (n2, d2, m2)) if d != common]
+        parts = [
+            f"{n}/{d} = {m}/{common}" for n, d, m in ((n1, d1, m1), (n2, d2, m2)) if d != common
+        ]
         detail = f"Avec le dénominateur {common} : {' et '.join(parts)}. On compare {m1} et {m2}."
     explanation = f"{detail} Donc {n1}/{d1} {symbol} {right_text}."
     return {

@@ -1,22 +1,28 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.gzip import GZipMiddleware
 
+from app import errors
 from app.config import get_settings
-from app.routers import health
+from app.routers import health, play
 
 API_PREFIX = "/api/v1"
 
 
 def create_app() -> FastAPI:
+    settings = get_settings()
+    settings.check()
     # La documentation OpenAPI sera exposée uniquement côté admin (TRD §3.3).
     app = FastAPI(
         title="Aldoria API",
-        version="0.1.0",
+        version="0.2.0",
         docs_url=None,
         redoc_url=None,
         openapi_url=None,
     )
-    settings = get_settings()
+    errors.install(app)
+    # Le paquet de session (≈ 200 Ko, surtout des SVG de formules) se compresse très bien.
+    app.add_middleware(GZipMiddleware, minimum_size=1024)
     if settings.cors_origins:
         app.add_middleware(
             CORSMiddleware,
@@ -25,6 +31,7 @@ def create_app() -> FastAPI:
             allow_headers=["*"],
         )
     app.include_router(health.router, prefix=API_PREFIX)
+    app.include_router(play.router, prefix=API_PREFIX)
     return app
 
 
