@@ -34,6 +34,8 @@ func _ready() -> void:
 	_shared_material = StandardMaterial3D.new()
 	_shared_material.albedo_texture = load("res://assets/kaykit/dungeon/dungeon_texture.png")
 	_shared_material.roughness = 0.8
+	if _vertex_shading():
+		_shared_material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
 
 	_static_root = Node3D.new()
 	_static_root.name = "Static"
@@ -129,12 +131,14 @@ func _build_characters() -> void:
 	hero.position = Vector3(-2.6, 0, 1.5)
 	hero.rotation_degrees.y = 90.0
 	add_child(hero)
+	_apply_vertex_shading(hero)
 	_hero_anim = _setup_animation(hero, "Idle")
 
 	var enemy := _instance(CHARACTERS % "Skeleton_Warrior")
 	enemy.position = Vector3(2.6, 0, 1.5)
 	enemy.rotation_degrees.y = -90.0
 	add_child(enemy)
+	_apply_vertex_shading(enemy)
 	_enemy_anim = _setup_animation(enemy, "Idle_Combat")
 
 	# Échange de coups toutes les 4 s : représentatif d'un combat (animations + particules).
@@ -204,8 +208,73 @@ func _exchange_blows() -> void:
 		get_tree().create_timer(0.35).timeout.connect(func() -> void: _enemy_anim.play("Hit_A"))
 
 
+## Éclairage par sommet (?vertex=1) : bien moins coûteux en pixels, adapté au low-poly.
+func _vertex_shading() -> bool:
+	return Quality.option("vertex") == "1"
+
+
+func _apply_vertex_shading(root: Node) -> void:
+	if not _vertex_shading():
+		return
+	for node in root.find_children("*", "MeshInstance3D", true, false):
+		var instance := node as MeshInstance3D
+		for surface in instance.mesh.get_surface_count():
+			var source := instance.get_active_material(surface) as BaseMaterial3D
+			if source == null:
+				continue
+			var mat := source.duplicate() as BaseMaterial3D
+			mat.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
+			instance.set_surface_override_material(surface, mat)
+
+
+## Fausse lumière (?lights=fake) : halo additif près de la torche et flaque de lumière
+## au sol. Contrairement à un OmniLight3D, ne relance aucune passe de rendu de la salle
+## (le renderer Compatibility redessine chaque objet éclairé une fois par lumière).
+func _add_fake_light(pos: Vector3) -> void:
+	var halo := MeshInstance3D.new()
+	halo.mesh = _glow_quad(2.2, Color(1.0, 0.65, 0.3, 0.55), true)
+	halo.position = pos + Vector3(0, -0.2, 0.2)
+	halo.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(halo)
+
+	var pool := MeshInstance3D.new()
+	pool.mesh = _glow_quad(9.0, Color(1.0, 0.6, 0.25, 0.35), false)
+	pool.rotation_degrees.x = -90.0
+	pool.position = Vector3(pos.x, 0.06, pos.z + 2.5)
+	pool.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
+	add_child(pool)
+
+
+func _glow_quad(size: float, color: Color, billboard: bool) -> QuadMesh:
+	var gradient := Gradient.new()
+	gradient.set_color(0, Color(1, 1, 1, 1))
+	gradient.set_color(1, Color(1, 1, 1, 0))
+	var texture := GradientTexture2D.new()
+	texture.gradient = gradient
+	texture.fill = GradientTexture2D.FILL_RADIAL
+	texture.fill_from = Vector2(0.5, 0.5)
+	texture.fill_to = Vector2(0.5, 0.0)
+	texture.width = 64
+	texture.height = 64
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	mat.albedo_texture = texture
+	mat.albedo_color = color
+	if billboard:
+		mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	var quad := QuadMesh.new()
+	quad.size = Vector2(size, size)
+	quad.material = mat
+	return quad
+
+
 func _add_torch_light(pos: Vector3) -> void:
-	if Quality.option("lights") != "0": # diagnostic : ?lights=0
+	var lights := Quality.option("lights")
+	if lights == "fake":
+		_add_fake_light(pos)
+	elif lights != "0": # diagnostic : ?lights=0
 		var light := OmniLight3D.new()
 		light.position = pos
 		light.light_color = Color(1.0, 0.6, 0.25)

@@ -145,7 +145,7 @@ func _render_resolution() -> String:
 
 func _active_options() -> String:
 	var parts: PackedStringArray = []
-	for name in ["scale", "shadows", "lights", "particles", "chars", "merge"]:
+	for name in ["scale", "shadows", "lights", "vertex", "particles", "chars", "merge"]:
 		var value := Quality.option(name)
 		if value != "":
 			parts.append("%s=%s" % [name, value])
