@@ -137,10 +137,10 @@ func is_mobile_web() -> bool:
 
 
 ## Option de test : `?nom=valeur` dans l'URL sur le web, `-- --nom=valeur` sur PC.
-func option(name: String, default := "") -> String:
+func option(key: String, default := "") -> String:
 	if _options.is_empty():
 		_options = _read_options()
-	return _options.get(name, default)
+	return _options.get(key, default)
 
 
 ## Lu une seule fois : sur le web, chaque accès à `location` traverse le pont JavaScript.

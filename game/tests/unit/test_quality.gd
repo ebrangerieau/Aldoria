@@ -15,9 +15,9 @@ func test_tablet_profile_matches_measured_setting() -> void:
 
 
 func test_no_profile_uses_real_lights_except_pc() -> void:
-	for name in Quality.PROFILES:
-		if name != &"haut":
-			assert_ne(Quality.PROFILES[name].lights, "real", "profil %s" % name)
+	for profile_name in Quality.PROFILES:
+		if profile_name != &"haut":
+			assert_ne(Quality.PROFILES[profile_name].lights, "real", "profil %s" % profile_name)
 
 
 func test_needs_rebuild_when_structural_setting_changes() -> void:

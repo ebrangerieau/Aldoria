@@ -26,10 +26,25 @@ func _ready() -> void:
 	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
 	Quality.changed.connect(func(_p: StringName) -> void: _refresh_quality_button())
 	_refresh_quality_button()
+	_maybe_take_screenshot()
 
 
 func show_overlay() -> void:
 	visible = true
+
+
+## Développement (PC uniquement) : `-- --screenshot=chemin.png [--shot-delay=2.5]`
+## enregistre une capture de la fenêtre après le délai, puis quitte.
+func _maybe_take_screenshot() -> void:
+	var path := Quality.option("screenshot")
+	if path == "" or OS.has_feature("web"):
+		return
+	var delay := float(Quality.option("shot-delay", "1.5"))
+	await get_tree().create_timer(delay, true, false, true).timeout
+	await RenderingServer.frame_post_draw
+	get_viewport().get_texture().get_image().save_png(path)
+	print("Capture enregistrée : ", path)
+	get_tree().quit()
 
 
 func _process(delta: float) -> void:
@@ -145,10 +160,10 @@ func _render_resolution() -> String:
 
 func _active_options() -> String:
 	var parts: PackedStringArray = []
-	for name in ["scale", "shadows", "lights", "vertex", "particles", "chars", "merge"]:
-		var value := Quality.option(name)
+	for key in ["scale", "shadows", "lights", "vertex", "particles", "chars", "merge"]:
+		var value := Quality.option(key)
 		if value != "":
-			parts.append("%s=%s" % [name, value])
+			parts.append("%s=%s" % [key, value])
 	return " ".join(parts)
 
 

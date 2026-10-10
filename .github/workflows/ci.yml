@@ -26,6 +26,7 @@ jobs:
 
   game-tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     container:
       image: barichello/godot-ci:4.7.2
     steps:
@@ -33,7 +34,8 @@ jobs:
       - name: Import des ressources
         run: godot --headless --path game --import
       - name: Tests GUT
-        run: godot --headless -d --path game -s addons/gut/gut_cmdln.gd -gexit
+        # Sans -d : en mode debug, une erreur de script fige Godot au lieu d'échouer.
+        run: timeout 600 godot --headless --path game -s addons/gut/gut_cmdln.gd -gexit
 
   export-web:
     runs-on: ubuntu-latest

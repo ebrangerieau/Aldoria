@@ -20,14 +20,20 @@ Godot est installé hors du dépôt : `D:\developpement\tools\godot\4.7.2\Godot_
 ```powershell
 # Import des ressources (après ajout d'assets ou de class_name)
 godot --headless --path game --import
-# Tests client (GUT 9.7.1)
-godot --headless -d --path game -s addons/gut/gut_cmdln.gd -gexit
+# Tests client (GUT 9.7.1) — sans -d : en mode debug une erreur de script fige Godot
+godot --headless --path game -s addons/gut/gut_cmdln.gd -gexit
+# Paquets de session de test (après modification d'un générateur)
+uv run --directory api python ../tools/export_pack_fixture.py
 # Lancer la scène d'étalonnage avec une capture d'écran (vérification visuelle)
-godot --path game --rendering-driver opengl3 -- --screenshot=C:/chemin/capture.png --quality=tablette
+godot --path game --rendering-driver opengl3 -- --scene=calibration --screenshot=C:/chemin/capture.png --quality=tablette
 # API
 uv run --directory api pytest -q
 uv run --directory api ruff check .
 ```
+
+Jeu sur PC contre l'API locale (Docker, port 8098) — options réservées au PC, ignorées sur le web :
+`godot --path game -- --autologin=<id> --pin=<code> [--autoaction=chapitre] [--screenshot=x.png --shot-delay=4]`.
+Profils locaux : `docker exec <conteneur api> python -m app.cli create --name … --level 6e|2nde --avatar … --pin …`.
 
 Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-ci:4.7.2`, puis
 `python tools/postprocess_web.py build/web`.

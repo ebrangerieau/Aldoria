@@ -7,7 +7,7 @@ config_version=5
 
 config/name="Les Chroniques d'Aldoria"
 config/description="Jeu éducatif 2.5D pour réviser le programme de 6ème et de seconde."
-run/main_scene="res://scenes/calibration/calibration.tscn"
+run/main_scene="res://scenes/title/title.tscn"
 config/features=PackedStringArray("4.7", "GL Compatibility")
 boot_splash/bg_color=Color(0.08, 0.07, 0.1, 1)
 boot_splash/show_image=false
@@ -16,6 +16,10 @@ boot_splash/show_image=false
 
 Quality="*res://autoload/quality.gd"
 PerfOverlay="*res://ui/debug/perf_overlay.tscn"
+ApiClient="*res://autoload/api_client.gd"
+Session="*res://autoload/session.gd"
+QuestionService="*res://autoload/question_service.gd"
+Sfx="*res://autoload/sfx.gd"
 
 [display]
 
