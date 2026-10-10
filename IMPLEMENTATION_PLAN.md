@@ -108,6 +108,8 @@ Objectif : savoir **avant tout développement de gameplay** si un export Godot 3
 
 ### Phase 1 – Prototype « combat » (2 à 3 semaines)
 
+> 🟡 **Prototype livré le 2026-10-10, en attente du test avec Jules et Tom.** En ligne sur https://aldoria.bandtrack.fr (profils créés, PIN tirés au hasard). Livré : 4 générateurs (1 000 tirages/difficulté vérifiés par SymPy), validation des réponses identique API/client (41 vecteurs partagés), API joueur (PIN Argon2id, JWT, session, tentatives idempotentes), formules SVG intégrées au paquet de session, combat complet dans les deux ambiances, file de réponses hors connexion. Tests : 78 pytest, 26 GUT (dont parcours de combat complet). **Écarts au plan** : formules incluses dans le paquet plutôt qu'une route `/render/latex` (plus simple, jouable hors connexion) ; équivalence d'expressions sur 8 points fixes (verdict identique client/serveur) ; effets sonores synthétisés (`tools/make_sfx.py`). **Reste** : test enfants, mesures tablette du combat, test de coupure réseau sur tablette.
+
 Livrables du TRD §13 : une salle, un ennemi, 3 widgets, 4 générateurs, et les routes `login`, `session/start` et `attempts`.
 
 **API** (`api/app/`)
