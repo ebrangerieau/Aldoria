@@ -1,0 +1,12 @@
+.git
+game/
+admin/node_modules
+api/.venv
+api/.pytest_cache
+api/.ruff_cache
+**/__pycache__
+docs/
+content/
+tools/
+*.md
+!build/web/**

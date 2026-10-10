@@ -1,0 +1,31 @@
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.config import get_settings
+from app.routers import health
+
+API_PREFIX = "/api/v1"
+
+
+def create_app() -> FastAPI:
+    # La documentation OpenAPI sera exposée uniquement côté admin (TRD §3.3).
+    app = FastAPI(
+        title="Aldoria API",
+        version="0.1.0",
+        docs_url=None,
+        redoc_url=None,
+        openapi_url=None,
+    )
+    settings = get_settings()
+    if settings.cors_origins:
+        app.add_middleware(
+            CORSMiddleware,
+            allow_origins=settings.cors_origins,
+            allow_methods=["*"],
+            allow_headers=["*"],
+        )
+    app.include_router(health.router, prefix=API_PREFIX)
+    return app
+
+
+app = create_app()

@@ -1,0 +1,49 @@
+; Engine configuration file.
+; Godot 4.7.2-stable, export web uniquement (voir docs/TRD.md §2.1).
+
+config_version=5
+
+[application]
+
+config/name="Les Chroniques d'Aldoria"
+config/description="Jeu éducatif 2.5D pour réviser le programme de 6ème et de seconde."
+run/main_scene="res://scenes/calibration/calibration.tscn"
+config/features=PackedStringArray("4.7", "GL Compatibility")
+boot_splash/bg_color=Color(0.08, 0.07, 0.1, 1)
+boot_splash/show_image=false
+
+[autoload]
+
+Quality="*res://autoload/quality.gd"
+PerfOverlay="*res://ui/debug/perf_overlay.tscn"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=4
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/gut/plugin.cfg")
+
+[input]
+
+toggle_perf_overlay={
+"deadzone": 0.2,
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":4194334,"key_label":0,"unicode":0,"location":0,"echo":false,"script":null)
+]
+}
+
+[input_devices]
+
+pointing/emulate_mouse_from_touch=true
+
+[rendering]
+
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true
+anti_aliasing/quality/msaa_3d=1

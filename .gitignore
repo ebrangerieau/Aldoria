@@ -1,0 +1,29 @@
+# Godot
+game/.godot/
+game/*.translation
+*.import.tmp
+build/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+.coverage
+htmlcov/
+.ruff_cache/
+
+# Node
+node_modules/
+dist/
+
+# Environnement et secrets
+.env
+deploy/.env
+*.pem
+*.key
+
+# Divers
+.DS_Store
+Thumbs.db
+*.log
