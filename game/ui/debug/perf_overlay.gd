@@ -84,10 +84,9 @@ func _window_stats() -> Dictionary:
 		"options": _active_options(),
 		"fps_avg": snappedf(count / _window_elapsed, 0.1),
 		"frame_ms": snappedf(frame_ms, 0.1),
+		# Indicatif seulement : sur le web, Godot semble compter certains temps en double
+		# (cpu_ms > frame_ms observé). Le diagnostic fiable reste la comparaison ?scale=.
 		"cpu_ms": snappedf(cpu_ms, 0.1),
-		# Le CPU n'occupe qu'une faible part de l'image : c'est la carte graphique qui limite.
-		# À ~60 fps, l'attente vient de la synchronisation écran : pas de limite.
-		"bound": "aucune" if frame_ms < 18.0 else ("gpu" if cpu_ms < frame_ms * 0.6 else "cpu"),
 		"render_px": _render_resolution(),
 		"dpr": snappedf(DisplayServer.screen_get_scale(), 0.01),
 		"fps_1pct_low": snappedf(1.0 / maxf(sorted[worst_index], 0.0001), 0.1),
@@ -108,9 +107,7 @@ func _format_text() -> String:
 	lines.append("FPS %d" % Engine.get_frames_per_second())
 	if not _last_stats.is_empty():
 		lines.append("Moy. 10 s : %.1f   1%% bas : %.1f" % [_last_stats.fps_avg, _last_stats.fps_1pct_low])
-		var bound_label := {"gpu": "carte graphique", "cpu": "processeur", "aucune": "aucune (60 fps)"}
-		lines.append("Image : %.1f ms   dont CPU : %.1f ms → limite : %s" % [
-			_last_stats.frame_ms, _last_stats.cpu_ms, bound_label[_last_stats.bound]])
+		lines.append("Image : %.1f ms" % _last_stats.frame_ms)
 	else:
 		lines.append("Moy. 10 s : mesure en cours…")
 	lines.append("Rendu 3D : %s px   (écran x%.2f)" % [_render_resolution(), DisplayServer.screen_get_scale()])
