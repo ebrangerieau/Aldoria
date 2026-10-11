@@ -71,7 +71,11 @@ from app.engine.generators import (  # noqa: E402, F401
     algebre_2nde,
     developper_2nde,
     evolutions_2nde,
+    fonctions_2nde,
     fractions_6e,
     geometrie_2nde,
+    nombres_2nde,
+    nombres_6e,
     prealgebre_6e,
+    problemes_6e,
 )

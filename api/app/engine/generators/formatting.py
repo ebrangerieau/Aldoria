@@ -22,8 +22,11 @@ def p(value: float | Fraction | int) -> str:
 
 
 def sentence(text: str) -> str:
-    """Majuscule initiale et point final, sans toucher au reste (≠ str.capitalize)."""
-    return text[:1].upper() + text[1:] + ("" if text.endswith(".") else ".")
+    """Majuscule initiale et point final, sans toucher au reste (≠ str.capitalize).
+    Pas de majuscule sur une formule qui commence la phrase : « f(5) = … », « x − 2 = 0 »."""
+    formula = len(text) > 1 and text[0].isalpha() and not text[1].isalpha() and text[0] != "à"
+    head = text[:1] if formula else text[:1].upper()
+    return head + text[1:] + ("" if text.endswith(".") else ".")
 
 
 def minus(text: str) -> str:

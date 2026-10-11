@@ -194,6 +194,17 @@ Livrables du TRD §13 : une salle, un ennemi, 3 widgets, 4 générateurs, et les
 
 ### Phase 3 – MVP (6 à 8 semaines)
 
+> 🟡 **Commencée le 2026-10-11 par le contenu.** 30 nouveaux générateurs : **21 pour Jules** (tables,
+> calcul mental, conversions, ×÷10, décimaux, division euclidienne, fraction d'une quantité, encadrement,
+> schéma en barres, suites de motifs, durées, aires, angle manquant, retour à l'unité, échelles,
+> probabilités) et **22 pour Tom** hors énigme (puissances, racines, calcul fractionnaire, intervalles,
+> valeur absolue, ensembles de nombres, image, fonction affine, coefficient directeur, produit nul,
+> moyenne pondérée, probabilités conditionnelles et arbres, Pythagore et Thalès, lecture de code Python).
+> Tous en QCM, nombre, fraction ou expression (widgets existants), réponses recalculées indépendamment
+> sur 1 000 tirages par niveau (`api/tests/test_generators_phase3.py`).
+> Reste au contenu : banque d'items relue par Eric, et les générateurs qui demandent les nouveaux widgets
+> (droite graduée, tableau de signes, lecture graphique, séquences d'instructions).
+
 **Contenu**
 - **20 générateurs par niveau** (§4).
 - Banque de départ : 150 à 200 items par niveau dans `content/seed/` (JSON validés par le schéma), **tous relus par Eric** avant publication.
