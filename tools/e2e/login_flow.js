@@ -1,5 +1,5 @@
-// Test de bout en bout du jeu web : titre → profil → PIN → combat → question
-// → Quitter → titre (joueur connecté) → Changer de joueur → choix des profils.
+// Test de bout en bout du jeu web : titre → profil → PIN → camp → donjon (marche
+// au clavier) → Quitter → camp → Archives → camp → Changer de joueur → profils.
 // Pilote Edge (ou Chrome) en headless via playwright-core, sur le banc local
 // (tools/e2e_web.ps1) : jamais sur la production avec les vrais codes des enfants.
 //
@@ -36,21 +36,33 @@ const { chromium } = require('playwright-core');
     await page.keyboard.press(digit);
     await page.waitForTimeout(120);
   }
-  await page.waitForTimeout(5000);   // connexion + paquet de session + scène 3D
-  await shot('2_combat');
-  await page.mouse.click(640, 737);  // action « Sort »
-  await page.waitForTimeout(2000);
-  await shot('3_question');
-  await page.mouse.click(1210, 63);  // « Quitter » → écran titre, joueur toujours connecté
+  await page.waitForTimeout(4000);   // connexion + sauvegarde → camp
+  await shot('2_camp');
+  await page.mouse.click(270, 712);  // « Entrer » dans le donjon (paquet + scène 3D)
+  await page.waitForTimeout(6000);
+  await shot('3_donjon_intro');
+  await page.mouse.click(640, 730);  // « En avant ! »
+  await page.waitForTimeout(800);
+  await page.keyboard.down('d');     // marcher vers l'est (D, ou → )
+  await page.waitForTimeout(1500);
+  await page.keyboard.up('d');
+  await page.waitForTimeout(500);
+  await shot('4_donjon_marche');
+  await page.mouse.click(1210, 63);  // « Quitter » → camp
   await page.waitForTimeout(3000);
-  await shot('4_titre_retour');
-  await page.mouse.click(830, 503);  // « Changer de joueur »
+  await page.mouse.click(1078, 712); // « Consulter » les Archives
+  await page.waitForTimeout(3000);
+  await shot('5_archives');
+  await page.mouse.click(1170, 52);  // « Retour au camp »
   await page.waitForTimeout(2500);
-  await shot('5_changer_joueur');
+  await page.mouse.click(1133, 71);  // « Changer de joueur »
+  await page.waitForTimeout(2500);
+  await shot('6_changer_joueur');
 
   console.log('Appels API :\n  ' + api.join('\n  '));
-  const started = api.some((line) => line.startsWith('200 POST /api/v1/play/session/start'));
-  if (!started) problems.push('session/start jamais réussi');
+  for (const call of ['200 POST /api/v1/play/session/start', '200 GET /api/v1/play/save', '200 GET /api/v1/play/progress']) {
+    if (!api.includes(call)) problems.push(`appel manquant : ${call}`);
+  }
   const profileLoads = api.filter((line) => line === '200 GET /api/v1/play/profiles').length;
   if (profileLoads < 2) problems.push('« Changer de joueur » n\'a pas rouvert le choix des profils');
   if (problems.length) {

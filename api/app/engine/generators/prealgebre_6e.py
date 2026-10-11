@@ -84,6 +84,14 @@ def _balance(difficulty: int, rng: random.Random) -> dict:
         "explanation": explanation,
         "time_target_ms": 30000 + 10000 * difficulty,  # 40 s à 80 s
         "game_modes": ["combat", "enigme"],
+        # Plateaux pour l'énigme de la balance (le client dessine boîtes et billes).
+        "visual": {
+            "kind": "balance",
+            "left": {"boxes": left_boxes, "units": left_units},
+            "right": {"boxes": right_boxes, "units": right_units},
+            "box": [box, boxes],
+            "unit": [unit, units],
+        },
         "meta": {
             "x": x,
             "left_boxes": left_boxes,

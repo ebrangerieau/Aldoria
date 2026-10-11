@@ -197,6 +197,102 @@ def _midpoint_distance(difficulty: int, rng: random.Random) -> dict:
     }
 
 
+# --- Énigme des miroirs : diriger un rayon (saisie des coordonnées d'un vecteur) ---------
+
+
+def _point_entry(name: str, x: int, y: int, role: str, hidden: bool = False) -> dict:
+    return {"name": name, "at": [x, y], "role": role, "hidden": hidden}
+
+
+def _ray(difficulty: int, rng: random.Random) -> dict:
+    """Le rayon part de la source A ; le joueur donne le vecteur qui l'amène au cristal.
+
+    1-3 : vecteur AB (repère de plus en plus grand, signes mêlés).
+    4 : point d'arrivée B = A + u.
+    5 : relation de Chasles, AB = AM + MB (le rayon passe par le miroir M).
+    """
+    span = {1: 4, 2: 5}.get(difficulty, 6)
+
+    def pick() -> tuple[int, int]:
+        return rng.randint(-span, span), rng.randint(-span, span)
+
+    if difficulty == 2:  # coordonnées positives : B au nord-est de A (A jamais dans le coin)
+        xa, ya = rng.randint(-span, span - 1), rng.randint(-span, span - 1)
+        xb, yb = rng.randint(xa, span), rng.randint(ya, span)
+        if (xb, yb) == (xa, ya):
+            xb += 1
+    else:
+        xa, ya = (0, 0) if difficulty == 1 and rng.random() < 0.5 else pick()
+        xb, yb = pick()
+        while (xb, yb) == (xa, ya):
+            xb, yb = pick()
+    dx, dy = xb - xa, yb - ya
+    points = [_point_entry("A", xa, ya, "source"), _point_entry("B", xb, yb, "target")]
+    path = ["A", "B"]
+    if difficulty <= 3:
+        prompt = (
+            f"Le rayon part de {_point('A', xa, ya)} et doit frapper le cristal "
+            f"{_point('B', xb, yb)}. Donne les coordonnées du vecteur AB."
+        )
+        answer = [dx, dy]
+        hint = "Coordonnées de AB : (xB − xA ; yB − yA), « arrivée moins départ »."
+        explanation = (
+            f"AB = ({fr_number(xb)} − {p(xa)} ; {fr_number(yb)} − {p(ya)}) = {vec(dx, dy)}."
+        )
+    elif difficulty == 4:
+        points[1]["hidden"] = True
+        prompt = (
+            f"Le rayon part de {_point('A', xa, ya)} en suivant le vecteur u{vec(dx, dy)}. "
+            "Quelles sont les coordonnées du point B où il arrive ?"
+        )
+        answer = [xb, yb]
+        hint = "Si AB = u, alors xB = xA + x(u) et yB = yA + y(u)."
+        explanation = (
+            f"B = ({fr_number(xa)} + {p(dx)} ; {fr_number(ya)} + {p(dy)}) = {vec(xb, yb)}."
+        )
+    else:
+        xm, ym = pick()
+        while (xm, ym) in ((xa, ya), (xb, yb)):
+            xm, ym = pick()
+        points.insert(1, _point_entry("M", xm, ym, "mirror"))
+        path = ["A", "M", "B"]
+        u, v = (xm - xa, ym - ya), (xb - xm, yb - ym)
+        prompt = (
+            f"Le rayon va de A au miroir M suivant AM{vec(*u)}, puis de M au cristal B "
+            f"suivant MB{vec(*v)}. Pour tirer directement de A vers B, quel vecteur AB "
+            "faut-il ?"
+        )
+        answer = [dx, dy]
+        hint = "Relation de Chasles : AB = AM + MB. On additionne les coordonnées."
+        explanation = (
+            f"AB = AM + MB = ({fr_number(u[0])} + {p(v[0])} ; {fr_number(u[1])} + {p(v[1])}) "
+            f"= {vec(dx, dy)}."
+        )
+    return {
+        "type": "vector",
+        "prompt": prompt,
+        "answer": {"kind": "vector", "value": [str(answer[0]), str(answer[1])]},
+        "hint": hint,
+        "explanation": explanation,
+        "time_target_ms": 25000 + 8000 * difficulty,  # 33 s à 65 s
+        "game_modes": ["enigme"],
+        "visual": {"kind": "grid", "span": span, "points": points, "path": path},
+        "meta": {"a": [xa, ya], "b": [xb, yb], "answer": answer, "points": points},
+    }
+
+
+RAY = register(
+    Generator(
+        code="2nde.vecteurs.rayon",
+        level="2nde",
+        notion="2nde.maths.vecteurs.coordonnees",
+        role="chapitre",
+        title="Miroirs : diriger un rayon",
+        generate=_ray,
+        combat=False,
+    )
+)
+
 COORDINATES = register(
     Generator(
         code="2nde.vecteurs.coordonnees",

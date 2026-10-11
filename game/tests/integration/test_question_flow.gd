@@ -18,6 +18,7 @@ func before_each() -> void:
 func after_each() -> void:
 	ApiClient.token = _saved_token
 	Session._queue = _saved_queue
+	Session._save_json(Session.QUEUE_FILE, Session._queue)  # ne pas laisser de fausses réponses
 	Session.items = []
 	Session.formulas = {}
 

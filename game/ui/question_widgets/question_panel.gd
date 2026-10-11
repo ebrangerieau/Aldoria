@@ -21,6 +21,7 @@ var _bonus: Label
 var _hint_label: Label
 var _hint_button: Button
 var _done := false
+var _visual: Control
 
 
 func setup(question: Dictionary, title: String, wt: WorldTheme) -> void:
@@ -73,8 +74,20 @@ func setup(question: Dictionary, title: String, wt: WorldTheme) -> void:
 		elif question.get("latex"):
 			box.add_child(UiKit.label(str(question["latex"]), 28))  # repli : texte brut
 
+	# Énigme : illustration interactive (balance, repère) à côté de l'énoncé.
+	if question.get("role") == "enigme" and question.get("visual") is Dictionary:
+		_visual = _make_visual(question["visual"], wt)
+		if _visual:
+			box.add_child(_visual)
+
 	var widget: Control
-	if question["type"] == "mcq":
+	if question["type"] == "vector":
+		var vector := VectorWidget.new()
+		vector.setup(wt)
+		vector.custom_minimum_size = Vector2(420, 0)
+		widget = vector
+		columns.add_child(widget)
+	elif question["type"] == "mcq":
 		var mcq := McqWidget.new()
 		mcq.setup(question["choices"])
 		widget = mcq
@@ -103,6 +116,25 @@ func setup(question: Dictionary, title: String, wt: WorldTheme) -> void:
 	box.add_child(footer)
 
 	_started_ms = Time.get_ticks_msec()
+
+
+## Après la validation : l'illustration montre le résultat (rayon tiré, masse révélée).
+func reveal(correct: bool) -> void:
+	if _visual and _visual.has_method("reveal"):
+		_visual.call("reveal", correct, expected_text(item))
+
+
+static func _make_visual(visual: Dictionary, wt: WorldTheme) -> Control:
+	match visual.get("kind"):
+		"balance":
+			var balance := BalanceView.new()
+			balance.setup(visual, wt)
+			return balance
+		"grid":
+			var grid := GridView.new()
+			grid.setup(visual, wt)
+			return grid
+	return null
 
 
 func elapsed_ms() -> int:
@@ -141,4 +173,6 @@ static func expected_text(question: Dictionary) -> String:
 	var answer: Dictionary = question["answer"]
 	if answer["kind"] == "choice":
 		return UiKit.pretty_math(str(question["choices"][int(answer["index"])]))
+	if answer["kind"] == "vector":
+		return UiKit.pretty_math("(%s ; %s)" % [answer["value"][0], answer["value"][1]])
 	return UiKit.pretty_math(str(answer["value"]))

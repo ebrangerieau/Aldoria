@@ -8,7 +8,8 @@ extends Node
 signal queue_changed(pending: int)
 
 const AUTH_FILE := "user://auth.json"
-const PACK_FILE := "user://pack.json"
+const PACK_FILE := "user://pack_%s.json"  # un paquet par mode (arène, donjon)
+const PACK_MODES := ["arene", "donjon"]
 const QUEUE_FILE := "user://attempts_queue.json"
 const FLUSH_RETRY_S := 10.0
 const BATCH_SIZE := 50
@@ -21,6 +22,8 @@ var settings: Dictionary = {}
 ## Difficulté de départ par rôle, calculée par le serveur selon la maîtrise.
 var start_levels: Dictionary = {}
 var active_seconds := 0.0
+## Temps de jeu actif depuis la connexion (toutes sessions) : limite fixée par le parent.
+var played_seconds := 0.0
 
 var _queue: Array = []
 var _flushing := false
@@ -45,6 +48,7 @@ func _process(delta: float) -> void:
 	# Le navigateur met le jeu en pause quand l'onglet est caché : seul le temps actif compte.
 	if session_id != "":
 		active_seconds += delta
+		played_seconds += delta
 
 
 func is_logged_in() -> bool:
@@ -60,6 +64,7 @@ func login(profile_id: int, pin: String) -> Dictionary:
 	if res.ok:
 		ApiClient.token = res.data["token"]
 		profile = res.data["profile"]
+		played_seconds = 0.0
 		_save_json(AUTH_FILE, {"token": ApiClient.token, "profile": profile})
 	return res
 
@@ -68,24 +73,29 @@ func login(profile_id: int, pin: String) -> Dictionary:
 ## à leur profil : elles partiront quand ce joueur se reconnectera.
 func logout() -> void:
 	await flush()
+	await SaveManager.unload()
 	ApiClient.token = ""
 	profile = {}
 	session_id = ""
+	played_seconds = 0.0
 	DirAccess.remove_absolute(AUTH_FILE)
-	# Le paquet hors connexion appartient au joueur précédent (autre niveau).
-	DirAccess.remove_absolute(PACK_FILE)
+	# Les paquets hors connexion appartiennent au joueur précédent (autre niveau).
+	for mode in PACK_MODES:
+		DirAccess.remove_absolute(PACK_FILE % mode)
+	DirAccess.remove_absolute("user://pack.json")  # ancien nom (phase 1)
 
 
-## Ouvre une session et charge le paquet de questions. Sans réseau, reprend le
-## dernier paquet enregistré (s'il existe) pour que le jeu reste jouable.
-func start() -> Dictionary:
-	var res := await ApiClient.post_json("/play/session/start")
+## Ouvre une session et charge le paquet de questions. `params` : chapitre et
+## énigme d'un donjon (voir DungeonDef). Sans réseau, reprend le dernier paquet
+## enregistré pour ce mode (s'il existe) pour que le jeu reste jouable.
+func start(mode := "arene", params := {}) -> Dictionary:
+	var res := await ApiClient.post_json("/play/session/start", params)
 	if res.ok:
 		_apply_pack(res.data)
-		_save_json(PACK_FILE, res.data)
+		_save_json(PACK_FILE % mode, res.data)
 		return res
 	if res.status == 0:
-		var cached: Dictionary = _load_json(PACK_FILE, {})
+		var cached: Dictionary = _load_json(PACK_FILE % mode, {})
 		if not cached.is_empty():
 			_apply_pack(cached)
 			return {"ok": true, "status": 0, "data": cached, "error": {}, "offline": true}
@@ -97,6 +107,12 @@ func end() -> void:
 	if session_id != "":
 		await ApiClient.post_json("/play/session/end",
 			{"session_id": session_id, "active_seconds": int(active_seconds)})
+	session_id = ""
+
+
+## Durée maximale de jeu atteinte (PRD US-11, réglée par le parent).
+func time_over() -> bool:
+	return played_seconds >= float(settings.get("session_max_minutes", 25)) * 60.0
 
 
 ## Enregistre une réponse (d'abord localement, puis envoi au serveur).
@@ -140,8 +156,11 @@ func flush() -> void:
 			copy.erase("profile_id")
 			return copy)
 		var res := await ApiClient.post_json("/play/attempts", {"attempts": payload})
-		if not res.ok:
+		if not res.ok and not _rejected_for_good(res.status):
 			break  # nouvel essai au prochain passage du minuteur
+		if not res.ok:
+			# Lot refusé par le serveur (invalide) : le renvoyer bloquerait la file à jamais.
+			printerr("[Aldoria/api] %d réponse(s) refusée(s) par le serveur (%d), écartée(s)" % [batch.size(), res.status])
 		var sent := {}
 		for a in batch:
 			sent[a["id"]] = true
@@ -149,6 +168,12 @@ func flush() -> void:
 		_save_json(QUEUE_FILE, _queue)
 		queue_changed.emit(pending_count())
 	_flushing = false
+
+
+## Refus définitif (requête invalide) ; les autres échecs se retentent : réseau,
+## jeton expiré (401, nouvelle connexion), serveur indisponible (5xx).
+static func _rejected_for_good(status: int) -> bool:
+	return status in [400, 403, 404, 409, 413, 422]
 
 
 func _profile_id() -> int:

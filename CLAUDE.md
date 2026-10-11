@@ -32,7 +32,11 @@ uv run --directory api ruff check .
 ```
 
 Jeu sur PC contre l'API locale (Docker, port 8098) — options réservées au PC, ignorées sur le web :
-`godot --path game -- --autologin=<id> --pin=<code> [--autoaction=chapitre] [--screenshot=x.png --shot-delay=4]`.
+`godot --path game -- --autologin=<id> --pin=<code> [--goto=donjon|arene|archives] [--room=N] [--approach=1]
+[--autoaction=chapitre] [--screenshot=x.png --shot-delay=4]`.
+`--goto` part du camp vers une destination ; `--room` démarre le donjon dans la salle N (0 à 5) ;
+`--approach` mène le héros au premier ennemi ou piédestal de la salle (captures d'un combat, d'une énigme) ;
+`--autoaction` choisit une action dans l'arène.
 Profils locaux : `docker exec <conteneur api> python -m app.cli create --name … --level 6e|2nde --avatar … --pin …`.
 
 Test de bout en bout **dans le navigateur** (à lancer avant tout déploiement touchant le réseau,
@@ -47,6 +51,11 @@ Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-
 
 - GDScript typé, `class_name` pour les types partagés, signaux plutôt que couplage direct.
 - Le gameplay ne connaît jamais le contenu d'une question (TRD §2.3) : il passe par `QuestionService`.
+  Un donjon (`DungeonDef`) ne transmet que son chapitre et son générateur d'énigme à `session/start`.
+- Combat : `Encounter` (core/combat) est partagé par l'arène et le donjon ; une scène ne réécrit pas le tour par tour.
+- Progression du joueur : `SaveManager` (XP, donjons, bestiaire), jamais de fichier de sauvegarde écrit à la main.
+- Un test qui enregistre des réponses réécrit ensuite la file locale (`Session._save_json`) : sinon de fausses
+  réponses partent vers l'API de dev au lancement suivant du jeu.
 - Pas de `JavaScriptBridge.eval` : la CSP interdit `eval`. Utiliser `JavaScriptBridge.get_interface`.
 - Géométrie statique d'une salle : un seul matériau partagé + `StaticBatcher.merge` (budget tablette < 100 appels de dessin).
 - Éclairage : la tablette (Android 10) ne tient 30 fps que sans vraies lumières ponctuelles ni ombres

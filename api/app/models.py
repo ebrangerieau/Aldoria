@@ -146,3 +146,20 @@ class NotionState(Base):
     mastery: Mapped[float] = mapped_column(Float, default=0.0)
     seen: Mapped[int] = mapped_column(Integer, default=0)
     last_seen: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class SaveRevision(Base):
+    """Sauvegarde de partie (TRD §2.7) : contenu opaque versionné par le client
+    (`schema_version`), 20 dernières révisions conservées par profil.
+    `progress` (XP totale) départage deux appareils : la plus avancée gagne."""
+
+    __tablename__ = "save_revision"
+
+    profile_id: Mapped[int] = mapped_column(
+        ForeignKey("profile.id", ondelete="CASCADE"), primary_key=True
+    )
+    revision: Mapped[int] = mapped_column(Integer, primary_key=True)
+    schema_version: Mapped[int] = mapped_column(Integer)
+    progress: Mapped[int] = mapped_column(Integer, default=0)
+    data: Mapped[dict[str, Any]] = mapped_column(JSONType)
+    saved_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

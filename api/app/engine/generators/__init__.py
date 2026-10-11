@@ -24,6 +24,8 @@ class Generator:
     role: str
     title: str
     generate: GenerateFn
+    # Faux : réservé aux énigmes (widget dédié), jamais tiré pour un combat.
+    combat: bool = True
 
     def item(self, difficulty: int, seed: int) -> Item:
         if not 1 <= difficulty <= 5:

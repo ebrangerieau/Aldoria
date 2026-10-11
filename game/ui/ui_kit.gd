@@ -75,6 +75,21 @@ static func button(text: String, min_height := 64.0) -> Button:
 	return b
 
 
+## Panneau de message (victoire, repli, fin de session) : [panneau, bouton principal].
+static func message_panel(wt: WorldTheme, title: String, body: String, button_text: String) -> Array:
+	var panel := PanelContainer.new()
+	panel.theme = make_theme(wt)
+	panel.custom_minimum_size = Vector2(640, 0)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 16)
+	panel.add_child(box)
+	box.add_child(label(title, 34, wt.accent))
+	box.add_child(label(body, 24))
+	var main := button(button_text, 64.0)
+	box.add_child(main)
+	return [panel, main]
+
+
 ## Affichage « joli » d'une saisie : x² au lieu de x^2, × au lieu de *, − au lieu de -.
 static func pretty_math(text: String) -> String:
 	return text.replace("^2", "²").replace("^3", "³").replace("*", "×").replace("-", "−")

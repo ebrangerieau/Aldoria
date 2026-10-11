@@ -26,6 +26,7 @@ func after_each() -> void:
 	await wait_process_frames(2)
 	ApiClient.token = _saved_token
 	Session._queue.clear()
+	Session._save_json(Session.QUEUE_FILE, Session._queue)  # ne pas laisser de fausses réponses
 	Session.items = []
 	Session.profile = {}
 

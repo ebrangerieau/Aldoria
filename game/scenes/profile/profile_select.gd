@@ -127,11 +127,8 @@ func _submit() -> void:
 	if res.ok:
 		_message.add_theme_color_override("font_color", _wt.good)
 		_message.text = "C'est parti !"
-		var start := await Session.start()
-		if start.ok:
-			get_tree().change_scene_to_file("res://scenes/combat/combat.tscn")
-			return
-		res = start
+		get_tree().change_scene_to_file("res://scenes/hub/hub.tscn")
+		return
 	_message.add_theme_color_override("font_color", _wt.bad)
 	match res.error.get("code", ""):
 		"wrong_pin":

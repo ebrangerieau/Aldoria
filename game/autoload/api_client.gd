@@ -32,6 +32,10 @@ func post_json(path: String, body: Variant = {}, auth := true) -> Dictionary:
 	return await _request(HTTPClient.METHOD_POST, path, body, auth)
 
 
+func put_json(path: String, body: Variant = {}, auth := true) -> Dictionary:
+	return await _request(HTTPClient.METHOD_PUT, path, body, auth)
+
+
 func _request(method: HTTPClient.Method, path: String, body: Variant, auth: bool) -> Dictionary:
 	var http := HTTPRequest.new()
 	http.timeout = 20.0
@@ -55,7 +59,7 @@ func _request(method: HTTPClient.Method, path: String, body: Variant, auth: bool
 	var status: int = res[1]
 	if result != HTTPRequest.RESULT_SUCCESS:
 		printerr("[Aldoria/api] %s %s : échec HTTPRequest (résultat %d, statut %d)" % [
-			"GET" if method == HTTPClient.METHOD_GET else "POST", path, result, status])
+			{HTTPClient.METHOD_GET: "GET", HTTPClient.METHOD_PUT: "PUT"}.get(method, "POST"), path, result, status])
 		if result in NETWORK_RESULTS:
 			_set_online(false)
 			return _network_error()

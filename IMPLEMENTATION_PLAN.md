@@ -137,6 +137,20 @@ Livrables du TRD §13 : une salle, un ennemi, 3 widgets, 4 générateurs, et les
 
 ### Phase 2 – Tranche verticale (4 à 6 semaines)
 
+> 🟡 **En cours (2026-10-11).** Fait : modèle de données et seed du programme (23 chapitres, 65 notions) ;
+> moteur pédagogique (Leitner, maîtrise, sélecteur, suivi rejoué depuis l'historique) ; 14 générateurs
+> (dont l'énigme des miroirs, réservée aux énigmes) ; sauvegarde serveur versionnée (`GET/PUT /play/save`,
+> 20 révisions, la partie la plus avancée gagne) et `SaveManager` ; XP et niveaux ; camp de base ; Archives
+> (étoiles par notion, bestiaire) ; donjon complet par monde (6 salles, 2 combats à 1-2 ennemis, énigme à
+> 3 piédestaux, salle d'élite, boss de synthèse, coffre), points de reprise, repli sans perte.
+> Reste : admin parent (React + TinyAuth) et son test de recette ; mesures du donjon sur la tablette.
+>
+> Écarts : `DungeonDef` est une classe GDScript à constructeurs statiques (comme `WorldTheme`) plutôt
+> qu'un `.tres` (données typées, relues en revue de code) ; la balance se résout en enlevant la même
+> chose des deux côtés puis en donnant la masse au pavé (pas de pose libre de poids) ; le boss compte
+> 10 « sceaux » (8 questions au mieux avec des critiques, davantage avec des indices) ; pas de masquage
+> des murs : la vue en coupe (côté sud ouvert) rend la caméra toujours dégagée.
+
 **Modèle de données complet** (TRD §4) avec ses migrations. **Seed du programme** : matières, chapitres et notions des deux niveaux (§4 de ce plan). Les notions incertaines de seconde portent `a_valider=true`.
 
 **Moteur pédagogique** (`api/app/engine/`)

@@ -1,12 +1,16 @@
 class_name CombatHud
 extends CanvasLayer
-## Interface du combat : barres de vie, vague, actions, bandeaux, panneaux
-## (question, explication, fin) et indicateur hors connexion discret (TRD §2.7).
+## Interface du combat et de l'exploration : barres de vie, titre (vague ou salle),
+## niveau et XP, actions, bandeaux, panneaux (question, explication, fin) et
+## indicateur hors connexion discret (TRD §2.7). En exploration, la barre de
+## l'ennemi et les actions sont masquées.
 
 signal action_chosen(action: String)  # « automatisme », « chapitre », « soin »
 signal quit_requested
 
 var _wt: WorldTheme
+var _hero_name: Label
+var _enemy_box: Control
 var _hero_bar: ProgressBar
 var _hero_hp: Label
 var _enemy_bar: ProgressBar
@@ -47,6 +51,7 @@ func setup(wt: WorldTheme, hero_name: String) -> void:
 	var hero_box := _fighter_box(hero_name, false)
 	_hero_bar = hero_box[1]
 	_hero_hp = hero_box[2]
+	_hero_name = hero_box[3]
 	top.add_child(hero_box[0])
 	var center := VBoxContainer.new()
 	center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -62,6 +67,7 @@ func setup(wt: WorldTheme, hero_name: String) -> void:
 	center.add_child(_sync)
 	top.add_child(center)
 	var enemy_box := _fighter_box("", true)
+	_enemy_box = enemy_box[0]
 	_enemy_name = enemy_box[3]
 	_enemy_bar = enemy_box[1]
 	_enemy_hp = enemy_box[2]
@@ -72,13 +78,22 @@ func setup(wt: WorldTheme, hero_name: String) -> void:
 	top.add_child(quit)
 	column.add_child(top)
 
-	# Zone centrale : bandeau d'annonce, puis panneaux en bas de l'écran
+	# Zone centrale libre (les panneaux montent aussi haut que nécessaire), puis
+	# panneaux en bas de l'écran. Le bandeau d'annonce flotte par-dessus, hors mise en page.
+	var gap := Control.new()
+	gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	gap.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	column.add_child(gap)
 	_banner = _shadowed_label("", 56)
+	_banner.set_anchors_preset(Control.PRESET_CENTER)
+	_banner.grow_horizontal = Control.GROW_DIRECTION_BOTH
+	_banner.grow_vertical = Control.GROW_DIRECTION_BOTH
 	_banner.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_banner.modulate.a = 0.0
-	_banner.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	_banner.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	column.add_child(_banner)
+	_banner.position.y -= 120  # au-dessus des panneaux
+	_banner.modulate.a = 0.0
+	_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	root.add_child(_banner)
 
 	_overlay = VBoxContainer.new()
 	_overlay.alignment = BoxContainer.ALIGNMENT_END
@@ -116,8 +131,22 @@ func set_enemy_hp(hp: int, max_hp: int) -> void:
 
 
 func set_wave(wave: int, xp: int) -> void:
-	_wave.text = "Combat %d" % wave
-	_xp.text = "%d XP" % xp
+	set_status("Combat %d" % wave, "%d XP" % xp)
+
+
+## Titre (vague, nom de la salle) et ligne d'information (niveau, XP).
+func set_status(title: String, subtitle: String) -> void:
+	_wave.text = title
+	_xp.text = subtitle
+
+
+func set_hero_name(text: String) -> void:
+	_hero_name.text = text
+
+
+## Exploration (faux) ou combat (vrai) : barre de l'ennemi.
+func set_enemy_visible(visible_enemy: bool) -> void:
+	_enemy_box.modulate.a = 1.0 if visible_enemy else 0.0
 
 
 func show_actions(visible_actions: bool, heal_enabled := true) -> void:

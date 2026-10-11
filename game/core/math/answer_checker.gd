@@ -52,6 +52,8 @@ static func check(answer: Dictionary, user_input: Variant) -> bool:
 			return _check_fraction(answer, str(user_input))
 		"expression":
 			return _check_expression(answer, str(user_input))
+		"vector":
+			return _check_vector(answer, user_input)
 	push_error("Type de réponse inconnu : %s" % answer.get("kind"))
 	return false
 
@@ -89,6 +91,18 @@ static func _check_expression(answer: Dictionary, text: String) -> bool:
 		"factored":
 			# Un vrai produit (« 3(x+2) », « (x+3)² ») : « (x²−9) » n'est pas une factorisation.
 			return "(" in MathExpr.normalize(text) and MathExpr.is_product(text)
+	return true
+
+
+## Coordonnées d'un vecteur : liste de 2 nombres, chacun comparé exactement.
+static func _check_vector(answer: Dictionary, user_input: Variant) -> bool:
+	if not user_input is Array or (user_input as Array).size() != 2:
+		return false
+	for i in 2:
+		var got := parse_rational(str(user_input[i]))
+		var expected := parse_rational(str(answer["value"][i]))
+		if got.is_empty() or expected.is_empty() or got.num != expected.num or got.den != expected.den:
+			return false
 	return true
 
 

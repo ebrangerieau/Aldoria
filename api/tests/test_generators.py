@@ -50,6 +50,7 @@ def test_registry_has_all_generators():
         "2nde.vecteurs.coordonnees",
         "2nde.vecteurs.colinearite",
         "2nde.geometrie.milieu_distance",
+        "2nde.vecteurs.rayon",
     }
 
 
@@ -255,3 +256,42 @@ def test_latex_renders(code):
         if item.latex:
             assert render_svg(item.latex).startswith("<svg"), item.id
             assert "	" not in item.latex and "" not in item.latex
+
+
+def test_ray():
+    for item in _items("2nde.vecteurs.rayon"):
+        m = item.meta
+        (xa, ya), (xb, yb) = m["a"], m["b"]
+        got = [int(v) for v in item.answer.value]
+        if item.difficulty == 4:
+            assert got == [xb, yb], item.id
+        else:
+            assert got == [xb - xa, yb - ya], item.id
+        assert got != [0, 0] or item.difficulty == 4, item.id
+        assert answers.check(item.answer.model_dump(), item.answer.value)
+        assert answers.check(item.answer.model_dump(), got)
+        assert not answers.check(item.answer.model_dump(), [got[1] + 1, got[0]])
+        # Le dessin et l'énoncé désignent les mêmes points, le rayon relie source et cible.
+        names = {pt["name"]: pt for pt in item.visual["points"]}
+        assert item.visual["path"][0] == "A" and item.visual["path"][-1] == "B"
+        assert names["A"]["at"] == [xa, ya] and names["B"]["at"] == [xb, yb]
+        span = item.visual["span"]
+        assert all(abs(c) <= span for pt in names.values() for c in pt["at"])
+
+
+def test_enigma_generators_stay_out_of_combat_packs():
+    import random
+
+    from app.engine.session_pack import build
+
+    for seed in range(20):
+        pack = build("2nde", random.Random(seed))
+        assert all(i["generator"] != "2nde.vecteurs.rayon" for i in pack["items"])
+
+
+def test_balance_visual_matches_statement():
+    for seed in range(200):
+        item = REGISTRY["6e.prealgebre.balance"].item(1 + seed % 5, seed)
+        v, m = item.visual, item.meta
+        assert (v["left"]["boxes"], v["left"]["units"]) == (m["left_boxes"], m["left_units"])
+        assert (v["right"]["boxes"], v["right"]["units"]) == (m["right_boxes"], m["right_units"])

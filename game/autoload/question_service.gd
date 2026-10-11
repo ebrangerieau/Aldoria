@@ -44,27 +44,37 @@ func level_for(role: String) -> int:
 
 
 ## Prochain item pour un rôle (ou n'importe lequel si `role` est vide).
-func next_item(role := "") -> Dictionary:
-	var pool: Array = Session.items.filter(func(it: Dictionary) -> bool:
-		return not _used.has(it["id"]) and (role == "" or it["role"] == role))
+## `level` impose la difficulté visée (montée en puissance du boss) au lieu du
+## niveau adaptatif. Rôle « enigme » : items de l'énigme du donjon, dans l'ordre
+## du paquet (difficulté croissante).
+func next_item(role := "", level := 0) -> Dictionary:
+	var all_of_role: Array = Session.items.filter(func(it: Dictionary) -> bool:
+		return role == "" or it["role"] == role)
+	var pool: Array = all_of_role.filter(func(it: Dictionary) -> bool: return not _used.has(it["id"]))
 	if pool.is_empty():
-		_used.clear()  # paquet épuisé : on recommence (les items sont nombreux et variés)
-		pool = Session.items.filter(func(it: Dictionary) -> bool: return role == "" or it["role"] == role)
+		# Paquet épuisé pour ce rôle : on recommence (les items sont nombreux et variés).
+		for it in all_of_role:
+			_used.erase(it["id"])
+		pool = all_of_role
 	if pool.is_empty():
 		return {}
+	if role == "enigme":
+		return _take(pool[0])
 	# Une notion ratée revient, sous une autre forme, quand son tour arrive.
 	for entry in _retry:
 		if entry.due_in <= 0:
 			var again := pool.filter(func(it: Dictionary) -> bool: return entry.notion in it["notions"])
 			if not again.is_empty():
 				_retry.erase(entry)
-				return _take(_closest(again, level_for(role)))
-	return _take(_closest(pool, level_for(role) if role != "" else 1))
+				return _take(_closest(again, level if level > 0 else level_for(role)))
+	if level <= 0:
+		level = level_for(role) if role != "" else 1
+	return _take(_closest(pool, level))
 
 
 ## Valide la réponse, ajuste la difficulté et enregistre la tentative.
 ## Renvoie {correct, speed_ratio (temps / temps cible), reward_factor, explanation}.
-func submit(item: Dictionary, user_input: Variant, time_ms: int, hint_used: bool) -> Dictionary:
+func submit(item: Dictionary, user_input: Variant, time_ms: int, hint_used: bool, game_mode := "combat") -> Dictionary:
 	var correct := AnswerChecker.check(item["answer"], user_input)
 	var role: String = item["role"]
 	var target := maxf(1.0, float(item.get("time_target_ms", 20000)))
@@ -73,16 +83,19 @@ func submit(item: Dictionary, user_input: Variant, time_ms: int, hint_used: bool
 	for entry in _retry:
 		entry.due_in -= 1
 
+	var adaptive := _level.has(role)  # les énigmes ont leur propre progression
 	if correct:
 		correct_count += 1
-		_streak[role] += 1
-		if _streak[role] >= 2 and int(item["difficulty"]) >= _level[role]:
-			_level[role] = mini(5, _level[role] + 1)
-			_streak[role] = 0
+		if adaptive:
+			_streak[role] += 1
+			if _streak[role] >= 2 and int(item["difficulty"]) >= _level[role]:
+				_level[role] = mini(5, _level[role] + 1)
+				_streak[role] = 0
 		_rush_streak = 0
 	else:
-		_streak[role] = 0
-		_level[role] = maxi(1, _level[role] - 1)
+		if adaptive:
+			_streak[role] = 0
+			_level[role] = maxi(1, _level[role] - 1)
 		for notion in item["notions"]:
 			_retry.append({"notion": notion, "due_in": RETRY_AFTER})
 		_rush_streak = _rush_streak + 1 if speed_ratio < RUSH_RATIO else 0
@@ -95,7 +108,7 @@ func submit(item: Dictionary, user_input: Variant, time_ms: int, hint_used: bool
 		reward_factor = 0.5
 		_penalty_left -= 1
 
-	Session.record_attempt(item, correct, time_ms, hint_used)
+	Session.record_attempt(item, correct, time_ms, hint_used, game_mode)
 	return {
 		"correct": correct,
 		"speed_ratio": speed_ratio,

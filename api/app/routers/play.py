@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import random
 import uuid
 from datetime import UTC, datetime, timedelta
@@ -16,8 +17,9 @@ from app.auth import CurrentProfile, create_token, verify_pin
 from app.config import get_settings
 from app.db import get_db
 from app.engine import tracking
+from app.engine.generators import REGISTRY
 from app.errors import ApiError
-from app.models import Attempt, GameSession, Profile
+from app.models import Attempt, Chapter, GameSession, Profile
 
 router = APIRouter(prefix="/play", tags=["play"])
 Db = Annotated[AsyncSession, Depends(get_db)]
@@ -43,6 +45,18 @@ class LoginOut(BaseModel):
     token: str
     expires_at: datetime
     profile: ProfileOut
+
+
+class EnigmaIn(BaseModel):
+    generator: str = Field(max_length=80)
+    count: int = Field(default=3, ge=1, le=12)
+
+
+class SessionStartIn(BaseModel):
+    """Paramètres d'un donjon (tous facultatifs : l'arène s'en passe)."""
+
+    focus_chapter: str | None = Field(default=None, max_length=80)
+    enigma: EnigmaIn | None = None
 
 
 class SessionStartOut(BaseModel):
@@ -75,6 +89,22 @@ class AttemptsIn(BaseModel):
 class AttemptsOut(BaseModel):
     accepted: int
     duplicates: int
+
+
+class SaveIn(BaseModel):
+    base_revision: int = Field(ge=0)
+    schema_version: int = Field(ge=1, le=1000)
+    data: dict[str, Any]
+
+
+class SaveOut(BaseModel):
+    revision: int
+    schema_version: int | None = None
+    data: dict[str, Any] | None = None
+    saved_at: datetime | None = None
+
+
+MAX_SAVE_BYTES = 64 * 1024
 
 
 class SessionEndIn(BaseModel):
@@ -133,11 +163,24 @@ async def login(body: LoginIn, db: Db) -> LoginOut:
 
 
 @router.post("/session/start", response_model=SessionStartOut)
-async def start_session(profile: CurrentProfile, db: Db) -> SessionStartOut:
+async def start_session(
+    profile: CurrentProfile, db: Db, body: SessionStartIn | None = None
+) -> SessionStartOut:
+    body = body or SessionStartIn()
+    enigma = None
+    if body.enigma is not None:
+        generator = REGISTRY.get(body.enigma.generator)
+        if generator is None or generator.level != profile.level:
+            raise ApiError(422, "unknown_generator", "Énigme inconnue pour ce niveau.")
+        enigma = (generator, body.enigma.count)
+    if body.focus_chapter is not None:
+        chapter = await db.scalar(select(Chapter).where(Chapter.code == body.focus_chapter))
+        if chapter is None or chapter.level != profile.level:
+            raise ApiError(422, "unknown_chapter", "Chapitre inconnu pour ce niveau.")
     session = GameSession(id=str(uuid.uuid4()), profile_id=profile.id)
     db.add(session)
     await db.commit()
-    pack = await tracking.build_pack(db, profile, random.Random())
+    pack = await tracking.build_pack(db, profile, random.Random(), body.focus_chapter, enigma)
     return SessionStartOut(
         session_id=session.id,
         items=pack["items"],
@@ -199,6 +242,41 @@ async def post_attempts(body: AttemptsIn, profile: CurrentProfile, db: Db) -> At
 async def get_progress(profile: CurrentProfile, db: Db) -> dict[str, Any]:
     """Maîtrise par notion, groupée par chapitre (étoiles d'Archives)."""
     return {"chapters": await tracking.progress(db, profile)}
+
+
+@router.get("/save", response_model=SaveOut)
+async def get_save(profile: CurrentProfile, db: Db) -> SaveOut:
+    current = await tracking.latest_save(db, profile.id)
+    return SaveOut(revision=0) if current is None else _save_out(current)
+
+
+@router.put("/save", response_model=SaveOut)
+async def put_save(body: SaveIn, profile: CurrentProfile, db: Db) -> SaveOut:
+    """Sauvegarde versionnée : `base_revision` = révision sur laquelle s'appuie le client.
+    Conflit (un autre appareil a sauvegardé une partie plus avancée) : 409, avec la
+    sauvegarde du serveur dans `details.current`, que le client adopte."""
+    if len(json.dumps(body.data)) > MAX_SAVE_BYTES:
+        raise ApiError(413, "save_too_large", "Sauvegarde trop volumineuse.")
+    accepted, saved = await tracking.store_save(
+        db, profile.id, body.base_revision, body.schema_version, body.data
+    )
+    if not accepted:
+        raise ApiError(
+            409,
+            "save_conflict",
+            "Une partie plus avancée existe sur un autre appareil.",
+            current=_save_out(saved).model_dump(mode="json"),
+        )
+    return _save_out(saved)
+
+
+def _save_out(saved: Any) -> SaveOut:
+    return SaveOut(
+        revision=saved.revision,
+        schema_version=saved.schema_version,
+        data=saved.data,
+        saved_at=saved.saved_at,
+    )
 
 
 @router.post("/session/end")

@@ -68,6 +68,19 @@ func play(candidates: Array, speed := 1.0) -> float:
 	return 0.0
 
 
+## Animation en boucle (course, marche) ; ne relance pas si elle tourne déjà.
+func loop(anim_name: String, speed := 1.0) -> void:
+	if _anim == null or not _anim.has_animation(anim_name):
+		return
+	_anim.get_animation(anim_name).loop_mode = Animation.LOOP_LINEAR
+	if _anim.current_animation != anim_name:
+		_anim.play(anim_name, 0.15, speed)
+
+
+func is_playing(anim_name: String) -> bool:
+	return _anim != null and _anim.current_animation == anim_name
+
+
 func idle() -> void:
 	if _anim and _anim.has_animation(idle_animation):
 		_anim.play(idle_animation, 0.2)

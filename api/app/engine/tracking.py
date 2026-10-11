@@ -14,9 +14,18 @@ from sqlalchemy import select as sql_select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.engine import mastery, selector, session_pack
-from app.engine.generators import playable_notions
+from app.engine.generators import Generator, playable_notions
 from app.engine.scheduler import LeitnerScheduler, Scheduler
-from app.models import Attempt, Chapter, ChapterStatus, Notion, NotionState, Profile, Subject
+from app.models import (
+    Attempt,
+    Chapter,
+    ChapterStatus,
+    Notion,
+    NotionState,
+    Profile,
+    SaveRevision,
+    Subject,
+)
 
 DEFAULT_TIME_TARGET_MS = 20_000
 _scheduler: Scheduler = LeitnerScheduler()
@@ -84,7 +93,30 @@ async def _level_notions(db: AsyncSession, level: str) -> list[tuple[Notion, Cha
 # --- Paquet de session ------------------------------------------------------------
 
 
-async def build_pack(db: AsyncSession, profile: Profile, rng: random.Random) -> dict[str, Any]:
+async def build_pack(
+    db: AsyncSession,
+    profile: Profile,
+    rng: random.Random,
+    focus_chapter: str | None = None,
+    enigma: tuple[Generator, int] | None = None,
+) -> dict[str, Any]:
+    """Paquet de session. `focus_chapter` : chapitre d'un donjon, qui fournit alors
+    toutes les questions « chapitre » (au lieu des chapitres en cours). `enigma` :
+    (générateur, nombre) d'items réservés à l'énigme du donjon."""
+    pack = await _combat_pack(db, profile, rng, focus_chapter)
+    if enigma is not None:
+        generator, count = enigma
+        notion = await db.scalar(sql_select(Notion).where(Notion.code == generator.notion))
+        state = (await _states(db, profile.id)).get(notion.id) if notion else None
+        pack["items"] += session_pack.enigma_items(
+            generator, state.mastery if state else 0.0, count, rng, pack["formulas"]
+        )
+    return pack
+
+
+async def _combat_pack(
+    db: AsyncSession, profile: Profile, rng: random.Random, focus_chapter: str | None
+) -> dict[str, Any]:
     playable = playable_notions()
     rows = [(n, c) for n, c in await _level_notions(db, profile.level) if n.code in playable]
     if not rows:  # programme pas encore chargé : paquet sans historique
@@ -108,6 +140,8 @@ async def build_pack(db: AsyncSession, profile: Profile, rng: random.Random) -> 
             .limit(20)
         )
     )
+    if focus_chapter and any(c.code == focus_chapter for _, c in rows):
+        statuses = {focus_chapter: "en_cours"}  # donjon : son chapitre seul
     infos = [selector.NotionInfo(n.code, c.code, n.is_automatism) for n, c in rows]
     progress = {
         n.code: selector.NotionProgress(st.mastery, st.seen, _aware(st.due_at))
@@ -234,3 +268,48 @@ def _aware(value: datetime | None) -> datetime | None:
     if value is not None and value.tzinfo is None:
         return value.replace(tzinfo=UTC)
     return value
+
+
+# --- Sauvegarde de partie --------------------------------------------------------------
+
+KEPT_REVISIONS = 20
+
+
+async def latest_save(db: AsyncSession, profile_id: int) -> SaveRevision | None:
+    return await db.scalar(
+        sql_select(SaveRevision)
+        .where(SaveRevision.profile_id == profile_id)
+        .order_by(SaveRevision.revision.desc())
+        .limit(1)
+    )
+
+
+async def store_save(
+    db: AsyncSession, profile_id: int, base_revision: int, schema_version: int, data: dict
+) -> tuple[bool, SaveRevision | None]:
+    """Enregistre une sauvegarde. Acceptée si elle part de la dernière révision, ou si
+    elle est plus avancée (XP) que celle du serveur : la progression la plus avancée
+    gagne. Sinon (un autre appareil a sauvegardé plus loin) : refusée, et la version
+    du serveur est renvoyée."""
+    current = await latest_save(db, profile_id)
+    progress = max(0, int(data.get("xp", 0) or 0))
+    if current is not None and base_revision != current.revision and progress <= current.progress:
+        return False, current
+    revision = (current.revision if current else 0) + 1
+    saved = SaveRevision(
+        profile_id=profile_id,
+        revision=revision,
+        schema_version=schema_version,
+        progress=progress,
+        data=data,
+        saved_at=datetime.now(UTC),
+    )
+    db.add(saved)
+    await db.execute(
+        delete(SaveRevision).where(
+            SaveRevision.profile_id == profile_id,
+            SaveRevision.revision <= revision - KEPT_REVISIONS,
+        )
+    )
+    await db.commit()
+    return True, saved

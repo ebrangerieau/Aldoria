@@ -64,8 +64,9 @@ func _build_returning_player(box: VBoxContainer) -> void:
 	box.add_child(buttons)
 
 
-## Développement, PC uniquement : `-- --autologin=<id profil> --pin=<code>`.
-## Jamais sur le web (le code apparaîtrait dans l'URL).
+## Développement, PC uniquement : `-- --autologin=<id profil> --pin=<code>`
+## (puis `--goto=donjon|arene|archives`, voir le camp). Jamais sur le web (le code
+## apparaîtrait dans l'URL).
 func _dev_autologin() -> void:
 	var profile_id := Quality.option("autologin")
 	if profile_id == "" or OS.has_feature("web"):
@@ -73,9 +74,7 @@ func _dev_autologin() -> void:
 	_started = true
 	var res := await Session.login(int(profile_id), Quality.option("pin"))
 	if res.ok:
-		res = await Session.start()
-	if res.ok:
-		get_tree().change_scene_to_file("res://scenes/combat/combat.tscn")
+		get_tree().change_scene_to_file("res://scenes/hub/hub.tscn")
 	else:
 		_hint.text = "Connexion auto impossible : %s" % res.error.get("message", "")
 		printerr("[Aldoria/dev] autologin : ", res.error)
@@ -114,12 +113,4 @@ func _continue() -> void:
 		return
 	_started = true
 	_hint.text = "C'est reparti !"
-	var res := await Session.start()
-	if res.ok:
-		get_tree().change_scene_to_file("res://scenes/combat/combat.tscn")
-	elif res.status == 401:
-		await Session.logout()  # jeton expiré : on redemande le code
-		get_tree().change_scene_to_file("res://scenes/profile/profile_select.tscn")
-	else:
-		_hint.text = "%s Réessaie dans un instant." % res.error.get("message", "")
-		_started = false
+	get_tree().change_scene_to_file("res://scenes/hub/hub.tscn")

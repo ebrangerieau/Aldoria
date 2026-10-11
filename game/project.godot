@@ -19,6 +19,7 @@ Quality="*res://autoload/quality.gd"
 PerfOverlay="*res://ui/debug/perf_overlay.tscn"
 ApiClient="*res://autoload/api_client.gd"
 Session="*res://autoload/session.gd"
+SaveManager="*res://autoload/save_manager.gd"
 QuestionService="*res://autoload/question_service.gd"
 Sfx="*res://autoload/sfx.gd"
 

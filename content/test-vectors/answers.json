@@ -424,6 +424,122 @@
       },
       "input": "(x+3)²",
       "expected": true
+    },
+    {
+      "note": "vecteur juste",
+      "answer": {
+        "kind": "vector",
+        "value": [
+          "3",
+          "-2"
+        ]
+      },
+      "input": [
+        "3",
+        "-2"
+      ],
+      "expected": true
+    },
+    {
+      "note": "vecteur juste, moins typographique et entiers",
+      "answer": {
+        "kind": "vector",
+        "value": [
+          "3",
+          "-2"
+        ]
+      },
+      "input": [
+        3,
+        "−2"
+      ],
+      "expected": true
+    },
+    {
+      "note": "vecteur : composantes inversées",
+      "answer": {
+        "kind": "vector",
+        "value": [
+          "3",
+          "-2"
+        ]
+      },
+      "input": [
+        "-2",
+        "3"
+      ],
+      "expected": false
+    },
+    {
+      "note": "vecteur : signe oublié",
+      "answer": {
+        "kind": "vector",
+        "value": [
+          "3",
+          "-2"
+        ]
+      },
+      "input": [
+        "3",
+        "2"
+      ],
+      "expected": false
+    },
+    {
+      "note": "vecteur : composante vide",
+      "answer": {
+        "kind": "vector",
+        "value": [
+          "3",
+          "-2"
+        ]
+      },
+      "input": [
+        "3",
+        ""
+      ],
+      "expected": false
+    },
+    {
+      "note": "vecteur : une seule composante",
+      "answer": {
+        "kind": "vector",
+        "value": [
+          "3",
+          "-2"
+        ]
+      },
+      "input": [
+        "3"
+      ],
+      "expected": false
+    },
+    {
+      "note": "vecteur : saisie non liste",
+      "answer": {
+        "kind": "vector",
+        "value": [
+          "3",
+          "-2"
+        ]
+      },
+      "input": "3;-2",
+      "expected": false
+    },
+    {
+      "note": "vecteur : fraction équivalente",
+      "answer": {
+        "kind": "vector",
+        "value": [
+          "0.5",
+          "4"
+        ]
+      },
+      "input": [
+        "1/2",
+        "4"
+      ],
+      "expected": true
     }
   ]
 }

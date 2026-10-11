@@ -14,6 +14,7 @@ func after_each() -> void:
 	ApiClient.token = _saved.token
 	Session.profile = _saved.profile
 	Session._queue = _saved.queue
+	Session._save_json(Session.QUEUE_FILE, Session._queue)  # ne pas laisser de fausses réponses
 
 
 func _item() -> Dictionary:

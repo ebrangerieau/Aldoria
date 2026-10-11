@@ -33,12 +33,19 @@ class ExpressionAnswer(BaseModel):
     form: Literal["expanded", "factored"] | None = None
 
 
+class VectorAnswer(BaseModel):
+    """Coordonnées (x ; y) d'un vecteur, chaque composante comparée comme un nombre."""
+
+    kind: Literal["vector"] = "vector"
+    value: list[str] = Field(min_length=2, max_length=2)
+
+
 Answer = Annotated[
-    ChoiceAnswer | NumberAnswer | FractionAnswer | ExpressionAnswer,
+    ChoiceAnswer | NumberAnswer | FractionAnswer | ExpressionAnswer | VectorAnswer,
     Field(discriminator="kind"),
 ]
 
-ItemType = Literal["mcq", "numeric", "expression"]
+ItemType = Literal["mcq", "numeric", "expression", "vector"]
 # Rôle dans le combat : « automatisme » = Frappe (rapide), « chapitre » = Sort (puissant).
 Role = Literal["automatisme", "chapitre"]
 
@@ -57,6 +64,8 @@ class Item(BaseModel):
     explanation: str
     time_target_ms: int
     game_modes: list[str] = ["combat"]
+    # Données d'illustration pour le client (plateaux d'une balance, points d'un repère…).
+    visual: dict[str, Any] | None = None
     generator: str | None = None
     seed: int | None = None
     # Données internes du générateur (valeurs tirées), utiles aux tests ; ignorées par le client.

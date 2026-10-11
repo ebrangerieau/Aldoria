@@ -9,6 +9,7 @@ Types de réponse attendue (`answer.kind`) :
 - `number`     : {"value": "2.5", "tolerance": 0.001}  (accepte aussi « 5/2 »)
 - `fraction`   : {"value": "11/12", "accept_equivalent": true, "require_irreducible": false}
 - `expression` : {"value": "x^2+6x+9", "variable": "x", "form": "expanded" | null}
+- `vector`     : {"value": ["3", "-2"]}  (saisie : liste de 2 nombres)
 """
 
 from __future__ import annotations
@@ -69,7 +70,19 @@ def check(answer: dict[str, Any], user_input: Any) -> bool:
         return _check_fraction(answer, str(user_input))
     if kind == "expression":
         return _check_expression(answer, str(user_input))
+    if kind == "vector":
+        return _check_vector(answer, user_input)
     raise ValueError(f"type de réponse inconnu : {kind}")
+
+
+def _check_vector(answer: dict[str, Any], user_input: Any) -> bool:
+    if not isinstance(user_input, list | tuple) or len(user_input) != 2:
+        return False
+    for got, expected in zip(user_input, answer["value"], strict=True):
+        parsed, wanted = parse_rational(str(got)), parse_rational(str(expected))
+        if parsed is None or wanted is None or parsed[0] != wanted[0]:
+            return False
+    return True
 
 
 def _check_fraction(answer: dict[str, Any], text: str) -> bool:
