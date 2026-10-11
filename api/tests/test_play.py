@@ -71,7 +71,8 @@ async def test_session_pack_matches_level(client, login):
         # Chaque réponse attendue est acceptée par le validateur.
         expected = item["answer"]
         if expected["kind"] == "true_false":
-            assert answers.check(expected, {"value": expected["value"], "reason": expected["reason"]})
+            verdict = {"value": expected["value"], "reason": expected["reason"]}
+            assert answers.check(expected, verdict)
         elif expected["kind"] != "choice":
             assert answers.check(expected, expected["value"])
 
