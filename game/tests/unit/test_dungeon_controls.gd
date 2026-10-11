@@ -56,3 +56,31 @@ func test_vector_widget_emits_both_coordinates() -> void:
 	widget._press("OK")
 	assert_signal_emitted_with_parameters(widget, "submitted", [["3", "−2"]])
 	assert_true(AnswerChecker.check({"kind": "vector", "value": ["3", "-2"]}, ["3", "−2"]))
+
+
+func test_touch_stick_tap_and_drag() -> void:
+	var stick := TouchStick.new()
+	stick.setup(Color.WHITE)
+	add_child_autofree(stick)
+	watch_signals(stick)
+	stick._gui_input(_mouse_button(Vector2(400, 300), true))
+	stick._gui_input(_mouse_button(Vector2(402, 301), false))
+	assert_signal_emitted_with_parameters(stick, "tapped", [Vector2(402, 301)])
+
+	stick._gui_input(_mouse_button(Vector2(400, 300), true))
+	var motion := InputEventMouseMotion.new()
+	motion.position = Vector2(490, 300)
+	stick._gui_input(motion)
+	assert_almost_eq(stick.vector.x, 1.0, 0.01, "glisser vers la droite")
+	assert_almost_eq(stick.vector.y, 0.0, 0.01)
+	stick._gui_input(_mouse_button(Vector2(490, 300), false))
+	assert_eq(stick.vector, Vector2.ZERO, "relâché : le héros s'arrête")
+	assert_signal_emit_count(stick, "tapped", 1, "un glissé n'est pas un toucher")
+
+
+func _mouse_button(at: Vector2, pressed: bool) -> InputEventMouseButton:
+	var event := InputEventMouseButton.new()
+	event.button_index = MOUSE_BUTTON_LEFT
+	event.pressed = pressed
+	event.position = at
+	return event
