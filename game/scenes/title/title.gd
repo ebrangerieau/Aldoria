@@ -1,7 +1,9 @@
 extends Control
 ## Écran titre. La première interaction débloque le son (les navigateurs bloquent
-## la lecture automatique) puis oriente : profil déjà connecté → combat ;
-## sinon → choix du profil. `?scene=calibration` ouvre la scène de mesure.
+## la lecture automatique). Sans joueur connecté : toucher l'écran → choix du profil.
+## Joueur déjà connecté (appareil partagé) : « Continuer avec X » ou « Changer de
+## joueur » ; toucher le fond ne lance rien, pour qu'un frère n'entre pas dans la
+## partie de l'autre. `?scene=calibration` ouvre la scène de mesure.
 
 var _wt := WorldTheme.jules()
 var _hint: Label
@@ -35,10 +37,31 @@ func _ready() -> void:
 	_hint = UiKit.label("Touche l'écran pour commencer", 28, Color.WHITE)
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_hint)
+	if Session.is_logged_in():
+		_build_returning_player(box)
+	else:
+		var pulse := create_tween().set_loops()
+		pulse.tween_property(_hint, "modulate:a", 0.35, 0.9)
+		pulse.tween_property(_hint, "modulate:a", 1.0, 0.9)
 	_dev_autologin()
-	var pulse := create_tween().set_loops()
-	pulse.tween_property(_hint, "modulate:a", 0.35, 0.9)
-	pulse.tween_property(_hint, "modulate:a", 1.0, 0.9)
+
+
+func _build_returning_player(box: VBoxContainer) -> void:
+	var player_name: String = Session.profile.get("name", "")
+	_hint.text = "Content de te revoir, %s !" % player_name
+	var buttons := HBoxContainer.new()
+	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
+	buttons.add_theme_constant_override("separation", 20)
+	var resume := UiKit.button("Continuer avec %s" % player_name, 80.0)
+	resume.custom_minimum_size.x = 360
+	resume.pressed.connect(_continue)
+	buttons.add_child(resume)
+	var switch := UiKit.button("Changer de joueur", 80.0)
+	switch.custom_minimum_size.x = 300
+	UiKit.style_secondary(switch, _wt)
+	switch.pressed.connect(_switch_player)
+	buttons.add_child(switch)
+	box.add_child(buttons)
 
 
 ## Développement, PC uniquement : `-- --autologin=<id profil> --pin=<code>`.
@@ -60,29 +83,43 @@ func _dev_autologin() -> void:
 
 func _gui_input(event: InputEvent) -> void:
 	if (event is InputEventMouseButton or event is InputEventScreenTouch) and event.is_pressed():
-		_start()
+		_choose_player()
 
 
 func _unhandled_key_input(event: InputEvent) -> void:
 	if event.is_pressed():
-		_start()
+		_choose_player()
 
 
-func _start() -> void:
-	if _started:
+## Sans joueur connecté : toucher l'écran mène au choix du profil.
+func _choose_player() -> void:
+	if _started or Session.is_logged_in():
 		return
 	_started = true
 	Sfx.play("click")
-	if not Session.is_logged_in():
-		get_tree().change_scene_to_file("res://scenes/profile/profile_select.tscn")
+	get_tree().change_scene_to_file("res://scenes/profile/profile_select.tscn")
+
+
+func _switch_player() -> void:
+	if _started:
 		return
-	_hint.text = "Bon retour, %s !" % Session.profile.get("name", "")
+	_started = true
+	_hint.text = "À tout bientôt, %s !" % Session.profile.get("name", "")
+	await Session.logout()
+	get_tree().change_scene_to_file("res://scenes/profile/profile_select.tscn")
+
+
+func _continue() -> void:
+	if _started:
+		return
+	_started = true
+	_hint.text = "C'est reparti !"
 	var res := await Session.start()
 	if res.ok:
 		get_tree().change_scene_to_file("res://scenes/combat/combat.tscn")
 	elif res.status == 401:
-		Session.logout()  # jeton expiré : on redemande le code
+		await Session.logout()  # jeton expiré : on redemande le code
 		get_tree().change_scene_to_file("res://scenes/profile/profile_select.tscn")
 	else:
-		_hint.text = "%s Touche pour réessayer." % res.error.get("message", "")
+		_hint.text = "%s Réessaie dans un instant." % res.error.get("message", "")
 		_started = false

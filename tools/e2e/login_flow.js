@@ -1,4 +1,5 @@
-// Test de bout en bout du jeu web : titre → profil → PIN → combat → question.
+// Test de bout en bout du jeu web : titre → profil → PIN → combat → question
+// → Quitter → titre (joueur connecté) → Changer de joueur → choix des profils.
 // Pilote Edge (ou Chrome) en headless via playwright-core, sur le banc local
 // (tools/e2e_web.ps1) : jamais sur la production avec les vrais codes des enfants.
 //
@@ -40,10 +41,18 @@ const { chromium } = require('playwright-core');
   await page.mouse.click(640, 737);  // action « Sort »
   await page.waitForTimeout(2000);
   await shot('3_question');
+  await page.mouse.click(1210, 63);  // « Quitter » → écran titre, joueur toujours connecté
+  await page.waitForTimeout(3000);
+  await shot('4_titre_retour');
+  await page.mouse.click(830, 503);  // « Changer de joueur »
+  await page.waitForTimeout(2500);
+  await shot('5_changer_joueur');
 
   console.log('Appels API :\n  ' + api.join('\n  '));
   const started = api.some((line) => line.startsWith('200 POST /api/v1/play/session/start'));
   if (!started) problems.push('session/start jamais réussi');
+  const profileLoads = api.filter((line) => line === '200 GET /api/v1/play/profiles').length;
+  if (profileLoads < 2) problems.push('« Changer de joueur » n\'a pas rouvert le choix des profils');
   if (problems.length) {
     console.log('ÉCHEC :\n  ' + problems.join('\n  '));
     process.exitCode = 1;

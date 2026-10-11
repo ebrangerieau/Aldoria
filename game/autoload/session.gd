@@ -62,11 +62,16 @@ func login(profile_id: int, pin: String) -> Dictionary:
 	return res
 
 
+## Changement de joueur. Les réponses en attente restent dans la file, rattachées
+## à leur profil : elles partiront quand ce joueur se reconnectera.
 func logout() -> void:
+	await flush()
 	ApiClient.token = ""
 	profile = {}
 	session_id = ""
 	DirAccess.remove_absolute(AUTH_FILE)
+	# Le paquet hors connexion appartient au joueur précédent (autre niveau).
+	DirAccess.remove_absolute(PACK_FILE)
 
 
 ## Ouvre une session et charge le paquet de questions. Sans réseau, reprend le
@@ -98,6 +103,7 @@ func record_attempt(item: Dictionary, correct: bool, time_ms: int, hint_used: bo
 	if session_id != "":
 		session_ref = session_id
 	_queue.append({
+		"profile_id": _profile_id(),  # local : retiré avant l'envoi
 		"id": uuid_v4(),
 		"session_id": session_ref,
 		"item_id": item["id"],
@@ -111,21 +117,26 @@ func record_attempt(item: Dictionary, correct: bool, time_ms: int, hint_used: bo
 		"answered_at": Time.get_datetime_string_from_system(true) + "Z",
 	})
 	_save_json(QUEUE_FILE, _queue)
-	queue_changed.emit(_queue.size())
+	queue_changed.emit(pending_count())
 	flush()
 
 
+## Réponses en attente d'envoi pour le joueur connecté.
 func pending_count() -> int:
-	return _queue.size()
+	return _own_queue().size()
 
 
 func flush() -> void:
-	if _flushing or _queue.is_empty() or ApiClient.token == "":
+	if _flushing or ApiClient.token == "" or _own_queue().is_empty():
 		return
 	_flushing = true
-	while not _queue.is_empty():
-		var batch := _queue.slice(0, BATCH_SIZE)
-		var res := await ApiClient.post_json("/play/attempts", {"attempts": batch})
+	while not _own_queue().is_empty():
+		var batch := _own_queue().slice(0, BATCH_SIZE)
+		var payload := batch.map(func(a: Dictionary) -> Dictionary:
+			var copy := a.duplicate()
+			copy.erase("profile_id")
+			return copy)
+		var res := await ApiClient.post_json("/play/attempts", {"attempts": payload})
 		if not res.ok:
 			break  # nouvel essai au prochain passage du minuteur
 		var sent := {}
@@ -133,8 +144,18 @@ func flush() -> void:
 			sent[a["id"]] = true
 		_queue = _queue.filter(func(a: Dictionary) -> bool: return not sent.has(a["id"]))
 		_save_json(QUEUE_FILE, _queue)
-		queue_changed.emit(_queue.size())
+		queue_changed.emit(pending_count())
 	_flushing = false
+
+
+func _profile_id() -> int:
+	return int(profile.get("id", 0))
+
+
+## File du joueur connecté (les réponses d'avant ce marquage lui sont rattachées).
+func _own_queue() -> Array:
+	var me := _profile_id()
+	return _queue.filter(func(a: Dictionary) -> bool: return int(a.get("profile_id", me)) == me)
 
 
 ## Texture d'une formule (SVG blanc, à teinter avec `modulate`).
