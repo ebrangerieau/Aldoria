@@ -1,0 +1,8 @@
+{
+  "name": "aldoria-e2e",
+  "private": true,
+  "description": "Test de bout en bout du jeu web (voir tools/e2e_web.ps1)",
+  "dependencies": {
+    "playwright-core": "1.56.1"
+  }
+}

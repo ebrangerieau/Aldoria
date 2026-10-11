@@ -14,6 +14,7 @@ boot_splash/show_image=false
 
 [autoload]
 
+Fonts="*res://autoload/fonts.gd"
 Quality="*res://autoload/quality.gd"
 PerfOverlay="*res://ui/debug/perf_overlay.tscn"
 ApiClient="*res://autoload/api_client.gd"

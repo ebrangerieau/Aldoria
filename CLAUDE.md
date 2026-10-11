@@ -35,6 +35,11 @@ Jeu sur PC contre l'API locale (Docker, port 8098) — options réservées au PC
 `godot --path game -- --autologin=<id> --pin=<code> [--autoaction=chapitre] [--screenshot=x.png --shot-delay=4]`.
 Profils locaux : `docker exec <conteneur api> python -m app.cli create --name … --level 6e|2nde --avatar … --pin …`.
 
+Test de bout en bout **dans le navigateur** (à lancer avant tout déploiement touchant le réseau,
+l'interface ou les polices) : `powershell -File tools/e2e_web.ps1` — export web, nginx + API + PostgreSQL
+locaux derrière un proxy de même origine, parcours titre → PIN → combat dans Edge headless.
+Le web diffère du PC : décompression gzip faite par le navigateur, pas de polices système.
+
 Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-ci:4.7.2`, puis
 `python tools/postprocess_web.py build/web`.
 

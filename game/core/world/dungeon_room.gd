@@ -75,13 +75,19 @@ func adapt_character(character: Node3D) -> void:
 		MobileLighting.apply_vertex_shading(character)
 
 
+## Avec les vraies lumières (profil haut), les torches et l'éclairage par pixel
+## ajoutent beaucoup de lumière : on atténue soleil et ambiance pour ne pas surexposer.
+const REAL_LIGHTS_DIMMING := 0.75
+
+
 func _build_environment() -> void:
+	var dimming := REAL_LIGHTS_DIMMING if built_settings.lights == "real" else 1.0
 	var env := Environment.new()
 	env.background_mode = Environment.BG_COLOR
 	env.background_color = background
 	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
 	env.ambient_light_color = ambient
-	env.ambient_light_energy = ambient_energy
+	env.ambient_light_energy = ambient_energy * dimming
 	env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
 	var world_env := WorldEnvironment.new()
 	world_env.environment = env
@@ -89,7 +95,7 @@ func _build_environment() -> void:
 
 	sun = DirectionalLight3D.new()
 	sun.light_color = sun_color
-	sun.light_energy = sun_energy
+	sun.light_energy = sun_energy * dimming
 	sun.rotation_degrees = Vector3(-55, -35, 0)
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
 	sun.directional_shadow_max_distance = 90.0
@@ -155,7 +161,7 @@ func _add_torch(pos: Vector3) -> void:
 			var light := OmniLight3D.new()
 			light.position = pos
 			light.light_color = torch_color
-			light.light_energy = 2.0
+			light.light_energy = 1.3
 			light.omni_range = 7.0
 			add_child(light)
 

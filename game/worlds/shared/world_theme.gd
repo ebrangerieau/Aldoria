@@ -59,10 +59,10 @@ static func jules() -> WorldTheme:
 	t.bad = Color("#d9534f")
 	t.formula = Color("#3b2a1a")
 	t.background = Color("#2a2140")
-	t.ambient = Color("#c9b8ff")
-	t.ambient_energy = 0.85
+	t.ambient = Color("#a294c4")
+	t.ambient_energy = 0.7
 	t.sun_color = Color("#ffe2b0")
-	t.sun_energy = 1.25
+	t.sun_energy = 1.15
 	t.torch_color = Color(1.0, 0.68, 0.32)
 	t.retreat_text = "Ouf ! Tu reprends ton souffle près du feu de camp. Tes forces reviennent, rien n'est perdu."
 	t.victory_texts = ["Victoire !", "Bien joué !", "Bravo, Archiviste !", "Quelle puissance !"]
