@@ -77,11 +77,12 @@ func setup(question: Dictionary, title: String, wt: WorldTheme) -> void:
 	# Illustration : celles des énigmes (balance, repère), et partout la courbe d'une
 	# lecture graphique ou la droite graduée où lire un point.
 	var visual: Variant = question.get("visual")
-	if visual is Dictionary and question["type"] != "number_line" and (
-			question.get("role") == "enigme" or visual.get("kind") in ["graph", "number_line"]):
+	if visual is Dictionary and not question["type"] in ["number_line", "sign_table"] and (
+			question.get("role") == "enigme" or visual.get("kind") in ["graph", "number_line", "robot"]):
 		_visual = _make_visual(visual, wt)
 		if _visual:
-			box.add_child(_visual)
+			# La grille du robot va à droite : le programme à lire est déjà long à gauche.
+			(columns if visual.get("kind") == "robot" else box).add_child(_visual)
 
 	var widget: Control
 	if question["type"] == "number_line":
@@ -89,6 +90,17 @@ func setup(question: Dictionary, title: String, wt: WorldTheme) -> void:
 		line.setup(question.get("visual", {}), wt)
 		widget = line
 		_visual = line
+		box.add_child(widget)
+	elif question["type"] == "true_false":
+		var verdict := TrueFalseWidget.new()
+		verdict.setup(question["choices"], wt)
+		widget = verdict
+		box.add_child(widget)
+	elif question["type"] == "sign_table":
+		var table := SignTableWidget.new()
+		table.setup(question.get("visual", {}), wt)
+		widget = table
+		_visual = table
 		box.add_child(widget)
 	elif question["type"] == "order":
 		var order := OrderWidget.new()
@@ -156,6 +168,10 @@ static func _make_visual(visual: Dictionary, wt: WorldTheme) -> Control:
 			var line := NumberLineWidget.new()
 			line.setup(visual, wt, false)
 			return line
+		"robot":
+			var robot := RobotView.new()
+			robot.setup(visual, wt)
+			return robot
 	return null
 
 
@@ -195,6 +211,14 @@ static func expected_text(question: Dictionary) -> String:
 	var answer: Dictionary = question["answer"]
 	if answer["kind"] == "choice":
 		return UiKit.pretty_math(str(question["choices"][int(answer["index"])]))
+	if answer["kind"] == "true_false":
+		var reason: String = str(question["choices"][int(answer["reason"])])
+		return "%s, car %s" % ["Vrai" if answer["value"] else "Faux", UiKit.pretty_math(reason)]
+	if answer["kind"] == "signs":
+		var signs := PackedStringArray()
+		for sign in answer["value"]:
+			signs.append("−" if str(sign) == "-" else "+")
+		return " ".join(signs)
 	if answer["kind"] == "order":
 		var labels := PackedStringArray()
 		for i in answer["value"]:

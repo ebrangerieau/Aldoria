@@ -32,8 +32,10 @@ func _correct_input(item: Dictionary) -> Variant:
 	var answer: Dictionary = item["answer"]
 	if answer["kind"] == "choice":
 		return int(answer["index"])
-	if answer["kind"] in ["order", "vector"]:
+	if answer["kind"] in ["order", "vector", "signs"]:
 		return answer["value"]
+	if answer["kind"] == "true_false":
+		return {"value": answer["value"], "reason": answer["reason"]}
 	return str(answer["value"])
 
 
@@ -175,7 +177,9 @@ func test_keypad_builds_expression_from_keys() -> void:
 
 func _find_widget(panel: Node) -> Node:
 	for node in panel.find_children("*", "", true, false):
-		if node is McqWidget or node is KeypadWidget or node is OrderWidget or node is VectorWidget 				or (node is NumberLineWidget and node._interactive):
+		if node is McqWidget or node is KeypadWidget or node is OrderWidget or node is VectorWidget \
+				or node is TrueFalseWidget or node is SignTableWidget \
+				or (node is NumberLineWidget and node._interactive):
 			return node
 	return null
 
@@ -213,3 +217,31 @@ func test_order_widget_collects_taps_in_order() -> void:
 	order._submit()
 	assert_signal_emitted_with_parameters(order, "submitted", [[1, 0, 2]])
 	assert_true(AnswerChecker.check({"kind": "order", "value": [1, 0, 2]}, [1.0, 0.0, 2.0]))
+
+
+func test_true_false_needs_verdict_then_reason() -> void:
+	var widget := TrueFalseWidget.new()
+	widget.setup(["raison A", "raison B", "raison C"], WorldTheme.tom())
+	add_child_autofree(widget)
+	watch_signals(widget)
+	widget._choose_reason(1)  # pas encore de verdict : ignoré
+	assert_signal_not_emitted(widget, "submitted")
+	widget._choose_verdict(false)
+	widget._choose_reason(1)
+	assert_signal_emitted_with_parameters(widget, "submitted", [{"value": false, "reason": 1}])
+	assert_true(AnswerChecker.check({"kind": "true_false", "value": false, "reason": 1}, {"value": false, "reason": 1.0}))
+
+
+func test_sign_table_cycles_and_submits_row_by_row() -> void:
+	var table := SignTableWidget.new()
+	table.setup({"roots": ["−4"], "rows": ["2x + 8"]}, WorldTheme.tom())
+	add_child_autofree(table)
+	watch_signals(table)
+	table._cycle(0)  # « + »
+	table._cycle(0)  # « − »
+	table._submit()  # case de droite vide : rien
+	assert_signal_not_emitted(table, "submitted")
+	table._cycle(1)
+	table._submit()
+	assert_signal_emitted_with_parameters(table, "submitted", [["-", "+"]])
+	assert_true(AnswerChecker.check({"kind": "signs", "value": ["-", "+"]}, ["-", "+"]))

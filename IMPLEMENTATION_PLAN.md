@@ -206,8 +206,14 @@ Livrables du TRD §13 : une salle, un ennemi, 3 widgets, 4 générateurs, et les
 > l'abscisse d'un point), remettre dans l'ordre (touches successives, plus fiable qu'un glisser-déposer sur
 > tablette), courbe pour la lecture graphique. Nouveaux générateurs : droite graduée et ranger des décimaux
 > (Jules), ranger des réels et lecture graphique (Tom). Réponse de type `order` ajoutée aux vecteurs de test.
-> Reste au contenu : banque d'items relue par Eric ; vrai/faux justifié, relier (tableau de signes) et
-> séquences d'instructions (robot sur grille).
+> Derniers widgets du MVP (2026-10-11) : vrai/faux justifié (verdict puis justification : le hasard ne
+> suffit pas), tableau de signes (cases à toucher, en-têtes en intervalles), robot sur grille. Générateurs :
+> vocabulaire des angles, séquences et boucles du robot (Jules) ; implication, réciproque et contre-exemple,
+> tableau de signes d'un produit ou d'un quotient (Tom). Réponses `true_false` et `signs` dans les vecteurs
+> de test. Bilan : **25 générateurs pour Jules, 26 pour Tom** (hors énigme), 46 notions jouables sur 65.
+> Écart : « relier » (drag_match) n'a pas de widget générique ; son seul usage prévu, le tableau de signes,
+> a son widget dédié.
+> Reste au contenu : banque d'items relue par Eric (questions rédigées, hors générateurs).
 
 **Contenu**
 - **20 générateurs par niveau** (§4).

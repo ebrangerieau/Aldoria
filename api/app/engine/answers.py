@@ -11,6 +11,8 @@ Types de réponse attendue (`answer.kind`) :
 - `expression` : {"value": "x^2+6x+9", "variable": "x", "form": "expanded" | null}
 - `vector`     : {"value": ["3", "-2"]}  (saisie : liste de 2 nombres)
 - `order`      : {"value": [2, 0, 1]}  (saisie : indices des choix dans l'ordre donné)
+- `true_false` : {"value": false, "reason": 1}  (saisie : {"value": bool, "reason": indice})
+- `signs`      : {"value": ["+", "-", "+"]}  (saisie : liste de « + » / « - », ou « − »)
 """
 
 from __future__ import annotations
@@ -75,7 +77,28 @@ def check(answer: dict[str, Any], user_input: Any) -> bool:
         return _check_vector(answer, user_input)
     if kind == "order":
         return _check_order(answer, user_input)
+    if kind == "true_false":
+        return _check_true_false(answer, user_input)
+    if kind == "signs":
+        return _check_signs(answer, user_input)
     raise ValueError(f"type de réponse inconnu : {kind}")
+
+
+def _check_true_false(answer: dict[str, Any], user_input: Any) -> bool:
+    """Le verdict ET la justification doivent être justes (un « Faux » au hasard ne suffit pas)."""
+    if not isinstance(user_input, dict) or not isinstance(user_input.get("value"), bool):
+        return False
+    reason = user_input.get("reason")
+    if isinstance(reason, bool) or not isinstance(reason, int | float) or reason != int(reason):
+        return False
+    return user_input["value"] is answer["value"] and int(reason) == int(answer["reason"])
+
+
+def _check_signs(answer: dict[str, Any], user_input: Any) -> bool:
+    if not isinstance(user_input, list | tuple) or len(user_input) != len(answer["value"]):
+        return False
+    got = [str(v).strip().replace("−", "-") for v in user_input]
+    return got == list(answer["value"])
 
 
 def _check_order(answer: dict[str, Any], user_input: Any) -> bool:

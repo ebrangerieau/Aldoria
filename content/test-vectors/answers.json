@@ -652,6 +652,150 @@
       },
       "input": "6/4",
       "expected": true
+    },
+    {
+      "note": "vrai/faux : verdict et justification justes",
+      "answer": {
+        "kind": "true_false",
+        "value": false,
+        "reason": 1
+      },
+      "input": {
+        "value": false,
+        "reason": 1
+      },
+      "expected": true
+    },
+    {
+      "note": "vrai/faux : justification en flottant du JSON",
+      "answer": {
+        "kind": "true_false",
+        "value": false,
+        "reason": 1
+      },
+      "input": {
+        "value": false,
+        "reason": 1.0
+      },
+      "expected": true
+    },
+    {
+      "note": "vrai/faux : bon verdict, mauvaise justification",
+      "answer": {
+        "kind": "true_false",
+        "value": false,
+        "reason": 1
+      },
+      "input": {
+        "value": false,
+        "reason": 2
+      },
+      "expected": false
+    },
+    {
+      "note": "vrai/faux : mauvais verdict",
+      "answer": {
+        "kind": "true_false",
+        "value": false,
+        "reason": 1
+      },
+      "input": {
+        "value": true,
+        "reason": 1
+      },
+      "expected": false
+    },
+    {
+      "note": "vrai/faux : saisie incomplète",
+      "answer": {
+        "kind": "true_false",
+        "value": false,
+        "reason": 1
+      },
+      "input": {
+        "value": false
+      },
+      "expected": false
+    },
+    {
+      "note": "vrai/faux : verdict non booléen",
+      "answer": {
+        "kind": "true_false",
+        "value": false,
+        "reason": 1
+      },
+      "input": {
+        "value": 0,
+        "reason": 1
+      },
+      "expected": false
+    },
+    {
+      "note": "tableau de signes juste",
+      "answer": {
+        "kind": "signs",
+        "value": [
+          "+",
+          "-",
+          "+"
+        ]
+      },
+      "input": [
+        "+",
+        "-",
+        "+"
+      ],
+      "expected": true
+    },
+    {
+      "note": "tableau de signes, moins typographique",
+      "answer": {
+        "kind": "signs",
+        "value": [
+          "+",
+          "-",
+          "+"
+        ]
+      },
+      "input": [
+        "+",
+        "−",
+        "+"
+      ],
+      "expected": true
+    },
+    {
+      "note": "tableau de signes : une case fausse",
+      "answer": {
+        "kind": "signs",
+        "value": [
+          "+",
+          "-",
+          "+"
+        ]
+      },
+      "input": [
+        "+",
+        "+",
+        "+"
+      ],
+      "expected": false
+    },
+    {
+      "note": "tableau de signes incomplet",
+      "answer": {
+        "kind": "signs",
+        "value": [
+          "+",
+          "-",
+          "+"
+        ]
+      },
+      "input": [
+        "+",
+        "-"
+      ],
+      "expected": false
     }
   ]
 }

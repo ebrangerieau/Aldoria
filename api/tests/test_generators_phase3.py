@@ -470,3 +470,87 @@ def test_graph_reading():
             assert int(_choice(item)) == len(sols)
         else:
             assert _value(item) == (max(sols) if m["largest"] else min(sols)), item.id
+
+
+# --- Raisonnement --------------------------------------------------------------------------
+
+
+def test_robot_simulated_independently():
+    moves = {"N": (0, -1), "E": (1, 0), "S": (0, 1), "O": (-1, 0)}
+    right = {"N": "E", "E": "S", "S": "O", "O": "N"}
+    left = {v: k for k, v in right.items()}
+    for code in ("6e.algorithmique.sequences", "6e.algorithmique.boucles"):
+        for item in _items(code):
+            v, m = item.visual, item.meta
+            x, y = v["start"]
+            facing = v["facing"]
+            for _ in range(m["repeat"]):
+                for op, arg in m["program"]:
+                    if op == "avancer":
+                        for _ in range(arg):
+                            x, y = x + moves[facing][0], y + moves[facing][1]
+                            assert 0 <= x < v["size"] and 0 <= y < v["size"], item.id
+                    else:
+                        facing = right[facing] if op == "droite" else left[facing]
+            marks = v["marks"]
+            assert marks[_choice(item)] == [x, y], item.id
+            cells = [tuple(c) for c in marks.values()]
+            assert len(set(cells)) == len(cells) >= 3 and tuple(v["start"]) not in cells, item.id
+            assert all(0 <= cx < v["size"] and 0 <= cy < v["size"] for cx, cy in cells)
+            assert ("répéter" in item.prompt) == (code.endswith("boucles"))
+
+
+def test_sign_table():
+    for item in _items("2nde.equations.signe"):
+        factors = [(a, Fraction(r)) for a, r in item.meta["factors"]]
+        roots = sorted({r for _, r in factors})
+        assert [Fraction(t.replace("−", "-")) for t in item.visual["roots"]] == roots
+        probes = (
+            [roots[0] - 1]
+            + [(lo + hi) / 2 for lo, hi in zip(roots, roots[1:], strict=False)]
+            + [roots[-1] + 1]
+        )
+        expected = []
+        for a, r in factors:
+            expected += ["+" if a * (x - r) > 0 else "-" for x in probes]
+        if len(factors) == 2:
+            expected += [
+                "+"
+                if (factors[0][0] * (x - factors[0][1])) * (factors[1][0] * (x - factors[1][1])) > 0
+                else "-"
+                for x in probes
+            ]
+        assert list(item.answer.value) == expected, item.id
+        assert len(item.visual["rows"]) == (3 if len(factors) == 2 else 1)
+
+
+def test_true_false():
+    kinds = {
+        "aigu": lambda a: a < 90,
+        "droit": lambda a: a == 90,
+        "obtus": lambda a: 90 < a < 180,
+        "plat": lambda a: a == 180,
+    }
+    for item in _items("6e.angles.vocabulaire"):
+        m = item.meta
+        assert kinds[m["real"]](m["angle"]) and item.answer.value == (m["claimed"] == m["real"]), (
+            item.id
+        )
+        assert m["real"] in item.choices[item.answer.reason]
+    true_cases = {"multiple", "quadrilatere"}
+    for item in _items("2nde.logique.implication"):
+        reason = item.choices[item.answer.reason]
+        assert item.explanation.startswith("Vrai" if item.answer.value else "Faux"), item.id
+        if item.meta["case"] in true_cases:
+            assert item.answer.value is True
+        elif item.meta["case"] != "ordre_carre":
+            assert item.answer.value is False and ("contre-exemple" in reason or "≠" in reason), (
+                item.id
+            )
+        assert len(set(item.choices)) == 3 and "−exemple" not in reason
+        assert answers.check(
+            item.answer.model_dump(), {"value": item.answer.value, "reason": item.answer.reason}
+        )
+        assert not answers.check(
+            item.answer.model_dump(), {"value": not item.answer.value, "reason": item.answer.reason}
+        )

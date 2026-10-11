@@ -47,14 +47,39 @@ class OrderAnswer(BaseModel):
     value: list[int] = Field(min_length=2)
 
 
+class TrueFalseAnswer(BaseModel):
+    """Vrai ou faux, puis la bonne justification (indice dans `choices`)."""
+
+    kind: Literal["true_false"] = "true_false"
+    value: bool
+    reason: int
+
+
+class SignsAnswer(BaseModel):
+    """Tableau de signes, cases lues ligne par ligne (« + » ou « - »)."""
+
+    kind: Literal["signs"] = "signs"
+    value: list[Literal["+", "-"]] = Field(min_length=2)
+
+
 Answer = Annotated[
-    ChoiceAnswer | NumberAnswer | FractionAnswer | ExpressionAnswer | VectorAnswer | OrderAnswer,
+    ChoiceAnswer
+    | NumberAnswer
+    | FractionAnswer
+    | ExpressionAnswer
+    | VectorAnswer
+    | OrderAnswer
+    | TrueFalseAnswer
+    | SignsAnswer,
     Field(discriminator="kind"),
 ]
 
 # number_line : placer un point sur une droite graduée (réponse fraction) ;
 # order : remettre des éléments dans l'ordre (réponse order).
-ItemType = Literal["mcq", "numeric", "expression", "vector", "number_line", "order"]
+# true_false : vrai/faux puis justification ; sign_table : tableau de signes à compléter.
+ItemType = Literal[
+    "mcq", "numeric", "expression", "vector", "number_line", "order", "true_false", "sign_table"
+]
 # Rôle dans le combat : « automatisme » = Frappe (rapide), « chapitre » = Sort (puissant).
 Role = Literal["automatisme", "chapitre"]
 

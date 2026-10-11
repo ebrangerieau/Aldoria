@@ -79,4 +79,5 @@ from app.engine.generators import (  # noqa: E402, F401
     nombres_6e,
     prealgebre_6e,
     problemes_6e,
+    raisonnement,
 )

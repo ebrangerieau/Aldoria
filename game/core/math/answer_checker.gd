@@ -56,6 +56,10 @@ static func check(answer: Dictionary, user_input: Variant) -> bool:
 			return _check_vector(answer, user_input)
 		"order":
 			return _check_order(answer, user_input)
+		"true_false":
+			return _check_true_false(answer, user_input)
+		"signs":
+			return _check_signs(answer, user_input)
 	push_error("Type de réponse inconnu : %s" % answer.get("kind"))
 	return false
 
@@ -93,6 +97,27 @@ static func _check_expression(answer: Dictionary, text: String) -> bool:
 		"factored":
 			# Un vrai produit (« 3(x+2) », « (x+3)² ») : « (x²−9) » n'est pas une factorisation.
 			return "(" in MathExpr.normalize(text) and MathExpr.is_product(text)
+	return true
+
+
+## Vrai/faux justifié : le verdict ET la justification (indice des choix).
+static func _check_true_false(answer: Dictionary, user_input: Variant) -> bool:
+	if not user_input is Dictionary or not user_input.get("value") is bool:
+		return false
+	var reason: Variant = user_input.get("reason")
+	if not (reason is int or reason is float) or float(reason) != floorf(float(reason)):
+		return false
+	return user_input["value"] == bool(answer["value"]) and int(reason) == int(answer["reason"])
+
+
+## Tableau de signes : cases lues ligne par ligne, « + » ou « - » (ou « − »).
+static func _check_signs(answer: Dictionary, user_input: Variant) -> bool:
+	var expected: Array = answer["value"]
+	if not user_input is Array or (user_input as Array).size() != expected.size():
+		return false
+	for i in expected.size():
+		if str(user_input[i]).strip_edges().replace("−", "-") != str(expected[i]):
+			return false
 	return true
 
 
