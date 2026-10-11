@@ -54,6 +54,8 @@ static func check(answer: Dictionary, user_input: Variant) -> bool:
 			return _check_expression(answer, str(user_input))
 		"vector":
 			return _check_vector(answer, user_input)
+		"order":
+			return _check_order(answer, user_input)
 	push_error("Type de réponse inconnu : %s" % answer.get("kind"))
 	return false
 
@@ -91,6 +93,18 @@ static func _check_expression(answer: Dictionary, text: String) -> bool:
 		"factored":
 			# Un vrai produit (« 3(x+2) », « (x+3)² ») : « (x²−9) » n'est pas une factorisation.
 			return "(" in MathExpr.normalize(text) and MathExpr.is_product(text)
+	return true
+
+
+## Ordre des choix : liste d'indices (le JSON donne des flottants : 2.0 accepté).
+static func _check_order(answer: Dictionary, user_input: Variant) -> bool:
+	var expected: Array = answer["value"]
+	if not user_input is Array or (user_input as Array).size() != expected.size():
+		return false
+	for i in expected.size():
+		var got: Variant = user_input[i]
+		if not (got is int or got is float) or float(got) != floorf(float(got)) or int(got) != int(expected[i]):
+			return false
 	return true
 
 

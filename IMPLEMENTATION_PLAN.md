@@ -202,8 +202,12 @@ Livrables du TRD §13 : une salle, un ennemi, 3 widgets, 4 générateurs, et les
 > moyenne pondérée, probabilités conditionnelles et arbres, Pythagore et Thalès, lecture de code Python).
 > Tous en QCM, nombre, fraction ou expression (widgets existants), réponses recalculées indépendamment
 > sur 1 000 tirages par niveau (`api/tests/test_generators_phase3.py`).
-> Reste au contenu : banque d'items relue par Eric, et les générateurs qui demandent les nouveaux widgets
-> (droite graduée, tableau de signes, lecture graphique, séquences d'instructions).
+> Widgets interactifs (2026-10-11) : droite graduée (placer un point, aimanté sur les graduations ; ou lire
+> l'abscisse d'un point), remettre dans l'ordre (touches successives, plus fiable qu'un glisser-déposer sur
+> tablette), courbe pour la lecture graphique. Nouveaux générateurs : droite graduée et ranger des décimaux
+> (Jules), ranger des réels et lecture graphique (Tom). Réponse de type `order` ajoutée aux vecteurs de test.
+> Reste au contenu : banque d'items relue par Eric ; vrai/faux justifié, relier (tableau de signes) et
+> séquences d'instructions (robot sur grille).
 
 **Contenu**
 - **20 générateurs par niveau** (§4).

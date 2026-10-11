@@ -26,6 +26,8 @@ godot --headless --path game -s addons/gut/gut_cmdln.gd -gexit
 uv run --directory api python ../tools/export_pack_fixture.py
 # Lancer la scène d'étalonnage avec une capture d'écran (vérification visuelle)
 godot --path game --rendering-driver opengl3 -- --scene=calibration --screenshot=C:/chemin/capture.png --quality=tablette
+# Galerie de questions (PC) : une question d'un type donné, tirée des paquets de test, dans le vrai panneau
+godot --path game --rendering-driver opengl3 -- --scene=questions --level=6e --type=number_line [--visual=graph] [--index=0] --screenshot=C:/chemin/q.png --shot-delay=1.5
 # Espace parent : vérification des types + build ; `npm run dev` relaie /api vers l'API locale
 # (exporter ALDORIA_ADMIN_KEY, la même que celle du conteneur API local)
 npm --prefix admin run build

@@ -74,6 +74,7 @@ from app.engine.generators import (  # noqa: E402, F401
     fonctions_2nde,
     fractions_6e,
     geometrie_2nde,
+    interactifs,
     nombres_2nde,
     nombres_6e,
     prealgebre_6e,

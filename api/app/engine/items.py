@@ -40,12 +40,21 @@ class VectorAnswer(BaseModel):
     value: list[str] = Field(min_length=2, max_length=2)
 
 
+class OrderAnswer(BaseModel):
+    """Ordre attendu des choix (indices dans `choices`), du premier au dernier."""
+
+    kind: Literal["order"] = "order"
+    value: list[int] = Field(min_length=2)
+
+
 Answer = Annotated[
-    ChoiceAnswer | NumberAnswer | FractionAnswer | ExpressionAnswer | VectorAnswer,
+    ChoiceAnswer | NumberAnswer | FractionAnswer | ExpressionAnswer | VectorAnswer | OrderAnswer,
     Field(discriminator="kind"),
 ]
 
-ItemType = Literal["mcq", "numeric", "expression", "vector"]
+# number_line : placer un point sur une droite graduée (réponse fraction) ;
+# order : remettre des éléments dans l'ordre (réponse order).
+ItemType = Literal["mcq", "numeric", "expression", "vector", "number_line", "order"]
 # Rôle dans le combat : « automatisme » = Frappe (rapide), « chapitre » = Sort (puissant).
 Role = Literal["automatisme", "chapitre"]
 

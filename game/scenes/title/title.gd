@@ -14,6 +14,10 @@ func _ready() -> void:
 	if Quality.option("scene") == "calibration":
 		get_tree().change_scene_to_file.call_deferred("res://scenes/calibration/calibration.tscn")
 		return
+	# Développement, PC uniquement (les paquets de test ne sont pas exportés).
+	if Quality.option("scene") == "questions" and not OS.has_feature("web"):
+		get_tree().change_scene_to_file.call_deferred("res://scenes/dev/question_gallery.tscn")
+		return
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	theme = UiKit.make_theme(_wt)
 	var bg := ColorRect.new()

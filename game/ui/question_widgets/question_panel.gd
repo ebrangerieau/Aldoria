@@ -74,14 +74,28 @@ func setup(question: Dictionary, title: String, wt: WorldTheme) -> void:
 		elif question.get("latex"):
 			box.add_child(UiKit.label(str(question["latex"]), 28))  # repli : texte brut
 
-	# Énigme : illustration interactive (balance, repère) à côté de l'énoncé.
-	if question.get("role") == "enigme" and question.get("visual") is Dictionary:
-		_visual = _make_visual(question["visual"], wt)
+	# Illustration : celles des énigmes (balance, repère), et partout la courbe d'une
+	# lecture graphique ou la droite graduée où lire un point.
+	var visual: Variant = question.get("visual")
+	if visual is Dictionary and question["type"] != "number_line" and (
+			question.get("role") == "enigme" or visual.get("kind") in ["graph", "number_line"]):
+		_visual = _make_visual(visual, wt)
 		if _visual:
 			box.add_child(_visual)
 
 	var widget: Control
-	if question["type"] == "vector":
+	if question["type"] == "number_line":
+		var line := NumberLineWidget.new()
+		line.setup(question.get("visual", {}), wt)
+		widget = line
+		_visual = line
+		box.add_child(widget)
+	elif question["type"] == "order":
+		var order := OrderWidget.new()
+		order.setup(question["choices"], wt)
+		widget = order
+		box.add_child(widget)
+	elif question["type"] == "vector":
 		var vector := VectorWidget.new()
 		vector.setup(wt)
 		vector.custom_minimum_size = Vector2(420, 0)
@@ -134,6 +148,14 @@ static func _make_visual(visual: Dictionary, wt: WorldTheme) -> Control:
 			var grid := GridView.new()
 			grid.setup(visual, wt)
 			return grid
+		"graph":
+			var graph := GraphView.new()
+			graph.setup(visual, wt)
+			return graph
+		"number_line":
+			var line := NumberLineWidget.new()
+			line.setup(visual, wt, false)
+			return line
 	return null
 
 
@@ -173,6 +195,11 @@ static func expected_text(question: Dictionary) -> String:
 	var answer: Dictionary = question["answer"]
 	if answer["kind"] == "choice":
 		return UiKit.pretty_math(str(question["choices"][int(answer["index"])]))
+	if answer["kind"] == "order":
+		var labels := PackedStringArray()
+		for i in answer["value"]:
+			labels.append(UiKit.pretty_math(str(question["choices"][int(i)])))
+		return " → ".join(labels)
 	if answer["kind"] == "vector":
 		return UiKit.pretty_math("(%s ; %s)" % [answer["value"][0], answer["value"][1]])
 	return UiKit.pretty_math(str(answer["value"]))

@@ -32,6 +32,8 @@ func _correct_input(item: Dictionary) -> Variant:
 	var answer: Dictionary = item["answer"]
 	if answer["kind"] == "choice":
 		return int(answer["index"])
+	if answer["kind"] in ["order", "vector"]:
+		return answer["value"]
 	return str(answer["value"])
 
 
@@ -140,7 +142,14 @@ func test_question_panel_for_each_type() -> void:
 	var wt := WorldTheme.tom()
 	for level in ["6e", "2nde"]:
 		_load_pack(level)
-		for item in Session.items.slice(0, 12):
+		# Les 12 premiers, plus un item de chaque type présent dans le paquet.
+		var sample: Array = Session.items.slice(0, 12)
+		var types := {}
+		for it in Session.items:
+			if not types.has(it["type"]):
+				types[it["type"]] = true
+				sample.append(it)
+		for item in sample:
 			var panel := QuestionPanel.new()
 			panel.setup(item, "Test", wt)
 			add_child_autofree(panel)
@@ -166,6 +175,41 @@ func test_keypad_builds_expression_from_keys() -> void:
 
 func _find_widget(panel: Node) -> Node:
 	for node in panel.find_children("*", "", true, false):
-		if node is McqWidget or node is KeypadWidget:
+		if node is McqWidget or node is KeypadWidget or node is OrderWidget or node is VectorWidget 				or (node is NumberLineWidget and node._interactive):
 			return node
 	return null
+
+
+func test_number_line_snaps_to_graduation() -> void:
+	var line := NumberLineWidget.new()
+	line.setup({"min": 0, "max": 2, "subdivisions": 4, "mode": "place"}, WorldTheme.jules())
+	line.size = Vector2(800, 200)
+	add_child_autofree(line)
+	await wait_process_frames(2)
+	watch_signals(line)
+	# 3/4 : trois graduations sur huit, un peu à côté (l'aimant corrige).
+	var x: float = line._x_of(3) + 7.0
+	var click := InputEventMouseButton.new()
+	click.button_index = MOUSE_BUTTON_LEFT
+	click.pressed = true
+	click.position = Vector2(x, 40)
+	line._on_canvas_input(click)
+	line._submit()
+	assert_signal_emitted_with_parameters(line, "submitted", ["3/4"])
+	assert_true(AnswerChecker.check({"kind": "fraction", "value": "6/8"}, "3/4"))
+
+
+func test_order_widget_collects_taps_in_order() -> void:
+	var order := OrderWidget.new()
+	order.setup(["2,5", "2,15", "2,9"], WorldTheme.jules())
+	add_child_autofree(order)
+	watch_signals(order)
+	order._pick(1)
+	order._submit()  # incomplet : rien n'est envoyé
+	assert_signal_not_emitted(order, "submitted")
+	order._pick(1)  # déjà choisi : ignoré
+	order._pick(0)
+	order._pick(2)
+	order._submit()
+	assert_signal_emitted_with_parameters(order, "submitted", [[1, 0, 2]])
+	assert_true(AnswerChecker.check({"kind": "order", "value": [1, 0, 2]}, [1.0, 0.0, 2.0]))

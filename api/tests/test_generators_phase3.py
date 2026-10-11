@@ -394,3 +394,79 @@ def test_statistics_probability_pythagoras_python():
             "\n".join(item.meta["code"]), {}, scope
         )  # code produit par le générateur, pas par l'utilisateur
         assert _value(item) == scope["x"], item.id
+
+
+# --- Widgets interactifs ------------------------------------------------------------------
+
+
+def test_number_line():
+    for item in _items("6e.fractions.droite_graduee"):
+        v, m = item.visual, item.meta
+        value = Fraction(m["value"])
+        assert v["min"] < value < v["max"], item.id
+        # Le point tombe pile sur une graduation, jamais sur un entier.
+        assert (value * v["subdivisions"]).denominator == 1 and value.denominator != 1, item.id
+        assert answers.check(item.answer.model_dump(), item.answer.value)
+        if item.type == "number_line":
+            assert v["mode"] == "place"
+            # Saisie du client : « k/sub » non simplifié.
+            assert answers.check(
+                item.answer.model_dump(), f"{int(value * v['subdivisions'])}/{v['subdivisions']}"
+            )
+        else:
+            assert v["mode"] == "read" and Fraction(v["point"]) == value
+
+
+def test_order_items_have_a_single_strict_order():
+    for code in ("6e.nombres.ranger_decimaux", "2nde.reels.ranger"):
+        for item in _items(code):
+            values = [Fraction(x) for x in item.meta["values"]]
+            assert len(set(values)) == len(values), item.id
+            ranked = [values[i] for i in item.answer.value]
+            assert ranked == sorted(values, reverse=item.meta["descending"]), item.id
+            assert sorted(item.answer.value) == list(range(len(item.choices)))
+            assert answers.check(item.answer.model_dump(), list(item.answer.value))
+            assert not answers.check(item.answer.model_dump(), list(reversed(item.answer.value)))
+
+
+def test_order_reals_labels_match_values():
+    import math
+
+    exact = {
+        "√2": math.sqrt(2),
+        "π": math.pi,
+        "√10": math.sqrt(10),
+        "−√0,1": -math.sqrt(0.1),
+        "10⁻²": 0.01,
+        "0,1³": 0.001,
+    }
+    for item in _items("2nde.reels.ranger", 200):
+        for label, value in zip(item.choices, item.meta["values"], strict=True):
+            expected = exact.get(label)
+            if expected is None:
+                expected = float(Fraction(label.replace("−", "-").replace(",", ".")))
+            assert abs(float(Fraction(value)) - expected) < 1e-6, (item.id, label)
+
+
+def test_graph_reading():
+    from app.engine.generators.interactifs import _solutions, _value_at
+
+    for item in _items("2nde.automatismes.lecture_graphique"):
+        points = item.visual["points"]
+        xs = [p[0] for p in points]
+        assert xs == sorted(xs) and xs[0] == item.visual["xmin"] and xs[-1] == item.visual["xmax"]
+        assert all(item.visual["ymin"] <= p[1] <= item.visual["ymax"] for p in points)
+        m = item.meta
+        if "x" in m:
+            assert _value_at(points, Fraction(m["x"])) == _value(item), item.id
+            continue
+        sols = _solutions(points, m["k"])
+        # Chaque solution annoncée vérifie f(x) = k, et l'on n'en oublie aucune (balayage fin).
+        assert all(_value_at(points, s) == m["k"] for s in sols)
+        sweep = [Fraction(n, 8) for n in range(-40, 41)]
+        crossings = {s for s in sweep if _value_at(points, s) == m["k"]}
+        assert crossings <= set(sols), item.id
+        if item.type == "mcq":
+            assert int(_choice(item)) == len(sols)
+        else:
+            assert _value(item) == (max(sols) if m["largest"] else min(sols)), item.id

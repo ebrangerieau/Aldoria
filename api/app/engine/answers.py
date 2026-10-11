@@ -10,6 +10,7 @@ Types de réponse attendue (`answer.kind`) :
 - `fraction`   : {"value": "11/12", "accept_equivalent": true, "require_irreducible": false}
 - `expression` : {"value": "x^2+6x+9", "variable": "x", "form": "expanded" | null}
 - `vector`     : {"value": ["3", "-2"]}  (saisie : liste de 2 nombres)
+- `order`      : {"value": [2, 0, 1]}  (saisie : indices des choix dans l'ordre donné)
 """
 
 from __future__ import annotations
@@ -72,7 +73,20 @@ def check(answer: dict[str, Any], user_input: Any) -> bool:
         return _check_expression(answer, str(user_input))
     if kind == "vector":
         return _check_vector(answer, user_input)
+    if kind == "order":
+        return _check_order(answer, user_input)
     raise ValueError(f"type de réponse inconnu : {kind}")
+
+
+def _check_order(answer: dict[str, Any], user_input: Any) -> bool:
+    if not isinstance(user_input, list | tuple) or len(user_input) != len(answer["value"]):
+        return False
+    try:
+        # Le JSON du client donne des flottants (2 → 2.0) : on accepte les entiers exacts.
+        got = [int(v) for v in user_input if float(v) == int(v)]
+    except (TypeError, ValueError):
+        return False
+    return got == [int(v) for v in answer["value"]]
 
 
 def _check_vector(answer: dict[str, Any], user_input: Any) -> bool:
