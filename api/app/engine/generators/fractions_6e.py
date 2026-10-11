@@ -87,7 +87,7 @@ def _addition(difficulty: int, rng: random.Random) -> dict:
         "answer": {"kind": "fraction", "value": frac_text(result), "accept_equivalent": True},
         "hint": hint,
         "explanation": explanation,
-        "time_target_ms": 15000 + 7000 * difficulty,
+        "time_target_ms": 30000 + 10000 * difficulty,  # 40 s à 80 s
         "meta": {"n1": n1, "d1": d1, "n2": n2, "d2": d2, "op": sign},
     }
 
@@ -158,7 +158,7 @@ def _comparison(difficulty: int, rng: random.Random) -> dict:
         "answer": {"kind": "choice", "index": COMPARE_CHOICES.index(symbol)},
         "hint": rule,
         "explanation": explanation,
-        "time_target_ms": 8000 + 3000 * difficulty,
+        "time_target_ms": 15000 + 5000 * difficulty,  # 20 s à 40 s
         "meta": {"n1": n1, "d1": d1, "n2": n2, "d2": d2},
     }
 

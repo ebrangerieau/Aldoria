@@ -4,9 +4,10 @@ extends PanelContainer
 ## réponse brute, le temps et l'usage de l'indice. Ne valide rien lui-même :
 ## c'est le rôle de QuestionService (TRD §2.3).
 ##
-## La barre du haut montre le « bonus de vitesse » (coup critique si réponse juste
-## en moins de la moitié du temps cible). Elle n'est jamais punitive : une fois
-## vide, la question reste ouverte sans limite.
+## Aucune limite de temps. Un badge « Bonus éclair » brille pendant la fenêtre du
+## coup critique (réponse juste en moins de la moitié du temps cible), puis s'efface
+## discrètement : pas de barre qui se vide, perçue comme un chrono par les enfants
+## (retour du 2026-10-11).
 
 signal answered(user_input: Variant, time_ms: int, hint_used: bool)
 
@@ -16,8 +17,7 @@ var item: Dictionary
 var _wt: WorldTheme
 var _started_ms := 0
 var _hint_used := false
-var _speed_bar: ProgressBar
-var _speed_fill: StyleBoxFlat
+var _bonus: Label
 var _hint_label: Label
 var _hint_button: Button
 var _done := false
@@ -47,17 +47,15 @@ func setup(question: Dictionary, title: String, wt: WorldTheme) -> void:
 	var stars := UiKit.label(_stars(int(question["difficulty"])), 22, wt.accent)
 	stars.autowrap_mode = TextServer.AUTOWRAP_OFF
 	header.add_child(stars)
-	_speed_bar = ProgressBar.new()
-	_speed_bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	_speed_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	_speed_bar.custom_minimum_size = Vector2(0, 14)
-	_speed_bar.max_value = 1.0
-	_speed_bar.value = 1.0
-	_speed_bar.show_percentage = false
-	_speed_fill = StyleBoxFlat.new()
-	_speed_fill.set_corner_radius_all(8)
-	_speed_bar.add_theme_stylebox_override("fill", _speed_fill)
-	header.add_child(_speed_bar)
+	var header_gap := Control.new()
+	header_gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header.add_child(header_gap)
+	_bonus = UiKit.label("⚡ Bonus éclair", 20, wt.good)
+	_bonus.autowrap_mode = TextServer.AUTOWRAP_OFF
+	header.add_child(_bonus)
+	var glow := create_tween().set_loops()
+	glow.tween_property(_bonus, "modulate:a", 0.55, 0.6)
+	glow.tween_property(_bonus, "modulate:a", 1.0, 0.6)
 	box.add_child(header)
 
 	box.add_child(UiKit.label(str(question["prompt"]), 26))
@@ -112,16 +110,17 @@ func elapsed_ms() -> int:
 
 
 func _process(_delta: float) -> void:
-	if _done or _speed_bar == null:
+	if _done or _bonus == null or not _bonus.visible:
 		return
 	var target := maxf(1.0, float(item.get("time_target_ms", 20000)))
 	var ratio := elapsed_ms() / target
-	_speed_bar.value = clampf(1.0 - ratio, 0.0, 1.0)
-	_speed_fill.bg_color = _wt.good if ratio < CRIT_RATIO else _wt.accent
+	if ratio >= CRIT_RATIO:
+		_bonus.visible = false
 
 
 func _show_hint() -> void:
 	_hint_used = true
+	_bonus.visible = false  # pas de coup critique avec un indice
 	_hint_label.visible = true
 	_hint_button.visible = false
 

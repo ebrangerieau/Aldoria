@@ -19,7 +19,11 @@ if (-not $SkipExport) {
 docker build -q -f deploy/web.Dockerfile -t aldoria-web:local . | Out-Null
 docker build -q -f deploy/api.Dockerfile -t aldoria-api:local . | Out-Null
 # Conteneurs d'un passage précédent (absents la première fois : pas une erreur).
-& { $ErrorActionPreference = "Continue"; docker rm -f aldoria-web-local aldoria-edge 2>&1 | Out-Null }
+& { $ErrorActionPreference = "Continue"; docker rm -f aldoria-web-local aldoria-edge aldoria-api-test 2>&1 | Out-Null }
+# API recréée avec le code courant (la base aldoria-pg et ses profils de test sont conservés).
+docker run -d --name aldoria-api-test --network aldoria-test -p 127.0.0.1:8098:8000 `
+    -e ALDORIA_DATABASE_URL=postgresql+asyncpg://aldoria:test@aldoria-pg:5432/aldoria aldoria-api:local | Out-Null
+Start-Sleep -Seconds 6
 docker run -d --name aldoria-web-local --network aldoria-test aldoria-web:local | Out-Null
 docker run -d --name aldoria-edge --network aldoria-test -p 127.0.0.1:8097:80 `
     -v "${root}/deploy/local/edge.conf:/etc/nginx/conf.d/default.conf:ro" nginx:1.29-alpine | Out-Null

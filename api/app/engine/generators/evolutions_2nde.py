@@ -121,7 +121,7 @@ def _evolution(difficulty: int, rng: random.Random) -> dict:
         "answer": {"kind": "choice", "index": index},
         "hint": hint,
         "explanation": explanation,
-        "time_target_ms": 10000 + 5000 * difficulty,
+        "time_target_ms": 15000 + 6000 * difficulty,  # 21 s à 45 s
         "meta": meta,
     }
 

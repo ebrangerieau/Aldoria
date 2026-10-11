@@ -116,7 +116,7 @@ def _develop(difficulty: int, rng: random.Random) -> dict:
         "answer": {"kind": "expression", "value": answer, "variable": "x", "form": "expanded"},
         "hint": hint,
         "explanation": _pretty(f"{shown} = {detail} = {answer}."),
-        "time_target_ms": 20000 + 10000 * difficulty,
+        "time_target_ms": 30000 + 12000 * difficulty,  # 42 s à 90 s
         "meta": {"expression": shown},
     }
 
