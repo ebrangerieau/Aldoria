@@ -64,6 +64,11 @@ func next_item(role := "", level := 0) -> Dictionary:
 	for entry in _retry:
 		if entry.due_in <= 0:
 			var again := pool.filter(func(it: Dictionary) -> bool: return entry.notion in it["notions"])
+			if again.is_empty():
+				# Plus de question inédite sur cette notion dans le paquet : une autre déjà
+				# posée fait l'affaire, jamais celle qui vient d'être ratée.
+				again = all_of_role.filter(func(it: Dictionary) -> bool:
+					return entry.notion in it["notions"] and it["id"] != entry.item_id)
 			if not again.is_empty():
 				_retry.erase(entry)
 				return _take(_closest(again, level if level > 0 else level_for(role)))
@@ -97,7 +102,7 @@ func submit(item: Dictionary, user_input: Variant, time_ms: int, hint_used: bool
 			_streak[role] = 0
 			_level[role] = maxi(1, _level[role] - 1)
 		for notion in item["notions"]:
-			_retry.append({"notion": notion, "due_in": RETRY_AFTER})
+			_retry.append({"notion": notion, "due_in": RETRY_AFTER, "item_id": item["id"]})
 		_rush_streak = _rush_streak + 1 if speed_ratio < RUSH_RATIO else 0
 		if _rush_streak >= RUSH_WINDOW:
 			_penalty_left = RUSH_PENALTY_QUESTIONS

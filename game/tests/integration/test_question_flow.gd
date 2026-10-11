@@ -57,7 +57,11 @@ func test_difficulty_rises_after_two_successes_and_drops_after_error() -> void:
 
 func test_failed_notion_comes_back_in_another_form() -> void:
 	_load_pack("6e")
+	# Une question dont la notion a au moins une autre forme dans le paquet.
 	var failed := QuestionService.next_item("chapitre")
+	while Session.items.filter(func(it: Dictionary) -> bool:
+			return it["role"] == "chapitre" and failed["notions"][0] in it["notions"]).size() < 2:
+		failed = QuestionService.next_item("chapitre")
 	QuestionService.submit(failed, "0/1", 4000, false)
 	var seen_again := false
 	for i in 4:
@@ -67,6 +71,35 @@ func test_failed_notion_comes_back_in_another_form() -> void:
 			seen_again = true
 		QuestionService.submit(item, _correct_input(item), 4000, false)
 	assert_true(seen_again)
+
+
+func test_failed_notion_comes_back_even_when_its_items_are_used_up() -> void:
+	# Deux questions seulement sur la notion A, toutes deux déjà posées : la ratée ne
+	# revient pas telle quelle, l'autre revient (paquet de 16 notions : cas fréquent).
+	var items: Array = []
+	for i in 2:
+		items.append(_fake_item("a%d" % i, "notion.a", 1))
+	for i in 6:
+		items.append(_fake_item("b%d" % i, "notion.b", 3))
+	Session._apply_pack({"items": items, "start_levels": {"chapitre": 1}})
+	QuestionService.reset()
+	var first := QuestionService.next_item("chapitre")
+	QuestionService.submit(first, "1", 4000, false)
+	var failed := QuestionService.next_item("chapitre")
+	assert_eq(failed["notions"], ["notion.a"], "les deux questions faciles d'abord")
+	QuestionService.submit(failed, "0", 4000, false)
+	var came_back := {}
+	for i in 3:
+		var item := QuestionService.next_item("chapitre")
+		came_back[item["id"]] = true
+		QuestionService.submit(item, "1", 4000, false)
+	assert_true(came_back.has(first["id"]), "la notion ratée revient par l'autre question")
+	assert_false(came_back.has(failed["id"]), "jamais la question qui vient d'être ratée")
+
+
+func _fake_item(id: String, notion: String, difficulty: int) -> Dictionary:
+	return {"id": id, "type": "numeric", "role": "chapitre", "difficulty": difficulty, "notions": [notion],
+		"answer": {"kind": "number", "value": "1"}, "time_target_ms": 20000, "prompt": "?"}
 
 
 func test_random_clicking_reduces_rewards_silently() -> void:
