@@ -55,6 +55,15 @@ def for_level(level: str) -> list[Generator]:
     return [g for g in REGISTRY.values() if g.level == level]
 
 
+def for_notion(notion: str) -> list[Generator]:
+    return [g for g in REGISTRY.values() if g.notion == notion]
+
+
+def playable_notions() -> set[str]:
+    """Notions couvertes par au moins un générateur."""
+    return {g.notion for g in REGISTRY.values()}
+
+
 # Enregistrement des générateurs (import pour effet de bord).
 from app.engine.generators import (  # noqa: E402, F401
     developper_2nde,

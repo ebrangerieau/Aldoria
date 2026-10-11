@@ -3,8 +3,9 @@ extends Node
 ## contenu d'une question). Une scène demande un item pour un rôle
 ## (« automatisme » = Frappe, « chapitre » = Sort), l'affiche, puis appelle `submit`.
 ##
-## Difficulté adaptative (prototype, avant le moteur Leitner de la phase 2) :
-## +1 après 2 réussites d'affilée au même niveau, −1 après une erreur.
+## Difficulté adaptative : départ au niveau suggéré par le serveur (maîtrise et
+## taux de réussite récent), puis +1 après 2 réussites d'affilée au même niveau,
+## −1 après une erreur.
 ## Une notion ratée revient 2 questions plus tard sous une autre forme (PRD §6).
 ## Clic au hasard (TRD §5.4) : 3 erreurs de suite en moins de 25 % du temps cible
 ## réduisent les gains des 5 questions suivantes, sans message.
@@ -25,7 +26,10 @@ var correct_count := 0
 
 
 func reset() -> void:
-	_level = {"automatisme": 1, "chapitre": 1}
+	_level = {
+		"automatisme": int(Session.start_levels.get("automatisme", 1)),
+		"chapitre": int(Session.start_levels.get("chapitre", 1)),
+	}
 	_streak = {"automatisme": 0, "chapitre": 0}
 	_used.clear()
 	_retry.clear()

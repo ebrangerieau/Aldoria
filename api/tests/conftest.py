@@ -5,6 +5,7 @@ from sqlalchemy.pool import StaticPool
 
 from app.auth import hash_pin
 from app.db import get_db
+from app.engine.tracking import seed_curriculum
 from app.main import app
 from app.models import Base, Profile
 
@@ -55,3 +56,9 @@ async def login(client, profiles):
         return {"Authorization": f"Bearer {response.json()['token']}"}
 
     return _login
+
+
+@pytest.fixture
+async def curriculum(sessionmaker):
+    async with sessionmaker() as db:
+        return await seed_curriculum(db)

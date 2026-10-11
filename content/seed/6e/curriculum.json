@@ -1,0 +1,55 @@
+{
+  "level": "6e",
+  "subject": {"code": "maths", "label": "Mathématiques"},
+  "source": "Programme de cycle 3, arrêté du 10 avril 2025 (BO n°16 du 17/04/2025). Voir IMPLEMENTATION_PLAN §1.1 et §4.",
+  "chapters": [
+    {"code": "6e.maths.nombres", "title": "Nombres entiers et décimaux", "notions": [
+      {"code": "6e.maths.nombres.comparer_decimaux", "label": "Comparer et ranger des nombres décimaux"},
+      {"code": "6e.maths.nombres.multiplier_diviser_10", "label": "Multiplier et diviser par 10, 100, 1 000"},
+      {"code": "6e.maths.nombres.division_euclidienne", "label": "Division euclidienne"}
+    ]},
+    {"code": "6e.maths.fractions", "title": "Fractions", "notions": [
+      {"code": "6e.maths.fractions.comparaison", "label": "Comparer des fractions", "automatism": true},
+      {"code": "6e.maths.fractions.addition", "label": "Additionner et soustraire des fractions"},
+      {"code": "6e.maths.fractions.produit_entier", "label": "Multiplier une fraction par un entier"},
+      {"code": "6e.maths.fractions.egalite", "label": "Fractions égales et simplification"},
+      {"code": "6e.maths.fractions.droite_graduee", "label": "Placer une fraction sur une droite graduée"},
+      {"code": "6e.maths.fractions.quantite", "label": "Fraction d'une quantité"},
+      {"code": "6e.maths.fractions.encadrement", "label": "Encadrer une fraction entre deux entiers, nombres mixtes"}
+    ]},
+    {"code": "6e.maths.prealgebre", "title": "Pré-algèbre", "notions": [
+      {"code": "6e.maths.prealgebre.balance", "label": "Trouver la valeur inconnue d'une balance"},
+      {"code": "6e.maths.prealgebre.schema_barres", "label": "Résoudre un problème avec un schéma en barres"},
+      {"code": "6e.maths.prealgebre.suites_motifs", "label": "Suites de motifs"}
+    ]},
+    {"code": "6e.maths.automatismes", "title": "Calcul et automatismes", "notions": [
+      {"code": "6e.maths.automatismes.tables", "label": "Tables de multiplication", "automatism": true},
+      {"code": "6e.maths.automatismes.calcul_mental", "label": "Calcul mental", "automatism": true},
+      {"code": "6e.maths.automatismes.conversions", "label": "Conversions d'unités", "automatism": true}
+    ]},
+    {"code": "6e.maths.grandeurs", "title": "Grandeurs et mesures", "notions": [
+      {"code": "6e.maths.grandeurs.durees", "label": "Calculer des durées"},
+      {"code": "6e.maths.grandeurs.aire_rectangle", "label": "Aire d'un rectangle"}
+    ]},
+    {"code": "6e.maths.angles", "title": "Angles et triangles", "notions": [
+      {"code": "6e.maths.angles.vocabulaire", "label": "Vocabulaire des angles"},
+      {"code": "6e.maths.angles.somme_triangle", "label": "Somme des angles d'un triangle"},
+      {"code": "6e.maths.angles.bissectrice", "label": "Bissectrice d'un angle"}
+    ]},
+    {"code": "6e.maths.mediatrice", "title": "Médiatrice et cercle", "notions": [
+      {"code": "6e.maths.mediatrice.definition", "label": "Médiatrice d'un segment"},
+      {"code": "6e.maths.mediatrice.cercle_circonscrit", "label": "Cercle circonscrit à un triangle"}
+    ]},
+    {"code": "6e.maths.proportionnalite", "title": "Proportionnalité et échelles", "notions": [
+      {"code": "6e.maths.proportionnalite.retour_unite", "label": "Proportionnalité : retour à l'unité"},
+      {"code": "6e.maths.proportionnalite.echelles", "label": "Échelles"}
+    ]},
+    {"code": "6e.maths.probabilites", "title": "Probabilités", "notions": [
+      {"code": "6e.maths.probabilites.equiprobabilite", "label": "Probabilité d'un événement (équiprobabilité)"}
+    ]},
+    {"code": "6e.maths.algorithmique", "title": "Pensée informatique", "notions": [
+      {"code": "6e.maths.algorithmique.sequences", "label": "Séquences d'instructions"},
+      {"code": "6e.maths.algorithmique.boucles", "label": "Boucles de répétition"}
+    ]}
+  ]
+}

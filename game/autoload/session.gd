@@ -18,6 +18,8 @@ var session_id := ""
 var items: Array = []
 var formulas: Dictionary = {}  # hash → texte SVG
 var settings: Dictionary = {}
+## Difficulté de départ par rôle, calculée par le serveur selon la maîtrise.
+var start_levels: Dictionary = {}
 var active_seconds := 0.0
 
 var _queue: Array = []
@@ -112,6 +114,7 @@ func record_attempt(item: Dictionary, correct: bool, time_ms: int, hint_used: bo
 		"notion_ids": item["notions"],
 		"correct": correct,
 		"time_ms": time_ms,
+		"time_target_ms": int(item.get("time_target_ms", 20000)),
 		"hint_used": hint_used,
 		"game_mode": game_mode,
 		"answered_at": Time.get_datetime_string_from_system(true) + "Z",
@@ -186,6 +189,7 @@ func _apply_pack(data: Dictionary) -> void:
 	items = data.get("items", [])
 	formulas = data.get("formulas", {})
 	settings = data.get("settings", {})
+	start_levels = data.get("start_levels", {})
 	active_seconds = 0.0
 	_textures.clear()
 

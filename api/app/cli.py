@@ -1,5 +1,7 @@
 """Administration en ligne de commande (avant l'éditeur parent de la phase 2).
 
+python -m app.cli seed      (programme : content/seed, idempotent)
+python -m app.cli rebuild-tracking   (rejoue toutes les réponses dans le suivi par notion)
 python -m app.cli list
 python -m app.cli create --name Jules --level 6e --world jules --avatar renard --pin 1234
 python -m app.cli set-pin --name Jules --pin 5678
@@ -15,6 +17,7 @@ from sqlalchemy import select
 
 from app.auth import hash_pin
 from app.db import get_sessionmaker
+from app.engine.tracking import rebuild, seed_curriculum
 from app.models import Profile
 
 LEVELS = {"6e": "jules", "2nde": "tom"}
@@ -22,6 +25,13 @@ LEVELS = {"6e": "jules", "2nde": "tom"}
 
 async def _run(args: argparse.Namespace) -> None:
     async with get_sessionmaker()() as db:
+        if args.command == "seed":
+            counts = await seed_curriculum(db)
+            print(f"Programme chargé : {counts['chapters']} chapitres, {counts['notions']} notions")
+            return
+        if args.command == "rebuild-tracking":
+            print(f"Suivi reconstruit à partir de {await rebuild(db)} réponses")
+            return
         if args.command == "list":
             for p in await db.scalars(select(Profile).order_by(Profile.id)):
                 state = "PIN défini" if p.pin_hash else "sans PIN"
@@ -53,6 +63,8 @@ async def _run(args: argparse.Namespace) -> None:
 def main() -> None:
     parser = argparse.ArgumentParser(prog="python -m app.cli")
     sub = parser.add_subparsers(dest="command", required=True)
+    sub.add_parser("seed")
+    sub.add_parser("rebuild-tracking")
     sub.add_parser("list")
     create = sub.add_parser("create")
     create.add_argument("--name", required=True)

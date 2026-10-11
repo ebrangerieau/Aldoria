@@ -12,6 +12,7 @@ RUN uv sync --frozen --no-dev --no-install-project
 COPY api/app ./app
 COPY api/alembic ./alembic
 COPY api/alembic.ini ./alembic.ini
+COPY content/seed ./content/seed
 
 RUN useradd --system --uid 10001 aldoria
 USER aldoria
@@ -20,5 +21,5 @@ EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s \
     CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health').status == 200 else 1)"
 
-# Migrations appliquées au démarrage (TRD §10.4), puis le serveur.
-CMD ["sh", "-c", "alembic upgrade head && exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2 --proxy-headers --forwarded-allow-ips '*'"]
+# Migrations puis programme (idempotent) au démarrage (TRD §10.4), puis le serveur.
+CMD ["sh", "-c", "alembic upgrade head && python -m app.cli seed && exec uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 2 --proxy-headers --forwarded-allow-ips '*'"]

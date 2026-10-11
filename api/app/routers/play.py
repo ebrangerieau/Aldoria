@@ -1,4 +1,4 @@
-"""API côté joueur (TRD §3.2), phase 1 : profils, connexion, session, tentatives."""
+"""API côté joueur (TRD §3.2) : profils, connexion, session, tentatives, progression."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth import CurrentProfile, create_token, verify_pin
 from app.config import get_settings
 from app.db import get_db
-from app.engine import session_pack
+from app.engine import tracking
 from app.errors import ApiError
 from app.models import Attempt, GameSession, Profile
 
@@ -49,6 +49,7 @@ class SessionStartOut(BaseModel):
     session_id: str
     items: list[dict[str, Any]]
     formulas: dict[str, str]
+    start_levels: dict[str, int]
     settings: dict[str, Any]
 
 
@@ -61,6 +62,7 @@ class AttemptIn(BaseModel):
     notion_ids: list[str] = Field(max_length=10)
     correct: bool
     time_ms: int = Field(ge=0, le=3_600_000)
+    time_target_ms: int | None = Field(default=None, ge=1000, le=600_000)
     hint_used: bool = False
     game_mode: str = Field(default="combat", max_length=20)
     answered_at: datetime
@@ -135,11 +137,12 @@ async def start_session(profile: CurrentProfile, db: Db) -> SessionStartOut:
     session = GameSession(id=str(uuid.uuid4()), profile_id=profile.id)
     db.add(session)
     await db.commit()
-    pack = session_pack.build(profile.level, random.Random())
+    pack = await tracking.build_pack(db, profile, random.Random())
     return SessionStartOut(
         session_id=session.id,
         items=pack["items"],
         formulas=pack["formulas"],
+        start_levels=pack["start_levels"],
         settings={"session_max_minutes": profile.session_max_minutes},
     )
 
@@ -162,6 +165,7 @@ async def post_attempts(body: AttemptsIn, profile: CurrentProfile, db: Db) -> At
             raise ApiError(403, "foreign_session", "Session inconnue pour ce profil.")
     accepted = 0
     seen: set[str] = set()
+    new_attempts: list[dict[str, Any]] = []
     for a in body.attempts:
         key = str(a.id)
         if key in existing or key in seen:
@@ -183,9 +187,18 @@ async def post_attempts(body: AttemptsIn, profile: CurrentProfile, db: Db) -> At
                 answered_at=a.answered_at,
             )
         )
+        new_attempts.append(a.model_dump())
         accepted += 1
+    # Leitner + maîtrise, une seule fois par tentative (les doublons sont écartés plus haut).
+    await tracking.apply_attempts(db, profile.id, new_attempts)
     await db.commit()
     return AttemptsOut(accepted=accepted, duplicates=len(body.attempts) - accepted)
+
+
+@router.get("/progress")
+async def get_progress(profile: CurrentProfile, db: Db) -> dict[str, Any]:
+    """Maîtrise par notion, groupée par chapitre (étoiles d'Archives)."""
+    return {"chapters": await tracking.progress(db, profile)}
 
 
 @router.post("/session/end")

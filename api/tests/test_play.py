@@ -61,7 +61,9 @@ async def test_session_pack_matches_level(client, login):
     assert len(body["items"]) == 60
     assert {i["generator"].split(".")[0] for i in body["items"]} == {"6e"}
     assert {i["role"] for i in body["items"]} == {"automatisme", "chapitre"}
-    assert {i["difficulty"] for i in body["items"]} == {1, 2, 3, 4, 5}
+    # Joueur sans historique : questions faciles d'abord (difficulté 1 ou 2).
+    assert {i["difficulty"] for i in body["items"]} <= {1, 2}
+    assert set(body["start_levels"]) == {"automatisme", "chapitre"}
     for item in body["items"]:
         assert "meta" not in item
         if item.get("latex"):
