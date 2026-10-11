@@ -421,6 +421,89 @@ def _scales(difficulty: int, rng: random.Random) -> dict:
     )
 
 
+# --- Énigme de la carte (Atelier des Balances) --------------------------------------------
+#
+# Carte quadrillée (1 carreau = 1 cm) avec des lieux et, selon la difficulté, une route
+# en deux tronçons. L'élève compte les carreaux puis applique l'échelle (barre graduée,
+# puis échelle numérique 1/n). Réservé à l'énigme : la question n'a de sens qu'avec la
+# carte affichée.
+
+# (nom sur la carte, « le … », « du … »)
+_PLACES = [
+    ("Moulin", "le Moulin", "du Moulin"),
+    ("Puits", "le Puits", "du Puits"),
+    ("Château", "le Château", "du Château"),
+    ("Forge", "la Forge", "de la Forge"),
+    ("Phare", "le Phare", "du Phare"),
+    ("Tour", "la Tour", "de la Tour"),
+    ("Pont", "le Pont", "du Pont"),
+    ("Ferme", "la Ferme", "de la Ferme"),
+]
+_MAP_COLS = 12
+_MAP_ROWS = 8
+
+
+def _map_points(rng: random.Random, bend: bool) -> tuple[list[list[int]], int]:
+    """Départ, (coude), arrivée en coordonnées de carreaux ; longueur en carreaux."""
+    if not bend:
+        y = rng.randint(1, _MAP_ROWS - 2)
+        x0 = rng.randint(1, 4)
+        x1 = rng.randint(x0 + 3, _MAP_COLS - 1)
+        if rng.random() < 0.5:
+            x0, x1 = x1, x0
+        return [[x0, y], [x1, y]], abs(x1 - x0)
+    x0 = rng.randint(1, 4)
+    x1 = rng.randint(x0 + 3, _MAP_COLS - 1)
+    y0, y1 = rng.sample(range(1, _MAP_ROWS - 1), 2)
+    while abs(y1 - y0) < 2:
+        y0, y1 = rng.sample(range(1, _MAP_ROWS - 1), 2)
+    return [[x0, y0], [x1, y0], [x1, y1]], (x1 - x0) + abs(y1 - y0)
+
+
+def _map(difficulty: int, rng: random.Random) -> dict:
+    bend = difficulty in (3, 5)
+    path, cells = _map_points(rng, bend)
+    a, b = rng.sample(_PLACES, 2)
+    points = [{"label": a[0], "at": path[0]}, {"label": b[0], "at": path[-1]}]
+    between = f"{a[1]} {b[2]}"
+    route = " en suivant la route" if bend else ""
+    visual = {"kind": "map", "cols": _MAP_COLS, "rows": _MAP_ROWS, "points": points}
+    if bend:
+        visual["path"] = path
+    if difficulty <= 3:
+        if difficulty == 1:
+            bar_cells, bar_m = 1, rng.choice([100, 200])
+        elif difficulty == 2:  # barre de 2 carreaux : diviser avant de multiplier
+            bar_cells, bar_m = 2, rng.choice([200, 500, 1000])
+        else:
+            bar_cells, bar_m = 1, rng.choice([200, 250, 500])
+        visual["scale"] = {"cells": bar_cells, "text": f"{dec(bar_m)} m"}
+        meters = Decimal(cells * bar_m) / bar_cells
+        per_cell = Decimal(bar_m) / bar_cells
+        item = _numeric(
+            f"Quelle distance sépare {between}{route}, en mètres ?",
+            plain(meters),
+            f"Compte les carreaux entre les deux lieux{route}, puis utilise la barre d'échelle.",
+            f"{cells} carreaux × {dec(per_cell)} m = {dec(meters)} m",
+            45000 + 10000 * difficulty,
+            {"cells": cells, "per_cell_m": str(per_cell), "result_m": str(meters)},
+        )
+        return item | {"visual": visual}
+    ratio = rng.choice([20000, 50000, 100000])
+    visual["scale"] = {"ratio": ratio, "text": f"Échelle 1/{dec(ratio)} · 1 carreau = 1 cm"}
+    km = Decimal(cells * ratio) / 100000
+    item = _numeric(
+        f"Quelle distance sépare {between}{route}, en kilomètres ?",
+        plain(km),
+        "Compte les carreaux (1 carreau = 1 cm), calcule la distance réelle en cm, puis "
+        "convertis : 1 km = 100 000 cm.",
+        f"{cells} cm × {dec(ratio)} = {dec(cells * ratio)} cm = {dec(km)} km",
+        60000 + 10000 * difficulty,
+        {"cells": cells, "ratio": ratio, "result_km": str(km)},
+    )
+    return item | {"visual": visual}
+
+
 # --- Probabilités (équiprobabilité) -----------------------------------------------------------
 
 
@@ -531,4 +614,15 @@ PROBABILITY = _gen(
     "6e.maths.probabilites.equiprobabilite",
     "Probabilités",
     _probability,
+)
+MAP = register(
+    Generator(
+        code="6e.proportionnalite.carte",
+        level="6e",
+        notion="6e.maths.proportionnalite.echelles",
+        role="chapitre",
+        title="Carte : distances et échelle",
+        generate=_map,
+        combat=False,
+    )
 )

@@ -2,8 +2,8 @@
 
 Usage (depuis la racine du dépôt) :
     uv run --directory api python ../tools/export_pack_fixture.py
-Écrit game/tests/fixtures/pack_6e.json et pack_2nde.json, avec les items de
-l'énigme du donjon de chaque monde (balance, miroirs).
+Écrit game/tests/fixtures/pack_6e.json et pack_2nde.json, avec les items des
+énigmes réservées aux donjons (balance et carte ; miroirs).
 """
 
 from __future__ import annotations
@@ -20,7 +20,11 @@ from app.engine import session_pack  # noqa: E402
 from app.engine.generators import REGISTRY  # noqa: E402
 
 OUT = ROOT / "game" / "tests" / "fixtures"
-ENIGMAS = {"6e": "6e.prealgebre.balance", "2nde": "2nde.vecteurs.rayon"}
+# (générateur, nombre d'items) : le premier sert aux tests du donjon.
+ENIGMAS = {
+    "6e": [("6e.prealgebre.balance", 6), ("6e.proportionnalite.carte", 3)],
+    "2nde": [("2nde.vecteurs.rayon", 6)],
+}
 
 
 def main() -> None:
@@ -28,9 +32,10 @@ def main() -> None:
     for level in ("6e", "2nde"):
         rng = random.Random(f"fixture-{level}")
         pack = session_pack.build(level, rng)
-        pack["items"] += session_pack.enigma_items(
-            REGISTRY[ENIGMAS[level]], 30.0, 6, rng, pack["formulas"]
-        )
+        for code, count in ENIGMAS[level]:
+            pack["items"] += session_pack.enigma_items(
+                REGISTRY[code], 30.0, count, rng, pack["formulas"]
+            )
         pack["session_id"] = ""
         pack["settings"] = {"session_max_minutes": 25}
         path = OUT / f"pack_{level}.json"

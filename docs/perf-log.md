@@ -23,6 +23,20 @@ Budgets (TRD §2.2) : PC 60 fps, tablette 30 fps minimum ; premier chargement < 
 
 **Poids de l'export web** (2026-10-10, template officiel) : `index.wasm` 39,5 Mo → 10,1 Mo gzip ; `index.pck` 4,5 Mo → 4,4 Mo ; total **14,5 Mo compressés** (budget 25 Mo).
 
+**Poids de l'export web, phase 3** (2026-10-11, six donjons) : avec deux squelettes de plus (mage, voleur), le
+`index.pck` atteignait 13,4 Mo (**23,3 Mo compressés** au total, budget 25 Mo). Chaque personnage KayKit embarquait
+sa propre copie des animations (1,3 à 1,8 Mo, presque incompressible). Tous partagent le même squelette :
+seuls le Guerrier squelette et le Chevalier importent maintenant leurs animations, les autres modèles les
+empruntent (`Fighter.ANIMATION_DONORS`). Résultat : `index.pck` **7,3 Mo**, total **≈ 17,3 Mo compressés**,
+et 20 Mo de mémoire statique en moins en jeu.
+
+**Donjons de la phase 3, profil `tablette`** (PC dev, salle 2 de chaque donjon, 2026-10-11) : la Tour des
+Fractions (référence de la phase 2) est à 72 appels de dessin et 66 600 triangles ; Atelier des Balances 74 et
+75 900 (parquet, table garnie) ; Observatoire des Angles 72 et 59 400 ; Forge de l'Algèbre 71 et 70 200 ;
+Citadelle des Fonctions 71 et 57 500. Les pièces les plus lourdes (pile de boîtes à 2 200 triangles, murs à
+étagères dans l'Atelier) ont été écartées. **À vérifier sur la tablette** (`?perf`) : la limite observée vient des
+lumières, pas des triangles, mais l'Atelier dépasse la cible de 60 000.
+
 ## Tablette (Android 10, Chrome 138) — 2026-10-10
 
 Mesures d'Eric, FPS moyen sur 10 s, scène d'étalonnage. Le navigateur se cale sur la synchronisation écran : une image de plus de 16,7 ms fait tomber à 30 fps, d'où le plafond observé.

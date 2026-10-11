@@ -30,6 +30,17 @@ var ambient_energy := 0.6
 var sun_color := Color(1.0, 0.86, 0.68)
 var sun_energy := 1.1
 var torch_color := Color(1.0, 0.62, 0.28)
+## Décor propre au donjon (DungeonDef.decor) ; valeurs absentes : décor par défaut.
+var decor: Dictionary = {}
+
+## Objets le long des murs (salles paires ; les salles impaires en miroir est-ouest) :
+## [pièce, position dans la salle, orientation, rayon de l'obstacle].
+const DEFAULT_PROPS := [
+	["barrel_large", Vector3(1.4, 0, 1.6), 0.0, 0.8],
+	["barrel_small_stack", Vector3(3.0, 0, 1.1), 0.0, 0.7],
+	["crates_stacked", Vector3(14.4, 0, 1.8), -20.0, 0.9],
+	["keg_decorated", Vector3(14.9, 0, 5.0), 90.0, 0.7],
+]
 
 var room_count := 0
 var built_settings: Dictionary
@@ -48,6 +59,12 @@ func use_theme(wt: WorldTheme) -> DungeonLevel:
 	sun_color = wt.sun_color
 	sun_energy = wt.sun_energy
 	torch_color = wt.torch_color
+	return self
+
+
+func use_decor(dungeon_decor: Dictionary) -> DungeonLevel:
+	decor = dungeon_decor
+	torch_color = decor.get("torch_color", torch_color)
 	return self
 
 
@@ -191,13 +208,16 @@ func _build_room(i: int) -> void:
 	static_root.name = "Static"
 	room.add_child(static_root)
 
+	var floor_piece: String = decor.get("floor", "floor_tile_large")
+	var accent_piece: String = decor.get("floor_accent", "floor_tile_large_rocks")
+	var walls: Array = decor.get("walls", ["wall", "wall_arched"])
 	for ix in TILES_X:
 		for iz in TILES_Z:
-			# Éboulis seulement le long du mur nord, hors du passage.
-			var rocks := iz == 0 and ix == 1 + (i % 2)
-			_place(static_root, "floor_tile_large_rocks" if rocks else "floor_tile_large", Vector3(2 + ix * TILE, 0, 2 + iz * TILE))
+			# Dalle différente (éboulis, planches sombres) seulement le long du mur nord, hors du passage.
+			var accent := iz == 0 and ix == 1 + (i % 2)
+			_place(static_root, accent_piece if accent else floor_piece, Vector3(2 + ix * TILE, 0, 2 + iz * TILE))
 	for ix in TILES_X:
-		_place(static_root, "wall_arched" if (ix + i) % 2 == 1 else "wall", Vector3(2 + ix * TILE, 0, 0))
+		_place(static_root, walls[(ix + i) % 2], Vector3(2 + ix * TILE, 0, 0))
 	# Mur ouest : extérieur pour la 1re salle, sinon mur de séparation avec sa porte.
 	for iz in TILES_Z:
 		var doorway := i > 0 and iz == 2
@@ -213,12 +233,14 @@ func _build_room(i: int) -> void:
 
 	# Décor contre les murs (jamais sur le passage des portes ni au centre).
 	var mirror := i % 2 == 1
-	_place(static_root, "banner_patternA_red" if mirror else "banner_patternA_blue", Vector3(6.5, 0, 0.05))
-	_place(static_root, "banner_patternA_blue" if mirror else "banner_patternA_red", Vector3(9.5, 0, 0.05))
-	_prop(static_root, "barrel_large", Vector3(1.4 if not mirror else 14.6, 0, 1.6), 0.0, 0.8)
-	_prop(static_root, "barrel_small_stack", Vector3(3.0 if not mirror else 13.0, 0, 1.1), 0.0, 0.7)
-	_prop(static_root, "crates_stacked", Vector3(14.4 if not mirror else 1.6, 0, 1.8), -20.0, 0.9)
-	_prop(static_root, "keg_decorated", Vector3(14.9 if not mirror else 1.1, 0, 5.0), 90.0, 0.7)
+	var banners: Array = decor.get("banners", ["banner_patternA_red", "banner_patternA_blue"])
+	_place(static_root, banners[1] if mirror else banners[0], Vector3(6.5, 0, 0.05))
+	_place(static_root, banners[0] if mirror else banners[1], Vector3(9.5, 0, 0.05))
+	for prop in decor.get("props", DEFAULT_PROPS):
+		var at: Vector3 = prop[1]
+		if mirror:
+			at.x = ROOM_W - at.x
+		_prop(static_root, prop[0], at, prop[2], prop[3])
 	_place(static_root, "candle_triple", Vector3(8.0, 0, 0.9))
 	for x in [4.0, 12.0]:
 		_place(static_root, "torch_mounted", Vector3(x, 2.2, 0.1))

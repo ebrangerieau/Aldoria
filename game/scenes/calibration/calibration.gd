@@ -7,7 +7,6 @@ extends Node3D
 ## Accès sur le web : ?scene=calibration. Capture sur PC :
 ##   godot --path game -- --scene=calibration --screenshot=C:/chemin/capture.png
 
-const CHARACTERS := "res://assets/kaykit/characters/%s.glb"
 
 const CAMERA_FOV := 20.0
 const CAMERA_DISTANCE := 62.0
@@ -56,7 +55,7 @@ func _build_characters() -> void:
 
 
 func _character(model: String, pos: Vector3, yaw_deg: float) -> Node3D:
-	var node: Node3D = (load(CHARACTERS % model) as PackedScene).instantiate()
+	var node: Node3D = Fighter.instantiate_model(model)
 	node.position = pos
 	node.rotation_degrees.y = yaw_deg
 	add_child(node)

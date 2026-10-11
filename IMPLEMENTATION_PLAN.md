@@ -214,6 +214,21 @@ Livrables du TRD §13 : une salle, un ennemi, 3 widgets, 4 générateurs, et les
 > Écart : « relier » (drag_match) n'a pas de widget générique ; son seul usage prévu, le tableau de signes,
 > a son widget dédié.
 > Reste au contenu : banque d'items relue par Eric (questions rédigées, hors générateurs).
+> Monde (2026-10-11) : **trois donjons par enfant**, ouverts l'un après l'autre depuis le camp. Jules : Tour des
+> Fractions, Atelier des Balances (pré-algèbre, proportionnalité ; énigme de la **carte** : compter les carreaux,
+> appliquer l'échelle), Observatoire des Angles (angles, probabilités ; énigme des automates : robot et boucles).
+> Tom : Labyrinthe des Vecteurs, Forge de l'Algèbre (calcul littéral, équations, valeur absolue ; énigme des
+> sceaux : tableaux de signes), Citadelle des Fonctions (fonctions, droites ; énigme des courbes : lecture
+> graphique). Décor propre à chaque donjon (sol, bannières, mobilier, couleur des torches), squelettes mage et
+> voleur. Un donjon peut viser plusieurs chapitres (`focus_chapters`). **Note de 1 à 5** en fin de donjon,
+> visible dans l'espace parent avec le type d'activité de chaque session.
+> **Défi du jour** : 10 automatismes (paquet `defi` du serveur), série de jours, un jour manqué rattrapable le
+> lendemain, coffre de la semaine à 5 défis, record personnel (bonnes réponses, puis temps).
+> Écarts : pas de compte à rebours (retour des enfants : un chrono visible les stresse), le temps n'apparaît
+> qu'au bilan ; pas de « mana » (le jeu n'en a pas), le défi rapporte de l'XP. Énigmes de Tom : tableaux de
+> signes et courbes plutôt qu'« artisanat proportionnel » (les générateurs existaient et couvrent le programme).
+> Poids web : animations des personnages partagées (pck 13,4 → 7,3 Mo, voir `docs/perf-log.md`).
+> Reste au monde : le village (PNJ, quêtes de révision, enquêtes statistiques de Tom), la personnalisation du héros.
 
 **Contenu**
 - **20 générateurs par niveau** (§4).

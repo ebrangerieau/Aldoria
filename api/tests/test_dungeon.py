@@ -150,3 +150,94 @@ async def test_oversized_save_is_rejected(client, login):
     response = await client.put(f"{API}/save", json=_save(0, 1, blob="x" * 70_000), headers=headers)
     assert response.status_code == 413
     assert response.json()["error"]["code"] == "save_too_large"
+
+
+async def test_dungeon_pack_with_several_chapters(client, login, curriculum):
+    headers = await login("jules", "1234")
+    chapters = ["6e.maths.prealgebre", "6e.maths.proportionnalite"]
+    body = (
+        await client.post(
+            f"{API}/session/start",
+            json={
+                "mode": "donjon",
+                "focus_chapters": chapters,
+                "enigma": {"generator": "6e.proportionnalite.carte", "count": 6},
+            },
+            headers=headers,
+        )
+    ).json()
+    chapter_items = [i for i in body["items"] if i["category"] == "chapitre"]
+    assert {i["notions"][0].rsplit(".", 1)[0] for i in chapter_items} == set(chapters)
+    enigma = [i for i in body["items"] if i["role"] == "enigme"]
+    assert len(enigma) == 6 and all(i["visual"]["kind"] == "map" for i in enigma)
+    # La carte n'a de sens qu'avec son dessin : jamais tirée pour un combat.
+    assert all(i["generator"] != "6e.proportionnalite.carte" for i in chapter_items)
+
+
+async def test_unknown_chapter_among_several_is_refused(client, login, curriculum):
+    headers = await login("tom", "9876")
+    response = await client.post(
+        f"{API}/session/start",
+        json={"focus_chapters": ["2nde.maths.fonctions", "6e.maths.fractions"]},
+        headers=headers,
+    )
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "unknown_chapter"
+
+
+async def test_daily_challenge_pack_is_automatisms_only(client, login, curriculum):
+    headers = await login("tom", "9876")
+    body = (
+        await client.post(f"{API}/session/start", json={"mode": "defi"}, headers=headers)
+    ).json()
+    assert len(body["items"]) >= 10
+    assert all(i["role"] == "automatisme" for i in body["items"])
+
+
+async def test_session_end_keeps_mode_and_rating(client, login, curriculum, sessionmaker):
+    from app.models import GameSession
+
+    headers = await login("jules", "1234")
+    started = (
+        await client.post(f"{API}/session/start", json={"mode": "donjon"}, headers=headers)
+    ).json()
+    for rating, status in ((6, 422), (4, 200)):
+        response = await client.post(
+            f"{API}/session/end",
+            json={"session_id": started["session_id"], "active_seconds": 300, "rating": rating},
+            headers=headers,
+        )
+        assert response.status_code == status
+    async with sessionmaker() as db:
+        session = await db.get(GameSession, started["session_id"])
+    assert (session.mode, session.rating) == ("donjon", 4)
+
+
+def test_game_dungeons_match_curriculum_and_generators():
+    """Les donjons du jeu (DungeonDef) visent des chapitres du programme qui ont des
+    questions, et une énigme du bon niveau."""
+    import json
+    import re
+    from pathlib import Path
+
+    from app.engine.generators import REGISTRY, playable_notions
+
+    root = Path(__file__).resolve().parents[2]
+    source = (root / "game/worlds/shared/dungeon_def.gd").read_text(encoding="utf-8")
+    chapters = {}
+    for level in ("6e", "2nde"):
+        seed = json.loads((root / f"content/seed/{level}/curriculum.json").read_text("utf-8"))
+        chapters |= {c["code"]: level for c in seed["chapters"]}
+    playable = {n.rsplit(".", 1)[0] for n in playable_notions()}
+    dungeons = re.findall(
+        r'd\.code = "(\w+)".*?d\.chapter_codes = \[(.*?)\].*?d\.enigma_generator = "([\w.]+)"',
+        source,
+        re.S,
+    )
+    assert len(dungeons) == 6
+    for code, chapter_list, enigma in dungeons:
+        codes = re.findall(r'"([\w.]+)"', chapter_list)
+        levels = {chapters[c] for c in codes}  # KeyError : chapitre absent du programme
+        assert len(levels) == 1, code
+        assert all(c in playable for c in codes), code
+        assert REGISTRY[enigma].level == levels.pop(), code

@@ -28,15 +28,17 @@ func after_each() -> void:
 	Session._save_json(Session.QUEUE_FILE, Session._queue)  # ne pas laisser de fausses réponses
 	Session.items = []
 	Session.profile = {}
+	Session.dungeon_code = ""
 	SaveManager.data = SaveManager.default_data()
 
 
-func _open(world: String, checkpoint := 0) -> void:
+func _open(world: String, checkpoint := 0, dungeon := "") -> void:
 	var level := "2nde" if world == "tom" else "6e"
 	Session.profile = {"name": "Test", "world": world, "level": level}
+	Session.dungeon_code = dungeon
 	Session._apply_pack(JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/pack_%s.json" % level)))
 	if checkpoint > 0:
-		SaveManager.set_checkpoint(DungeonDef.for_world(world).code, checkpoint)
+		SaveManager.set_checkpoint(DungeonDef.by_code(world, dungeon).code, checkpoint)
 	_scene = (load(DUNGEON) as PackedScene).instantiate()
 	add_child(_scene)
 	await wait_process_frames(3)
@@ -135,13 +137,62 @@ func test_boss_then_chest_completes_the_dungeon() -> void:
 	await wait_until(func() -> bool: return _actions_visible(), 6.0)
 	(boss["node"] as Fighter).hp = 1
 	await _answer("chapitre", true)
-	await wait_until(func() -> bool: return _scene._chest != null and not _scene._busy, 8.0)
+	await wait_until(func() -> bool: return _scene._chest != null and not _scene._busy, 12.0)
 	assert_not_null(_scene._chest, "coffre apparu")
 	_scene._hero.position = _scene._chest.position + Vector3(-1.0, 0, 0)
 	var button := await _wait_button(10.0)
 	assert_not_null(button, "fin du donjon")
 	assert_eq(int(SaveManager.dungeon("tour_fractions")["completed"]), 1)
 	assert_eq(int(SaveManager.dungeon("tour_fractions")["checkpoint"]), 0, "rejouable depuis l'entrée")
+
+
+func test_every_dungeon_builds_with_its_own_decor_and_enemies() -> void:
+	for world in ["jules", "tom"]:
+		for def in DungeonDef.all_for_world(world):
+			await _open(world, 0, def.code)
+			assert_eq(_scene._def.code, def.code)
+			assert_eq(_scene._level.room_count, def.room_count())
+			assert_eq(_scene._enemies.size(), def.enemy_count(), def.code)
+			assert_eq(_scene._pedestals.size(), 3, def.code)
+			var pieces: Array = def.decor.get("walls", []) + def.decor.get("banners", [])
+			for key in ["floor", "floor_accent"]:
+				if def.decor.has(key):
+					pieces.append(def.decor[key])
+			for prop in def.decor.get("props", []):
+				pieces.append(prop[0])
+			for piece in pieces:
+				assert_true(ResourceLoader.exists(DungeonLevel.DUNGEON % piece), "pièce de décor %s" % piece)
+			for room in def.rooms:
+				for enemy in room.get("enemies", []):
+					assert_true(ResourceLoader.exists(Fighter.MODELS % enemy["model"]), enemy["model"])
+			_scene.queue_free()
+			await wait_process_frames(2)
+
+
+func test_dungeon_session_params_name_its_chapters_and_enigma() -> void:
+	var forge := DungeonDef.by_code("tom", "forge_algebre")
+	var params := forge.session_params()
+	assert_eq(params["mode"], "donjon")
+	assert_eq(params["focus_chapters"], ["2nde.maths.calcul_litteral", "2nde.maths.equations", "2nde.maths.valeur_absolue"])
+	assert_eq(params["enigma"]["generator"], "2nde.equations.signe")
+	assert_eq(DungeonDef.by_code("jules", "inconnu").code, "tour_fractions", "code inconnu : premier donjon")
+
+
+func test_rating_panel_returns_the_stars_or_zero() -> void:
+	var panel := RatingPanel.new()
+	panel.setup(WorldTheme.jules(), "Test")
+	add_child_autofree(panel)
+	watch_signals(panel)
+	panel._choose(4)
+	panel._choose(2)  # déjà noté : ignoré
+	await wait_for_signal(panel.rated, 2.0)
+	assert_signal_emitted_with_parameters(panel, "rated", [4])
+	var skipped := RatingPanel.new()
+	skipped.setup(WorldTheme.tom(), "Test")
+	add_child_autofree(skipped)
+	watch_signals(skipped)
+	skipped._finish(0)
+	assert_signal_emitted_with_parameters(skipped, "rated", [0])
 
 
 func test_tap_path_goes_through_open_doors_only() -> void:

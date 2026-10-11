@@ -295,6 +295,8 @@ async def _played_sessions(
                 "questions": int(row.questions),
                 "correct": int(row.correct),
                 "finished": s.ended_at is not None,
+                "mode": s.mode,
+                "rating": s.rating,
             }
         )
     return result

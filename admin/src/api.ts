@@ -47,7 +47,15 @@ export interface Dashboard {
   playable: number
   week: Week
   days: { date: string; minutes: number }[]
-  recent_sessions: { started_at: string; minutes: number; questions: number; correct: number; finished: boolean }[]
+  recent_sessions: {
+    started_at: string
+    minutes: number
+    questions: number
+    correct: number
+    finished: boolean
+    mode: 'arene' | 'donjon' | 'defi' | null
+    rating: number | null
+  }[]
   weak_notions: (Notion & { chapter: string })[]
 }
 

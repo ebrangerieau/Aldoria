@@ -53,6 +53,8 @@ class GameSession(Base):
     active_seconds: Mapped[int | None] = mapped_column(Integer)
     nb_questions: Mapped[int] = mapped_column(Integer, default=0)
     nb_correct: Mapped[int] = mapped_column(Integer, default=0)
+    mode: Mapped[str | None] = mapped_column(String(20))  # arene, donjon, defi
+    rating: Mapped[int | None] = mapped_column(Integer)  # note de plaisir, 1 à 5
 
 
 class Attempt(Base):

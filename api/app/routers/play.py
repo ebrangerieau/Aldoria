@@ -6,7 +6,7 @@ import json
 import random
 import uuid
 from datetime import UTC, datetime, timedelta
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
@@ -53,8 +53,14 @@ class EnigmaIn(BaseModel):
 
 
 class SessionStartIn(BaseModel):
-    """Paramètres d'un donjon (tous facultatifs : l'arène s'en passe)."""
+    """Mode de jeu et paramètres d'un donjon (tous facultatifs : l'arène s'en passe).
+    `defi` : défi quotidien, paquet d'automatismes seulement."""
 
+    mode: Literal["arene", "donjon", "defi"] = "arene"
+    focus_chapters: list[Annotated[str, Field(max_length=80)]] = Field(
+        default_factory=list, max_length=4
+    )
+    # Ancien client (un seul chapitre) : encore accepté le temps des mises à jour.
     focus_chapter: str | None = Field(default=None, max_length=80)
     enigma: EnigmaIn | None = None
 
@@ -110,6 +116,8 @@ MAX_SAVE_BYTES = 64 * 1024
 class SessionEndIn(BaseModel):
     session_id: uuid.UUID
     active_seconds: int = Field(ge=0, le=24 * 3600)
+    # Note de plaisir donnée par l'enfant en fin de donjon (PRD §2), facultative.
+    rating: int | None = Field(default=None, ge=1, le=5)
 
 
 # --- Routes -----------------------------------------------------------------------
@@ -173,14 +181,21 @@ async def start_session(
         if generator is None or generator.level != profile.level:
             raise ApiError(422, "unknown_generator", "Énigme inconnue pour ce niveau.")
         enigma = (generator, body.enigma.count)
-    if body.focus_chapter is not None:
-        chapter = await db.scalar(select(Chapter).where(Chapter.code == body.focus_chapter))
-        if chapter is None or chapter.level != profile.level:
+    focus = list(dict.fromkeys([*body.focus_chapters, *filter(None, [body.focus_chapter])]))
+    if focus:
+        known = set(
+            await db.scalars(
+                select(Chapter.code).where(Chapter.code.in_(focus), Chapter.level == profile.level)
+            )
+        )
+        if known != set(focus):
             raise ApiError(422, "unknown_chapter", "Chapitre inconnu pour ce niveau.")
-    session = GameSession(id=str(uuid.uuid4()), profile_id=profile.id)
+    session = GameSession(id=str(uuid.uuid4()), profile_id=profile.id, mode=body.mode)
     db.add(session)
     await db.commit()
-    pack = await tracking.build_pack(db, profile, random.Random(), body.focus_chapter, enigma)
+    pack = await tracking.build_pack(
+        db, profile, random.Random(), focus, enigma, daily=body.mode == "defi"
+    )
     return SessionStartOut(
         session_id=session.id,
         items=pack["items"],
@@ -295,6 +310,8 @@ async def end_session(body: SessionEndIn, profile: CurrentProfile, db: Db) -> di
     session.active_seconds = body.active_seconds
     session.nb_questions = int(total)
     session.nb_correct = int(correct)
+    if body.rating is not None:
+        session.rating = body.rating
     await db.commit()
     return {"nb_questions": session.nb_questions, "nb_correct": session.nb_correct}
 

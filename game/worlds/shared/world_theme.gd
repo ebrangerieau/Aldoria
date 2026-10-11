@@ -46,7 +46,7 @@ static func jules() -> WorldTheme:
 	t.title = "Les Chroniques d'Aldoria"
 	t.hero_model = "Knight"
 	t.hero_name = "Jules, apprenti Archiviste"
-	t.enemy_models = ["Skeleton_Minion"]
+	t.enemy_models = ["Skeleton_Minion", "Skeleton_Minion", "Skeleton_Rogue", "Skeleton_Mage"]
 	t.enemy_names = ["Petit squelette égaré", "Squelette grognon", "Squelette farceur", "Gardien des os"]
 	t.action_names = {"automatisme": "Coup d'épée", "chapitre": "Sort d'étoiles", "soin": "Potion"}
 	t.bg = Color("#2b1d3a")
@@ -77,7 +77,7 @@ static func tom() -> WorldTheme:
 	t.title = "Les Chroniques d'Aldoria"
 	t.hero_model = "Rogue_Hooded"
 	t.hero_name = "Tom, Archiviste"
-	t.enemy_models = ["Skeleton_Warrior"]
+	t.enemy_models = ["Skeleton_Warrior", "Skeleton_Rogue", "Skeleton_Warrior", "Skeleton_Mage"]
 	t.enemy_names = ["Sentinelle du Brouillard", "Spectre d'os", "Gardien oublié", "Héraut du Brouillard"]
 	t.action_names = {"automatisme": "Frappe", "chapitre": "Arcane", "soin": "Régénération"}
 	t.bg = Color("#0d1117")

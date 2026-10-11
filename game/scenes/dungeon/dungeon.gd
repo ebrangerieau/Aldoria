@@ -1,11 +1,13 @@
 extends Node3D
-## Donjon (tranche verticale, phase 2) : salles en enfilade à explorer, combats au
-## contact des ennemis, énigme du monde (balance pour Jules, miroirs et vecteurs pour
-## Tom), boss de synthèse puis coffre. Chaque salle franchie devient un point de
-## reprise (sauvegarde) ; un repli à 0 PV ramène à l'entrée de la salle, sans perte.
+## Donjon : salles en enfilade à explorer, combats au contact des ennemis, énigme
+## (balance, carte, robot pour Jules ; miroirs, tableau de signes, courbes pour Tom),
+## boss de synthèse puis coffre et note de 1 à 5. Chaque salle franchie devient un
+## point de reprise (sauvegarde) ; un repli à 0 PV ramène à l'entrée de la salle,
+## sans perte.
 ##
-## Le donjon (DungeonDef) fixe le chapitre et l'énigme ; le paquet de questions a été
-## composé par le serveur au lancement (`Session.start("donjon", …)`).
+## Le donjon (DungeonDef choisi au camp : `Session.dungeon_code`) fixe les chapitres
+## et l'énigme ; le paquet de questions a été composé par le serveur au lancement
+## (`Session.start("donjon", …)`).
 
 const EXPLORE := {"fov": 36.0, "distance": 21.0, "pitch": -50.0}
 const COMBAT := {"fov": 22.0, "distance": 22.0, "pitch": -20.0}
@@ -42,10 +44,10 @@ var _ending := false
 
 func _ready() -> void:
 	_wt = WorldTheme.for_world(Session.world())
-	_def = DungeonDef.for_world(Session.world())
+	_def = DungeonDef.by_code(Session.world(), chosen_code())
 	QuestionService.reset()
 
-	_level = DungeonLevel.new().use_theme(_wt)
+	_level = DungeonLevel.new().use_theme(_wt).use_decor(_def.decor)
 	add_child(_level)
 	_level.build(_def.room_count())
 
@@ -123,6 +125,13 @@ func _dev_approach() -> void:
 
 
 # --- Mise en place --------------------------------------------------------------------
+
+## Donjon choisi au camp. Développement, PC uniquement : `-- --dungeon=<code>`.
+static func chosen_code() -> String:
+	if Quality.option("dungeon") != "" and not OS.has_feature("web"):
+		return Quality.option("dungeon")
+	return Session.dungeon_code
+
 
 func _checkpoint() -> int:
 	var room := int(SaveManager.dungeon(_def.code)["checkpoint"])
@@ -401,8 +410,11 @@ func _open_chest() -> void:
 	await get_tree().create_timer(1.2).timeout
 	await _message("%s : terminé !" % _def.title,
 		"%s\n%d bonnes réponses sur %d. +%d XP dans le coffre." % [_def.outro, QuestionService.correct_count, QuestionService.answered, _def.chest_xp],
-		"Retour au camp")
-	_quit()
+		"Continuer")
+	var rating := RatingPanel.new()
+	rating.setup(_wt, _def.title)
+	_hud.show_panel(rating)
+	_quit(await rating.rated)
 
 
 # --- Énigme ------------------------------------------------------------------------------
@@ -497,10 +509,10 @@ func _session_end() -> void:
 	_quit()
 
 
-func _quit() -> void:
+func _quit(rating := 0) -> void:
 	_pause_exploration()
 	_hud.show_actions(false)
 	_hud.clear_panel()
 	Engine.time_scale = 1.0
-	await Session.end()
+	await Session.end(rating)
 	get_tree().change_scene_to_file("res://scenes/hub/hub.tscn")

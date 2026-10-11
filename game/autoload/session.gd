@@ -8,8 +8,7 @@ extends Node
 signal queue_changed(pending: int)
 
 const AUTH_FILE := "user://auth.json"
-const PACK_FILE := "user://pack_%s.json"  # un paquet par mode (arène, donjon)
-const PACK_MODES := ["arene", "donjon"]
+const PACK_FILE := "user://pack_%s.json"  # un paquet par mode (arène, défi) ou par donjon
 const QUEUE_FILE := "user://attempts_queue.json"
 const FLUSH_RETRY_S := 10.0
 const BATCH_SIZE := 50
@@ -21,6 +20,8 @@ var formulas: Dictionary = {}  # hash → texte SVG
 var settings: Dictionary = {}
 ## Difficulté de départ par rôle, calculée par le serveur selon la maîtrise.
 var start_levels: Dictionary = {}
+## Donjon choisi au camp (code d'un DungeonDef du monde du joueur).
+var dungeon_code := ""
 var active_seconds := 0.0
 ## Temps de jeu actif depuis la connexion (toutes sessions) : limite fixée par le parent.
 var played_seconds := 0.0
@@ -77,36 +78,44 @@ func logout() -> void:
 	ApiClient.token = ""
 	profile = {}
 	session_id = ""
+	dungeon_code = ""
 	played_seconds = 0.0
 	DirAccess.remove_absolute(AUTH_FILE)
 	# Les paquets hors connexion appartiennent au joueur précédent (autre niveau).
-	for mode in PACK_MODES:
-		DirAccess.remove_absolute(PACK_FILE % mode)
-	DirAccess.remove_absolute("user://pack.json")  # ancien nom (phase 1)
+	for file in DirAccess.get_files_at("user://"):
+		if file.begins_with("pack") and file.ends_with(".json"):
+			DirAccess.remove_absolute("user://" + file)
 
 
-## Ouvre une session et charge le paquet de questions. `params` : chapitre et
-## énigme d'un donjon (voir DungeonDef). Sans réseau, reprend le dernier paquet
-## enregistré pour ce mode (s'il existe) pour que le jeu reste jouable.
-func start(mode := "arene", params := {}) -> Dictionary:
-	var res := await ApiClient.post_json("/play/session/start", params)
+## Ouvre une session et charge le paquet de questions. `mode` : arene, donjon ou
+## defi ; `params` : chapitres et énigme d'un donjon (voir DungeonDef). Sans réseau,
+## reprend le dernier paquet enregistré sous `cache` (le mode par défaut, le code
+## du donjon sinon) pour que le jeu reste jouable.
+func start(mode := "arene", params := {}, cache := "") -> Dictionary:
+	var body := params.duplicate()
+	body["mode"] = mode
+	var key := cache if cache != "" else mode
+	var res := await ApiClient.post_json("/play/session/start", body)
 	if res.ok:
 		_apply_pack(res.data)
-		_save_json(PACK_FILE % mode, res.data)
+		_save_json(PACK_FILE % key, res.data)
 		return res
 	if res.status == 0:
-		var cached: Dictionary = _load_json(PACK_FILE % mode, {})
+		var cached: Dictionary = _load_json(PACK_FILE % key, {})
 		if not cached.is_empty():
 			_apply_pack(cached)
 			return {"ok": true, "status": 0, "data": cached, "error": {}, "offline": true}
 	return res
 
 
-func end() -> void:
+## Fin de session ; `rating` : note de plaisir de 1 à 5 (fin de donjon), 0 sinon.
+func end(rating := 0) -> void:
 	await flush()
 	if session_id != "":
-		await ApiClient.post_json("/play/session/end",
-			{"session_id": session_id, "active_seconds": int(active_seconds)})
+		var body := {"session_id": session_id, "active_seconds": int(active_seconds)}
+		if rating > 0:
+			body["rating"] = rating
+		await ApiClient.post_json("/play/session/end", body)
 	session_id = ""
 
 

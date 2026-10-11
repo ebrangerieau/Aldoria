@@ -1,5 +1,6 @@
 extends Node
-## Sauvegarde de partie (TRD §2.7) : XP, progression dans les donjons, bestiaire.
+## Sauvegarde de partie (TRD §2.7) : XP, progression dans les donjons, bestiaire,
+## défis quotidiens (jours faits, record, coffres de la semaine ouverts).
 ##
 ## Écrite d'abord dans `user://` (IndexedDB sur le web), puis envoyée au serveur
 ## (`PUT /play/save` avec la révision sur laquelle elle s'appuie). Deux appareils
@@ -34,7 +35,11 @@ func _ready() -> void:
 
 
 static func default_data() -> Dictionary:
-	return {"schema_version": SCHEMA_VERSION, "xp": 0, "dungeons": {}, "bestiary": {}}
+	return {"schema_version": SCHEMA_VERSION, "xp": 0, "dungeons": {}, "bestiary": {}, "daily": _default_daily()}
+
+
+static func _default_daily() -> Dictionary:
+	return {"days": [], "best": {"correct": 0, "ms": 0}, "best_streak": 0, "chests": []}
 
 
 ## Met une sauvegarde au format courant (version 1 : point de départ, rien à convertir).
@@ -72,6 +77,24 @@ func bestiary() -> Dictionary:
 	return data["bestiary"]
 
 
+## Un donjon est ouvert quand le précédent du même monde a été terminé une fois.
+func dungeon_unlocked(dungeons: Array[DungeonDef], index: int) -> bool:
+	return index == 0 or int(dungeon(dungeons[index - 1].code)["completed"]) > 0
+
+
+func daily() -> Dictionary:
+	_ensure_loaded()
+	var d: Dictionary = data.get("daily", {})
+	var full := _default_daily()
+	full.merge(d, true)
+	data["daily"] = full
+	return full
+
+
+func daily_days() -> Array:
+	return daily()["days"]
+
+
 # --- Modifications ---------------------------------------------------------------------
 
 func add_xp(amount: int) -> void:
@@ -97,6 +120,39 @@ func complete_dungeon(code: String) -> void:
 	d["completed"] = int(d["completed"]) + 1
 	d["checkpoint"] = 0  # rejouable depuis l'entrée
 	_touch()
+
+
+## Défi quotidien terminé. `day` : jour compté (aujourd'hui, hier en rattrapage, ou ""
+## pour un simple entraînement) ; record : plus de bonnes réponses, puis plus rapide.
+func record_daily(day: String, correct: int, time_ms: int, today: String) -> void:
+	var d := daily()
+	var days: Array = d["days"]
+	if day != "" and not days.has(day):
+		days.append(day)
+		days.sort()
+		while days.size() > DailyChallenge.KEPT_DAYS:
+			days.pop_front()
+	var best: Dictionary = d["best"]
+	if correct > int(best["correct"]) or (correct == int(best["correct"]) and time_ms < int(best["ms"])):
+		d["best"] = {"correct": correct, "ms": time_ms}
+	d["best_streak"] = maxi(int(d["best_streak"]), DailyChallenge.streak(days, today))
+	_touch()
+
+
+func weekly_chest_ready(today: String) -> bool:
+	var d := daily()
+	var week_done := DailyChallenge.week_count(d["days"], today) >= DailyChallenge.WEEKLY_GOAL
+	return week_done and not (d["chests"] as Array).has(DailyChallenge.week_start(today))
+
+
+func open_weekly_chest(today: String) -> void:
+	if not weekly_chest_ready(today):
+		return
+	var chests: Array = daily()["chests"]
+	chests.append(DailyChallenge.week_start(today))
+	while chests.size() > 8:
+		chests.pop_front()
+	add_xp(DailyChallenge.WEEKLY_CHEST_XP)
 
 
 func record_defeat(enemy_key: String) -> void:

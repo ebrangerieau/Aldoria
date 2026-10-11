@@ -170,7 +170,7 @@ func _resolve_failure(item: Dictionary) -> void:
 
 func _enemy_turn(guarded: bool) -> void:
 	await get_tree().create_timer(0.25).timeout
-	enemy.play(["1H_Melee_Attack_Chop", "2H_Melee_Attack_Chop", "Unarmed_Melee_Attack_Punch_A"])
+	enemy.play(enemy.attack_animations)
 	await get_tree().create_timer(0.45).timeout
 	var base := randi_range(6, 10) if wt.id == "jules" else randi_range(9, 14)
 	var dmg := roundi((base + tier) * (GUARD_MULT if guarded else 1.0))

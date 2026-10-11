@@ -97,13 +97,15 @@ async def build_pack(
     db: AsyncSession,
     profile: Profile,
     rng: random.Random,
-    focus_chapter: str | None = None,
+    focus_chapters: list[str] | None = None,
     enigma: tuple[Generator, int] | None = None,
+    daily: bool = False,
 ) -> dict[str, Any]:
-    """Paquet de session. `focus_chapter` : chapitre d'un donjon, qui fournit alors
-    toutes les questions « chapitre » (au lieu des chapitres en cours). `enigma` :
-    (générateur, nombre) d'items réservés à l'énigme du donjon."""
-    pack = await _combat_pack(db, profile, rng, focus_chapter)
+    """Paquet de session. `focus_chapters` : chapitres d'un donjon, qui fournissent
+    alors toutes les questions « chapitre » (au lieu des chapitres en cours). `enigma` :
+    (générateur, nombre) d'items réservés à l'énigme du donjon. `daily` : défi
+    quotidien, automatismes seulement."""
+    pack = await _combat_pack(db, profile, rng, focus_chapters or [], daily)
     if enigma is not None:
         generator, count = enigma
         notion = await db.scalar(sql_select(Notion).where(Notion.code == generator.notion))
@@ -114,8 +116,15 @@ async def build_pack(
     return pack
 
 
+DAILY_PACK_SIZE = 24
+
+
 async def _combat_pack(
-    db: AsyncSession, profile: Profile, rng: random.Random, focus_chapter: str | None
+    db: AsyncSession,
+    profile: Profile,
+    rng: random.Random,
+    focus_chapters: list[str],
+    daily: bool = False,
 ) -> dict[str, Any]:
     playable = playable_notions()
     rows = [(n, c) for n, c in await _level_notions(db, profile.level) if n.code in playable]
@@ -140,8 +149,10 @@ async def _combat_pack(
             .limit(20)
         )
     )
-    if focus_chapter and any(c.code == focus_chapter for _, c in rows):
-        statuses = {focus_chapter: "en_cours"}  # donjon : son chapitre seul
+    level_chapters = {c.code for _, c in rows}
+    focus = [code for code in focus_chapters if code in level_chapters]
+    if focus:
+        statuses = {code: "en_cours" for code in focus}  # donjon : ses chapitres seuls
     infos = [selector.NotionInfo(n.code, c.code, n.is_automatism) for n, c in rows]
     progress = {
         n.code: selector.NotionProgress(st.mastery, st.seen, _aware(st.due_at))
@@ -149,8 +160,11 @@ async def _combat_pack(
         if (st := states.get(n.id)) is not None
     }
     ratios = (profile.ratio_chapter, profile.ratio_review, profile.ratio_automatisms)
+    size = selector.PACK_SIZE
+    if daily:
+        ratios, statuses, size = (0.0, 0.0, 1.0), {}, DAILY_PACK_SIZE
     slots = selector.select(
-        infos, progress, statuses, list(reversed(recent)), ratios, datetime.now(UTC), rng
+        infos, progress, statuses, list(reversed(recent)), ratios, datetime.now(UTC), rng, size
     )
     return session_pack.build_items(slots, rng)
 

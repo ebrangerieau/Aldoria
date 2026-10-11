@@ -5,12 +5,30 @@ extends Node3D
 signal hp_changed(hp: int, max_hp: int)
 
 const MODELS := "res://assets/kaykit/characters/%s.glb"
+## Animations partagées (poids de l'export web) : tous les personnages KayKit ont le même
+## squelette. Seuls le Guerrier squelette et le Chevalier importent leurs animations ;
+## les autres modèles sont importés sans (`animation/import=false`) et empruntent la
+## bibliothèque de leur donneur.
+const ANIMATION_DONORS := {
+	"Skeleton_Minion": "Skeleton_Warrior",
+	"Skeleton_Mage": "Skeleton_Warrior",
+	"Skeleton_Rogue": "Skeleton_Warrior",
+	"Rogue_Hooded": "Knight",
+}
+## Attaque propre à certains modèles (le mage lance un sort, le voleur frappe d'estoc).
+const ATTACKS := {
+	"Skeleton_Mage": ["Spellcast_Shoot", "Spellcast_Raise"],
+	"Skeleton_Rogue": ["1H_Melee_Attack_Stab", "1H_Melee_Attack_Chop"],
+}
 
 var display_name := ""
 var max_hp := 100
 var hp := 100
 var idle_animation := "Idle"
+var attack_animations: Array = ["1H_Melee_Attack_Chop", "2H_Melee_Attack_Chop", "Unarmed_Melee_Attack_Punch_A"]
 var _anim: AnimationPlayer
+
+static var _libraries: Dictionary = {}  # donneur → AnimationLibrary
 
 
 static func create(model: String, name_text: String, hp_max: int, idle_name := "Idle") -> Fighter:
@@ -19,7 +37,9 @@ static func create(model: String, name_text: String, hp_max: int, idle_name := "
 	f.max_hp = hp_max
 	f.hp = hp_max
 	f.idle_animation = idle_name
-	var body: Node3D = (load(MODELS % model) as PackedScene).instantiate()
+	if ATTACKS.has(model):
+		f.attack_animations = ATTACKS[model]
+	var body := instantiate_model(model)
 	f.add_child(body)
 	f._anim = body.find_child("AnimationPlayer", true, false) as AnimationPlayer
 	if f._anim:
@@ -28,6 +48,28 @@ static func create(model: String, name_text: String, hp_max: int, idle_name := "
 				f._anim.get_animation(loop).loop_mode = Animation.LOOP_LINEAR
 		f._anim.animation_finished.connect(f._on_animation_finished)
 	return f
+
+
+## Modèle prêt à animer : son AnimationPlayer, ou un nouveau qui reçoit la
+## bibliothèque d'animations de son donneur.
+static func instantiate_model(model: String) -> Node3D:
+	var body: Node3D = (load(MODELS % model) as PackedScene).instantiate()
+	if ANIMATION_DONORS.has(model) and body.find_child("AnimationPlayer", true, false) == null:
+		var player := AnimationPlayer.new()
+		player.name = "AnimationPlayer"
+		body.add_child(player)
+		player.root_node = NodePath("..")
+		player.add_animation_library("", _library(ANIMATION_DONORS[model]))
+	return body
+
+
+static func _library(donor: String) -> AnimationLibrary:
+	if not _libraries.has(donor):
+		var scene: Node = (load(MODELS % donor) as PackedScene).instantiate()
+		var player := scene.find_child("AnimationPlayer", true, false) as AnimationPlayer
+		_libraries[donor] = player.get_animation_library("")
+		scene.free()
+	return _libraries[donor]
 
 
 func _ready() -> void:

@@ -1,5 +1,6 @@
 // Test de bout en bout du jeu web : titre → profil → PIN → camp → donjon (marche
-// au clavier) → Quitter → camp → Archives → camp → Changer de joueur → profils.
+// au clavier) → Quitter → camp → Archives → camp → défi du jour (1re question) →
+// Quitter → camp → Changer de joueur → profils.
 // Pilote Edge (ou Chrome) en headless via playwright-core, sur le banc local
 // (tools/e2e_web.ps1) : jamais sur la production avec les vrais codes des enfants.
 //
@@ -38,7 +39,7 @@ const { chromium } = require('playwright-core');
   }
   await page.waitForTimeout(4000);   // connexion + sauvegarde → camp
   await shot('2_camp');
-  await page.mouse.click(270, 712);  // « Entrer » dans le donjon (paquet + scène 3D)
+  await page.mouse.click(642, 226);  // « Entrer » dans le premier donjon (paquet + scène 3D)
   await page.waitForTimeout(6000);
   await shot('3_donjon_intro');
   await page.mouse.click(640, 730);  // « En avant ! »
@@ -50,19 +51,28 @@ const { chromium } = require('playwright-core');
   await shot('4_donjon_marche');
   await page.mouse.click(1210, 63);  // « Quitter » → camp
   await page.waitForTimeout(3000);
-  await page.mouse.click(1078, 712); // « Consulter » les Archives
+  await page.mouse.click(1138, 683); // « Consulter » les Archives
   await page.waitForTimeout(3000);
   await shot('5_archives');
   await page.mouse.click(1170, 52);  // « Retour au camp »
   await page.waitForTimeout(2500);
-  await page.mouse.click(1133, 71);  // « Changer de joueur »
+  await page.mouse.click(1138, 237); // « Relever » le défi du jour
+  await page.waitForTimeout(4000);
+  await page.mouse.click(640, 530);  // « C'est parti ! »
+  await page.waitForTimeout(1500);
+  await shot('6_defi');
+  await page.mouse.click(1190, 53);  // « Quitter » → camp
+  await page.waitForTimeout(3000);
+  await page.mouse.click(1137, 65);  // « Changer de joueur »
   await page.waitForTimeout(2500);
-  await shot('6_changer_joueur');
+  await shot('7_changer_joueur');
 
   console.log('Appels API :\n  ' + api.join('\n  '));
   for (const call of ['200 POST /api/v1/play/session/start', '200 GET /api/v1/play/save', '200 GET /api/v1/play/progress']) {
     if (!api.includes(call)) problems.push(`appel manquant : ${call}`);
   }
+  const starts = api.filter((line) => line === '200 POST /api/v1/play/session/start').length;
+  if (starts < 2) problems.push("le défi du jour n'a pas ouvert de session");
   const profileLoads = api.filter((line) => line === '200 GET /api/v1/play/profiles').length;
   if (profileLoads < 2) problems.push('« Changer de joueur » n\'a pas rouvert le choix des profils');
   if (problems.length) {

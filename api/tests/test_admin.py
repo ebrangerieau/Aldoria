@@ -203,4 +203,6 @@ async def test_sessions_without_answers_are_ignored(client, login, profiles, cur
         "questions": 2,
         "correct": 2,
         "finished": False,
+        "mode": "arene",
+        "rating": None,
     }

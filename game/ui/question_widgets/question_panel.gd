@@ -172,6 +172,10 @@ static func _make_visual(visual: Dictionary, wt: WorldTheme) -> Control:
 			var robot := RobotView.new()
 			robot.setup(visual, wt)
 			return robot
+		"map":
+			var map := MapView.new()
+			map.setup(visual, wt)
+			return map
 	return null
 
 

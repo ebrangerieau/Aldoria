@@ -94,6 +94,8 @@ function PlayTime({ days }: { days: DashboardData['days'] }) {
   )
 }
 
+const MODES = { arene: 'Arène', donjon: 'Donjon', defi: 'Défi du jour' } as const
+
 function RecentSessions({ sessions }: { sessions: DashboardData['recent_sessions'] }) {
   if (sessions.length === 0) return <p className="muted">Aucune session.</p>
   return (
@@ -101,18 +103,22 @@ function RecentSessions({ sessions }: { sessions: DashboardData['recent_sessions
       <thead>
         <tr>
           <th>Date</th>
+          <th>Activité</th>
           <th>Durée</th>
           <th>Réponses</th>
           <th>Justes</th>
+          <th>Note</th>
         </tr>
       </thead>
       <tbody>
         {sessions.map((s) => (
           <tr key={s.started_at}>
             <td>{formatDateTime(s.started_at)}</td>
+            <td>{s.mode ? MODES[s.mode] : '–'}</td>
             <td>{s.finished ? `${s.minutes} min` : <span className="muted">non terminée</span>}</td>
             <td>{s.questions}</td>
             <td>{s.questions ? `${Math.round((100 * s.correct) / s.questions)} %` : '–'}</td>
+            <td title="Note de plaisir donnée en fin de donjon">{s.rating ? `${'★'.repeat(s.rating)}${'☆'.repeat(5 - s.rating)}` : '–'}</td>
           </tr>
         ))}
       </tbody>

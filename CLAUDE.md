@@ -37,9 +37,10 @@ uv run --directory api ruff check .
 ```
 
 Jeu sur PC contre l'API locale (Docker, port 8098) — options réservées au PC, ignorées sur le web :
-`godot --path game -- --autologin=<id> --pin=<code> [--goto=donjon|arene|archives] [--room=N] [--approach=1]
-[--autoaction=chapitre] [--screenshot=x.png --shot-delay=4]`.
-`--goto` part du camp vers une destination ; `--room` démarre le donjon dans la salle N (0 à 5) ;
+`godot --path game -- --autologin=<id> --pin=<code> [--goto=donjon|defi|arene|archives] [--dungeon=<code>] [--room=N]
+[--approach=1] [--autoaction=chapitre] [--screenshot=x.png --shot-delay=4]`.
+`--goto` part du camp vers une destination ; `--dungeon` choisit le donjon (code d'un `DungeonDef`, même fermé) ;
+`--room` démarre le donjon dans la salle N (0 à 5) ;
 `--approach` mène le héros au premier ennemi ou piédestal de la salle (captures d'un combat, d'une énigme) ;
 `--autoaction` choisit une action dans l'arène.
 Profils locaux : `docker exec <conteneur api> python -m app.cli create --name … --level 6e|2nde --avatar … --pin …`.
@@ -56,9 +57,13 @@ Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-
 
 - GDScript typé, `class_name` pour les types partagés, signaux plutôt que couplage direct.
 - Le gameplay ne connaît jamais le contenu d'une question (TRD §2.3) : il passe par `QuestionService`.
-  Un donjon (`DungeonDef`) ne transmet que son chapitre et son générateur d'énigme à `session/start`.
+  Un donjon (`DungeonDef`, trois par monde) ne transmet que ses chapitres et son générateur d'énigme à
+  `session/start` ; `api/tests/test_dungeon.py` vérifie qu'ils existent côté API. Son décor (`decor`) est lu
+  par `DungeonLevel`.
 - Combat : `Encounter` (core/combat) est partagé par l'arène et le donjon ; une scène ne réécrit pas le tour par tour.
-- Progression du joueur : `SaveManager` (XP, donjons, bestiaire), jamais de fichier de sauvegarde écrit à la main.
+- Progression du joueur : `SaveManager` (XP, donjons, bestiaire, défis quotidiens), jamais de fichier de
+  sauvegarde écrit à la main. Défi du jour : règles de série et de coffre dans `DailyChallenge`, sans compte à
+  rebours à l'écran (les enfants l'ont vécu comme un chrono).
 - Un test qui enregistre des réponses réécrit ensuite la file locale (`Session._save_json`) : sinon de fausses
   réponses partent vers l'API de dev au lancement suivant du jeu.
 - Pas de `JavaScriptBridge.eval` : la CSP interdit `eval`. Utiliser `JavaScriptBridge.get_interface`.
@@ -68,6 +73,9 @@ Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-
   `vertex_shading`, `shadows`. En `fake`, utiliser `MobileLighting.make_fake_light` ; si `vertex_shading`,
   appliquer `MobileLighting.apply_vertex_shading`. Jamais d'`OmniLight3D` en dur dans une scène.
 - Tout asset ajouté est inscrit dans `game/assets/LICENSES.md`.
+- Personnage KayKit ajouté : l'importer sans animations (`animation/import=false` dans son `.import`) et
+  l'inscrire dans `Fighter.ANIMATION_DONORS` ; toujours l'instancier par `Fighter.create` ou
+  `Fighter.instantiate_model`. Chaque copie des animations pèse 1,3 à 1,8 Mo dans l'export web.
 - Options de test : `?quality=haut|tablette|bas`, `?perf`, `?scale=`, `?lights=fake|real|0`, `?vertex=0|1`,
   `?shadows=0`, `?merge=0` dans l'URL (web) ou `-- --quality=bas` (PC).
 - JSON en snake_case, dates ISO 8601 UTC, erreurs `{"error": {"code", "message"}}`.

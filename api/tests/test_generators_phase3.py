@@ -554,3 +554,26 @@ def test_true_false():
         assert not answers.check(
             item.answer.model_dump(), {"value": not item.answer.value, "reason": item.answer.reason}
         )
+
+
+def test_map_distance_measured_on_the_drawing():
+    """Énigme de la carte : la distance se retrouve en comptant les carreaux du dessin."""
+    for item in _items("6e.proportionnalite.carte"):
+        v = item.visual
+        path = v.get("path") or [p["at"] for p in v["points"]]
+        assert path[0] == v["points"][0]["at"] and path[-1] == v["points"][1]["at"]
+        assert all(0 <= x < v["cols"] and 0 <= y < v["rows"] for x, y in path), item.id
+        legs = list(zip(path, path[1:], strict=False))
+        cells = sum(abs(b[0] - a[0]) + abs(b[1] - a[1]) for a, b in legs)
+        assert all(a[0] == b[0] or a[1] == b[1] for a, b in legs)
+        scale = v["scale"]
+        if "ratio" in scale:
+            expected = Fraction(cells * scale["ratio"], 100000)
+            assert "kilomètres" in item.prompt
+        else:
+            metres = int(scale["text"].removesuffix(" m").replace(" ", ""))
+            expected = Fraction(cells * metres, scale["cells"])
+            assert "mètres" in item.prompt
+        assert _value(item) == expected, item.id
+        assert ("route" in item.prompt) == ("path" in v)
+        assert v["points"][0]["label"] != v["points"][1]["label"]
