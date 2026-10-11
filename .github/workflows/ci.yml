@@ -25,6 +25,22 @@ jobs:
       - run: uv run ruff check .
       - run: uv run pytest -q
 
+  admin-build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: admin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: admin/package-lock.json
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build  # vérification des types + build Vite
+
   game-tests:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -63,7 +79,7 @@ jobs:
 
   images:
     runs-on: ubuntu-latest
-    needs: [api-tests, export-web]
+    needs: [api-tests, admin-build, export-web]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
       contents: read

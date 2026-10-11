@@ -7,7 +7,7 @@ Documents de référence : `docs/PRD.md`, `docs/TRD.md`, `IMPLEMENTATION_PLAN.md
 
 - `game/` : projet Godot (GDScript typé, renderer Compatibility, export web sans threads)
 - `api/` : FastAPI (Python 3.12, `uv`)
-- `admin/` : éditeur parent React (phase 2)
+- `admin/` : espace parent React + TypeScript + Vite (servi par l'image `web` sur `aldoria-admin.*`)
 - `content/` : schémas d'items, seed, vecteurs de test partagés API/client
 - `deploy/` : docker-compose (Traefik bandtrack.fr), Dockerfiles, nginx
 - `tools/` : scripts (post-traitement de l'export web…)
@@ -26,6 +26,9 @@ godot --headless --path game -s addons/gut/gut_cmdln.gd -gexit
 uv run --directory api python ../tools/export_pack_fixture.py
 # Lancer la scène d'étalonnage avec une capture d'écran (vérification visuelle)
 godot --path game --rendering-driver opengl3 -- --scene=calibration --screenshot=C:/chemin/capture.png --quality=tablette
+# Espace parent : vérification des types + build ; `npm run dev` relaie /api vers l'API locale
+# (exporter ALDORIA_ADMIN_KEY, la même que celle du conteneur API local)
+npm --prefix admin run build
 # API
 uv run --directory api pytest -q
 uv run --directory api ruff check .
@@ -66,4 +69,7 @@ Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-
 - Options de test : `?quality=haut|tablette|bas`, `?perf`, `?scale=`, `?lights=fake|real|0`, `?vertex=0|1`,
   `?shadows=0`, `?merge=0` dans l'URL (web) ou `-- --quality=bas` (PC).
 - JSON en snake_case, dates ISO 8601 UTC, erreurs `{"error": {"code", "message"}}`.
+- API parent (`/api/v1/admin`) : jamais de route parent sans la dépendance `CurrentParent` (secret
+  `X-Aldoria-Admin-Key` posé par Traefik + identité TinyAuth dans `ALDORIA_ADMIN_USERS`).
+  L'espace parent n'utilise aucun style en ligne (CSP `style-src 'self'`) : graphiques en SVG.
 - Textes visibles par les enfants en français ; aucune donnée personnelle hors du foyer.

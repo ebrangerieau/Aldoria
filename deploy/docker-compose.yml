@@ -16,6 +16,18 @@ services:
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME}.priority=1"
       - "traefik.http.services.${COMPOSE_PROJECT_NAME}.loadbalancer.server.port=80"
+      # Espace parent : même conteneur nginx (bloc server de l'hôte admin), derrière TinyAuth.
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-admin.rule=Host(`${COMPOSE_PROJECT_NAME}-admin.${TRAEFIK_HOST}`)"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-admin.entrypoints=websecure"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-admin.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-admin.priority=1"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-admin.service=${COMPOSE_PROJECT_NAME}"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-admin.middlewares=${COMPOSE_PROJECT_NAME}-admin-auth"
+      # ForwardAuth TinyAuth propre à Aldoria : le middleware partagé « tinyauth-proxy »
+      # ne recopie que X-User ; l'API parent a besoin de Remote-User / Remote-Email.
+      - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME}-admin-auth.forwardauth.address=http://tinyauth:3000/api/auth/traefik"
+      - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME}-admin-auth.forwardauth.trustForwardHeader=true"
+      - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME}-admin-auth.forwardauth.authResponseHeaders=Remote-User,Remote-Email,Remote-Name"
 
   api:
     image: ghcr.io/ebrangerieau/aldoria-api:${ALDORIA_TAG:-latest}
@@ -24,6 +36,8 @@ services:
       ALDORIA_ENVIRONMENT: prod
       ALDORIA_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       ALDORIA_JWT_SECRET: ${ALDORIA_JWT_SECRET}
+      ALDORIA_ADMIN_KEY: ${ALDORIA_ADMIN_KEY}
+      ALDORIA_ADMIN_USERS: ${ALDORIA_ADMIN_USERS}
     depends_on:
       db:
         condition: service_healthy
@@ -46,6 +60,16 @@ services:
       - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME}-strip-identity.headers.customrequestheaders.Remote-Email="
       - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME}-strip-identity.headers.customrequestheaders.Remote-Name="
       - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME}-strip-identity.headers.customrequestheaders.Remote-Groups="
+      - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME}-strip-identity.headers.customrequestheaders.X-Aldoria-Admin-Key="
+      # API parent : seulement sur l'hôte admin, après TinyAuth, avec le secret que seul
+      # ce routeur ajoute (l'API refuse toute requête parent sans lui).
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-admin-api.rule=Host(`${COMPOSE_PROJECT_NAME}-admin.${TRAEFIK_HOST}`) && PathPrefix(`/api/v1/admin`)"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-admin-api.entrypoints=websecure"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-admin-api.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-admin-api.priority=20"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-admin-api.service=${COMPOSE_PROJECT_NAME}-api"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-admin-api.middlewares=${COMPOSE_PROJECT_NAME}-admin-auth,${COMPOSE_PROJECT_NAME}-admin-key"
+      - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME}-admin-key.headers.customrequestheaders.X-Aldoria-Admin-Key=${ALDORIA_ADMIN_KEY}"
 
   db:
     image: postgres:16-alpine

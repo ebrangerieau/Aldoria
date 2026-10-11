@@ -84,7 +84,7 @@ async def _level_notions(db: AsyncSession, level: str) -> list[tuple[Notion, Cha
     rows = await db.execute(
         sql_select(Notion, Chapter)
         .join(Chapter, Notion.chapter_id == Chapter.id)
-        .where(Chapter.level == level)
+        .where(Chapter.level == level, Notion.in_program.is_not(False))
         .order_by(Chapter.position, Notion.id)
     )
     return [(n, c) for n, c in rows]

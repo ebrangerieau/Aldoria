@@ -143,7 +143,16 @@ Livrables du TRD §13 : une salle, un ennemi, 3 widgets, 4 générateurs, et les
 > 20 révisions, la partie la plus avancée gagne) et `SaveManager` ; XP et niveaux ; camp de base ; Archives
 > (étoiles par notion, bestiaire) ; donjon complet par monde (6 salles, 2 combats à 1-2 ennemis, énigme à
 > 3 piédestaux, salle d'élite, boss de synthèse, coffre), points de reprise, repli sans perte.
-> Reste : admin parent (React + TinyAuth) et son test de recette ; mesures du donjon sur la tablette.
+> Espace parent (2026-10-11) : `aldoria-admin.bandtrack.fr` derrière TinyAuth ; tableau de bord (notions
+> acquises / fragiles / en cours / jamais vues, temps de jeu sur 14 jours, sessions, notions à retravailler),
+> statut des chapitres et date de contrôle par enfant, durée de session, décision sur les notions « à valider ».
+> Recette automatisée : un `Remote-User` forgé sur l'hôte public reçoit 404 (banc local et production).
+> Reste : vérification par Eric de la connexion SSO réelle ; mesures du donjon sur la tablette.
+>
+> Écarts admin : pas de shadcn/ui ni de React Router (3 écrans, CSS simple, aucun style en ligne pour la
+> CSP) ; défense en profondeur en plus du plan : secret `X-Aldoria-Admin-Key` ajouté par le routeur admin
+> de Traefik, sans lequel l'API parent répond 404 ; middleware ForwardAuth propre à Aldoria (le middleware
+> partagé du VPS ne transmet que `X-User`).
 >
 > Écarts : `DungeonDef` est une classe GDScript à constructeurs statiques (comme `WorldTheme`) plutôt
 > qu'un `.tres` (données typées, relues en revue de code) ; la balance se résout en enlevant la même

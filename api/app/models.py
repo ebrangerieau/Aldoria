@@ -112,6 +112,9 @@ class Notion(Base):
     is_automatism: Mapped[bool] = mapped_column(Boolean, default=False)
     # Contenu de programme incertain (sources contradictoires), à confirmer par le parent.
     to_validate: Mapped[bool] = mapped_column(Boolean, default=False)
+    # Décision du parent (espace parent) : None = pas encore tranché, False = hors
+    # programme (jamais proposée). Le seed ne la modifie jamais.
+    in_program: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
 
 
 class ChapterStatus(Base):

@@ -19,10 +19,20 @@ class Settings(BaseSettings):
     lock_minutes: int = 5
     # Origines autorisées en développement local (éditeur Godot « Run in Browser »).
     cors_origins: list[str] = []
+    # Espace parent : secret posé par Traefik sur l'hôte admin (vide = API parent fermée)
+    # et identités SSO autorisées, séparées par des virgules (« * » : toute personne
+    # authentifiée par TinyAuth).
+    admin_key: str = ""
+    admin_users: str = ""
+
+    def admin_user_list(self) -> set[str]:
+        return {u.strip().lower() for u in self.admin_users.split(",") if u.strip()}
 
     def check(self) -> None:
         if self.environment == "prod" and self.jwt_secret == DEV_JWT_SECRET:
             raise RuntimeError("ALDORIA_JWT_SECRET doit être défini en production.")
+        if self.admin_key and len(self.admin_key) < 32:
+            raise RuntimeError("ALDORIA_ADMIN_KEY doit faire au moins 32 caractères.")
 
 
 @lru_cache

@@ -1,7 +1,8 @@
 # Banc de test web local, au plus près de la production :
 #   export web (image de la CI) → nginx « web » + API + PostgreSQL de test
 #   → proxy « edge » (rôle de Traefik : même origine pour le jeu et /api)
-#   → parcours joueur dans Edge headless (tools/e2e/login_flow.js).
+#   → parcours joueur dans Edge headless (tools/e2e/login_flow.js)
+#   → espace parent, et refus d'un Remote-User forgé sur l'hôte public (tools/e2e/admin_flow.js).
 # Prérequis : Docker Desktop, conteneurs aldoria-pg et aldoria-api-test (réseau aldoria-test)
 # avec un profil de test (PIN 1234). Usage : powershell -File tools/e2e_web.ps1 [-SkipExport]
 param([switch]$SkipExport)
@@ -22,7 +23,9 @@ docker build -q -f deploy/api.Dockerfile -t aldoria-api:local . | Out-Null
 & { $ErrorActionPreference = "Continue"; docker rm -f aldoria-web-local aldoria-edge aldoria-api-test 2>&1 | Out-Null }
 # API recréée avec le code courant (la base aldoria-pg et ses profils de test sont conservés).
 docker run -d --name aldoria-api-test --network aldoria-test -p 127.0.0.1:8098:8000 `
-    -e ALDORIA_DATABASE_URL=postgresql+asyncpg://aldoria:test@aldoria-pg:5432/aldoria aldoria-api:local | Out-Null
+    -e ALDORIA_DATABASE_URL=postgresql+asyncpg://aldoria:test@aldoria-pg:5432/aldoria `
+    -e ALDORIA_ADMIN_KEY=cle-de-test-locale-uniquement-0123456789 -e ALDORIA_ADMIN_USERS=parent@test.local `
+    aldoria-api:local | Out-Null
 Start-Sleep -Seconds 6
 docker run -d --name aldoria-web-local --network aldoria-test aldoria-web:local | Out-Null
 docker run -d --name aldoria-edge --network aldoria-test -p 127.0.0.1:8097:80 `
@@ -33,5 +36,8 @@ if (-not (Test-Path "$e2e/node_modules")) { Push-Location $e2e; npm install --si
 $out = Join-Path $env:TEMP "aldoria-e2e"
 New-Item -ItemType Directory -Force $out | Out-Null
 node "$e2e/login_flow.js" "http://127.0.0.1:8097/" $out
+$game = $LASTEXITCODE
+node "$e2e/admin_flow.js" "http://aldoria-admin.localhost:8097/" "http://127.0.0.1:8097/" $out
+$admin = $LASTEXITCODE
 Write-Host "Captures : $out"
-exit $LASTEXITCODE
+exit [Math]::Max($game, $admin)
