@@ -222,6 +222,15 @@ def variables(node) -> set[str]:
     return set().union(*(variables(child) for child in node[1:]))
 
 
+def is_product(text: str) -> bool:
+    """Vrai si l'expression est, au premier niveau, un produit ou une puissance
+    (au signe près) : 3(x+2), (x−3)(x+3), (x+1)², −2x(x+1)."""
+    node = parse(text)
+    while node[0] == "neg":
+        node = node[1]
+    return node[0] in ("*", "^")
+
+
 def equivalent(a: str, b: str, variable: str = "x") -> bool:
     """Vrai si les deux expressions coïncident sur tous les points d'évaluation."""
     na, nb = parse(a), parse(b)

@@ -66,7 +66,10 @@ def playable_notions() -> set[str]:
 
 # Enregistrement des générateurs (import pour effet de bord).
 from app.engine.generators import (  # noqa: E402, F401
+    algebre_2nde,
     developper_2nde,
     evolutions_2nde,
     fractions_6e,
+    geometrie_2nde,
+    prealgebre_6e,
 )

@@ -77,10 +77,8 @@ async def test_session_pack_matches_level(client, login):
 async def test_tom_gets_seconde_items(client, login):
     headers = await login("tom", "9876")
     body = (await client.post(f"{API}/session/start", headers=headers)).json()
-    assert {i["generator"] for i in body["items"]} == {
-        "2nde.automatismes.evolutions",
-        "2nde.calcul.developper",
-    }
+    generators = {i["generator"] for i in body["items"]}
+    assert generators and all(g.startswith("2nde.") for g in generators)
 
 
 def _attempt(session_id: str, **overrides) -> dict:

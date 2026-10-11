@@ -14,6 +14,7 @@ env:
 jobs:
   api-tests:
     runs-on: ubuntu-latest
+    timeout-minutes: 10  # une boucle infinie dans un générateur ne doit pas tourner 6 h
     defaults:
       run:
         working-directory: api

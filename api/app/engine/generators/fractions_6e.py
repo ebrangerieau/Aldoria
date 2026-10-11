@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import random
 from fractions import Fraction
-from math import lcm
+from math import gcd, lcm
 
 from app.engine.generators import Generator, register
 from app.engine.generators.formatting import frac_latex, frac_text
@@ -182,5 +182,109 @@ COMPARISON = register(
         role="automatisme",
         title="Comparer des fractions",
         generate=_comparison,
+    )
+)
+
+
+# --- Fraction × entier --------------------------------------------------------------
+
+
+def _product(difficulty: int, rng: random.Random) -> dict:
+    if difficulty == 1:
+        k, d = rng.randint(2, 4), rng.randint(3, 6)
+        n = rng.randint(1, d - 1)
+    elif difficulty == 2:
+        k, d = rng.randint(2, 9), rng.randint(3, 10)
+        n = rng.randint(1, d - 1)
+    elif difficulty == 3:  # le résultat se simplifie (parfois en entier)
+        d = rng.choice([2, 3, 4, 5, 6, 8])
+        smallest_divisor = next(p for p in range(2, d + 1) if d % p == 0)
+        k = d * rng.randint(1, 3) if rng.random() < 0.5 else smallest_divisor * rng.randint(1, 4)
+        k = max(k, 2)
+        n = rng.randint(1, d - 1)
+    else:  # fraction plus grande que 1, nombres plus grands
+        d = rng.randint(3, 12)
+        n = rng.randint(d + 1, 3 * d)
+        k = rng.randint(2, 12 if difficulty == 5 else 6)
+    result = Fraction(k * n, d)
+    explanation = f"Pour multiplier une fraction par un entier, on multiplie le numérateur : {k} × {n}/{d} = {k * n}/{d}"
+    if frac_text(result) != f"{k * n}/{d}":
+        explanation += f" = {frac_text(result)}"
+    word = difficulty == 4 and rng.random() < 0.5
+    prompt = (
+        f"Un sac contient {n}/{d} kg de farine. Combien de kilogrammes dans {k} sacs ?"
+        if word
+        else "Calcule."
+    )
+    return {
+        "type": "numeric",
+        "prompt": prompt,
+        "latex": None if word else f"{k} \\times {frac_latex(n, d)}",
+        "answer": {"kind": "fraction", "value": frac_text(result), "accept_equivalent": True},
+        "hint": "On multiplie le numérateur par l'entier et on garde le dénominateur.",
+        "explanation": explanation + ".",
+        "time_target_ms": 25000 + 8000 * difficulty,  # 33 s à 65 s
+        "meta": {"k": k, "n": n, "d": d},
+    }
+
+
+# --- Fractions égales et simplification ---------------------------------------------
+
+
+def _equality(difficulty: int, rng: random.Random) -> dict:
+    d = rng.randint(2, 9)
+    n = rng.choice([v for v in range(1, d) if gcd(v, d) == 1] or [1])
+    if difficulty <= 3:
+        k = 2 if difficulty == 1 else rng.randint(2, 6)
+        missing_numerator = difficulty != 3 or rng.random() < 0.3
+        if missing_numerator:
+            latex = f"{frac_latex(n, d)} = \\frac{{\\square}}{{{d * k}}}"
+            value, shown = n * k, f"{n * k}/{d * k}"
+        else:
+            latex = f"{frac_latex(n, d)} = \\frac{{{n * k}}}{{\\square}}"
+            value, shown = d * k, f"{n * k}/{d * k}"
+        return {
+            "type": "numeric",
+            "prompt": "Quel nombre manque-t-il ?",
+            "latex": latex,
+            "answer": {"kind": "number", "value": str(value)},
+            "hint": "Le numérateur et le dénominateur sont multipliés par le même nombre.",
+            "explanation": f"On multiplie le numérateur et le dénominateur par {k} : {n}/{d} = {shown}.",
+            "time_target_ms": 20000 + 6000 * difficulty,  # 26 s à 38 s
+            "meta": {"n": n, "d": d, "k": k},
+        }
+    k = rng.randint(2, 6) if difficulty == 4 else rng.choice([6, 8, 9, 10, 12, 15])
+    big_n, big_d = n * k, d * k
+    return {
+        "type": "numeric",
+        "prompt": "Simplifie au maximum cette fraction.",
+        "latex": frac_latex(big_n, big_d),
+        "answer": {"kind": "fraction", "value": f"{n}/{d}", "require_irreducible": True},
+        "hint": f"Cherche un nombre qui divise à la fois {big_n} et {big_d}.",
+        "explanation": f"{big_n} et {big_d} sont tous les deux divisibles par {k} : {big_n}/{big_d} = {n}/{d}, qu'on ne peut plus simplifier.",
+        "time_target_ms": 30000 + 8000 * difficulty,  # 62 s à 70 s
+        "meta": {"n": n, "d": d, "k": k},
+    }
+
+
+PRODUCT = register(
+    Generator(
+        code="6e.fractions.produit_entier",
+        level="6e",
+        notion="6e.maths.fractions.produit_entier",
+        role="chapitre",
+        title="Multiplier une fraction par un entier",
+        generate=_product,
+    )
+)
+
+EQUALITY = register(
+    Generator(
+        code="6e.fractions.egalite",
+        level="6e",
+        notion="6e.maths.fractions.egalite",
+        role="chapitre",
+        title="Fractions égales et simplification",
+        generate=_equality,
     )
 )

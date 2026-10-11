@@ -15,6 +15,22 @@ def fr_number(value: float | Fraction | int, max_decimals: int = 4) -> str:
     return text.replace(".", ",").replace("-", "−")
 
 
+def p(value: float | Fraction | int) -> str:
+    """Nombre pour une explication : « 3 », « (−4) » (parenthèses si négatif)."""
+    text = fr_number(value)
+    return f"({text})" if value < 0 else text
+
+
+def sentence(text: str) -> str:
+    """Majuscule initiale et point final, sans toucher au reste (≠ str.capitalize)."""
+    return text[:1].upper() + text[1:] + ("" if text.endswith(".") else ".")
+
+
+def minus(text: str) -> str:
+    """Signe moins typographique, sans espaces ajoutés (« −4x », « x > −8 »)."""
+    return text.replace("-", "−")
+
+
 def frac_text(value: Fraction) -> str:
     """Fraction → « 3/4 » (ou « 2 » si entière). Forme attendue dans `answer.value`."""
     if value.denominator == 1:

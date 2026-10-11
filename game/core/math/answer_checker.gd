@@ -87,7 +87,8 @@ static func _check_expression(answer: Dictionary, text: String) -> bool:
 		"expanded":
 			return "(" not in MathExpr.normalize(text)
 		"factored":
-			return "(" in MathExpr.normalize(text)
+			# Un vrai produit (« 3(x+2) », « (x+3)² ») : « (x²−9) » n'est pas une factorisation.
+			return "(" in MathExpr.normalize(text) and MathExpr.is_product(text)
 	return true
 
 

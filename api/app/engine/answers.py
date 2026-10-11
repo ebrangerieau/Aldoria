@@ -103,5 +103,6 @@ def _check_expression(answer: dict[str, Any], text: str) -> bool:
         # Forme développée : plus aucune parenthèse.
         return "(" not in mathexpr.normalize(text)
     if form == "factored":
-        return "(" in mathexpr.normalize(text)
+        # Un vrai produit (« 3(x+2) », « (x+3)² ») : « (x²−9) » n'est pas une factorisation.
+        return "(" in mathexpr.normalize(text) and mathexpr.is_product(text)
     return True

@@ -93,8 +93,10 @@ func test_every_answer_is_queued_locally_with_uuid() -> void:
 
 func test_formulas_render_from_pack() -> void:
 	_load_pack("6e")
-	var item := QuestionService.next_item("chapitre")
-	assert_true(item.has("latex_hash"))
+	# Toutes les questions n'ont pas de formule (balance, problèmes rédigés).
+	var with_formula: Array = Session.items.filter(func(it: Dictionary) -> bool: return it.has("latex_hash"))
+	assert_gt(with_formula.size(), 10)
+	var item: Dictionary = with_formula[0]
 	var texture := Session.formula_texture(item["latex_hash"])
 	assert_not_null(texture)
 	assert_gt(texture.get_width(), 50)

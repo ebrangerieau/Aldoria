@@ -87,6 +87,18 @@ static func variables(node: Array) -> Array[String]:
 	return out
 
 
+## Vrai si l'expression est, au premier niveau, un produit ou une puissance
+## (au signe près) : 3(x+2), (x−3)(x+3), (x+1)², −2x(x+1).
+static func is_product(text: String) -> bool:
+	var parser := MathExpr.new()
+	var node: Variant = parser.parse(text)
+	if node == null:
+		return false
+	while node[0] == "neg":
+		node = node[1]
+	return node[0] in ["*", "^"]
+
+
 ## Vrai si les deux expressions coïncident sur tous les points d'évaluation.
 static func equivalent(a: String, b: String, variable := "x") -> bool:
 	var pa := MathExpr.new()
