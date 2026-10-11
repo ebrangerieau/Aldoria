@@ -147,7 +147,11 @@ Livrables du TRD §13 : une salle, un ennemi, 3 widgets, 4 générateurs, et les
 > acquises / fragiles / en cours / jamais vues, temps de jeu sur 14 jours, sessions, notions à retravailler),
 > statut des chapitres et date de contrôle par enfant, durée de session, décision sur les notions « à valider ».
 > Recette automatisée : un `Remote-User` forgé sur l'hôte public reçoit 404 (banc local et production).
-> Reste : vérification par Eric de la connexion SSO réelle ; mesures du donjon sur la tablette.
+> Connexion SSO réelle vérifiée par Eric le 2026-10-11 (identité Pocket ID transmise par TinyAuth, ajoutée à
+> `ALDORIA_ADMIN_USERS`).
+> Reste avant le critère de passage : réglage des chapitres par Eric, mesures du donjon sur la tablette
+> (`?perf`), retours des enfants. À la reprise : corrections issues de ces retours, puis phase 3 (contenu
+> d'abord : 20 générateurs par niveau, banque d'items relue, widgets restants).
 >
 > Écarts admin : pas de shadcn/ui ni de React Router (3 écrans, CSS simple, aucun style en ligne pour la
 > CSP) ; défense en profondeur en plus du plan : secret `X-Aldoria-Admin-Key` ajouté par le routeur admin
