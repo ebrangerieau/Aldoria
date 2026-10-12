@@ -144,6 +144,12 @@ func set_hero_name(text: String) -> void:
 	_hero_name.text = text
 
 
+## Village : pas de combat, la barre de vie du héros est masquée.
+func set_hero_hp_visible(visible_hp: bool) -> void:
+	_hero_bar.visible = visible_hp
+	_hero_hp.visible = visible_hp
+
+
 ## Exploration (faux) ou combat (vrai) : barre de l'ennemi.
 func set_enemy_visible(visible_enemy: bool) -> void:
 	_enemy_box.modulate.a = 1.0 if visible_enemy else 0.0

@@ -1,6 +1,6 @@
 // Test de bout en bout du jeu web : titre → profil → PIN → camp → donjon (marche
-// au clavier) → Quitter → camp → Archives → camp → défi du jour (1re question) →
-// Quitter → camp → Changer de joueur → profils.
+// au clavier) → Quitter → camp → Archives → camp → village → Quitter → camp → défi
+// du jour (1re question) → Quitter → camp → Changer de joueur → profils.
 // Pilote Edge (ou Chrome) en headless via playwright-core, sur le banc local
 // (tools/e2e_web.ps1) : jamais sur la production avec les vrais codes des enfants.
 //
@@ -51,28 +51,35 @@ const { chromium } = require('playwright-core');
   await shot('4_donjon_marche');
   await page.mouse.click(1210, 63);  // « Quitter » → camp
   await page.waitForTimeout(3000);
-  await page.mouse.click(1138, 683); // « Consulter » les Archives
+  await page.mouse.click(1128, 724); // « Archives »
   await page.waitForTimeout(3000);
   await shot('5_archives');
   await page.mouse.click(1170, 52);  // « Retour au camp »
   await page.waitForTimeout(2500);
-  await page.mouse.click(1138, 237); // « Relever » le défi du jour
+  await page.mouse.click(1138, 252); // « Y aller » : le village
+  await page.waitForTimeout(6000);
+  await page.mouse.click(640, 730);  // « Entrer dans le village »
+  await page.waitForTimeout(1200);
+  await shot('6_village');
+  await page.mouse.click(1210, 63);  // « Quitter » → camp
+  await page.waitForTimeout(3000);
+  await page.mouse.click(1138, 528); // « Relever » le défi du jour
   await page.waitForTimeout(4000);
   await page.mouse.click(640, 530);  // « C'est parti ! »
   await page.waitForTimeout(1500);
-  await shot('6_defi');
+  await shot('7_defi');
   await page.mouse.click(1190, 53);  // « Quitter » → camp
   await page.waitForTimeout(3000);
   await page.mouse.click(1137, 65);  // « Changer de joueur »
   await page.waitForTimeout(2500);
-  await shot('7_changer_joueur');
+  await shot('8_changer_joueur');
 
   console.log('Appels API :\n  ' + api.join('\n  '));
   for (const call of ['200 POST /api/v1/play/session/start', '200 GET /api/v1/play/save', '200 GET /api/v1/play/progress']) {
     if (!api.includes(call)) problems.push(`appel manquant : ${call}`);
   }
   const starts = api.filter((line) => line === '200 POST /api/v1/play/session/start').length;
-  if (starts < 2) problems.push("le défi du jour n'a pas ouvert de session");
+  if (starts < 3) problems.push("le village ou le défi du jour n'a pas ouvert de session");
   const profileLoads = api.filter((line) => line === '200 GET /api/v1/play/profiles').length;
   if (profileLoads < 2) problems.push('« Changer de joueur » n\'a pas rouvert le choix des profils');
   if (problems.length) {

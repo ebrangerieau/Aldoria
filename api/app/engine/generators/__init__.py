@@ -26,11 +26,15 @@ class Generator:
     generate: GenerateFn
     # Faux : réservé aux énigmes (widget dédié), jamais tiré pour un combat.
     combat: bool = True
+    # Vrai : à graine égale, même document (relevé, tableau) à toutes les difficultés ;
+    # seule la question change (enquêtes du village, plusieurs questions par document).
+    shared_document: bool = False
 
     def item(self, difficulty: int, seed: int) -> Item:
         if not 1 <= difficulty <= 5:
             raise ValueError(f"difficulté hors bornes : {difficulty}")
-        rng = random.Random(f"{self.code}:{difficulty}:{seed}")
+        key = f"{self.code}:{seed}" if self.shared_document else f"{self.code}:{difficulty}:{seed}"
+        rng = random.Random(key)
         fields = self.generate(difficulty, rng)
         return Item(
             id=f"{self.code}:{difficulty}:{seed}",
@@ -70,6 +74,7 @@ def playable_notions() -> set[str]:
 from app.engine.generators import (  # noqa: E402, F401
     algebre_2nde,
     developper_2nde,
+    enquetes,
     evolutions_2nde,
     fonctions_2nde,
     fractions_6e,

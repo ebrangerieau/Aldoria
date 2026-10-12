@@ -3,7 +3,8 @@
 Usage (depuis la racine du dépôt) :
     uv run --directory api python ../tools/export_pack_fixture.py
 Écrit game/tests/fixtures/pack_6e.json et pack_2nde.json, avec les items des
-énigmes réservées aux donjons (balance et carte ; miroirs).
+énigmes et enquêtes réservées aux donjons et au village (balance, carte ; miroirs,
+relevé statistique, tableau croisé).
 """
 
 from __future__ import annotations
@@ -23,7 +24,11 @@ OUT = ROOT / "game" / "tests" / "fixtures"
 # (générateur, nombre d'items) : le premier sert aux tests du donjon.
 ENIGMAS = {
     "6e": [("6e.prealgebre.balance", 6), ("6e.proportionnalite.carte", 3)],
-    "2nde": [("2nde.vecteurs.rayon", 6)],
+    "2nde": [
+        ("2nde.vecteurs.rayon", 6),
+        ("2nde.statistiques.enquete", 3),
+        ("2nde.probabilites.enquete", 3),
+    ],
 }
 
 

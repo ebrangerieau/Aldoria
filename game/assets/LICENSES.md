@@ -6,6 +6,7 @@ Tout asset ajouté au jeu est inscrit ici (IMPLEMENTATION_PLAN §1.2).
 | --- | --- | --- | --- | --- | --- |
 | `kaykit/dungeon/` | KayKit Dungeon Remastered 1.0 (19 pièces + texture) | Kay Lousberg | https://github.com/KayKit-Game-Assets/KayKit-Dungeon-Remastered-1.0 | CC0 1.0 | 2026-10-10 |
 | `kaykit/characters/Knight.glb`, `Rogue_Hooded.glb` | KayKit Character Pack: Adventurers 1.0 | Kay Lousberg | https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0 | CC0 1.0 | 2026-10-10 |
+| `kaykit/characters/Barbarian.glb`, `Mage.glb`, `Rogue.glb` (habitants des villages) | KayKit Character Pack: Adventurers 1.0 | Kay Lousberg | https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Adventures-1.0 | CC0 1.0 | 2026-10-12 |
 | `kaykit/characters/Skeleton_Warrior.glb`, `Skeleton_Minion.glb` | KayKit Character Pack: Skeletons 1.0 | Kay Lousberg | https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Skeletons-1.0 | CC0 1.0 | 2026-10-10 |
 | `kaykit/characters/Skeleton_Mage.glb`, `Skeleton_Rogue.glb` | KayKit Character Pack: Skeletons 1.0 | Kay Lousberg | https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Skeletons-1.0 | CC0 1.0 | 2026-10-11 |
 | `kaykit/dungeon/` : 20 pièces de décor des nouveaux donjons (parquets, bannières, étagères, tables, coffres…) | KayKit Dungeon Remastered 1.0 | Kay Lousberg | https://github.com/KayKit-Game-Assets/KayKit-Dungeon-Remastered-1.0 | CC0 1.0 | 2026-10-11 |

@@ -14,6 +14,9 @@ const ANIMATION_DONORS := {
 	"Skeleton_Mage": "Skeleton_Warrior",
 	"Skeleton_Rogue": "Skeleton_Warrior",
 	"Rogue_Hooded": "Knight",
+	"Barbarian": "Knight",
+	"Mage": "Knight",
+	"Rogue": "Knight",
 }
 ## Attaque propre à certains modèles (le mage lance un sort, le voleur frappe d'estoc).
 const ATTACKS := {

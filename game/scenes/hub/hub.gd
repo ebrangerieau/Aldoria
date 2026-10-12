@@ -1,6 +1,6 @@
 extends Control
-## Camp de base (avant le village du MVP) : niveau et XP du héros, les trois donjons
-## du monde (ouverts l'un après l'autre), le défi du jour, l'arène d'entraînement et
+## Camp de base : niveau et XP du héros, les trois donjons du monde (ouverts l'un
+## après l'autre), le village et ses quêtes, le défi du jour, l'arène d'entraînement et
 ## les Archives. Récupère la sauvegarde du serveur à l'arrivée (autre appareil, TRD §2.7).
 
 var _wt: WorldTheme
@@ -9,6 +9,8 @@ var _level: Label
 var _xp_bar: ProgressBar
 var _xp_text: Label
 var _dungeon_rows: Array[Dictionary] = []  # {panel, state, button}
+var _village: VillageDef
+var _village_state: Label
 var _daily_state: Label
 var _daily_button: Button
 var _message: Label
@@ -18,6 +20,7 @@ var _busy := false
 func _ready() -> void:
 	_wt = WorldTheme.for_world(Session.world())
 	_dungeons = DungeonDef.all_for_world(Session.world())
+	_village = VillageDef.for_world(Session.world())
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	theme = UiKit.make_theme(_wt)
 	_build()
@@ -93,24 +96,34 @@ func _build() -> void:
 		row["button"].pressed.connect(_enter_dungeon.bind(i))
 		_dungeon_rows.append(row)
 
-	# Défi du jour, arène, Archives.
+	# Village, défi du jour, puis arène et Archives en plus petit.
 	var side := VBoxContainer.new()
 	side.add_theme_constant_override("separation", 12)
 	side.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	main.add_child(side)
+	var village := _row(side, _village.title, "Les habitants ont besoin de toi.")
+	_village_state = village["state"]
+	village["button"].text = "Y aller"
+	village["button"].pressed.connect(_enter_village)
 	var daily := _row(side, "Défi du jour", "Dix automatismes, à ton rythme.")
 	_daily_state = daily["state"]
 	_daily_button = daily["button"]
 	_daily_button.pressed.connect(_enter_daily)
-	var arena := _row(side, "Arène d'entraînement", "Des ennemis à la chaîne, de plus en plus coriaces.")
-	arena["button"].text = "Combattre"
-	arena["state"].visible = false
-	arena["button"].pressed.connect(_enter_arena)
-	var archives := _row(side, "Les Archives", "Tes étoiles de maîtrise et le bestiaire.")
-	archives["button"].text = "Consulter"
-	archives["state"].visible = false
-	archives["button"].pressed.connect(func() -> void:
+	# Arène et Archives : deux boutons dans un même panneau.
+	var small_panel := PanelContainer.new()
+	side.add_child(small_panel)
+	var small := HBoxContainer.new()
+	small.add_theme_constant_override("separation", 12)
+	small_panel.add_child(small)
+	var arena := UiKit.button("Arène", 60.0)
+	arena.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	arena.pressed.connect(_enter_arena)
+	small.add_child(arena)
+	var archives := UiKit.button("Archives", 60.0)
+	archives.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	archives.pressed.connect(func() -> void:
 		get_tree().change_scene_to_file("res://scenes/archives/archives.tscn"))
+	small.add_child(archives)
 
 
 ## Carte en ligne : titre, sous-titre et état à gauche, bouton à droite.
@@ -147,6 +160,10 @@ func _refresh() -> void:
 	for i in _dungeons.size():
 		_refresh_dungeon(i)
 	_refresh_daily()
+	var waiting := _village.pending_quests(DailyChallenge.today())
+	var plural := waiting > 1
+	_village_state.text = "Tout le monde est aidé aujourd'hui ✓" if waiting == 0 else \
+		"%d habitant%s attend%s ton aide" % [waiting, "s" if plural else "", "ent" if plural else ""]
 
 
 func _refresh_dungeon(i: int) -> void:
@@ -186,7 +203,7 @@ func _refresh_daily() -> void:
 	var series := "Série : %d jour%s" % [streak, "s" if streak > 1 else ""] if streak > 0 else "Pas encore de série"
 	var week := "coffre %d / %d" % [mini(DailyChallenge.week_count(days, today), DailyChallenge.WEEKLY_GOAL), DailyChallenge.WEEKLY_GOAL]
 	if not days.has(today):
-		_daily_state.text = "%s · %s · à relever aujourd'hui" % [series, week]
+		_daily_state.text = "%s · %s · à relever" % [series, week]
 		_daily_button.text = "Relever"
 	elif DailyChallenge.can_catch_up(days, today):
 		_daily_state.text = "Fait aujourd'hui ✓ · hier manqué : rattrape-le !"
@@ -202,6 +219,10 @@ func _enter_dungeon(i: int) -> void:
 	var d := _dungeons[i]
 	Session.dungeon_code = d.code
 	await _launch("donjon", d.session_params(), "res://scenes/dungeon/dungeon.tscn", "donjon_" + d.code)
+
+
+func _enter_village() -> void:
+	await _launch("village", _village.session_params(), "res://scenes/village/village.tscn")
 
 
 func _enter_daily() -> void:
@@ -237,7 +258,7 @@ func _switch_player() -> void:
 	get_tree().change_scene_to_file("res://scenes/profile/profile_select.tscn")
 
 
-## Développement, PC uniquement : `-- --goto=donjon|defi|arene|archives`
+## Développement, PC uniquement : `-- --goto=donjon|village|defi|arene|archives`
 ## (`--dungeon=<code>` pour un autre donjon que le premier).
 func _dev_goto() -> void:
 	if OS.has_feature("web"):
@@ -251,6 +272,8 @@ func _dev_goto() -> void:
 			var d := _dungeons[index]
 			Session.dungeon_code = d.code
 			_launch("donjon", d.session_params(), "res://scenes/dungeon/dungeon.tscn", "donjon_" + d.code)
+		"village":
+			_enter_village()
 		"defi":
 			_enter_daily()
 		"arene":

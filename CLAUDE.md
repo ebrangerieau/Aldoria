@@ -37,9 +37,10 @@ uv run --directory api ruff check .
 ```
 
 Jeu sur PC contre l'API locale (Docker, port 8098) — options réservées au PC, ignorées sur le web :
-`godot --path game -- --autologin=<id> --pin=<code> [--goto=donjon|defi|arene|archives] [--dungeon=<code>] [--room=N]
-[--approach=1] [--autoaction=chapitre] [--screenshot=x.png --shot-delay=4]`.
+`godot --path game -- --autologin=<id> --pin=<code> [--goto=donjon|village|defi|arene|archives] [--dungeon=<code>]
+[--room=N] [--approach=1] [--npc=<code>] [--autoaction=chapitre] [--screenshot=x.png --shot-delay=4]`.
 `--goto` part du camp vers une destination ; `--dungeon` choisit le donjon (code d'un `DungeonDef`, même fermé) ;
+`--npc` place le héros devant un habitant du village et accepte sa quête ;
 `--room` démarre le donjon dans la salle N (0 à 5) ;
 `--approach` mène le héros au premier ennemi ou piédestal de la salle (captures d'un combat, d'une énigme) ;
 `--autoaction` choisit une action dans l'arène.
@@ -60,6 +61,9 @@ Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-
   Un donjon (`DungeonDef`, trois par monde) ne transmet que ses chapitres et son générateur d'énigme à
   `session/start` ; `api/tests/test_dungeon.py` vérifie qu'ils existent côté API. Son décor (`decor`) est lu
   par `DungeonLevel`.
+- Village (`VillageDef`) : chaque habitant confie une quête de trois questions par jour (`revision`, `veille`,
+  `enquete`) ; les questions passent par `QuestionService.next_quest_item`. Une enquête porte sur un seul
+  document : générateur `shared_document` côté API (même document à graine égale, quelle que soit la difficulté).
 - Combat : `Encounter` (core/combat) est partagé par l'arène et le donjon ; une scène ne réécrit pas le tour par tour.
 - Progression du joueur : `SaveManager` (XP, donjons, bestiaire, défis quotidiens), jamais de fichier de
   sauvegarde écrit à la main. Défi du jour : règles de série et de coffre dans `DailyChallenge`, sans compte à

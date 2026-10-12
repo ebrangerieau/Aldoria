@@ -228,7 +228,17 @@ Livrables du TRD §13 : une salle, un ennemi, 3 widgets, 4 générateurs, et les
 > qu'au bilan ; pas de « mana » (le jeu n'en a pas), le défi rapporte de l'XP. Énigmes de Tom : tableaux de
 > signes et courbes plutôt qu'« artisanat proportionnel » (les générateurs existaient et couvrent le programme).
 > Poids web : animations des personnages partagées (pck 13,4 → 7,3 Mo, voir `docs/perf-log.md`).
-> Reste au monde : le village (PNJ, quêtes de révision, enquêtes statistiques de Tom), la personnalisation du héros.
+> **Village** (2026-10-12) : Clairval (Jules) et Brumegarde (Tom), une halle en deux salles avec ses
+> habitants (barbare, mage, voleuse, chevalier du pack Aventuriers). Chaque habitant confie **une quête de
+> trois questions par jour** : révision espacée (notions à revoir), **veille de contrôle** (chapitre marqué
+> « contrôle bientôt » par le parent, sinon chapitre en cours ; le paquet en renvoie la liste dans
+> `context`), **enquêtes** sur un document : la carte pour Jules, un relevé statistique (effectif, fréquence,
+> fréquence cumulée, moyenne, médiane) et un tableau croisé (probabilités, conditionnelles, réunion) pour Tom,
+> trois questions de difficulté croissante sur le même document. Le camp affiche le nombre d'habitants qui
+> attendent de l'aide.
+> Écart : une halle couverte faite des pièces du donjon plutôt qu'un village en plein air (aucun pack
+> extérieur, budget de poids et de rendu déjà mesuré sur tablette).
+> Reste au monde : la personnalisation du héros (apparence, compagnon de Jules).
 
 **Contenu**
 - **20 générateurs par niveau** (§4).

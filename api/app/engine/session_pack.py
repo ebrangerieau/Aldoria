@@ -51,12 +51,24 @@ def enigma_items(
     generator: Generator, mastery: float, count: int, rng: random.Random, formulas: dict
 ) -> list[dict[str, Any]]:
     """Items d'une énigme (rôle « enigme ») : difficulté croissante autour du niveau
-    de maîtrise de la notion, du plus facile au plus difficile."""
+    de maîtrise de la notion, du plus facile au plus difficile.
+
+    Générateur à document partagé (enquêtes) : par groupes de trois questions sur un
+    même document, de difficultés consécutives (une quête = un groupe)."""
     base = selector.base_difficulty(mastery)
+    if generator.shared_document:
+        start = max(1, min(3, base - 1))
+        plan = []
+        for _ in range(-(-count // 3)):
+            seed = rng.randrange(1_000_000_000)
+            plan += [(start + k, seed) for k in range(3)]
+        plan = plan[:count]
+    else:
+        offsets = sorted(ENIGMA_OFFSETS[:count])
+        plan = [(max(1, min(5, base + o)), rng.randrange(1_000_000_000)) for o in offsets]
     items = []
-    for offset in sorted(ENIGMA_OFFSETS[:count]):
-        difficulty = max(1, min(5, base + offset))
-        item = generator.item(difficulty, rng.randrange(1_000_000_000))
+    for difficulty, seed in plan:
+        item = generator.item(difficulty, seed)
         data = item_data(item, "enigme", formulas)
         data["role"] = "enigme"
         items.append(data)

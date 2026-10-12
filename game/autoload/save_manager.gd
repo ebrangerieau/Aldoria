@@ -1,6 +1,7 @@
 extends Node
 ## Sauvegarde de partie (TRD §2.7) : XP, progression dans les donjons, bestiaire,
-## défis quotidiens (jours faits, record, coffres de la semaine ouverts).
+## défis quotidiens (jours faits, record, coffres de la semaine ouverts), quêtes du
+## village (dernier jour où chaque habitant a été aidé).
 ##
 ## Écrite d'abord dans `user://` (IndexedDB sur le web), puis envoyée au serveur
 ## (`PUT /play/save` avec la révision sur laquelle elle s'appuie). Deux appareils
@@ -35,7 +36,7 @@ func _ready() -> void:
 
 
 static func default_data() -> Dictionary:
-	return {"schema_version": SCHEMA_VERSION, "xp": 0, "dungeons": {}, "bestiary": {}, "daily": _default_daily()}
+	return {"schema_version": SCHEMA_VERSION, "xp": 0, "dungeons": {}, "bestiary": {}, "daily": _default_daily(), "village": {}}
 
 
 static func _default_daily() -> Dictionary:
@@ -93,6 +94,20 @@ func daily() -> Dictionary:
 
 func daily_days() -> Array:
 	return daily()["days"]
+
+
+## Habitant déjà aidé ce jour-là (une quête par habitant et par jour).
+func quest_done(npc_code: String, day: String) -> bool:
+	_ensure_loaded()
+	return str((data.get("village", {}) as Dictionary).get(npc_code, "")) == day
+
+
+func record_quest(npc_code: String, day: String) -> void:
+	_ensure_loaded()
+	if not data.get("village") is Dictionary:
+		data["village"] = {}
+	data["village"][npc_code] = day
+	_touch()
 
 
 # --- Modifications ---------------------------------------------------------------------

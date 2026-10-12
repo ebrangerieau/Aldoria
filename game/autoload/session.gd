@@ -20,6 +20,8 @@ var formulas: Dictionary = {}  # hash → texte SVG
 var settings: Dictionary = {}
 ## Difficulté de départ par rôle, calculée par le serveur selon la maîtrise.
 var start_levels: Dictionary = {}
+## Chapitres marqués par le parent : {test_soon: [{code, title}], current: [...]}.
+var context: Dictionary = {}
 ## Donjon choisi au camp (code d'un DungeonDef du monde du joueur).
 var dungeon_code := ""
 var active_seconds := 0.0
@@ -224,6 +226,7 @@ func _apply_pack(data: Dictionary) -> void:
 	formulas = data.get("formulas", {})
 	settings = data.get("settings", {})
 	start_levels = data.get("start_levels", {})
+	context = data.get("context", {})
 	active_seconds = 0.0
 	_textures.clear()
 

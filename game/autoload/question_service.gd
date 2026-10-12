@@ -77,6 +77,38 @@ func next_item(role := "", level := 0) -> Dictionary:
 	return _take(_closest(pool, level))
 
 
+## Quêtes du village (VillageDef) : `enquete` = items d'énigme du générateur, dans
+## l'ordre du paquet (trois questions sur un même document) ; `revision` = notions à
+## revoir (catégorie « revision »), sinon chapitre ; `veille` = questions des chapitres
+## donnés, sinon chapitre. Paquet épuisé : on recommence.
+func next_quest_item(quest: String, generator := "", chapters: Array = []) -> Dictionary:
+	var matching: Callable
+	match quest:
+		"enquete":
+			matching = func(it: Dictionary) -> bool:
+				return it["role"] == "enigme" and it.get("generator", "") == generator
+		"revision":
+			matching = func(it: Dictionary) -> bool: return it.get("category", "") == "revision"
+		_:
+			matching = func(it: Dictionary) -> bool:
+				var chapter: String = str(it["notions"][0]).rsplit(".", true, 1)[0]
+				return it.get("category", "") == "chapitre" and chapter in chapters
+	var candidates: Array = Session.items.filter(matching)
+	if candidates.is_empty() and quest != "enquete":
+		candidates = Session.items.filter(func(it: Dictionary) -> bool:
+			return it.get("category", "") == "chapitre")
+	if candidates.is_empty():
+		return {}
+	var pool: Array = candidates.filter(func(it: Dictionary) -> bool: return not _used.has(it["id"]))
+	if pool.is_empty():
+		for it in candidates:
+			_used.erase(it["id"])
+		pool = candidates
+	if quest == "enquete":
+		return _take(pool[0])
+	return _take(_closest(pool, level_for("chapitre")))
+
+
 ## Valide la réponse, ajuste la difficulté et enregistre la tentative.
 ## Renvoie {correct, speed_ratio (temps / temps cible), reward_factor, explanation}.
 func submit(item: Dictionary, user_input: Variant, time_ms: int, hint_used: bool, game_mode := "combat") -> Dictionary:

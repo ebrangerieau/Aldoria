@@ -54,15 +54,17 @@ class EnigmaIn(BaseModel):
 
 class SessionStartIn(BaseModel):
     """Mode de jeu et paramètres d'un donjon (tous facultatifs : l'arène s'en passe).
-    `defi` : défi quotidien, paquet d'automatismes seulement."""
+    `defi` : défi quotidien, paquet d'automatismes seulement. `village` : quêtes des
+    habitants (révision espacée, veille de contrôle) ; `enigmas` : leurs enquêtes."""
 
-    mode: Literal["arene", "donjon", "defi"] = "arene"
+    mode: Literal["arene", "donjon", "defi", "village"] = "arene"
     focus_chapters: list[Annotated[str, Field(max_length=80)]] = Field(
         default_factory=list, max_length=4
     )
     # Ancien client (un seul chapitre) : encore accepté le temps des mises à jour.
     focus_chapter: str | None = Field(default=None, max_length=80)
     enigma: EnigmaIn | None = None
+    enigmas: list[EnigmaIn] = Field(default_factory=list, max_length=3)
 
 
 class SessionStartOut(BaseModel):
@@ -71,6 +73,8 @@ class SessionStartOut(BaseModel):
     formulas: dict[str, str]
     start_levels: dict[str, int]
     settings: dict[str, Any]
+    # Chapitres en classe et en « contrôle bientôt » (quête de veille de contrôle du village).
+    context: dict[str, Any] = Field(default_factory=dict)
 
 
 class AttemptIn(BaseModel):
@@ -175,12 +179,12 @@ async def start_session(
     profile: CurrentProfile, db: Db, body: SessionStartIn | None = None
 ) -> SessionStartOut:
     body = body or SessionStartIn()
-    enigma = None
-    if body.enigma is not None:
-        generator = REGISTRY.get(body.enigma.generator)
+    enigmas = []
+    for requested in [*filter(None, [body.enigma]), *body.enigmas]:
+        generator = REGISTRY.get(requested.generator)
         if generator is None or generator.level != profile.level:
             raise ApiError(422, "unknown_generator", "Énigme inconnue pour ce niveau.")
-        enigma = (generator, body.enigma.count)
+        enigmas.append((generator, requested.count))
     focus = list(dict.fromkeys([*body.focus_chapters, *filter(None, [body.focus_chapter])]))
     if focus:
         known = set(
@@ -194,7 +198,7 @@ async def start_session(
     db.add(session)
     await db.commit()
     pack = await tracking.build_pack(
-        db, profile, random.Random(), focus, enigma, daily=body.mode == "defi"
+        db, profile, random.Random(), focus, enigmas, daily=body.mode == "defi"
     )
     return SessionStartOut(
         session_id=session.id,
@@ -202,6 +206,7 @@ async def start_session(
         formulas=pack["formulas"],
         start_levels=pack["start_levels"],
         settings={"session_max_minutes": profile.session_max_minutes},
+        context=pack.get("context", {}),
     )
 
 

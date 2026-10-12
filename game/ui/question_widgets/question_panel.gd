@@ -176,6 +176,10 @@ static func _make_visual(visual: Dictionary, wt: WorldTheme) -> Control:
 			var map := MapView.new()
 			map.setup(visual, wt)
 			return map
+		"table":
+			var table := TableView.new()
+			table.setup(visual, wt)
+			return table
 	return null
 
 

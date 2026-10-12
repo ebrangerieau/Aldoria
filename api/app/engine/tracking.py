@@ -98,22 +98,41 @@ async def build_pack(
     profile: Profile,
     rng: random.Random,
     focus_chapters: list[str] | None = None,
-    enigma: tuple[Generator, int] | None = None,
+    enigmas: list[tuple[Generator, int]] | None = None,
     daily: bool = False,
 ) -> dict[str, Any]:
     """Paquet de session. `focus_chapters` : chapitres d'un donjon, qui fournissent
     alors toutes les questions « chapitre » (au lieu des chapitres en cours). `enigma` :
-    (générateur, nombre) d'items réservés à l'énigme du donjon. `daily` : défi
-    quotidien, automatismes seulement."""
+    (générateur, nombre) d'items réservés aux énigmes (donjon) ou aux enquêtes
+    (village). `daily` : défi quotidien, automatismes seulement."""
     pack = await _combat_pack(db, profile, rng, focus_chapters or [], daily)
-    if enigma is not None:
-        generator, count = enigma
+    states = await _states(db, profile.id) if enigmas else {}
+    for generator, count in enigmas or []:
         notion = await db.scalar(sql_select(Notion).where(Notion.code == generator.notion))
-        state = (await _states(db, profile.id)).get(notion.id) if notion else None
+        state = states.get(notion.id) if notion else None
         pack["items"] += session_pack.enigma_items(
             generator, state.mastery if state else 0.0, count, rng, pack["formulas"]
         )
+    pack["context"] = await _chapter_context(db, profile)
     return pack
+
+
+async def _chapter_context(db: AsyncSession, profile: Profile) -> dict[str, Any]:
+    """Chapitres que le parent a marqués « en cours » et « contrôle bientôt »."""
+    rows = (
+        await db.execute(
+            sql_select(ChapterStatus, Chapter)
+            .join(Chapter, ChapterStatus.chapter_id == Chapter.id)
+            .where(ChapterStatus.profile_id == profile.id)
+            .order_by(Chapter.position)
+        )
+    ).all()
+    context: dict[str, Any] = {"test_soon": [], "current": []}
+    for status, chapter in rows:
+        key = {"controle_bientot": "test_soon", "en_cours": "current"}.get(status.status)
+        if key:
+            context[key].append({"code": chapter.code, "title": chapter.title})
+    return context
 
 
 DAILY_PACK_SIZE = 24
