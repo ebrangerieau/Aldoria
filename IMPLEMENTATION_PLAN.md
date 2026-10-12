@@ -274,6 +274,27 @@ Livrables du TRD §13 : une salle, un ennemi, 3 widgets, 4 générateurs, et les
 
 **Bien-être et accessibilité** : durée maximale de session réglable par le parent, rappel de pause, temps compté uniquement quand le jeu est actif ; tailles de texte, mode daltonien, sous-titres ; volumes musique et effets séparés.
 
+**Troubles « dys »** (demande d'Eric, 2026-10-12) : le jeu doit rester jouable et juste pour un enfant
+dyslexique, dyscalculique ou dyspraxique, ou avec un trouble de l'attention (souvent associé). Principe : des
+**aménagements par enfant**, réglés par le parent dans l'espace parent (comme ceux d'un PAP en classe),
+enregistrés sur le serveur (mêmes réglages sur PC et tablette), regroupés en préréglages que l'on peut
+ensuite affiner case par case. Aucun diagnostic n'est demandé ni stocké : seuls les réglages le sont.
+
+| Besoin | Aménagements dans le jeu |
+| --- | --- |
+| Lecture (dyslexie) | **Lecture à voix haute** de l'énoncé, des propositions et de l'explication (bouton « Écouter », synthèse vocale du navigateur, voix française ; lecture automatique en option) ; texte **plus grand** et **plus espacé** (espacement des lettres, des mots et des lignes : c'est l'aménagement le mieux étayé) ; police au choix, dont une police très lisible (Atkinson Hyperlegible ou Lexend, licence OFL) ; jamais de capitales ni d'italique pour les consignes ; énoncés courts, une idée par phrase (règle de rédaction des générateurs et de la banque). |
+| Calcul (dyscalculie) | **Aucune pénalité de lenteur** : le temps ne compte plus dans la maîtrise (TRD §5.4), le coup critique récompense une réponse juste du premier coup et sans indice au lieu d'une réponse rapide, le badge « Bonus éclair » disparaît, le défi du jour n'affiche pas de temps ; nombres aérés (espace des milliers, déjà en place) ; aides visuelles à la demande sur les questions de nombres (droite graduée, tableau de numération) ; difficulté de départ plus douce. |
+| Gestes (dyspraxie) | Déplacement **par toucher** seulement (sans joystick) avec un chemin automatique vers les habitants et les ennemis ; cibles tactiles agrandies (≥ 64 px) ; aucune action rapide ou en glisser-déposer (déjà le cas : remise en ordre par touches successives) ; saisie au pavé, jamais d'écriture. |
+| Attention | **Mode calme** : pas de secousse d'écran, ni de ralenti, ni d'éclair ; moins de particules ; sons plus doux ; rappel de pause plus fréquent ; une question à la fois, sans décor animé derrière le panneau. |
+| Couleurs et contraste | Mode daltonien (juste/faux jamais distingués par la seule couleur : icône et texte en plus), contraste renforcé. |
+
+Côté parent : une rubrique « Aménagements » dans les Réglages (préréglages Dyslexie, Dyscalculie, Dyspraxie,
+Attention, cumulables) décrite dans le guide ; les indicateurs du tableau de bord ignorent la vitesse quand
+l'aménagement « sans pénalité de lenteur » est actif. Côté enfant : il peut lui-même agrandir le texte et
+lancer la lecture à voix haute, sans pouvoir retirer les aménagements choisis par le parent.
+À vérifier sur la tablette : synthèse vocale française du navigateur (Chrome Android) via
+`DisplayServer.tts_speak`, poids de la police ajoutée.
+
 **Admin complet** : CRUD des items avec aperçu identique au rendu en jeu (SVG de l'API), import CSV et JSON (5 Mo maximum, rapport ligne par ligne avant validation), aperçu de 10 items par générateur, signalements d'erreur venant des enfants, réglages (durée, ratios), réinitialisation d'un profil (droit à l'effacement), tableau des indicateurs du PRD §2 (sessions spontanées, régularité, questions par session, progression entre la 1ère et la 4ème exposition, note de plaisir).
 
 **Exploitation** : service `backup` (pg_dump quotidien, rétention 14 jours, copie hors du VPS), healthcheck sur `/api/v1/health`, logs JSON conservés 30 jours sans données de réponse, en-têtes de sécurité, fichiers versionnés par hash. CI complète : pytest, GUT headless, Playwright, export, images Docker, déploiement.
