@@ -320,6 +320,12 @@ export function Guide({ child, onOpen }: { child: Profile; onOpen: (page: GuideT
             <strong>Réinitialiser la progression</strong> : efface les réponses, les sessions, les étoiles et la partie de l'enfant (niveau, donjons,
             défis). Le profil, son code et le programme restent. Pour éviter une erreur, il faut écrire le prénom de l'enfant.
           </li>
+          <li>
+            <strong>Sauvegardes</strong> : rien à régler, c'est un témoin. Chaque nuit, le serveur copie toutes les données du jeu et garde les
+            14 dernières copies ; l'ordinateur de la maison les récupère chaque soir. Une coche verte veut dire que tout va bien. Une ligne
+            orange ou rouge dit ce qui ne va pas : le plus souvent, l'ordinateur de la maison est resté éteint ; allumez-le, la copie se fait
+            dans le quart d'heure.
+          </li>
         </ul>
         <div className="warn">
           <strong>Attention.</strong> La réinitialisation est définitive. Elle sert par exemple à repartir de zéro à la rentrée, ou à effacer les
@@ -483,8 +489,20 @@ export function Guide({ child, onOpen }: { child: Profile; onOpen: (page: GuideT
         <details>
           <summary>Quelles données sont conservées ?</summary>
           <p>
-            Les réponses (juste ou faux, temps de réponse), les sessions et la partie de chaque enfant, sur votre serveur uniquement. Aucune donnée
-            ne part ailleurs. La réinitialisation, dans les Réglages, efface tout pour un enfant.
+            Les réponses (juste ou faux, temps de réponse), les sessions et la partie de chaque enfant, sur votre serveur, et leurs sauvegardes
+            sur le serveur et sur l'ordinateur de la maison. Aucune donnée ne part ailleurs. La réinitialisation, dans les Réglages, efface tout
+            pour un enfant ; ses anciennes données disparaissent des sauvegardes au bout de 14 jours sur le serveur (60 sur l'ordinateur de la
+            maison).
+          </p>
+        </details>
+        <details>
+          <summary>Où sont les sauvegardes, et comment revenir en arrière ?</summary>
+          <p>
+            Sur le serveur, dans <code>/docker/aldoria/backups/quotidiennes</code> ; à la maison, dans le dossier{' '}
+            <code>Documents\Sauvegardes Aldoria</code> de l'ordinateur qui fait la copie (un fichier par jour, avec un journal). Revenir en
+            arrière remplace toutes les données du jeu par celles du jour choisi : c'est une opération technique, décrite pas à pas dans{' '}
+            <code>docs/exploitation.md</code>. Pour vérifier qu'une sauvegarde est lisible sans rien toucher :{' '}
+            <code>tools/test_restauration.ps1 fichier.sql.gz</code>.
           </p>
         </details>
       </Section>

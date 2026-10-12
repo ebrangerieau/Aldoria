@@ -193,6 +193,20 @@ export interface Parent {
   name: string
 }
 
+// État des sauvegardes de la base (service backup sur le VPS, copie à la maison).
+export type BackupStatus =
+  | { configured: false }
+  | {
+      configured: true
+      state: 'ok' | 'late' | 'failed' | 'none'
+      last: { file: string; bytes: number; date: string } | null
+      copies: number
+      error: string | null
+      attempt: string | null
+      home: { file: string; date: string } | null
+      home_state: 'ok' | 'late' | 'none'
+    }
+
 export class ApiError extends Error {
   constructor(
     public status: number,
@@ -230,6 +244,7 @@ function safeJson(text: string): unknown {
 
 export const api = {
   me: () => request<Parent>('GET', '/me'),
+  backups: () => request<BackupStatus>('GET', '/backups'),
   profiles: () => request<Profile[]>('GET', '/profiles'),
   dashboard: (id: number) => request<Dashboard>('GET', `/profiles/${id}/dashboard`),
   chapters: (id: number) => request<Chapter[]>('GET', `/profiles/${id}/chapters`),

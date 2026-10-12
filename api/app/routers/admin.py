@@ -21,6 +21,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import Integer, cast, delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app import backups
 from app.config import get_settings
 from app.db import get_db
 from app.engine import accommodations, tracking
@@ -110,6 +111,12 @@ class NotionDecisionIn(BaseModel):
 @router.get("/me")
 async def me(parent: CurrentParent) -> dict[str, str]:
     return {"user": parent.user, "email": parent.email, "name": parent.name}
+
+
+@router.get("/backups")
+async def backup_status(parent: CurrentParent) -> dict[str, Any]:
+    """Dernière sauvegarde de la base et dernière copie à la maison (Réglages)."""
+    return backups.status(get_settings().backup_status_dir)
 
 
 @router.get("/profiles")

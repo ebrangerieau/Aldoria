@@ -27,3 +27,6 @@ deploy/.env
 .DS_Store
 Thumbs.db
 *.log
+
+# Sauvegardes (docker compose lancé depuis deploy/)
+deploy/backups/

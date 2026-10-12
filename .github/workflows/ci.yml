@@ -127,6 +127,10 @@ jobs:
           mkdir -p ~/.ssh
           # Le scan de clé échoue parfois (réseau) : 3 essais.
           for i in 1 2 3; do ssh-keyscan -T 15 -H "$VPS_HOST" >> ~/.ssh/known_hosts && break; sleep 10; done
+          ssh -i ~/key "$VPS_USER@$VPS_HOST" "mkdir -p /docker/aldoria/backup"
           scp -i ~/key deploy/docker-compose.yml "$VPS_USER@$VPS_HOST:/docker/aldoria/docker-compose.yml"
+          scp -i ~/key deploy/backup/*.sh "$VPS_USER@$VPS_HOST:/docker/aldoria/backup/"
+          # Le service backup est relancé pour lire la nouvelle version de son script
+          # (il rattrape la sauvegarde du jour si elle manque, sinon il attend la suivante).
           ssh -i ~/key "$VPS_USER@$VPS_HOST" \
-            "cd /docker/aldoria && sed -i 's/^ALDORIA_TAG=.*/ALDORIA_TAG=${GITHUB_SHA}/' .env && docker compose pull && docker compose up -d --remove-orphans"
+            "cd /docker/aldoria && sed -i 's/^ALDORIA_TAG=.*/ALDORIA_TAG=${GITHUB_SHA}/' .env && docker compose pull && docker compose up -d --remove-orphans && docker compose restart backup"

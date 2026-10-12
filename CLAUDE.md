@@ -53,6 +53,9 @@ l'interface ou les polices) : `powershell -File tools/e2e_web.ps1` — export we
 locaux derrière un proxy de même origine, parcours titre → PIN → combat dans Edge headless.
 Le web diffère du PC : décompression gzip faite par le navigateur, pas de polices système.
 
+Sauvegardes de la base (service `backup`, copie à la maison, restauration) : `docs/exploitation.md`.
+Vérifier qu'une sauvegarde se restaure, dans un PostgreSQL jetable : `powershell -File tools/test_restauration.ps1 <fichier.sql.gz>`.
+
 Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-ci:4.7.2`, puis
 `python tools/postprocess_web.py build/web`.
 

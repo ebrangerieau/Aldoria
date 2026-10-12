@@ -24,6 +24,8 @@ class Settings(BaseSettings):
     # authentifiée par TinyAuth).
     admin_key: str = ""
     admin_users: str = ""
+    # Dossier où le service « backup » écrit l'état des sauvegardes (vide = non configuré).
+    backup_status_dir: str = ""
 
     def admin_user_list(self) -> set[str]:
         return {u.strip().lower() for u in self.admin_users.split(",") if u.strip()}

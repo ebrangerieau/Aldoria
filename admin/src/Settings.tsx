@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Accommodations } from './Accommodations'
-import { api, ApiError, type NotionToValidate, type Profile } from './api'
+import { api, ApiError, type BackupStatus, type NotionToValidate, type Profile } from './api'
 
 export function Settings({ child }: { child: Profile }) {
   return (
@@ -10,6 +10,7 @@ export function Settings({ child }: { child: Profile }) {
       <Accommodations key={`acc-${child.id}`} child={child} />
       <SessionMix key={`mix-${child.id}`} child={child} />
       <NotionsToValidate level={child.level} />
+      <Backups />
       <ResetProfile key={`reset-${child.id}`} child={child} />
     </div>
   )
@@ -54,6 +55,69 @@ function SessionMix({ child }: { child: Profile }) {
       </div>
     </section>
   )
+}
+
+// Sauvegardes de la base (toute la famille) : nuit sur le serveur, puis copie à la maison.
+function Backups() {
+  const query = useQuery({ queryKey: ['backups'], queryFn: api.backups })
+  return (
+    <section className="card" id="sauvegardes">
+      <h2>Sauvegardes</h2>
+      <p className="muted small">
+        Chaque nuit, le serveur copie toutes les données du jeu (pour tous les enfants) et garde les 14 dernières copies. L'ordinateur de la
+        maison récupère ensuite ces copies : si le serveur tombe en panne, rien n'est perdu.
+      </p>
+      {query.isPending && <p className="loading">Chargement…</p>}
+      {query.isError && <p className="status-line bad">État des sauvegardes indisponible.</p>}
+      {query.data && <BackupLines status={query.data} />}
+    </section>
+  )
+}
+
+function BackupLines({ status }: { status: BackupStatus }) {
+  if (!status.configured) return <p className="status-line">Sauvegardes non installées sur ce serveur (installation de test).</p>
+  const last = status.last ? `${when(status.last.date)} (${size(status.last.bytes)})` : ''
+  return (
+    <>
+      {status.state === 'ok' && (
+        <p className="status-line ok">
+          ✓ Dernière sauvegarde : {last}. {status.copies} copie{status.copies > 1 ? 's' : ''} sur le serveur.
+        </p>
+      )}
+      {status.state === 'none' && (
+        <p className="status-line">Pas encore de sauvegarde : la première se fait dans les minutes qui suivent l'installation, puis chaque nuit.</p>
+      )}
+      {status.state === 'late' && (
+        <p className="status-line late">
+          ⚠ La dernière sauvegarde date de {last} : le service de sauvegarde semble arrêté sur le serveur.
+        </p>
+      )}
+      {status.state === 'failed' && (
+        <p className="status-line bad">
+          ✗ La dernière tentative a échoué{status.attempt ? ` (${when(status.attempt)})` : ''} : « {status.error} ». Le serveur réessaie toutes
+          les 10 minutes.{status.last ? ` Dernière sauvegarde réussie : ${last}.` : ''}
+        </p>
+      )}
+      {status.home_state === 'ok' && status.home && <p className="status-line ok">✓ Copie à la maison : {when(status.home.date)}.</p>}
+      {status.home_state === 'late' && status.home && (
+        <p className="status-line late">
+          ⚠ Dernière copie à la maison : {when(status.home.date)}. L'ordinateur de la maison n'a rien récupéré depuis plus d'une semaine :
+          allumez-le, ou vérifiez sa tâche planifiée (voir le guide).
+        </p>
+      )}
+      {status.home_state === 'none' && (
+        <p className="status-line late">⚠ Aucune copie à la maison pour l'instant : les sauvegardes ne sont que sur le serveur.</p>
+      )}
+    </>
+  )
+}
+
+function when(iso: string): string {
+  return new Date(iso).toLocaleString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' })
+}
+
+function size(bytes: number): string {
+  return bytes < 1024 * 1024 ? `${Math.max(1, Math.round(bytes / 1024))} Ko` : `${(bytes / 1024 / 1024).toLocaleString('fr-FR', { maximumFractionDigits: 1 })} Mo`
 }
 
 // Réinitialisation (droit à l'effacement) : progression, réponses et sauvegardes.

@@ -38,6 +38,10 @@ services:
       ALDORIA_JWT_SECRET: ${ALDORIA_JWT_SECRET}
       ALDORIA_ADMIN_KEY: ${ALDORIA_ADMIN_KEY}
       ALDORIA_ADMIN_USERS: ${ALDORIA_ADMIN_USERS}
+      ALDORIA_BACKUP_STATUS_DIR: /etat-sauvegardes
+    volumes:
+      # État des sauvegardes seulement (pas les sauvegardes elles-mêmes), pour l'espace parent.
+      - ./backups/etat:/etat-sauvegardes:ro
     depends_on:
       db:
         condition: service_healthy
@@ -86,6 +90,30 @@ services:
       timeout: 5s
       retries: 5
     # Réseau interne uniquement : jamais exposé à Traefik ni à l'extérieur.
+    networks:
+      - default
+
+  # Sauvegarde quotidienne de la base (deploy/backup/sauvegarde.sh, copié par la CI à côté
+  # de ce fichier) : /docker/aldoria/backups/quotidiennes, 14 copies ; état lu par l'API.
+  # La copie à la maison passe par deploy/backup/copie-maison.sh (clé SSH restreinte).
+  backup:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    command: ["sh", "/sauvegarde.sh"]
+    environment:
+      PGHOST: db
+      PGUSER: ${POSTGRES_USER}
+      PGPASSWORD: ${POSTGRES_PASSWORD}
+      PGDATABASE: ${POSTGRES_DB}
+      SAUVEGARDE_HEURE: ${SAUVEGARDE_HEURE:-3}
+      SAUVEGARDE_NOMBRE: ${SAUVEGARDE_NOMBRE:-14}
+    volumes:
+      - ./backup/sauvegarde.sh:/sauvegarde.sh:ro
+      - ./backups/quotidiennes:/sauvegardes
+      - ./backups/etat:/etat
+    depends_on:
+      db:
+        condition: service_healthy
     networks:
       - default
 

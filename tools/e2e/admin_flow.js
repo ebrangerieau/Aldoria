@@ -92,6 +92,10 @@ const { chromium } = require('playwright-core');
   await page.getByRole('button', { name: 'Tout désactiver' }).click();
   await page.locator('#amenagements').getByRole('button', { name: 'Enregistrer' }).click();
   await page.waitForResponse((r) => r.url().includes('/accommodations') && r.request().method() === 'PUT');
+  // Sauvegardes : le service du banc a fait sa première sauvegarde, pas encore de copie à la maison.
+  await page.locator('#sauvegardes').getByText('✓ Dernière sauvegarde').waitFor();
+  await page.locator('#sauvegardes').getByText('Aucune copie à la maison').waitFor();
+  await page.locator('#sauvegardes').screenshot({ path: `${outDir}/admin_8b_sauvegardes.png` });
   await page.getByRole('button', { name: /Tom/ }).click();
   await page.waitForTimeout(800);
   await shot('8_reglages_tom');

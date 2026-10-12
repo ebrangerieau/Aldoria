@@ -21,11 +21,19 @@ if (-not $SkipExport) {
 docker build -q -f deploy/web.Dockerfile -t aldoria-web:local . | Out-Null
 docker build -q -f deploy/api.Dockerfile -t aldoria-api:local . | Out-Null
 # Conteneurs d'un passage précédent (absents la première fois : pas une erreur).
-& { $ErrorActionPreference = "Continue"; docker rm -f aldoria-web-local aldoria-edge aldoria-api-test 2>&1 | Out-Null }
+& { $ErrorActionPreference = "Continue"; docker rm -f aldoria-web-local aldoria-edge aldoria-api-test aldoria-backup-test 2>&1 | Out-Null }
+# Service de sauvegarde réel (deploy/backup/sauvegarde.sh) : son état est lu par l'API (Réglages → Sauvegardes).
+$bk = Join-Path $env:TEMP "aldoria-e2e-sauvegardes"
+Remove-Item -Recurse -Force $bk -ErrorAction SilentlyContinue
+New-Item -ItemType Directory -Force "$bk/quotidiennes", "$bk/etat" | Out-Null
+docker run -d --name aldoria-backup-test --network aldoria-test -e PGHOST=aldoria-pg -e PGUSER=aldoria -e PGPASSWORD=test `
+    -e PGDATABASE=aldoria -e SAUVEGARDE_HEURE=0 -v "${root}/deploy/backup/sauvegarde.sh:/sauvegarde.sh:ro" `
+    -v "$bk/quotidiennes:/sauvegardes" -v "$bk/etat:/etat" postgres:16-alpine sh /sauvegarde.sh | Out-Null
 # API recréée avec le code courant (la base aldoria-pg et ses profils de test sont conservés).
 docker run -d --name aldoria-api-test --network aldoria-test -p 127.0.0.1:8098:8000 `
     -e ALDORIA_DATABASE_URL=postgresql+asyncpg://aldoria:test@aldoria-pg:5432/aldoria `
     -e ALDORIA_ADMIN_KEY=cle-de-test-locale-uniquement-0123456789 -e ALDORIA_ADMIN_USERS=parent@test.local `
+    -e ALDORIA_BACKUP_STATUS_DIR=/etat-sauvegardes -v "$bk/etat:/etat-sauvegardes:ro" `
     aldoria-api:local | Out-Null
 Start-Sleep -Seconds 6
 docker run -d --name aldoria-web-local --network aldoria-test aldoria-web:local | Out-Null

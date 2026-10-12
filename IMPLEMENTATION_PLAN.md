@@ -319,6 +319,17 @@ lancer la lecture à voix haute, sans pouvoir retirer les aménagements choisis 
 
 **Exploitation** : service `backup` (pg_dump quotidien, rétention 14 jours, copie hors du VPS), healthcheck sur `/api/v1/health`, logs JSON conservés 30 jours sans données de réponse, en-têtes de sécurité, fichiers versionnés par hash. CI complète : pytest, GUT headless, Playwright, export, images Docker, déploiement.
 
+> ✅ **Sauvegardes livrées le 2026-10-12** (voir `docs/exploitation.md`). Service `backup` (postgres:16-alpine +
+> `deploy/backup/sauvegarde.sh`) : `pg_dump` compressé chaque nuit dès 3 h UTC, rattrapé au démarrage, retenté
+> toutes les 10 min, vérifié (fin de dump), 14 copies gardées **par nombre** (une panne prolongée n'efface pas les
+> dernières bonnes copies). Copie hors du VPS **à la maison** (aucune donnée des enfants chez un tiers) :
+> `tools/copie_maison.ps1` en tâche planifiée Windows, clé SSH restreinte à une commande forcée
+> (`copie-maison.sh` : lister, envoyer, confirmer par SHA-256), 60 copies gardées. État des deux dans l'espace
+> parent (Réglages → Sauvegardes, alerte après 36 h sans sauvegarde ou 8 jours sans copie). Restauration testée
+> dans une base jetable (`tools/test_restauration.ps1`) ; procédure de retour en arrière documentée.
+> Écarts : rétention par nombre au lieu de « 14 jours » ; logs : la rotation Docker du VPS (10 Mo × 3 par
+> conteneur) remplace une conservation de 30 jours ; le healthcheck de l'API existait déjà (image).
+
 **Critère de passage** : objectifs du PRD §2 atteints sur un mois.
 
 ### Phases suivantes (à détailler le moment venu)

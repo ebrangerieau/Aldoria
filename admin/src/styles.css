@@ -706,3 +706,14 @@ fieldset.accommodations legend {
     grid-template-columns: 1fr 1fr;
   }
 }
+
+/* --- Sauvegardes --- */
+.status-line {
+  margin: 8px 0 0;
+}
+.status-line.late {
+  color: var(--warn);
+}
+.status-line.bad {
+  color: var(--bad);
+}
