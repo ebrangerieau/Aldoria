@@ -7,6 +7,7 @@ export function Settings({ child }: { child: Profile }) {
   return (
     <div className="stack">
       <PlayTimeLimit key={child.id} child={child} />
+      <ChildPin key={`pin-${child.id}`} child={child} />
       <Accommodations key={`acc-${child.id}`} child={child} />
       <SessionMix key={`mix-${child.id}`} child={child} />
       <NotionsToValidate level={child.level} />
@@ -53,6 +54,75 @@ function SessionMix({ child }: { child: Profile }) {
         </button>
         {mutation.isSuccess && !changed && <span className="ok">Enregistré ✓</span>}
       </div>
+    </section>
+  )
+}
+
+// Code secret de l'enfant (4 chiffres) : saisi deux fois, jamais réaffiché.
+function ChildPin({ child }: { child: Profile }) {
+  const [pin, setPin] = useState('')
+  const [again, setAgain] = useState('')
+  const mutation = useMutation({
+    mutationFn: () => api.setPin(child.id, pin),
+    onSuccess: () => {
+      setPin('')
+      setAgain('')
+    },
+  })
+  const digits = (value: string) => value.replace(/[^0-9]/g, '').slice(0, 4)
+  const complete = pin.length === 4 && again.length === 4
+  const mismatch = complete && pin !== again
+  return (
+    <section className="card" id="code">
+      <h2>Code secret de {child.name}</h2>
+      <p className="muted small">
+        Les 4 chiffres que {child.name} tape pour entrer dans le jeu. Le nouveau code sert dès la prochaine connexion, et débloque le profil
+        s'il est bloqué après 5 erreurs. Il doit être différent de celui des autres enfants.
+      </p>
+      <form
+        className="row"
+        onSubmit={(e) => {
+          e.preventDefault()
+          if (complete && !mismatch) mutation.mutate()
+        }}
+      >
+        <label>
+          Nouveau code{' '}
+          <input
+            className="pin"
+            type="password"
+            inputMode="numeric"
+            autoComplete="off"
+            value={pin}
+            onChange={(e) => {
+              setPin(digits(e.target.value))
+              mutation.reset()
+            }}
+          />
+        </label>
+        <label>
+          Encore une fois{' '}
+          <input
+            className="pin"
+            type="password"
+            inputMode="numeric"
+            autoComplete="off"
+            value={again}
+            onChange={(e) => {
+              setAgain(digits(e.target.value))
+              mutation.reset()
+            }}
+          />
+        </label>
+        <button className="primary" type="submit" disabled={!complete || mismatch || mutation.isPending}>
+          Changer le code
+        </button>
+      </form>
+      {mismatch && <p className="status-line bad">Les deux codes sont différents.</p>}
+      {mutation.isError && <p className="status-line bad">{(mutation.error as ApiError).message}</p>}
+      {mutation.isSuccess && (
+        <p className="status-line ok">Code changé ✓ Donnez-le à {child.name} : il sert dès sa prochaine connexion.</p>
+      )}
     </section>
   )
 }

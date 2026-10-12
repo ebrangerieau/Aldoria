@@ -263,3 +263,32 @@ async def test_indicators_follow_the_prd(client, login, profiles, curriculum):
     assert values["alignement"]["value"] == 80
     assert values["plaisir"]["value"] == 4.5 and values["plaisir"]["met"]
     assert values["envie"]["value"] == 0.5 and values["envie"]["met"] is False
+
+
+async def test_parent_changes_a_pin(client, profiles, login):
+    url = f"{ADMIN}/profiles/{profiles['jules']}/pin"
+    assert (await client.put(url, json={"pin": "4321"})).status_code == 404  # sans le secret
+    for bad in ("12", "12345", "12a4", " 123"):
+        response = await client.put(url, json={"pin": bad}, headers=parent())
+        assert response.status_code == 422, bad
+    # Code de Tom : refusé pour Jules (chacun entrerait dans le profil de l'autre).
+    taken = await client.put(url, json={"pin": "9876"}, headers=parent())
+    assert taken.status_code == 422
+    assert taken.json()["error"]["code"] == "pin_taken"
+    assert "Tom" in taken.json()["error"]["message"]
+
+    # Jules s'est trompé 5 fois : bloqué ; le nouveau code lève le blocage.
+    for _ in range(5):
+        await client.post(f"{PLAY}/login", json={"profile_id": profiles["jules"], "pin": "0000"})
+    locked = await client.post(
+        f"{PLAY}/login", json={"profile_id": profiles["jules"], "pin": "1234"}
+    )
+    assert locked.status_code != 200
+    response = await client.put(url, json={"pin": "4321"}, headers=parent())
+    assert response.status_code == 204
+    old = await client.post(f"{PLAY}/login", json={"profile_id": profiles["jules"], "pin": "1234"})
+    assert old.status_code == 401
+    assert await login("jules", "4321")
+    # Remettre son propre code n'est pas un conflit.
+    same = await client.put(url, json={"pin": "4321"}, headers=parent())
+    assert same.status_code == 204

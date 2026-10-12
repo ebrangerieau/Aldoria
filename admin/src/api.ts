@@ -257,6 +257,7 @@ export const api = {
   setRatios: (id: number, ratios: Ratios) => request<Profile>('PATCH', `/profiles/${id}`, { ratios }),
   setAccommodations: (id: number, accommodations: Accommodations) =>
     request<Profile>('PUT', `/profiles/${id}/accommodations`, accommodations),
+  setPin: (id: number, pin: string) => request<null>('PUT', `/profiles/${id}/pin`, { pin }),
   reset: (id: number, confirm: string) => request<Record<string, number>>('POST', `/profiles/${id}/reset`, { confirm }),
   indicators: (id: number) => request<Indicators>('GET', `/profiles/${id}/indicators`),
   bank: (level: Level) => request<BankRow[]>('GET', `/bank?level=${level}`),

@@ -308,6 +308,11 @@ export function Guide({ child, onOpen }: { child: Profile; onOpen: (page: GuideT
             proposant une pause. Seul le temps où le jeu est affiché compte.
           </li>
           <li>
+            <strong>Code secret</strong> : tapez deux fois les 4 nouveaux chiffres, puis <strong>Changer le code</strong>. Le code sert dès la
+            prochaine connexion de l'enfant ; une partie déjà ouverte sur un appareil continue. Le code doit être différent de celui des autres
+            enfants. Changer le code débloque aussi un profil bloqué après 5 erreurs (sinon, il se débloque seul au bout de 5 minutes).
+          </li>
+          <li>
             <strong>Mélange des questions</strong> : la part des questions du chapitre en cours, de la révision des notions à revoir et des
             automatismes (calcul rapide{tom ? ", au format du QCM de l'épreuve anticipée de première" : ''}). Par défaut 50 / 30 / 20. Un chapitre en
             « Contrôle bientôt » prend de toute façon 70 %.
@@ -488,8 +493,9 @@ export function Guide({ child, onOpen }: { child: Profile; onOpen: (page: GuideT
         <details>
           <summary>Comment changer le code d'un enfant ?</summary>
           <p>
-            Pas encore depuis cet espace : sur le serveur, dans le dossier du jeu, avec la commande{' '}
-            <code>docker compose exec -T api python -m app.cli set-pin --name Prénom --pin NOUVEAU_CODE</code>.
+            Dans <strong>Réglages</strong>, rubrique <strong>Code secret</strong> : tapez le nouveau code deux fois, puis cliquez sur{' '}
+            <strong>Changer le code</strong>. L'ancien code ne marche plus. Si l'enfant a oublié son code ou s'est trompé 5 fois, c'est aussi
+            la solution.
           </p>
         </details>
         <details>

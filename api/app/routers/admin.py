@@ -22,6 +22,7 @@ from sqlalchemy import Integer, cast, delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import backups
+from app.auth import hash_pin, verify_pin
 from app.config import get_settings
 from app.db import get_db
 from app.engine import accommodations, tracking
@@ -97,6 +98,10 @@ class ProfileSettingsIn(BaseModel):
     ratios: RatiosIn | None = None
 
 
+class PinIn(BaseModel):
+    pin: str = Field(pattern=r"^[0-9]{4}$")
+
+
 class ResetIn(BaseModel):
     confirm: str = Field(max_length=40)
 
@@ -157,6 +162,25 @@ async def set_accommodations(
     profile.accommodations = body.model_dump()
     await db.commit()
     return _profile_out(profile)
+
+
+@router.put("/profiles/{profile_id}/pin", status_code=204)
+async def set_pin(profile_id: int, body: PinIn, parent: CurrentParent, db: Db) -> None:
+    """Nouveau code secret de l'enfant (4 chiffres), valable dès sa prochaine connexion.
+    Lève aussi un blocage en cours (5 erreurs). Un code déjà pris par un autre enfant est
+    refusé : sinon chacun pourrait entrer dans le profil de l'autre."""
+    profile = await _profile(db, profile_id)
+    for other in await db.scalars(select(Profile).where(Profile.id != profile.id)):
+        if verify_pin(other.pin_hash, body.pin):
+            raise ApiError(
+                422,
+                "pin_taken",
+                f"Ce code est déjà celui de {other.name} : choisissez-en un autre.",
+            )
+    profile.pin_hash = hash_pin(body.pin)
+    profile.failed_logins = 0
+    profile.locked_until = None
+    await db.commit()
 
 
 @router.post("/profiles/{profile_id}/reset")

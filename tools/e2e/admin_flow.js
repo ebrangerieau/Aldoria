@@ -98,6 +98,16 @@ const { chromium } = require('playwright-core');
   await page.locator('#sauvegardes').screenshot({ path: `${outDir}/admin_8b_sauvegardes.png` });
   await page.getByRole('button', { name: /Tom/ }).click();
   await page.waitForTimeout(800);
+  // Code secret : deux saisies différentes bloquent le bouton ; puis le même code que
+  // celui du banc (9876), pour ne pas changer le profil de test.
+  const code = page.locator('#code');
+  await code.getByLabel('Nouveau code').fill('9876');
+  await code.getByLabel('Encore une fois').fill('9875');
+  await code.getByText('Les deux codes sont différents.').waitFor();
+  await code.getByLabel('Encore une fois').fill('9876');
+  await code.getByRole('button', { name: 'Changer le code' }).click();
+  await code.getByText('Code changé ✓').waitFor();
+  if ((await code.getByLabel('Nouveau code').inputValue()) !== '') problems.push('le code reste affiché après le changement');
   await shot('8_reglages_tom');
 
   // Guide : bandeau de première visite, puis un bouton « Ouvrir … » mène à la rubrique.

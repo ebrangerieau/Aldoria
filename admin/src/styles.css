@@ -717,3 +717,11 @@ fieldset.accommodations legend {
 .status-line.bad {
   color: var(--bad);
 }
+
+/* --- Code secret --- */
+input.pin {
+  width: 5.5em;
+  font-size: 1.2rem;
+  letter-spacing: 0.3em;
+  text-align: center;
+}
