@@ -324,3 +324,200 @@ input[type='range'] {
 code {
   font-size: 0.9em;
 }
+
+/* --- Questions, signalements, indicateurs (phase 3) --- */
+.spread {
+  justify-content: space-between;
+}
+.subtabs {
+  display: flex;
+  gap: 8px;
+}
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--accent-soft);
+  font-size: 0.8rem;
+}
+.badge.good {
+  background: var(--good);
+  color: #fff;
+}
+.count {
+  margin-left: 6px;
+  padding: 0 7px;
+  border-radius: 999px;
+  background: var(--bad);
+  color: #fff;
+  font-size: 0.8rem;
+}
+tr.clickable {
+  cursor: pointer;
+}
+tr.clickable:hover td {
+  background: var(--accent-soft);
+}
+.editor {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+.editor label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+.editor label.inline {
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+}
+.editor label.inline input {
+  width: auto;
+  min-height: 0;
+}
+.danger-zone input {
+  flex: 1;
+  min-width: 260px;
+}
+input,
+select,
+textarea {
+  font: inherit;
+  color: var(--text);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px 10px;
+  min-height: 40px;
+}
+textarea {
+  width: 100%;
+  resize: vertical;
+}
+.editor input,
+.editor select {
+  width: 100%;
+}
+button.danger {
+  background: var(--bad);
+  border-color: var(--bad);
+  color: #fff;
+}
+.danger-zone {
+  border-color: var(--bad);
+}
+.preview {
+  margin-top: 16px;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
+}
+.question .prompt {
+  font-weight: 600;
+  white-space: pre-line;
+  margin: 0 0 8px;
+}
+.question .formula {
+  display: block;
+  max-height: 90px;
+  max-width: 100%;
+  margin: 4px 0 8px;
+  filter: invert(1); /* SVG blanc (teinté par le jeu) : noir sur fond clair */
+}
+@media (prefers-color-scheme: dark) {
+  .question .formula {
+    filter: none;
+  }
+}
+.choices li.correct {
+  color: var(--good);
+  font-weight: 600;
+}
+.visual-note {
+  margin: 4px 0 8px;
+}
+table.doc {
+  width: auto;
+  margin-top: 6px;
+}
+table.doc th,
+table.doc td {
+  padding: 4px 10px;
+  border: 1px solid var(--border);
+  text-align: center;
+}
+.previews {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+pre.example {
+  white-space: pre-wrap;
+  font-size: 0.8rem;
+  background: var(--bg);
+  padding: 8px;
+  border-radius: 8px;
+}
+.indicators {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin: 8px 0 16px;
+}
+.indicator {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  border: 1px solid var(--border);
+  border-left: 5px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.indicator.met {
+  border-left-color: var(--good);
+}
+.indicator.below {
+  border-left-color: var(--warn);
+}
+.indicator .big {
+  font-size: 1.6rem;
+  font-weight: 700;
+}
+.indicator .unit {
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: var(--muted);
+}
+.chart .target {
+  stroke: var(--good);
+  stroke-dasharray: 4 4;
+}
+.mix {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.mix label {
+  display: block;
+}
+.mix input {
+  display: block;
+  width: 100%;
+  margin-top: 4px;
+}
+@media (max-width: 720px) {
+  .indicators {
+    grid-template-columns: 1fr 1fr;
+  }
+  table.bank th:nth-child(3),
+  table.bank td:nth-child(3) {
+    display: none;
+  }
+}

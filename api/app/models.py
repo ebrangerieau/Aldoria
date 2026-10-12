@@ -38,6 +38,9 @@ class Profile(Base):
     ratio_chapter: Mapped[float] = mapped_column(Float, default=0.5)
     ratio_review: Mapped[float] = mapped_column(Float, default=0.3)
     ratio_automatisms: Mapped[float] = mapped_column(Float, default=0.2)
+    # Incrémentée à chaque réinitialisation par le parent : une sauvegarde d'une époque
+    # antérieure (appareil resté hors ligne) est refusée au lieu de restaurer la partie.
+    save_epoch: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
@@ -168,3 +171,40 @@ class SaveRevision(Base):
     progress: Mapped[int] = mapped_column(Integer, default=0)
     data: Mapped[dict[str, Any]] = mapped_column(JSONType)
     saved_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class BankItem(Base):
+    """Question rédigée (banque, PRD US-10) : créée ou importée par le parent, jouée
+    seulement une fois publiée. `data` : champs d'un Item (engine/items.py) hors id,
+    validés à chaque enregistrement (engine/bank.py)."""
+
+    __tablename__ = "bank_item"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    level: Mapped[str] = mapped_column(String(8), index=True)
+    notion: Mapped[str] = mapped_column(String(120), index=True)
+    difficulty: Mapped[int] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(String(12), default="brouillon")  # brouillon | publie
+    source: Mapped[str] = mapped_column(String(12), default="parent")  # parent | import
+    data: Mapped[dict[str, Any]] = mapped_column(JSONType)
+    version: Mapped[int] = mapped_column(Integer, default=1)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class Report(Base):
+    """Signalement d'une question par un enfant (« il y a une erreur ») : la question
+    telle qu'affichée, la réponse donnée, le motif. Traité par le parent."""
+
+    __tablename__ = "report"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    profile_id: Mapped[int] = mapped_column(
+        ForeignKey("profile.id", ondelete="CASCADE"), index=True
+    )
+    item_id: Mapped[str] = mapped_column(String(120))
+    item: Mapped[dict[str, Any]] = mapped_column(JSONType)
+    user_input: Mapped[str | None] = mapped_column(String(200))
+    reason: Mapped[str] = mapped_column(String(30))
+    status: Mapped[str] = mapped_column(String(12), default="ouvert")  # ouvert | traite
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { api, type Dashboard as DashboardData, type Profile } from './api'
+import { Indicators } from './Indicators'
 import { Stars } from './Stars'
 
 const STATES = [
@@ -67,6 +68,8 @@ export function Dashboard({ child }: { child: Profile }) {
         <h2>Dernières sessions</h2>
         <RecentSessions sessions={d.recent_sessions} />
       </section>
+
+      <Indicators child={child} />
     </div>
   )
 }
@@ -94,7 +97,7 @@ function PlayTime({ days }: { days: DashboardData['days'] }) {
   )
 }
 
-const MODES = { arene: 'Arène', donjon: 'Donjon', defi: 'Défi du jour' } as const
+const MODES = { arene: 'Arène', donjon: 'Donjon', defi: 'Défi du jour', village: 'Village' } as const
 
 function RecentSessions({ sessions }: { sessions: DashboardData['recent_sessions'] }) {
   if (sessions.length === 0) return <p className="muted">Aucune session.</p>

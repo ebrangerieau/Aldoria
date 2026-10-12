@@ -13,25 +13,36 @@ from __future__ import annotations
 
 import hmac
 from dataclasses import dataclass
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime, time, timedelta
 from typing import Annotated, Any, Literal
 
 from fastapi import APIRouter, Depends, Request
 from pydantic import BaseModel, Field
-from sqlalchemy import Integer, cast, func, select
+from sqlalchemy import Integer, cast, delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
 from app.db import get_db
 from app.engine import tracking
 from app.errors import ApiError
-from app.models import Attempt, Chapter, ChapterStatus, GameSession, Notion, Profile
+from app.models import (
+    Attempt,
+    Chapter,
+    ChapterStatus,
+    GameSession,
+    Notion,
+    NotionState,
+    Profile,
+    Report,
+    SaveRevision,
+)
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 Db = Annotated[AsyncSession, Depends(get_db)]
 
 STATUSES = ("a_venir", "en_cours", "controle_bientot", "termine")
 DAYS = 14
+WEEKS = 8
 
 
 @dataclass(frozen=True)
@@ -71,8 +82,21 @@ class ChapterStatusIn(BaseModel):
     test_date: date | None = None
 
 
+class RatiosIn(BaseModel):
+    """Mélange d'une session (TRD §5.5) : chapitre en cours, révision, automatismes."""
+
+    chapter: float = Field(ge=0, le=1)
+    review: float = Field(ge=0, le=1)
+    automatisms: float = Field(ge=0, le=1)
+
+
 class ProfileSettingsIn(BaseModel):
-    session_max_minutes: int = Field(ge=5, le=120)
+    session_max_minutes: int | None = Field(default=None, ge=5, le=120)
+    ratios: RatiosIn | None = None
+
+
+class ResetIn(BaseModel):
+    confirm: str = Field(max_length=40)
 
 
 class NotionDecisionIn(BaseModel):
@@ -102,9 +126,193 @@ async def update_profile(
     profile_id: int, body: ProfileSettingsIn, parent: CurrentParent, db: Db
 ) -> dict[str, Any]:
     profile = await _profile(db, profile_id)
-    profile.session_max_minutes = body.session_max_minutes
+    if body.session_max_minutes is not None:
+        profile.session_max_minutes = body.session_max_minutes
+    if body.ratios is not None:
+        r = body.ratios
+        if abs(r.chapter + r.review + r.automatisms - 1) > 0.011:
+            raise ApiError(422, "bad_ratios", "Les trois parts doivent faire 100 %.")
+        profile.ratio_chapter = r.chapter
+        profile.ratio_review = r.review
+        profile.ratio_automatisms = r.automatisms
     await db.commit()
     return _profile_out(profile)
+
+
+@router.post("/profiles/{profile_id}/reset")
+async def reset_profile(
+    profile_id: int, body: ResetIn, parent: CurrentParent, db: Db
+) -> dict[str, int]:
+    """Réinitialisation (droit à l'effacement) : réponses, sessions, suivi des notions,
+    sauvegardes et signalements de l'enfant sont supprimés. Le profil, son code et les
+    statuts des chapitres restent. L'époque de sauvegarde change : un appareil qui garde
+    une ancienne partie l'abandonne au lieu de la renvoyer."""
+    profile = await _profile(db, profile_id)
+    if body.confirm.strip().lower() != profile.name.lower():
+        raise ApiError(422, "confirmation", f"Écrivez « {profile.name} » pour confirmer.")
+    counts = {}
+    for name, model in (
+        ("attempts", Attempt),
+        ("sessions", GameSession),
+        ("notions", NotionState),
+        ("saves", SaveRevision),
+        ("reports", Report),
+    ):
+        result = await db.execute(delete(model).where(model.profile_id == profile.id))
+        counts[name] = result.rowcount or 0
+    profile.save_epoch += 1
+    await db.commit()
+    return counts
+
+
+def _indicator(code, label, value, unit, target, met, detail) -> dict[str, Any]:
+    return {
+        "code": code,
+        "label": label,
+        "value": None if value is None else round(value, 1),
+        "unit": unit,
+        "target": target,
+        "met": None if value is None else bool(met),
+        "detail": detail,
+    }
+
+
+def _plural(n: int, word: str) -> str:
+    return f"{n} {word}{'s' if n > 1 else ''}"
+
+
+@router.get("/profiles/{profile_id}/indicators")
+async def indicators(profile_id: int, parent: CurrentParent, db: Db) -> dict[str, Any]:
+    """Indicateurs du PRD §2 sur les dernières semaines."""
+    profile = await _profile(db, profile_id)
+    now = datetime.now(UTC)
+    monday = now.date() - timedelta(days=now.weekday())
+    first = monday - timedelta(weeks=WEEKS - 1)
+    sessions = await _played_sessions(db, profile.id, datetime.combine(first, time.min, UTC))
+    weeks = [
+        {"start": (first + timedelta(weeks=i)).isoformat(), "sessions": 0} for i in range(WEEKS)
+    ]
+    ratings = []
+    for s in sessions:
+        index = (datetime.fromisoformat(s["started_at"]).date() - first).days // 7
+        weeks[min(max(index, 0), WEEKS - 1)]["sessions"] += 1
+        if s.get("rating"):
+            ratings.append(s["rating"])
+
+    # Régularité : semaines d'affilée avec au moins 2 sessions (la semaine en cours
+    # compte dès qu'elle les a atteintes).
+    ordered = list(reversed(weeks))
+    if ordered[0]["sessions"] < 2:
+        ordered = ordered[1:]
+    streak = 0
+    for week in ordered:
+        if week["sessions"] < 2:
+            break
+        streak += 1
+
+    month_start = now - timedelta(days=28)
+    month = [s for s in sessions if datetime.fromisoformat(s["started_at"]) >= month_start]
+    per_session = sum(s["questions"] for s in month) / len(month) if month else None
+    per_week = sum(w["sessions"] for w in weeks[-4:]) / 4
+
+    attempts = (
+        await db.execute(
+            select(Attempt.notion_ids, Attempt.correct, Attempt.answered_at)
+            .where(Attempt.profile_id == profile.id)
+            .order_by(Attempt.answered_at)
+        )
+    ).all()
+    exposures: dict[str, list[bool]] = {}
+    for notions, correct, _ in attempts:
+        if notions:
+            exposures.setdefault(notions[0], []).append(bool(correct))
+    measured = [e for e in exposures.values() if len(e) >= 4]
+    gain = None
+    if measured:
+        gain = 100 * (sum(e[3] for e in measured) - sum(e[0] for e in measured)) / len(measured)
+
+    current = set(
+        await db.scalars(
+            select(Chapter.code)
+            .join(ChapterStatus, ChapterStatus.chapter_id == Chapter.id)
+            .where(
+                ChapterStatus.profile_id == profile.id,
+                ChapterStatus.status.in_(("en_cours", "controle_bientot")),
+            )
+        )
+    )
+    recent = [n for n, _, at in attempts if n and _aware(at) >= month_start]
+    alignment = None
+    if current and recent:
+        on_current = sum(1 for n in recent if n[0].rsplit(".", 1)[0] in current)
+        alignment = 100 * on_current / len(recent)
+    pleasure = sum(ratings) / len(ratings) if ratings else None
+    alignment_detail = (
+        "Part des réponses des 28 derniers jours sur les chapitres « en cours » ou "
+        "« contrôle bientôt »."
+        if current
+        else "Aucun chapitre marqué « en cours » : à régler dans Programme."
+    )
+    return {
+        "weeks": weeks,
+        "indicators": [
+            _indicator(
+                "envie",
+                "Sessions par semaine",
+                per_week,
+                "",
+                "3 par semaine",
+                per_week >= 3,
+                "Moyenne des 4 dernières semaines (sessions avec au moins une réponse).",
+            ),
+            _indicator(
+                "regularite",
+                "Régularité",
+                streak,
+                "semaines",
+                "6 semaines d'affilée",
+                streak >= 6,
+                "Semaines consécutives avec au moins 2 sessions.",
+            ),
+            _indicator(
+                "revision",
+                "Questions par session",
+                per_session,
+                "",
+                "20 à 40",
+                per_session is not None and 20 <= per_session <= 40,
+                "Moyenne sur 28 jours.",
+            ),
+            _indicator(
+                "apprentissage",
+                "Progrès entre la 1re et la 4e rencontre d'une notion",
+                gain,
+                "points",
+                "+25 points",
+                gain is not None and gain >= 25,
+                f"Réussite à la 4e rencontre moins réussite à la 1re, sur "
+                f"{_plural(len(measured), 'notion')} rencontrée(s) au moins 4 fois.",
+            ),
+            _indicator(
+                "alignement",
+                "Questions sur le chapitre en classe",
+                alignment,
+                "%",
+                "50 % au moins",
+                alignment is not None and alignment >= 50,
+                alignment_detail,
+            ),
+            _indicator(
+                "plaisir",
+                "Note de fin de donjon",
+                pleasure,
+                "/ 5",
+                "4 ou plus",
+                pleasure is not None and pleasure >= 4,
+                f"Moyenne de {_plural(len(ratings), 'note')} sur {WEEKS} semaines.",
+            ),
+        ],
+    }
 
 
 @router.get("/profiles/{profile_id}/dashboard")
@@ -254,6 +462,11 @@ def _profile_out(p: Profile) -> dict[str, Any]:
         "world": p.world,
         "avatar": p.avatar,
         "session_max_minutes": p.session_max_minutes,
+        "ratios": {
+            "chapter": p.ratio_chapter,
+            "review": p.ratio_review,
+            "automatisms": p.ratio_automatisms,
+        },
     }
 
 

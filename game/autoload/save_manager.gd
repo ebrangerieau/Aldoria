@@ -21,6 +21,9 @@ const RETRY_S := 15.0
 var data: Dictionary = default_data()
 var _profile_id := 0
 var _revision := 0  # révision du serveur sur laquelle `data` s'appuie
+## Époque du profil sur le serveur : elle change quand le parent réinitialise la
+## progression ; une partie d'une autre époque est abandonnée, jamais renvoyée.
+var _epoch := 0
 var _dirty := false  # modifications pas encore acceptées par le serveur
 var _pushing := false
 
@@ -187,6 +190,9 @@ func sync() -> void:
 	if not res.ok:
 		return
 	var server: Dictionary = res.data
+	if int(server.get("epoch", 0)) != _epoch:
+		_restart(server)
+		return
 	var server_revision := int(server.get("revision", 0))
 	if server_revision > _revision and server.get("data") is Dictionary:
 		var theirs: Dictionary = server["data"]
@@ -203,7 +209,7 @@ func push() -> void:
 		return
 	_pushing = true
 	var res := await ApiClient.put_json("/play/save", {
-		"base_revision": _revision, "schema_version": SCHEMA_VERSION, "data": data,
+		"base_revision": _revision, "schema_version": SCHEMA_VERSION, "data": data, "epoch": _epoch,
 	})
 	_pushing = false
 	if res.ok:
@@ -211,8 +217,11 @@ func push() -> void:
 		_dirty = false
 		_write_local()
 	elif res.status == 409:
-		# Un autre appareil est allé plus loin : sa partie l'emporte.
-		_adopt(res.error.get("details", {}).get("current", {}))
+		var current: Dictionary = res.error.get("details", {}).get("current", {})
+		if int(current.get("epoch", 0)) != _epoch:
+			_restart(current)  # progression réinitialisée par le parent
+		else:
+			_adopt(current)  # un autre appareil est allé plus loin : sa partie l'emporte
 
 
 ## Changement de joueur : dernier envoi, puis on oublie la partie en mémoire.
@@ -221,8 +230,20 @@ func unload() -> void:
 		await push()
 	_profile_id = 0
 	_revision = 0
+	_epoch = 0
 	_dirty = false
 	data = default_data()
+
+
+## Le parent a réinitialisé la progression : on repart de la partie du serveur (vide
+## ou recommencée sur un autre appareil), sans renvoyer l'ancienne.
+func _restart(server: Dictionary) -> void:
+	_epoch = int(server.get("epoch", 0))
+	_revision = int(server.get("revision", 0))
+	data = migrate(server["data"], int(server.get("schema_version", 0))) if server.get("data") is Dictionary else default_data()
+	_dirty = false
+	_write_local()
+	changed.emit()
 
 
 func _adopt(server: Dictionary) -> void:
@@ -255,6 +276,7 @@ func _ensure_loaded() -> void:
 		return
 	_profile_id = id
 	_revision = 0
+	_epoch = 0
 	_dirty = false
 	data = default_data()
 	if id == 0 or not FileAccess.file_exists(FILE % id):
@@ -263,6 +285,7 @@ func _ensure_loaded() -> void:
 	if stored is Dictionary and stored.get("data") is Dictionary:
 		data = migrate(stored["data"], int(stored["data"].get("schema_version", 0)))
 		_revision = int(stored.get("revision", 0))
+		_epoch = int(stored.get("epoch", 0))
 		_dirty = bool(stored.get("dirty", false))
 
 
@@ -271,4 +294,4 @@ func _write_local() -> void:
 		return  # pas de joueur identifié (tests) : partie en mémoire seulement
 	var file := FileAccess.open(FILE % _profile_id, FileAccess.WRITE)
 	if file:
-		file.store_string(JSON.stringify({"revision": _revision, "dirty": _dirty, "data": data}))
+		file.store_string(JSON.stringify({"revision": _revision, "epoch": _epoch, "dirty": _dirty, "data": data}))

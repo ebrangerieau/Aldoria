@@ -1,13 +1,92 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { api, type NotionToValidate, type Profile } from './api'
+import { api, ApiError, type NotionToValidate, type Profile } from './api'
 
 export function Settings({ child }: { child: Profile }) {
   return (
     <div className="stack">
       <PlayTimeLimit key={child.id} child={child} />
+      <SessionMix key={`mix-${child.id}`} child={child} />
       <NotionsToValidate level={child.level} />
+      <ResetProfile key={`reset-${child.id}`} child={child} />
     </div>
+  )
+}
+
+// Mélange d'une session (TRD §5.5) : chapitre en cours, révision espacée, automatismes.
+function SessionMix({ child }: { child: Profile }) {
+  const client = useQueryClient()
+  const [chapter, setChapter] = useState(Math.round(child.ratios.chapter * 100))
+  const [review, setReview] = useState(Math.round(child.ratios.review * 100))
+  const automatisms = 100 - chapter - review
+  const mutation = useMutation({
+    mutationFn: () => api.setRatios(child.id, { chapter: chapter / 100, review: review / 100, automatisms: automatisms / 100 }),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['profiles'] }),
+  })
+  const changed = chapter !== Math.round(child.ratios.chapter * 100) || review !== Math.round(child.ratios.review * 100)
+  return (
+    <section className="card">
+      <h2>Mélange des questions</h2>
+      <p className="muted small">
+        Part de chaque famille dans une session d'arène ou de village. Un chapitre « contrôle bientôt » prend de toute façon 70 % des questions ;
+        les donjons gardent leur propre chapitre.
+      </p>
+      <div className="mix">
+        <label>
+          Chapitre en cours : <strong>{chapter} %</strong>
+          <input type="range" min={0} max={100 - review} step={5} value={chapter} onChange={(e) => setChapter(Number(e.target.value))} />
+        </label>
+        <label>
+          Révision des notions à revoir : <strong>{review} %</strong>
+          <input type="range" min={0} max={100 - chapter} step={5} value={review} onChange={(e) => setReview(Number(e.target.value))} />
+        </label>
+        <p>
+          Automatismes (calcul rapide{child.level === '2nde' ? ", format de l'épreuve anticipée" : ''}) : <strong>{automatisms} %</strong>
+        </p>
+      </div>
+      <div className="row">
+        <button className="primary" disabled={!changed || mutation.isPending} onClick={() => mutation.mutate()}>
+          Enregistrer
+        </button>
+        {mutation.isSuccess && !changed && <span className="ok">Enregistré ✓</span>}
+      </div>
+    </section>
+  )
+}
+
+// Réinitialisation (droit à l'effacement) : progression, réponses et sauvegardes.
+function ResetProfile({ child }: { child: Profile }) {
+  const client = useQueryClient()
+  const [confirm, setConfirm] = useState('')
+  const mutation = useMutation({
+    mutationFn: () => api.reset(child.id, confirm),
+    onSuccess: () => {
+      setConfirm('')
+      client.invalidateQueries()
+    },
+  })
+  return (
+    <section className="card danger-zone">
+      <h2>Réinitialiser la progression de {child.name}</h2>
+      <p className="muted small">
+        Efface toutes les réponses, les sessions, les étoiles des Archives et la partie (niveau, donjons, défis). Le profil, son code et le
+        programme restent. Irréversible.
+      </p>
+      <form
+        className="row"
+        onSubmit={(e) => {
+          e.preventDefault()
+          mutation.mutate()
+        }}
+      >
+        <input value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder={`Écrivez « ${child.name} » pour confirmer`} aria-label="Confirmation" />
+        <button className="danger" disabled={confirm.trim().toLowerCase() !== child.name.toLowerCase() || mutation.isPending}>
+          Tout effacer
+        </button>
+        {mutation.isSuccess && <span className="ok">Progression effacée ✓</span>}
+        {mutation.isError && <span className="error-text">{mutation.error instanceof ApiError ? mutation.error.message : 'Erreur'}</span>}
+      </form>
+    </section>
   )
 }
 

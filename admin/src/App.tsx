@@ -3,13 +3,17 @@ import { useState } from 'react'
 import { api, ApiError, type Profile } from './api'
 import { Dashboard } from './Dashboard'
 import { Program } from './Program'
+import { Questions } from './Questions'
+import { Reports } from './Reports'
 import { Settings } from './Settings'
 
-type Page = 'dashboard' | 'program' | 'settings'
+type Page = 'dashboard' | 'program' | 'questions' | 'reports' | 'settings'
 
 const PAGES: { id: Page; label: string }[] = [
   { id: 'dashboard', label: 'Tableau de bord' },
   { id: 'program', label: 'Programme' },
+  { id: 'questions', label: 'Questions' },
+  { id: 'reports', label: 'Signalements' },
   { id: 'settings', label: 'Réglages' },
 ]
 
@@ -18,6 +22,8 @@ export function App() {
   const profiles = useQuery({ queryKey: ['profiles'], queryFn: api.profiles, enabled: me.isSuccess })
   const [childId, setChildId] = useState<number | null>(null)
   const [page, setPage] = useState<Page>('dashboard')
+  const [openItem, setOpenItem] = useState<number | null>(null)
+  const reportCount = useQuery({ queryKey: ['report-count'], queryFn: api.reportCount, enabled: me.isSuccess })
 
   if (me.isError) return <AccessError error={me.error} />
   if (me.isPending || profiles.isPending) return <p className="loading">Chargement…</p>
@@ -43,8 +49,16 @@ export function App() {
       </header>
       <nav className="tabs" aria-label="Rubrique">
         {PAGES.map((p) => (
-          <button key={p.id} className={p.id === page ? 'tab active' : 'tab'} onClick={() => setPage(p.id)}>
+          <button
+            key={p.id}
+            className={p.id === page ? 'tab active' : 'tab'}
+            onClick={() => {
+              setOpenItem(null)
+              setPage(p.id)
+            }}
+          >
             {p.label}
+            {p.id === 'reports' && (reportCount.data?.open ?? 0) > 0 && <span className="count">{reportCount.data!.open}</span>}
           </button>
         ))}
       </nav>
@@ -52,6 +66,15 @@ export function App() {
         {!child && <p>Aucun profil enfant.</p>}
         {child && page === 'dashboard' && <Dashboard child={child} />}
         {child && page === 'program' && <Program child={child} />}
+        {child && page === 'questions' && <Questions key={`${child.level}-${openItem}`} child={child} openItem={openItem} />}
+        {child && page === 'reports' && (
+          <Reports
+            onEditBankItem={(id) => {
+              setOpenItem(id)
+              setPage('questions')
+            }}
+          />
+        )}
         {child && page === 'settings' && <Settings child={child} />}
       </main>
     </div>

@@ -17,12 +17,33 @@ from app.engine.formulas import formula_hash, render_svg
 from app.engine.generators import Generator, for_level, for_notion
 from app.engine.items import Item
 
+# Part des emplacements confiés à une question de la banque quand la notion en a une
+# de difficulté proche (les générateurs gardent l'essentiel : variété infinie).
+BANK_SHARE = 0.4
 
-def build_items(slots: list[selector.Slot], rng: random.Random) -> dict[str, Any]:
+
+def build_items(
+    slots: list[selector.Slot],
+    rng: random.Random,
+    bank: dict[str, list[dict[str, Any]]] | None = None,
+) -> dict[str, Any]:
+    """Items des emplacements. `bank` : questions publiées de la banque par notion
+    (champs d'un Item, `id` compris) ; une même question au plus une fois par paquet."""
     items: list[dict[str, Any]] = []
     formulas: dict[str, str] = {}
+    used: set[str] = set()
     for slot in slots:
         generators = [g for g in for_notion(slot.notion) if g.combat]
+        written = [
+            entry
+            for entry in (bank or {}).get(slot.notion, [])
+            if abs(entry["difficulty"] - slot.difficulty) <= 1 and entry["id"] not in used
+        ]
+        if written and (not generators or rng.random() < BANK_SHARE):
+            entry = rng.choice(written)
+            used.add(entry["id"])
+            items.append(item_data(Item(**entry), slot.category, formulas))
+            continue
         if not generators:
             continue
         item = rng.choice(generators).item(slot.difficulty, rng.randrange(1_000_000_000))

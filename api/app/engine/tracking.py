@@ -18,6 +18,7 @@ from app.engine.generators import Generator, playable_notions
 from app.engine.scheduler import LeitnerScheduler, Scheduler
 from app.models import (
     Attempt,
+    BankItem,
     Chapter,
     ChapterStatus,
     Notion,
@@ -145,7 +146,8 @@ async def _combat_pack(
     focus_chapters: list[str],
     daily: bool = False,
 ) -> dict[str, Any]:
-    playable = playable_notions()
+    bank = await published_bank(db, profile.level)
+    playable = playable_notions() | set(bank)
     rows = [(n, c) for n, c in await _level_notions(db, profile.level) if n.code in playable]
     if not rows:  # programme pas encore chargé : paquet sans historique
         return session_pack.build(profile.level, rng)
@@ -185,7 +187,19 @@ async def _combat_pack(
     slots = selector.select(
         infos, progress, statuses, list(reversed(recent)), ratios, datetime.now(UTC), rng, size
     )
-    return session_pack.build_items(slots, rng)
+    return session_pack.build_items(slots, rng, bank)
+
+
+async def published_bank(db: AsyncSession, level: str) -> dict[str, list[dict[str, Any]]]:
+    """Questions publiées de la banque, par notion, prêtes pour un paquet."""
+    bank: dict[str, list[dict[str, Any]]] = {}
+    rows = await db.scalars(
+        sql_select(BankItem).where(BankItem.level == level, BankItem.status == "publie")
+    )
+    for row in rows:
+        entry = dict(row.data) | {"id": f"banque:{row.id}:{row.version}"}
+        bank.setdefault(row.notion, []).append(entry)
+    return bank
 
 
 # --- Suivi par notion ---------------------------------------------------------------

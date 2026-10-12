@@ -64,6 +64,11 @@ Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-
 - Village (`VillageDef`) : chaque habitant confie une quête de trois questions par jour (`revision`, `veille`,
   `enquete`) ; les questions passent par `QuestionService.next_quest_item`. Une enquête porte sur un seul
   document : générateur `shared_document` côté API (même document à graine égale, quelle que soit la difficulté).
+- Banque de questions (espace parent, `admin_content.py`) : une question rédigée est validée par
+  `engine/bank.py` (même schéma qu'un item généré, réponse qui se vérifie elle-même) et n'est jouée qu'une
+  fois publiée (`session_pack.build_items`, identifiant `banque:<id>:<version>`). Les signalements des enfants
+  passent par `POST /play/reports`. Réinitialisation d'un profil : `save_epoch` change, le client
+  (`SaveManager._restart`) abandonne l'ancienne partie au lieu de la renvoyer.
 - Combat : `Encounter` (core/combat) est partagé par l'arène et le donjon ; une scène ne réécrit pas le tour par tour.
 - Progression du joueur : `SaveManager` (XP, donjons, bestiaire, défis quotidiens), jamais de fichier de
   sauvegarde écrit à la main. Défi du jour : règles de série et de coffre dans `DailyChallenge`, sans compte à

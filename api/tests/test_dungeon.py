@@ -89,7 +89,13 @@ def _save(base: int, xp: int, **extra) -> dict:
 async def test_save_round_trip(client, login):
     headers = await login("jules", "1234")
     empty = (await client.get(f"{API}/save", headers=headers)).json()
-    assert empty == {"revision": 0, "schema_version": None, "data": None, "saved_at": None}
+    assert empty == {
+        "revision": 0,
+        "epoch": 0,
+        "schema_version": None,
+        "data": None,
+        "saved_at": None,
+    }
 
     response = await client.put(f"{API}/save", json=_save(0, 120, level=2), headers=headers)
     assert response.status_code == 200

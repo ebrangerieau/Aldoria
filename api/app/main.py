@@ -4,7 +4,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 
 from app import errors
 from app.config import get_settings
-from app.routers import admin, health, play
+from app.routers import admin, admin_content, health, play
 
 API_PREFIX = "/api/v1"
 
@@ -33,6 +33,7 @@ def create_app() -> FastAPI:
     app.include_router(health.router, prefix=API_PREFIX)
     app.include_router(play.router, prefix=API_PREFIX)
     app.include_router(admin.router, prefix=API_PREFIX)
+    app.include_router(admin_content.router, prefix=API_PREFIX)
     return app
 
 

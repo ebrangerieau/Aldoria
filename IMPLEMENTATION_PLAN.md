@@ -239,6 +239,22 @@ Livrables du TRD §13 : une salle, un ennemi, 3 widgets, 4 générateurs, et les
 > Écart : une halle couverte faite des pièces du donjon plutôt qu'un village en plein air (aucun pack
 > extérieur, budget de poids et de rendu déjà mesuré sur tablette).
 > Reste au monde : la personnalisation du héros (apparence, compagnon de Jules).
+> **Espace parent complet** (2026-10-12) : **banque de questions** (QCM, nombre ou fraction, expression,
+> vrai/faux justifié, remise en ordre ; brouillon puis publication ; aperçu avec la formule rendue par l'API ;
+> une question publiée prend environ 4 emplacements sur 10 de sa notion face aux générateurs, et rend jouables
+> les notions sans générateur), **import CSV ou JSON** (5 Mo au plus, rapport ligne par ligne avant
+> d'enregistrer, questions valides ajoutées en brouillon), **aperçu de 10 questions par générateur** et par
+> difficulté, **signalements** depuis l'explication d'une erreur (motif + réponse donnée), **mélange des
+> questions** réglable, **réinitialisation** d'un profil (droit à l'effacement ; l'ancienne partie d'un
+> appareil hors ligne est abandonnée grâce à l'« époque » de sauvegarde), **indicateurs du PRD §2** comparés
+> aux cibles. Migration 0006.
+> Écarts : l'aperçu reproduit le contenu de la question (énoncé, formule, propositions, réponse, explication),
+> pas le rendu Godot ; les illustrations (carte, balance…) y sont résumées. « Sessions sans sollicitation » :
+> le jeu ne peut pas le savoir, toutes les sessions jouées comptent. L'alignement se calcule sur les statuts
+> actuels des chapitres.
+> Reste au MVP : la banque de 150 à 200 questions par niveau (rédaction et relecture), la personnalisation du
+> héros, bien-être et accessibilité (rappel de pause, tailles de texte, mode daltonien, volumes), exploitation
+> (sauvegarde quotidienne de la base, logs).
 
 **Contenu**
 - **20 générateurs par niveau** (§4).

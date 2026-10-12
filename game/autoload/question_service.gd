@@ -23,6 +23,7 @@ var _rush_streak := 0
 var _penalty_left := 0
 var answered := 0
 var correct_count := 0
+var _last_input := {}  # dernière réponse donnée : {id, text} (signalement d'une erreur)
 
 
 func reset() -> void:
@@ -113,6 +114,10 @@ func next_quest_item(quest: String, generator := "", chapters: Array = []) -> Di
 ## Renvoie {correct, speed_ratio (temps / temps cible), reward_factor, explanation}.
 func submit(item: Dictionary, user_input: Variant, time_ms: int, hint_used: bool, game_mode := "combat") -> Dictionary:
 	var correct := AnswerChecker.check(item["answer"], user_input)
+	_last_input = {
+		"id": item.get("id", ""),
+		"text": JSON.stringify(user_input) if user_input is Dictionary or user_input is Array else str(user_input),
+	}
 	var role: String = item["role"]
 	var target := maxf(1.0, float(item.get("time_target_ms", 20000)))
 	var speed_ratio := time_ms / target
@@ -152,6 +157,11 @@ func submit(item: Dictionary, user_input: Variant, time_ms: int, hint_used: bool
 		"reward_factor": reward_factor,
 		"explanation": item.get("explanation", ""),
 	}
+
+
+## Réponse que l'enfant vient de donner à cette question ("" sinon).
+func last_input_for(item: Dictionary) -> String:
+	return str(_last_input.get("text", "")) if _last_input.get("id", null) == item.get("id", "") else ""
 
 
 func _take(item: Dictionary) -> Dictionary:

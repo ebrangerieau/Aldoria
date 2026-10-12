@@ -58,3 +58,18 @@ func test_conflict_adopts_the_server_save() -> void:
 	assert_eq(SaveManager._revision, 7)
 	assert_false(SaveManager._dirty)
 	assert_eq(int(SaveManager.bestiary()["Squelette"]), 3)
+
+
+func test_parent_reset_restarts_the_game_without_resending_it() -> void:
+	SaveManager.add_xp(800)
+	SaveManager.complete_dungeon("tour_fractions")
+	# Réinitialisation par le parent : époque 1, plus aucune sauvegarde sur le serveur.
+	SaveManager._restart({"revision": 0, "epoch": 1, "data": null})
+	assert_eq(SaveManager.xp(), 0)
+	assert_eq(int(SaveManager.dungeon("tour_fractions")["completed"]), 0)
+	assert_eq(SaveManager._epoch, 1)
+	assert_false(SaveManager._dirty, "l'ancienne partie n'est pas renvoyée")
+	# Partie déjà recommencée sur un autre appareil : on la reprend.
+	SaveManager._restart({"revision": 2, "epoch": 2, "schema_version": 1, "data": {"xp": 40}})
+	assert_eq(SaveManager.xp(), 40)
+	assert_eq(SaveManager._revision, 2)

@@ -19,7 +19,7 @@ from app.db import get_db
 from app.engine import tracking
 from app.engine.generators import REGISTRY
 from app.errors import ApiError
-from app.models import Attempt, Chapter, GameSession, Profile
+from app.models import Attempt, Chapter, GameSession, Profile, Report
 
 router = APIRouter(prefix="/play", tags=["play"])
 Db = Annotated[AsyncSession, Depends(get_db)]
@@ -103,18 +103,32 @@ class AttemptsOut(BaseModel):
 
 class SaveIn(BaseModel):
     base_revision: int = Field(ge=0)
+    # Époque du profil (réinitialisation par le parent) sur laquelle s'appuie le client.
+    epoch: int = Field(default=0, ge=0)
     schema_version: int = Field(ge=1, le=1000)
     data: dict[str, Any]
 
 
 class SaveOut(BaseModel):
     revision: int
+    epoch: int = 0
     schema_version: int | None = None
     data: dict[str, Any] | None = None
     saved_at: datetime | None = None
 
 
 MAX_SAVE_BYTES = 64 * 1024
+
+
+class ReportIn(BaseModel):
+    """Signalement d'une question par l'enfant (« il y a une erreur »)."""
+
+    item: dict[str, Any]
+    user_input: str | None = Field(default=None, max_length=200)
+    reason: Literal["enonce", "reponse", "incomprehensible", "autre"] = "autre"
+
+
+MAX_REPORT_ITEM_BYTES = 20 * 1024
 
 
 class SessionEndIn(BaseModel):
@@ -267,7 +281,9 @@ async def get_progress(profile: CurrentProfile, db: Db) -> dict[str, Any]:
 @router.get("/save", response_model=SaveOut)
 async def get_save(profile: CurrentProfile, db: Db) -> SaveOut:
     current = await tracking.latest_save(db, profile.id)
-    return SaveOut(revision=0) if current is None else _save_out(current)
+    if current is None:
+        return SaveOut(revision=0, epoch=profile.save_epoch)
+    return _save_out(current, profile.save_epoch)
 
 
 @router.put("/save", response_model=SaveOut)
@@ -277,6 +293,17 @@ async def put_save(body: SaveIn, profile: CurrentProfile, db: Db) -> SaveOut:
     sauvegarde du serveur dans `details.current`, que le client adopte."""
     if len(json.dumps(body.data)) > MAX_SAVE_BYTES:
         raise ApiError(413, "save_too_large", "Sauvegarde trop volumineuse.")
+    if body.epoch != profile.save_epoch:
+        # Partie d'avant une réinitialisation par le parent : jamais restaurée.
+        current = await tracking.latest_save(db, profile.id)
+        out = (
+            SaveOut(revision=0, epoch=profile.save_epoch)
+            if current is None
+            else _save_out(current, profile.save_epoch)
+        )
+        raise ApiError(
+            409, "save_reset", "La partie a été réinitialisée.", current=out.model_dump(mode="json")
+        )
     accepted, saved = await tracking.store_save(
         db, profile.id, body.base_revision, body.schema_version, body.data
     )
@@ -285,14 +312,52 @@ async def put_save(body: SaveIn, profile: CurrentProfile, db: Db) -> SaveOut:
             409,
             "save_conflict",
             "Une partie plus avancée existe sur un autre appareil.",
-            current=_save_out(saved).model_dump(mode="json"),
+            current=_save_out(saved, profile.save_epoch).model_dump(mode="json"),
         )
-    return _save_out(saved)
+    return _save_out(saved, profile.save_epoch)
 
 
-def _save_out(saved: Any) -> SaveOut:
+@router.post("/reports", status_code=201)
+async def post_report(body: ReportIn, profile: CurrentProfile, db: Db) -> dict[str, int]:
+    """L'enfant signale une question qu'il pense fausse ; le parent la retrouve dans
+    l'espace parent avec la réponse donnée."""
+    if len(json.dumps(body.item)) > MAX_REPORT_ITEM_BYTES:
+        raise ApiError(413, "report_too_large", "Signalement trop volumineux.")
+    item_id = str(body.item.get("id", ""))[:120] or "inconnu"
+    item = {k: body.item.get(k) for k in REPORT_FIELDS if k in body.item}
+    report = Report(
+        profile_id=profile.id,
+        item_id=item_id,
+        item=item,
+        user_input=body.user_input,
+        reason=body.reason,
+    )
+    db.add(report)
+    await db.commit()
+    return {"id": report.id}
+
+
+# Champs de la question gardés avec un signalement (ce que l'enfant a vu et la réponse).
+REPORT_FIELDS = (
+    "id",
+    "type",
+    "difficulty",
+    "notions",
+    "prompt",
+    "latex",
+    "choices",
+    "answer",
+    "hint",
+    "explanation",
+    "visual",
+    "generator",
+)
+
+
+def _save_out(saved: Any, epoch: int) -> SaveOut:
     return SaveOut(
         revision=saved.revision,
+        epoch=epoch,
         schema_version=saved.schema_version,
         data=saved.data,
         saved_at=saved.saved_at,

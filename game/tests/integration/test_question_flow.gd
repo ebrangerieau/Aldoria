@@ -245,3 +245,22 @@ func test_sign_table_cycles_and_submits_row_by_row() -> void:
 	table._submit()
 	assert_signal_emitted_with_parameters(table, "submitted", [["-", "+"]])
 	assert_true(AnswerChecker.check({"kind": "signs", "value": ["-", "+"]}, ["-", "+"]))
+
+
+func test_child_can_report_a_question_with_the_answer_given() -> void:
+	_load_pack("6e")
+	var item := QuestionService.next_item("chapitre")
+	QuestionService.submit(item, "12/7", 4000, false)
+	assert_eq(QuestionService.last_input_for(item), "12/7")
+	assert_eq(QuestionService.last_input_for({"id": "autre"}), "")
+	var panel := ExplanationPanel.new()
+	panel.setup(item, WorldTheme.jules())
+	add_child_autofree(panel)
+	watch_signals(panel)
+	assert_false(panel._report_box.visible, "motifs cachés tant qu'on n'a pas demandé")
+	panel._report_button.pressed.emit()
+	assert_true(panel._report_box.visible)
+	(panel._report_box.get_child(0) as Button).pressed.emit()
+	assert_signal_emitted_with_parameters(panel, "reported", ["reponse"])
+	assert_false(panel._report_box.visible)
+	await wait_for_signal(get_tree().process_frame, 0.2)
