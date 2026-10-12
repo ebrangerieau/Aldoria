@@ -521,3 +521,133 @@ pre.example {
     display: none;
   }
 }
+
+/* --- Guide --- */
+.welcome {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.guide p,
+.guide li,
+.guide dd {
+  line-height: 1.6;
+}
+.guide h2 {
+  font-size: 1.25rem;
+  margin-bottom: 12px;
+}
+.guide section[id] {
+  scroll-margin-top: 16px;
+}
+.toc ol {
+  columns: 2;
+  column-gap: 32px;
+  margin: 12px 0 0;
+  padding-left: 22px;
+}
+.toc a,
+.section-foot a {
+  color: var(--accent);
+}
+.steps {
+  counter-reset: step;
+  list-style: none;
+  padding: 0;
+  margin: 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.steps li {
+  counter-increment: step;
+  position: relative;
+  padding-left: 40px;
+}
+.steps li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.bullets {
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.tip,
+.warn {
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin: 12px 0 0;
+  border-left: 4px solid var(--info);
+  background: var(--accent-soft);
+}
+.warn {
+  border-left-color: var(--warn);
+}
+.pill {
+  display: inline-block;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0 8px;
+  font-size: 0.85rem;
+}
+.legend {
+  display: block;
+  margin: 4px 0;
+}
+.statuses-guide {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 10px 16px;
+  align-items: center;
+  margin: 12px 0;
+}
+.statuses-guide dd {
+  margin: 0;
+}
+.statuses-guide .status {
+  cursor: default;
+}
+table.guide-table {
+  margin-top: 12px;
+}
+table.guide-table td {
+  vertical-align: top;
+}
+.section-foot {
+  margin-top: 16px;
+  align-items: center;
+}
+.guide details {
+  border-top: 1px solid var(--border);
+  padding: 10px 0;
+}
+.guide summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+@media (max-width: 720px) {
+  .toc ol {
+    columns: 1;
+  }
+  .statuses-guide {
+    grid-template-columns: 1fr;
+  }
+}

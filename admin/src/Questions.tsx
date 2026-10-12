@@ -15,12 +15,12 @@ import {
 } from './api'
 import { QuestionPreview } from './QuestionPreview'
 
-type View = 'bank' | 'import' | 'generators'
+export type View = 'bank' | 'import' | 'generators'
 
 // Questions du niveau de l'enfant choisi : banque rédigée (jouée une fois publiée),
 // import d'un fichier, aperçu des générateurs.
-export function Questions({ child, openItem }: { child: Profile; openItem?: number | null }) {
-  const [view, setView] = useState<View>('bank')
+export function Questions({ child, openItem, initialView = 'bank' }: { child: Profile; openItem?: number | null; initialView?: View }) {
+  const [view, setView] = useState<View>(initialView)
   const [editing, setEditing] = useState<number | 'new' | null>(openItem ?? null)
   const notions = useNotions(child)
   return (

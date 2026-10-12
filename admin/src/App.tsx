@@ -2,12 +2,13 @@ import { useQuery } from '@tanstack/react-query'
 import { useState } from 'react'
 import { api, ApiError, type Profile } from './api'
 import { Dashboard } from './Dashboard'
+import { Guide, type GuideTarget } from './Guide'
 import { Program } from './Program'
-import { Questions } from './Questions'
+import { Questions, type View } from './Questions'
 import { Reports } from './Reports'
 import { Settings } from './Settings'
 
-type Page = 'dashboard' | 'program' | 'questions' | 'reports' | 'settings'
+type Page = GuideTarget | 'guide'
 
 const PAGES: { id: Page; label: string }[] = [
   { id: 'dashboard', label: 'Tableau de bord' },
@@ -15,7 +16,27 @@ const PAGES: { id: Page; label: string }[] = [
   { id: 'questions', label: 'Questions' },
   { id: 'reports', label: 'Signalements' },
   { id: 'settings', label: 'Réglages' },
+  { id: 'guide', label: 'Guide' },
 ]
+
+const WELCOME_KEY = 'aldoria-guide-vu'
+
+// Mémoire du navigateur : peut être indisponible (navigation privée) sans gêner la page.
+function guideSeen(): boolean {
+  try {
+    return localStorage.getItem(WELCOME_KEY) === '1'
+  } catch {
+    return false
+  }
+}
+
+function rememberGuideSeen() {
+  try {
+    localStorage.setItem(WELCOME_KEY, '1')
+  } catch {
+    // rien : le bandeau reviendra à la prochaine visite
+  }
+}
 
 export function App() {
   const me = useQuery({ queryKey: ['me'], queryFn: api.me, retry: false })
@@ -23,6 +44,18 @@ export function App() {
   const [childId, setChildId] = useState<number | null>(null)
   const [page, setPage] = useState<Page>('dashboard')
   const [openItem, setOpenItem] = useState<number | null>(null)
+  const [welcome, setWelcome] = useState(!guideSeen())
+  const [questionsView, setQuestionsView] = useState<View>('bank')
+  const go = (target: Page, view: View = 'bank') => {
+    setOpenItem(null)
+    setQuestionsView(view)
+    setPage(target)
+    if (target === 'guide') {
+      rememberGuideSeen()
+      setWelcome(false)
+    }
+    window.scrollTo(0, 0)
+  }
   const reportCount = useQuery({ queryKey: ['report-count'], queryFn: api.reportCount, enabled: me.isSuccess })
 
   if (me.isError) return <AccessError error={me.error} />
@@ -52,10 +85,7 @@ export function App() {
           <button
             key={p.id}
             className={p.id === page ? 'tab active' : 'tab'}
-            onClick={() => {
-              setOpenItem(null)
-              setPage(p.id)
-            }}
+            onClick={() => go(p.id)}
           >
             {p.label}
             {p.id === 'reports' && (reportCount.data?.open ?? 0) > 0 && <span className="count">{reportCount.data!.open}</span>}
@@ -63,10 +93,30 @@ export function App() {
         ))}
       </nav>
       <main>
+        {welcome && page !== 'guide' && (
+          <div className="card welcome">
+            <span>
+              <strong>Première visite ?</strong> Le guide explique pas à pas tout ce que vous pouvez faire ici.
+            </span>
+            <span className="row">
+              <button className="primary" onClick={() => go('guide')}>
+                Lire le guide
+              </button>
+              <button
+                onClick={() => {
+                  rememberGuideSeen()
+                  setWelcome(false)
+                }}
+              >
+                Masquer
+              </button>
+            </span>
+          </div>
+        )}
         {!child && <p>Aucun profil enfant.</p>}
         {child && page === 'dashboard' && <Dashboard child={child} />}
         {child && page === 'program' && <Program child={child} />}
-        {child && page === 'questions' && <Questions key={`${child.level}-${openItem}`} child={child} openItem={openItem} />}
+        {child && page === 'questions' && <Questions key={`${child.level}-${openItem}-${questionsView}`} child={child} openItem={openItem} initialView={questionsView} />}
         {child && page === 'reports' && (
           <Reports
             onEditBankItem={(id) => {
@@ -76,6 +126,7 @@ export function App() {
           />
         )}
         {child && page === 'settings' && <Settings child={child} />}
+        {child && page === 'guide' && <Guide child={child} onOpen={go} />}
       </main>
     </div>
   )

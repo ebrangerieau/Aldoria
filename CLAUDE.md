@@ -91,4 +91,6 @@ Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-
 - API parent (`/api/v1/admin`) : jamais de route parent sans la dépendance `CurrentParent` (secret
   `X-Aldoria-Admin-Key` posé par Traefik + identité TinyAuth dans `ALDORIA_ADMIN_USERS`).
   L'espace parent n'utilise aucun style en ligne (CSP `style-src 'self'`) : graphiques en SVG.
+  Toute fonction ajoutée ou modifiée dans l'espace parent est décrite dans son guide (`admin/src/Guide.tsx`),
+  en langage simple, avec les étapes pour s'en servir.
 - Textes visibles par les enfants en français ; aucune donnée personnelle hors du foyer.

@@ -88,6 +88,17 @@ const { chromium } = require('playwright-core');
   await page.waitForTimeout(800);
   await shot('8_reglages_tom');
 
+  // Guide : bandeau de première visite, puis un bouton « Ouvrir … » mène à la rubrique.
+  await page.getByRole('button', { name: 'Guide', exact: true }).click();
+  await page.getByRole('heading', { name: "Guide de l'espace parent" }).waitFor();
+  await shot('9_guide');
+  await page.getByRole('button', { name: /Ouvrir l.import/ }).click();
+  await page.getByRole('heading', { name: /Importer des questions/ }).waitFor();
+  await page.getByRole('button', { name: 'Guide', exact: true }).click();
+  await page.getByRole('button', { name: 'Ouvrir le programme' }).click();
+  await page.locator('section.chapter').first().waitFor();
+  if ((await page.getByText('Première visite ?').count()) !== 0) problems.push('bandeau du guide encore affiché après lecture');
+
   // Recette : Remote-User forgé sur l'hôte public → l'API parent reste introuvable.
   const forged = await page.request.get(`${publicUrl}api/v1/admin/profiles`, {
     headers: { 'Remote-User': 'parent', 'Remote-Email': 'parent@test.local' },
