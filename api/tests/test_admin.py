@@ -1,9 +1,10 @@
-"""Espace parent : chaîne de confiance (secret Traefik + identité SSO), statut des
-chapitres, tableau de bord, réglages, notions à valider."""
+"""Espace parent : chaîne de confiance (secret Traefik + session d'un adulte), statut
+des chapitres, tableau de bord, réglages, notions à valider."""
 
 import pytest
 
 from app.config import get_settings
+from tests.conftest import PARENT_SESSION
 
 ADMIN = "/api/v1/admin"
 PLAY = "/api/v1/play"
@@ -13,47 +14,60 @@ KEY = "k" * 40
 @pytest.fixture(autouse=True)
 def admin_settings(monkeypatch):
     monkeypatch.setenv("ALDORIA_ADMIN_KEY", KEY)
-    monkeypatch.setenv("ALDORIA_ADMIN_USERS", "parent@example.org, eric")
     get_settings.cache_clear()
     yield
     get_settings.cache_clear()
 
 
-def parent(email="parent@example.org", user="parent", key=KEY) -> dict:
-    headers = {"Remote-User": user, "Remote-Email": email, "Remote-Name": "Le parent"}
+def parent(session: str | None = PARENT_SESSION, key: str | None = KEY) -> dict:
+    """En-têtes d'un appel de l'espace parent : secret de Traefik, cookie de session,
+    en-tête anti-CSRF."""
+    headers = {"X-Requested-With": "aldoria"}
     if key is not None:
         headers["X-Aldoria-Admin-Key"] = key
+    if session is not None:
+        headers["Cookie"] = f"aldoria_parent={session}"
     return headers
 
 
 async def test_identity(client):
     response = await client.get(f"{ADMIN}/me", headers=parent())
     assert response.status_code == 200
-    assert response.json() == {"user": "parent", "email": "parent@example.org", "name": "Le parent"}
+    assert response.json() == {
+        "adult": {
+            "id": 1,
+            "name": "Le parent",
+            "email": "parent@example.org",
+            "is_operator": False,
+        },
+        "family": {"id": 1, "name": "Famille test"},
+    }
 
 
-async def test_forged_identity_without_traefik_secret_is_404(client, profiles):
-    """Recette : un Remote-User forgé arrivant par l'hôte public (sans le secret que
-    seul le routeur admin ajoute) ne voit même pas l'API parent."""
+async def test_without_traefik_secret_the_admin_api_does_not_exist(client, profiles):
+    """Recette : un appel arrivant par l'hôte public (sans le secret que seul le routeur
+    admin ajoute), même avec une session valide, ne voit même pas l'API parent."""
     for headers in (parent(key=None), parent(key="mauvais" * 6), {}):
         response = await client.get(f"{ADMIN}/profiles", headers=headers)
         assert response.status_code == 404
         assert response.json()["error"]["code"] == "not_found"
 
 
-async def test_unknown_parent_is_forbidden(client):
-    response = await client.get(f"{ADMIN}/me", headers=parent(email="voisin@example.org", user="x"))
+async def test_without_session_is_401(client):
+    for session in (None, "jeton-inconnu"):
+        response = await client.get(f"{ADMIN}/me", headers=parent(session=session))
+        assert response.status_code == 401
+        assert response.json()["error"]["code"] == "not_logged_in"
+
+
+async def test_changes_need_the_csrf_header(client, profiles):
+    headers = parent()
+    del headers["X-Requested-With"]
+    response = await client.patch(
+        f"{ADMIN}/profiles/{profiles['jules']}", json={"session_max_minutes": 40}, headers=headers
+    )
     assert response.status_code == 403
-    assert response.json()["error"]["details"]["identity"] == "voisin@example.org"
-    # Correspondance par nom d'utilisateur, sans tenir compte de la casse.
-    ok = await client.get(f"{ADMIN}/me", headers=parent(email="", user="Eric"))
-    assert ok.status_code == 200
-
-
-async def test_missing_identity_is_401(client):
-    response = await client.get(f"{ADMIN}/me", headers={"X-Aldoria-Admin-Key": KEY})
-    assert response.status_code == 401
-    assert response.json()["error"]["code"] == "no_identity"
+    assert response.json()["error"]["code"] == "csrf"
 
 
 async def test_admin_closed_without_key(client, monkeypatch):

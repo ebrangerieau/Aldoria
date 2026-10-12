@@ -1,4 +1,6 @@
-"""Authentification des enfants : profil + PIN à 4 chiffres → jeton JWT (TRD §8)."""
+"""Authentification des enfants : profil + PIN à 4 chiffres → jeton JWT (TRD §8),
+depuis un appareil relié à la famille (accounts.py). Le jeton porte l'appareil : un
+appareil retiré par le parent ferme ses parties."""
 
 from __future__ import annotations
 
@@ -15,7 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import get_settings
 from app.db import get_db
 from app.errors import ApiError
-from app.models import Profile
+from app.models import Device, Profile
 
 _hasher = PasswordHasher()
 _bearer = HTTPBearer(auto_error=False)
@@ -36,11 +38,11 @@ def verify_pin(pin_hash: str | None, pin: str) -> bool:
         return False
 
 
-def create_token(profile_id: int) -> tuple[str, datetime]:
+def create_token(profile_id: int, device_id: int) -> tuple[str, datetime]:
     settings = get_settings()
     expires = datetime.now(UTC) + timedelta(hours=settings.token_hours)
     token = jwt.encode(
-        {"sub": str(profile_id), "exp": expires, "scope": "play"},
+        {"sub": str(profile_id), "dev": device_id, "exp": expires, "scope": "play"},
         settings.jwt_secret,
         algorithm="HS256",
     )
@@ -66,6 +68,10 @@ async def current_profile(
     profile = await db.get(Profile, int(payload["sub"]))
     if profile is None:
         raise ApiError(401, "invalid_token", "Profil introuvable.")
+    # Jeton d'avant les appareils (sans « dev ») ou appareil retiré : on se reconnecte.
+    device = await db.get(Device, int(payload.get("dev", 0)))
+    if device is None or device.family_id != profile.family_id:
+        raise ApiError(401, "device_unknown", "Cet appareil n'est plus relié à la famille.")
     return profile
 
 

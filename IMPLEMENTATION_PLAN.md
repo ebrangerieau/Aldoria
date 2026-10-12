@@ -343,6 +343,36 @@ lancer la lecture à voix haute, sans pouvoir retirer les aménagements choisis 
 
 **Critère de passage** : objectifs du PRD §2 atteints sur un mois.
 
+### Chantier « plusieurs familles » et comptes adultes (décidé le 2026-10-12)
+
+Objectif d'Eric : ajouter un adulte simplement, ne plus dépendre de TinyAuth, pouvoir accueillir d'autres
+familles. Remplace l'écart TRD §1.3-1 (identité SSO TinyAuth) : Traefik garde l'aiguillage, le HTTPS, la
+séparation des hôtes (secret `X-Aldoria-Admin-Key`) et limite le débit des routes de connexion.
+
+- **Famille** (`family`) : chaque enfant, question de la banque, appareil, adulte et décision « au programme /
+  hors programme » (`family_notion`) lui appartient ; toute route parent filtre sur la famille de l'adulte
+  connecté (404 sinon). La famille existante devient la n° 1.
+- **Adultes** (`adult`) : e-mail + mot de passe (Argon2id, 10 caractères au moins), blocage 15 min après
+  5 erreurs, session serveur dans un cookie `HttpOnly; Secure; SameSite=Strict` limité à `/api/v1/admin`
+  (30 jours), en-tête `X-Requested-With: aldoria` exigé (protection CSRF en plus de SameSite).
+- **Invitations** (`invitation`, jeton à usage unique, haché en base, lien `…/#invitation=…` : le fragment
+  n'est jamais envoyé au serveur ni journalisé) : rejoindre une famille (7 jours), créer une famille (7 jours,
+  envoyée par l'exploitant), réinitialiser un mot de passe (2 jours, envoyée par un autre adulte ou en ligne
+  de commande). Le serveur n'envoie aucun e-mail : le lien se copie.
+- **Exploitant** (`adult.is_operator`, Eric) : liste des familles, invitation d'une nouvelle famille, état
+  des sauvegardes.
+- **Appareils** (`device`) : le jeu liste les enfants et accepte un code d'enfant seulement depuis un appareil
+  relié à la famille. Le parent crée un code de liaison à 8 chiffres (30 min, usage unique) ; l'appareil
+  l'échange contre un jeton durable (`X-Aldoria-Device`). Un appareil retiré déconnecte ses parties
+  (le jeton joueur porte l'appareil).
+- **Espace parent** : page de connexion, onglet « Famille » (adultes, enfants à créer ou supprimer, appareils,
+  mon compte, suppression de la famille), onglet « Exploitation » pour l'exploitant.
+- **Bascule sans coupure** : 1) déploiement avec TinyAuth encore devant l'espace parent, compte d'Eric créé par
+  `python -m app.cli invite --family 1 --operator` ; 2) une fois la connexion vérifiée, retrait de TinyAuth.
+- **Hors code, à la charge d'Eric avant d'accueillir une autre famille** : RGPD (information et accord des
+  parents, registre, durée de conservation, hébergement UE), la règle « aucune donnée hors du foyer » devient
+  « aucune donnée hors du serveur d'Aldoria ».
+
 ### Phases suivantes (à détailler le moment venu)
 
 - **V2** : français et langues vivantes ; génération d'items par IA validée par le parent (route admin uniquement, sortie JSON validée par le schéma, statut `brouillon`) ; **grimoire Python** (Pyodide 314 auto-hébergé, Web Worker, `aldoriaPy.run(code, tests)` appelé via `JavaScriptBridge` avec des callbacks conservés en variables membres et des échanges en JSON, délai par `terminate()`) ; cinématiques ; résumé hebdomadaire au parent ; lecture vocale.

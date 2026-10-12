@@ -1,12 +1,24 @@
-"""Tables (TRD §4) : profils, programme (matières, chapitres, notions), suivi par
-notion (Leitner + maîtrise), sessions de jeu, tentatives."""
+"""Tables (TRD §4) : familles et adultes, profils, programme (matières, chapitres,
+notions), suivi par notion (Leitner + maîtrise), sessions de jeu, tentatives.
+Tout ce qu'un parent voit ou modifie appartient à une famille (IMPLEMENTATION_PLAN,
+chantier « plusieurs familles »)."""
 
 from __future__ import annotations
 
 from datetime import UTC, date, datetime
 from typing import Any
 
-from sqlalchemy import JSON, Boolean, Date, DateTime, Float, ForeignKey, Integer, String
+from sqlalchemy import (
+    JSON,
+    Boolean,
+    Date,
+    DateTime,
+    Float,
+    ForeignKey,
+    Integer,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -22,11 +34,98 @@ class Base(DeclarativeBase):
     pass
 
 
-class Profile(Base):
-    __tablename__ = "profile"
+class Family(Base):
+    __tablename__ = "family"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    name: Mapped[str] = mapped_column(String(40), unique=True)
+    name: Mapped[str] = mapped_column(String(80))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class Adult(Base):
+    """Parent (ou autre adulte) d'une famille : e-mail + mot de passe (accounts.py).
+    `is_operator` : l'exploitant du serveur (familles, sauvegardes)."""
+
+    __tablename__ = "adult"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    family_id: Mapped[int] = mapped_column(ForeignKey("family.id", ondelete="CASCADE"), index=True)
+    email: Mapped[str] = mapped_column(String(200), unique=True)  # en minuscules
+    name: Mapped[str] = mapped_column(String(60))
+    password_hash: Mapped[str] = mapped_column(String(200))
+    is_operator: Mapped[bool] = mapped_column(Boolean, default=False)
+    failed_logins: Mapped[int] = mapped_column(Integer, default=0)
+    locked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class AdultSession(Base):
+    """Session de l'espace parent : seul l'empreinte SHA-256 du jeton est gardée."""
+
+    __tablename__ = "adult_session"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    adult_id: Mapped[int] = mapped_column(ForeignKey("adult.id", ondelete="CASCADE"), index=True)
+    label: Mapped[str] = mapped_column(String(120), default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    last_seen_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class Invitation(Base):
+    """Lien à usage unique (empreinte SHA-256 du jeton) : « adulte » rejoint une famille,
+    « famille » en crée une, « mot_de_passe » réinitialise celui d'un adulte."""
+
+    __tablename__ = "invitation"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    kind: Mapped[str] = mapped_column(String(14))
+    family_id: Mapped[int | None] = mapped_column(
+        ForeignKey("family.id", ondelete="CASCADE"), index=True
+    )
+    adult_id: Mapped[int | None] = mapped_column(ForeignKey("adult.id", ondelete="CASCADE"))
+    created_by: Mapped[int | None] = mapped_column(ForeignKey("adult.id", ondelete="SET NULL"))
+    note: Mapped[str] = mapped_column(String(80), default="")
+    operator: Mapped[bool] = mapped_column(Boolean, default=False)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class Device(Base):
+    """Appareil relié à une famille (tablette, PC) : le jeu y liste les enfants."""
+
+    __tablename__ = "device"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    family_id: Mapped[int] = mapped_column(ForeignKey("family.id", ondelete="CASCADE"), index=True)
+    token_hash: Mapped[str] = mapped_column(String(64), unique=True)
+    name: Mapped[str] = mapped_column(String(60))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    last_seen_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class PairingCode(Base):
+    """Code de liaison d'un appareil (8 chiffres, empreinte SHA-256), à usage unique."""
+
+    __tablename__ = "pairing_code"
+
+    id: Mapped[str] = mapped_column(String(64), primary_key=True)
+    family_id: Mapped[int] = mapped_column(ForeignKey("family.id", ondelete="CASCADE"), index=True)
+    device_name: Mapped[str] = mapped_column(String(60))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    expires_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
+    used_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+
+
+class Profile(Base):
+    __tablename__ = "profile"
+    __table_args__ = (UniqueConstraint("family_id", "name", name="uq_profile_family_name"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    family_id: Mapped[int] = mapped_column(ForeignKey("family.id", ondelete="CASCADE"), index=True)
+    name: Mapped[str] = mapped_column(String(40))
     avatar: Mapped[str] = mapped_column(String(40))
     level: Mapped[str] = mapped_column(String(8))  # « 6e » ou « 2nde »
     world: Mapped[str] = mapped_column(String(16))  # « jules » ou « tom »
@@ -117,11 +216,24 @@ class Notion(Base):
     code: Mapped[str] = mapped_column(String(120), unique=True)
     label: Mapped[str] = mapped_column(String(200))
     is_automatism: Mapped[bool] = mapped_column(Boolean, default=False)
-    # Contenu de programme incertain (sources contradictoires), à confirmer par le parent.
+    # Contenu de programme incertain (sources contradictoires), à confirmer par chaque
+    # famille (FamilyNotion).
     to_validate: Mapped[bool] = mapped_column(Boolean, default=False)
-    # Décision du parent (espace parent) : None = pas encore tranché, False = hors
-    # programme (jamais proposée). Le seed ne la modifie jamais.
-    in_program: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+
+
+class FamilyNotion(Base):
+    """Décision d'une famille sur une notion incertaine : False = hors programme (jamais
+    proposée à ses enfants). Pas de ligne = pas encore tranché."""
+
+    __tablename__ = "family_notion"
+
+    family_id: Mapped[int] = mapped_column(
+        ForeignKey("family.id", ondelete="CASCADE"), primary_key=True
+    )
+    notion_id: Mapped[int] = mapped_column(
+        ForeignKey("notion.id", ondelete="CASCADE"), primary_key=True
+    )
+    in_program: Mapped[bool] = mapped_column(Boolean)
 
 
 class ChapterStatus(Base):
@@ -183,6 +295,7 @@ class BankItem(Base):
     __tablename__ = "bank_item"
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    family_id: Mapped[int] = mapped_column(ForeignKey("family.id", ondelete="CASCADE"), index=True)
     level: Mapped[str] = mapped_column(String(8), index=True)
     notion: Mapped[str] = mapped_column(String(120), index=True)
     difficulty: Mapped[int] = mapped_column(Integer)

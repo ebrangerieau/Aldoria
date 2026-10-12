@@ -1,4 +1,5 @@
-"""API côté joueur (TRD §3.2) : profils, connexion, session, tentatives, progression."""
+"""API côté joueur (TRD §3.2) : liaison de l'appareil à une famille, profils de cette
+famille, connexion, session, tentatives, progression."""
 
 from __future__ import annotations
 
@@ -13,13 +14,15 @@ from pydantic import BaseModel, Field
 from sqlalchemy import Integer, cast, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app import accounts
+from app.accounts import CurrentDevice, aware, utcnow
 from app.auth import CurrentProfile, create_token, verify_pin
 from app.config import get_settings
 from app.db import get_db
 from app.engine import accommodations, tracking
 from app.engine.generators import REGISTRY
 from app.errors import ApiError
-from app.models import Attempt, Chapter, GameSession, Profile, Report
+from app.models import Attempt, Chapter, Device, Family, GameSession, PairingCode, Profile, Report
 
 router = APIRouter(prefix="/play", tags=["play"])
 Db = Annotated[AsyncSession, Depends(get_db)]
@@ -34,6 +37,16 @@ class ProfileOut(BaseModel):
     avatar: str
     level: str
     world: str
+
+
+class PairIn(BaseModel):
+    code: str = Field(pattern=r"^[0-9]{8}$")
+
+
+class PairOut(BaseModel):
+    device_token: str
+    family: str
+    device: str
 
 
 class LoginIn(BaseModel):
@@ -147,17 +160,41 @@ def _profile_out(p: Profile) -> ProfileOut:
     return ProfileOut(id=p.id, name=p.name, avatar=p.avatar, level=p.level, world=p.world)
 
 
+@router.post("/devices/pair", response_model=PairOut)
+async def pair_device(body: PairIn, db: Db) -> PairOut:
+    """Relie l'appareil à une famille avec le code à 8 chiffres créé par un parent
+    (30 min, usage unique ; Traefik limite le débit de cette route)."""
+    pairing = await db.get(PairingCode, accounts.digest(body.code))
+    if pairing is None or pairing.used_at is not None or aware(pairing.expires_at) <= utcnow():
+        raise ApiError(404, "pairing_invalid", "Code inconnu ou expiré : demande-en un nouveau.")
+    token = accounts.new_token()
+    device = Device(
+        family_id=pairing.family_id,
+        token_hash=accounts.digest(token),
+        name=pairing.device_name,
+        last_seen_at=utcnow(),
+    )
+    db.add(device)
+    pairing.used_at = utcnow()
+    family = await db.get(Family, pairing.family_id)
+    await db.commit()
+    return PairOut(device_token=token, family=family.name, device=device.name)
+
+
 @router.get("/profiles", response_model=list[ProfileOut])
-async def list_profiles(db: Db) -> list[ProfileOut]:
-    rows = await db.scalars(select(Profile).order_by(Profile.id))
+async def list_profiles(device: CurrentDevice, db: Db) -> list[ProfileOut]:
+    """Enfants de la famille de l'appareil (aucun profil sans appareil relié)."""
+    rows = await db.scalars(
+        select(Profile).where(Profile.family_id == device.family_id).order_by(Profile.id)
+    )
     return [_profile_out(p) for p in rows]
 
 
 @router.post("/login", response_model=LoginOut)
-async def login(body: LoginIn, db: Db) -> LoginOut:
+async def login(body: LoginIn, device: CurrentDevice, db: Db) -> LoginOut:
     settings = get_settings()
     profile = await db.get(Profile, body.profile_id)
-    if profile is None:
+    if profile is None or profile.family_id != device.family_id:
         raise ApiError(404, "unknown_profile", "Profil inconnu.")
     now = datetime.now(UTC)
     locked_until = _aware(profile.locked_until)
@@ -186,7 +223,7 @@ async def login(body: LoginIn, db: Db) -> LoginOut:
     profile.failed_logins = 0
     profile.locked_until = None
     await db.commit()
-    token, expires = create_token(profile.id)
+    token, expires = create_token(profile.id, device.id)
     return LoginOut(
         token=token,
         expires_at=expires,

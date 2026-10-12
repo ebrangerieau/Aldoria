@@ -21,6 +21,7 @@ from app.models import (
     BankItem,
     Chapter,
     ChapterStatus,
+    FamilyNotion,
     Notion,
     NotionState,
     Profile,
@@ -81,11 +82,17 @@ async def seed_curriculum(db: AsyncSession, directory: Path | None = None) -> di
     return counts
 
 
-async def _level_notions(db: AsyncSession, level: str) -> list[tuple[Notion, Chapter]]:
+async def _level_notions(
+    db: AsyncSession, level: str, family_id: int
+) -> list[tuple[Notion, Chapter]]:
+    """Notions du niveau, sauf celles que la famille a mises hors programme."""
+    excluded = sql_select(FamilyNotion.notion_id).where(
+        FamilyNotion.family_id == family_id, FamilyNotion.in_program.is_(False)
+    )
     rows = await db.execute(
         sql_select(Notion, Chapter)
         .join(Chapter, Notion.chapter_id == Chapter.id)
-        .where(Chapter.level == level, Notion.in_program.is_not(False))
+        .where(Chapter.level == level, Notion.id.not_in(excluded))
         .order_by(Chapter.position, Notion.id)
     )
     return [(n, c) for n, c in rows]
@@ -146,9 +153,13 @@ async def _combat_pack(
     focus_chapters: list[str],
     daily: bool = False,
 ) -> dict[str, Any]:
-    bank = await published_bank(db, profile.level)
+    bank = await published_bank(db, profile.level, profile.family_id)
     playable = playable_notions() | set(bank)
-    rows = [(n, c) for n, c in await _level_notions(db, profile.level) if n.code in playable]
+    rows = [
+        (n, c)
+        for n, c in await _level_notions(db, profile.level, profile.family_id)
+        if n.code in playable
+    ]
     if not rows:  # programme pas encore chargé : paquet sans historique
         return session_pack.build(profile.level, rng)
     states = await _states(db, profile.id)
@@ -190,11 +201,15 @@ async def _combat_pack(
     return session_pack.build_items(slots, rng, bank)
 
 
-async def published_bank(db: AsyncSession, level: str) -> dict[str, list[dict[str, Any]]]:
-    """Questions publiées de la banque, par notion, prêtes pour un paquet."""
+async def published_bank(
+    db: AsyncSession, level: str, family_id: int
+) -> dict[str, list[dict[str, Any]]]:
+    """Questions publiées de la banque de la famille, par notion, prêtes pour un paquet."""
     bank: dict[str, list[dict[str, Any]]] = {}
     rows = await db.scalars(
-        sql_select(BankItem).where(BankItem.level == level, BankItem.status == "publie")
+        sql_select(BankItem).where(
+            BankItem.family_id == family_id, BankItem.level == level, BankItem.status == "publie"
+        )
     )
     for row in rows:
         entry = dict(row.data) | {"id": f"banque:{row.id}:{row.version}"}
@@ -283,7 +298,7 @@ async def progress(db: AsyncSession, profile: Profile) -> list[dict[str, Any]]:
         )
     }
     chapters: dict[int, dict[str, Any]] = {}
-    for notion, chapter in await _level_notions(db, profile.level):
+    for notion, chapter in await _level_notions(db, profile.level, profile.family_id):
         entry = chapters.setdefault(
             chapter.id,
             {

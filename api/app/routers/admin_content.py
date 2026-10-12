@@ -2,7 +2,8 @@
 aperçu, import CSV/JSON avec rapport ligne par ligne, publication), aperçu des
 générateurs, signalements d'erreur envoyés par les enfants.
 
-Mêmes protections que le reste de l'espace parent (`CurrentParent`, voir admin.py).
+Mêmes protections que le reste de l'espace parent (`CurrentParent`, voir admin.py) : la
+banque et les signalements sont ceux de la famille de l'adulte connecté.
 """
 
 from __future__ import annotations
@@ -19,7 +20,7 @@ from app.engine import bank, session_pack
 from app.engine.generators import REGISTRY, for_level
 from app.engine.items import Item
 from app.errors import ApiError
-from app.models import BankItem, Chapter, Notion, Profile, Report
+from app.models import Adult, BankItem, Chapter, Notion, Profile, Report
 from app.routers.admin import CurrentParent, Db
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -92,7 +93,11 @@ async def _checked(db: Db, level: str, question: dict[str, Any]) -> dict[str, An
 
 @router.get("/bank")
 async def list_bank(parent: CurrentParent, db: Db, level: Level | None = None) -> list[dict]:
-    query = select(BankItem).order_by(BankItem.notion, BankItem.difficulty, BankItem.id)
+    query = (
+        select(BankItem)
+        .where(BankItem.family_id == parent.family_id)
+        .order_by(BankItem.notion, BankItem.difficulty, BankItem.id)
+    )
     if level:
         query = query.where(BankItem.level == level)
     return [_bank_out(row) for row in await db.scalars(query)]
@@ -100,13 +105,14 @@ async def list_bank(parent: CurrentParent, db: Db, level: Level | None = None) -
 
 @router.get("/bank/{item_id}")
 async def get_bank_item(item_id: int, parent: CurrentParent, db: Db) -> dict[str, Any]:
-    return _bank_out(await _bank_row(db, item_id), full=True)
+    return _bank_out(await _bank_row(db, item_id, parent), full=True)
 
 
 @router.post("/bank", status_code=201)
 async def create_bank_item(body: BankItemIn, parent: CurrentParent, db: Db) -> dict[str, Any]:
     data = await _checked(db, body.level, body.question)
     row = BankItem(
+        family_id=parent.family_id,
         level=body.level,
         notion=data["notions"][0],
         difficulty=data["difficulty"],
@@ -123,7 +129,7 @@ async def create_bank_item(body: BankItemIn, parent: CurrentParent, db: Db) -> d
 async def update_bank_item(
     item_id: int, body: BankItemIn, parent: CurrentParent, db: Db
 ) -> dict[str, Any]:
-    row = await _bank_row(db, item_id)
+    row = await _bank_row(db, item_id, parent)
     data = await _checked(db, body.level, body.question)
     if data != row.data:
         row.version += 1  # nouvel identifiant de jeu : le suivi repart sur la question corrigée
@@ -135,7 +141,7 @@ async def update_bank_item(
 
 @router.delete("/bank/{item_id}", status_code=204)
 async def delete_bank_item(item_id: int, parent: CurrentParent, db: Db) -> None:
-    await db.delete(await _bank_row(db, item_id))
+    await db.delete(await _bank_row(db, item_id, parent))
     await db.commit()
 
 
@@ -173,6 +179,7 @@ async def import_bank(body: ImportIn, parent: CurrentParent, db: Db) -> dict[str
         for data in valid:
             db.add(
                 BankItem(
+                    family_id=parent.family_id,
                     level=body.level,
                     notion=data["notions"][0],
                     difficulty=data["difficulty"],
@@ -190,9 +197,9 @@ async def import_bank(body: ImportIn, parent: CurrentParent, db: Db) -> dict[str
     }
 
 
-async def _bank_row(db: Db, item_id: int) -> BankItem:
+async def _bank_row(db: Db, item_id: int, parent: Adult) -> BankItem:
     row = await db.get(BankItem, item_id)
-    if row is None:
+    if row is None or row.family_id != parent.family_id:
         raise ApiError(404, "unknown_item", "Question introuvable.")
     return row
 
@@ -246,7 +253,7 @@ async def list_reports(parent: CurrentParent, db: Db, status: str = "ouvert") ->
     rows = await db.execute(
         select(Report, Profile.name)
         .join(Profile, Report.profile_id == Profile.id)
-        .where(Report.status == status)
+        .where(Report.status == status, Profile.family_id == parent.family_id)
         .order_by(Report.created_at.desc())
         .limit(200)
     )
@@ -274,7 +281,10 @@ async def list_reports(parent: CurrentParent, db: Db, status: str = "ouvert") ->
 @router.get("/reports/count")
 async def count_reports(parent: CurrentParent, db: Db) -> dict[str, int]:
     open_reports = await db.scalar(
-        select(func.count()).select_from(Report).where(Report.status == "ouvert")
+        select(func.count())
+        .select_from(Report)
+        .join(Profile, Report.profile_id == Profile.id)
+        .where(Report.status == "ouvert", Profile.family_id == parent.family_id)
     )
     return {"open": int(open_reports or 0)}
 
@@ -284,7 +294,8 @@ async def set_report_status(
     report_id: int, body: ReportStatusIn, parent: CurrentParent, db: Db
 ) -> dict[str, Any]:
     report = await db.get(Report, report_id)
-    if report is None:
+    child = await db.get(Profile, report.profile_id) if report else None
+    if report is None or child is None or child.family_id != parent.family_id:
         raise ApiError(404, "unknown_report", "Signalement introuvable.")
     report.status = body.status
     await db.commit()

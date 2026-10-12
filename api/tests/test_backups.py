@@ -8,11 +8,12 @@ import pytest
 
 from app import backups
 from app.config import get_settings
+from app.models import Adult
+from tests.test_admin import parent
 
 ADMIN = "/api/v1/admin"
 KEY = "k" * 40
 NOW = datetime(2026, 10, 12, 18, 0, tzinfo=UTC)
-PARENT = {"Remote-User": "parent", "Remote-Email": "parent@example.org", "X-Aldoria-Admin-Key": KEY}
 
 
 def write(folder, name: str, data) -> None:
@@ -98,15 +99,19 @@ def test_home_copy(tmp_path, date, state):
     assert result["home"] == {"file": "aldoria-20261011T030002Z.sql.gz", "date": date}
 
 
-async def test_route_is_parent_only(client, tmp_path, monkeypatch):
+async def test_route_is_for_the_operator_only(client, sessionmaker, tmp_path, monkeypatch):
     write(tmp_path, "sauvegarde.json", success())
     monkeypatch.setenv("ALDORIA_ADMIN_KEY", KEY)
-    monkeypatch.setenv("ALDORIA_ADMIN_USERS", "parent@example.org")
     monkeypatch.setenv("ALDORIA_BACKUP_STATUS_DIR", str(tmp_path))
     get_settings.cache_clear()
     try:
         assert (await client.get(f"{ADMIN}/backups")).status_code == 404
-        response = await client.get(f"{ADMIN}/backups", headers=PARENT)
+        response = await client.get(f"{ADMIN}/backups", headers=parent())
+        assert response.status_code == 403, "un parent ordinaire ne voit pas l'exploitation"
+        async with sessionmaker() as db:
+            (await db.get(Adult, 1)).is_operator = True
+            await db.commit()
+        response = await client.get(f"{ADMIN}/backups", headers=parent())
         assert response.status_code == 200
         assert response.json()["last"]["bytes"] == 13155
     finally:

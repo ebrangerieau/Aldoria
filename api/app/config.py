@@ -19,16 +19,12 @@ class Settings(BaseSettings):
     lock_minutes: int = 5
     # Origines autorisées en développement local (éditeur Godot « Run in Browser »).
     cors_origins: list[str] = []
-    # Espace parent : secret posé par Traefik sur l'hôte admin (vide = API parent fermée)
-    # et identités SSO autorisées, séparées par des virgules (« * » : toute personne
-    # authentifiée par TinyAuth).
+    # Espace parent : secret posé par Traefik sur l'hôte admin (vide = API parent fermée).
     admin_key: str = ""
-    admin_users: str = ""
+    # Adresse publique de l'espace parent, pour les liens d'invitation (accounts.py).
+    admin_url: str = "http://localhost:5173"
     # Dossier où le service « backup » écrit l'état des sauvegardes (vide = non configuré).
     backup_status_dir: str = ""
-
-    def admin_user_list(self) -> set[str]:
-        return {u.strip().lower() for u in self.admin_users.split(",") if u.strip()}
 
     def check(self) -> None:
         if self.environment == "prod" and self.jwt_secret == DEV_JWT_SECRET:

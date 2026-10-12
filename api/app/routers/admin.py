@@ -1,27 +1,26 @@
 """API de l'espace parent (PRD US-08 à US-11), servie uniquement sur l'hôte admin.
 
-Chaîne de confiance (IMPLEMENTATION_PLAN §1.3) :
-1. Traefik n'envoie `/api/v1/admin` vers l'API que depuis l'hôte admin, après
-   TinyAuth (ForwardAuth), qui pose `Remote-User` / `Remote-Email`.
-2. Ce même routeur ajoute `X-Aldoria-Admin-Key` (secret partagé). Sans lui, la route
-   n'existe pas (404) : un appel qui contourne Traefik, ou qui arrive par l'hôte
-   public avec un `Remote-User` forgé, est refusé.
-3. L'identité doit figurer dans `ALDORIA_ADMIN_USERS` (sinon 403).
+Chaîne de confiance (IMPLEMENTATION_PLAN, chantier « plusieurs familles ») :
+1. Traefik n'envoie `/api/v1/admin` vers l'API que depuis l'hôte admin, et ce routeur
+   ajoute `X-Aldoria-Admin-Key` (secret partagé). Sans lui, la route n'existe pas (404).
+2. L'adulte est connecté (cookie de session, accounts.py) ; une modification porte
+   `X-Requested-With: aldoria`.
+3. Tout ce qu'il lit ou modifie appartient à sa famille : un enfant d'une autre famille
+   est « inconnu » (404).
 """
 
 from __future__ import annotations
 
-import hmac
-from dataclasses import dataclass
 from datetime import UTC, date, datetime, time, timedelta
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 from sqlalchemy import Integer, cast, delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app import backups
+from app.accounts import CurrentAdult, CurrentOperator
 from app.auth import hash_pin, verify_pin
 from app.config import get_settings
 from app.db import get_db
@@ -29,9 +28,11 @@ from app.engine import accommodations, tracking
 from app.engine.accommodations import Accommodations
 from app.errors import ApiError
 from app.models import (
+    Adult,
     Attempt,
     Chapter,
     ChapterStatus,
+    FamilyNotion,
     GameSession,
     Notion,
     NotionState,
@@ -42,39 +43,12 @@ from app.models import (
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 Db = Annotated[AsyncSession, Depends(get_db)]
+# Nom historique : l'adulte connecté (accounts.py), avec sa famille.
+CurrentParent = CurrentAdult
 
 STATUSES = ("a_venir", "en_cours", "controle_bientot", "termine")
 DAYS = 14
 WEEKS = 8
-
-
-@dataclass(frozen=True)
-class Parent:
-    user: str
-    email: str
-    name: str
-
-
-def parent_identity(request: Request) -> Parent:
-    settings = get_settings()
-    key = request.headers.get("x-aldoria-admin-key", "")
-    if not settings.admin_key or not hmac.compare_digest(key.encode(), settings.admin_key.encode()):
-        raise ApiError(404, "not_found", "Ressource introuvable.")
-    user = request.headers.get("remote-user", "").strip()
-    email = request.headers.get("remote-email", "").strip()
-    name = request.headers.get("remote-name", "").strip()
-    allowed = settings.admin_user_list()
-    if "*" not in allowed:
-        if not user and not email:
-            raise ApiError(
-                401, "no_identity", "Identité du parent absente : connexion SSO requise."
-            )
-        if user.lower() not in allowed and email.lower() not in allowed:
-            raise ApiError(403, "forbidden", "Accès réservé aux parents.", identity=email or user)
-    return Parent(user=user, email=email, name=name or user or email or "Parent")
-
-
-CurrentParent = Annotated[Parent, Depends(parent_identity)]
 
 
 # --- Schémas ------------------------------------------------------------------------
@@ -113,14 +87,9 @@ class NotionDecisionIn(BaseModel):
 # --- Routes ---------------------------------------------------------------------------
 
 
-@router.get("/me")
-async def me(parent: CurrentParent) -> dict[str, str]:
-    return {"user": parent.user, "email": parent.email, "name": parent.name}
-
-
 @router.get("/backups")
-async def backup_status(parent: CurrentParent) -> dict[str, Any]:
-    """Dernière sauvegarde de la base et dernière copie à la maison (Réglages)."""
+async def backup_status(operator: CurrentOperator) -> dict[str, Any]:
+    """Dernière sauvegarde de la base et dernière copie à la maison (exploitant)."""
     return backups.status(get_settings().backup_status_dir)
 
 
@@ -128,7 +97,10 @@ async def backup_status(parent: CurrentParent) -> dict[str, Any]:
 async def profiles(parent: CurrentParent, db: Db) -> list[dict[str, Any]]:
     since = datetime.now(UTC) - timedelta(days=7)
     result = []
-    for p in await db.scalars(select(Profile).order_by(Profile.id)):
+    rows = await db.scalars(
+        select(Profile).where(Profile.family_id == parent.family_id).order_by(Profile.id)
+    )
+    for p in rows:
         week = await _activity(db, p.id, since)
         result.append({**_profile_out(p), "week": week})
     return result
@@ -138,7 +110,7 @@ async def profiles(parent: CurrentParent, db: Db) -> list[dict[str, Any]]:
 async def update_profile(
     profile_id: int, body: ProfileSettingsIn, parent: CurrentParent, db: Db
 ) -> dict[str, Any]:
-    profile = await _profile(db, profile_id)
+    profile = await _profile(db, profile_id, parent)
     if body.session_max_minutes is not None:
         profile.session_max_minutes = body.session_max_minutes
     if body.ratios is not None:
@@ -158,7 +130,7 @@ async def set_accommodations(
 ) -> dict[str, Any]:
     """Aménagements de l'enfant (accessibilité, troubles « dys »), appliqués par le jeu
     à sa prochaine connexion ou au retour au camp."""
-    profile = await _profile(db, profile_id)
+    profile = await _profile(db, profile_id, parent)
     profile.accommodations = body.model_dump()
     await db.commit()
     return _profile_out(profile)
@@ -169,8 +141,11 @@ async def set_pin(profile_id: int, body: PinIn, parent: CurrentParent, db: Db) -
     """Nouveau code secret de l'enfant (4 chiffres), valable dès sa prochaine connexion.
     Lève aussi un blocage en cours (5 erreurs). Un code déjà pris par un autre enfant est
     refusé : sinon chacun pourrait entrer dans le profil de l'autre."""
-    profile = await _profile(db, profile_id)
-    for other in await db.scalars(select(Profile).where(Profile.id != profile.id)):
+    profile = await _profile(db, profile_id, parent)
+    siblings = select(Profile).where(
+        Profile.family_id == profile.family_id, Profile.id != profile.id
+    )
+    for other in await db.scalars(siblings):
         if verify_pin(other.pin_hash, body.pin):
             raise ApiError(
                 422,
@@ -191,7 +166,7 @@ async def reset_profile(
     sauvegardes et signalements de l'enfant sont supprimés. Le profil, son code et les
     statuts des chapitres restent. L'époque de sauvegarde change : un appareil qui garde
     une ancienne partie l'abandonne au lieu de la renvoyer."""
-    profile = await _profile(db, profile_id)
+    profile = await _profile(db, profile_id, parent)
     if body.confirm.strip().lower() != profile.name.lower():
         raise ApiError(422, "confirmation", f"Écrivez « {profile.name} » pour confirmer.")
     counts = {}
@@ -228,7 +203,7 @@ def _plural(n: int, word: str) -> str:
 @router.get("/profiles/{profile_id}/indicators")
 async def indicators(profile_id: int, parent: CurrentParent, db: Db) -> dict[str, Any]:
     """Indicateurs du PRD §2 sur les dernières semaines."""
-    profile = await _profile(db, profile_id)
+    profile = await _profile(db, profile_id, parent)
     now = datetime.now(UTC)
     monday = now.date() - timedelta(days=now.weekday())
     first = monday - timedelta(weeks=WEEKS - 1)
@@ -363,7 +338,7 @@ async def indicators(profile_id: int, parent: CurrentParent, db: Db) -> dict[str
 async def dashboard(profile_id: int, parent: CurrentParent, db: Db) -> dict[str, Any]:
     """Tableau de bord : notions acquises / fragiles / non vues, temps de jeu par jour,
     dernières sessions, notions à retravailler (PRD US-10)."""
-    profile = await _profile(db, profile_id)
+    profile = await _profile(db, profile_id, parent)
     chapters = await tracking.progress(db, profile)
     playable = [n for ch in chapters for n in ch["notions"] if n["playable"]]
     counts = {state: 0 for state in ("acquise", "fragile", "non acquise", "non vue")}
@@ -405,7 +380,7 @@ async def dashboard(profile_id: int, parent: CurrentParent, db: Db) -> dict[str,
 @router.get("/profiles/{profile_id}/chapters")
 async def chapters(profile_id: int, parent: CurrentParent, db: Db) -> list[dict[str, Any]]:
     """Programme de l'enfant : statut et date de contrôle par chapitre, étoiles par notion."""
-    profile = await _profile(db, profile_id)
+    profile = await _profile(db, profile_id, parent)
     rows = {
         c.code: (c, s)
         for c, s in (
@@ -436,7 +411,7 @@ async def chapters(profile_id: int, parent: CurrentParent, db: Db) -> list[dict[
 async def set_chapter_status(
     profile_id: int, chapter_code: str, body: ChapterStatusIn, parent: CurrentParent, db: Db
 ) -> dict[str, Any]:
-    profile = await _profile(db, profile_id)
+    profile = await _profile(db, profile_id, parent)
     chapter = await db.scalar(select(Chapter).where(Chapter.code == chapter_code))
     if chapter is None or chapter.level != profile.level:
         raise ApiError(404, "unknown_chapter", "Chapitre inconnu pour ce niveau.")
@@ -459,8 +434,12 @@ async def set_chapter_status(
 async def notions_to_validate(parent: CurrentParent, db: Db) -> list[dict[str, Any]]:
     """Contenus de programme incertains (sources contradictoires) : le parent tranche."""
     rows = await db.execute(
-        select(Notion, Chapter)
+        select(Notion, Chapter, FamilyNotion.in_program)
         .join(Chapter, Notion.chapter_id == Chapter.id)
+        .outerjoin(
+            FamilyNotion,
+            (FamilyNotion.notion_id == Notion.id) & (FamilyNotion.family_id == parent.family_id),
+        )
         .where(Notion.to_validate.is_(True))
         .order_by(Chapter.level, Chapter.position, Notion.id)
     )
@@ -470,9 +449,9 @@ async def notions_to_validate(parent: CurrentParent, db: Db) -> list[dict[str, A
             "label": n.label,
             "level": c.level,
             "chapter": c.title,
-            "in_program": n.in_program,
+            "in_program": decision,
         }
-        for n, c in rows
+        for n, c, decision in rows
     ]
 
 
@@ -483,17 +462,23 @@ async def decide_notion(
     notion = await db.scalar(select(Notion).where(Notion.code == notion_code))
     if notion is None:
         raise ApiError(404, "unknown_notion", "Notion inconnue.")
-    notion.in_program = body.in_program
+    decision = await db.get(FamilyNotion, (parent.family_id, notion.id))
+    if decision is None:
+        decision = FamilyNotion(family_id=parent.family_id, notion_id=notion.id)
+        db.add(decision)
+    decision.in_program = body.in_program
     await db.commit()
-    return {"code": notion.code, "in_program": notion.in_program}
+    return {"code": notion.code, "in_program": decision.in_program}
 
 
 # --- Aides ----------------------------------------------------------------------------
 
 
-async def _profile(db: AsyncSession, profile_id: int) -> Profile:
+async def _profile(db: AsyncSession, profile_id: int, parent: Adult) -> Profile:
+    """Enfant de la famille de l'adulte connecté ; un enfant d'une autre famille est
+    traité comme inconnu (on ne révèle pas qu'il existe)."""
     profile = await db.get(Profile, profile_id)
-    if profile is None:
+    if profile is None or profile.family_id != parent.family_id:
         raise ApiError(404, "unknown_profile", "Profil inconnu.")
     return profile
 
