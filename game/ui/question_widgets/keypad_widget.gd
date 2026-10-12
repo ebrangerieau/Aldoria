@@ -5,6 +5,8 @@ extends VBoxContainer
 ## sur tablette, le pavé intégré est plus grand et ne masque pas la question.
 
 signal submitted(value: Variant)
+## Saisie en cours (tableau de numération des outils de calcul).
+signal text_changed(text: String)
 
 const NUMERIC_KEYS := [
 	["7", "8", "9", "⌫"],
@@ -81,6 +83,7 @@ func _press(key: String) -> void:
 func _refresh() -> void:
 	_display.text = UiKit.pretty_math(_text) if _text != "" else "…"
 	_display.modulate.a = 1.0 if _text != "" else 0.4
+	text_changed.emit(_text)
 
 
 func _unhandled_key_input(event: InputEvent) -> void:

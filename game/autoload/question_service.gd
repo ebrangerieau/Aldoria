@@ -27,9 +27,11 @@ var _last_input := {}  # dernière réponse donnée : {id, text} (signalement d'
 
 
 func reset() -> void:
+	# Aménagement « départ plus doux » : un cran sous le niveau proposé par le serveur.
+	var easier := 1 if Accessibility.on("easy_start") else 0
 	_level = {
-		"automatisme": int(Session.start_levels.get("automatisme", 1)),
-		"chapitre": int(Session.start_levels.get("chapitre", 1)),
+		"automatisme": maxi(1, int(Session.start_levels.get("automatisme", 1)) - easier),
+		"chapitre": maxi(1, int(Session.start_levels.get("chapitre", 1)) - easier),
 	}
 	_streak = {"automatisme": 0, "chapitre": 0}
 	_used.clear()

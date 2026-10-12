@@ -13,7 +13,7 @@ from sqlalchemy import delete
 from sqlalchemy import select as sql_select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.engine import mastery, selector, session_pack
+from app.engine import accommodations, mastery, selector, session_pack
 from app.engine.generators import Generator, playable_notions
 from app.engine.scheduler import LeitnerScheduler, Scheduler
 from app.models import (
@@ -211,6 +211,9 @@ async def apply_attempts(db: AsyncSession, profile_id: int, attempts: list[dict[
     codes = {code for a in attempts for code in a["notion_ids"]}
     if not codes:
         return
+    profile = await db.get(Profile, profile_id)
+    # Aménagement « sans pénalité de lenteur » : le temps ne compte pas dans la maîtrise.
+    no_speed = profile is not None and accommodations.of(profile.accommodations).no_speed
     notions = {
         n.code: n for n in await db.scalars(sql_select(Notion).where(Notion.code.in_(codes)))
     }
@@ -230,12 +233,13 @@ async def apply_attempts(db: AsyncSession, profile_id: int, attempts: list[dict[
             review = _scheduler.review(state.box, a["correct"], a["hint_used"], a["answered_at"])
             state.box = review.box
             state.due_at = review.due_at
+            target = a.get("time_target_ms") or DEFAULT_TIME_TARGET_MS
             state.mastery = mastery.update(
                 state.mastery,
                 a["correct"],
                 a["hint_used"],
-                a["time_ms"],
-                a.get("time_target_ms") or DEFAULT_TIME_TARGET_MS,
+                min(a["time_ms"], target) if no_speed else a["time_ms"],
+                target,
                 a["difficulty"],
             )
             state.seen += 1

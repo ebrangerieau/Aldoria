@@ -23,7 +23,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.config import get_settings
 from app.db import get_db
-from app.engine import tracking
+from app.engine import accommodations, tracking
+from app.engine.accommodations import Accommodations
 from app.errors import ApiError
 from app.models import (
     Attempt,
@@ -135,6 +136,18 @@ async def update_profile(
         profile.ratio_chapter = r.chapter
         profile.ratio_review = r.review
         profile.ratio_automatisms = r.automatisms
+    await db.commit()
+    return _profile_out(profile)
+
+
+@router.put("/profiles/{profile_id}/accommodations")
+async def set_accommodations(
+    profile_id: int, body: Accommodations, parent: CurrentParent, db: Db
+) -> dict[str, Any]:
+    """Aménagements de l'enfant (accessibilité, troubles « dys »), appliqués par le jeu
+    à sa prochaine connexion ou au retour au camp."""
+    profile = await _profile(db, profile_id)
+    profile.accommodations = body.model_dump()
     await db.commit()
     return _profile_out(profile)
 
@@ -462,6 +475,7 @@ def _profile_out(p: Profile) -> dict[str, Any]:
         "world": p.world,
         "avatar": p.avatar,
         "session_max_minutes": p.session_max_minutes,
+        "accommodations": accommodations.of(p.accommodations).model_dump(),
         "ratios": {
             "chapter": p.ratio_chapter,
             "review": p.ratio_review,

@@ -72,6 +72,9 @@ func _run() -> void:
 					"Combat suivant")
 				_wave += 1
 				_enemy.queue_free()
+				if Accessibility.pause_due() and not await _continue_after_pause():
+					_quit()
+					return
 				_spawn_enemy()
 			"retreat":
 				await _show_message("Repli", _wt.retreat_text, "Reprendre le combat")
@@ -92,6 +95,21 @@ func _on_xp(amount: int) -> void:
 	_xp += amount
 	SaveManager.add_xp(amount)
 	_hud.set_wave(_wave, _xp)
+
+
+## Rappel de pause (bien-être) entre deux combats : vrai si l'enfant continue.
+func _continue_after_pause() -> bool:
+	var panel := UiKit.pause_panel(_wt)
+	_hud.show_panel(panel[0])
+	var choice: Array = []
+	(panel[1] as Button).pressed.connect(func() -> void: choice.append(true))
+	(panel[2] as Button).pressed.connect(func() -> void: choice.append(false))
+	while choice.is_empty():
+		await get_tree().process_frame
+	_hud.clear_panel()
+	if choice[0]:
+		Accessibility.snooze_pause()
+	return choice[0]
 
 
 func _show_message(title: String, body: String, button_text: String) -> void:

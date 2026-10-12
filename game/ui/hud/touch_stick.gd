@@ -45,7 +45,8 @@ func _gui_input(event: InputEvent) -> void:
 			_current = button.position
 			_pressed_ms = Time.get_ticks_msec()
 		elif _pressed:
-			if not _dragging and Time.get_ticks_msec() - _pressed_ms <= TAP_MAX_MS:
+			var quick := Time.get_ticks_msec() - _pressed_ms <= TAP_MAX_MS or Accessibility.on("tap_only")
+			if not _dragging and quick:
 				tapped.emit(button.position)
 			_release()
 		accept_event()
@@ -55,7 +56,9 @@ func _gui_input(event: InputEvent) -> void:
 		_current = motion.position
 		if not _dragging and _current.distance_to(_start) > DRAG_START_PX:
 			_dragging = true
-		if _dragging:
+		if _dragging and Accessibility.on("tap_only"):
+			_dragging = false  # aménagement « gestes » : pas de joystick, le toucher suffit
+		elif _dragging:
 			vector = ((_current - _start) / RADIUS_PX).limit_length(1.0)
 			queue_redraw()
 		accept_event()

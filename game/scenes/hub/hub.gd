@@ -27,6 +27,10 @@ func _ready() -> void:
 	_refresh()
 	SaveManager.changed.connect(_refresh)
 	await SaveManager.sync()
+	# Aménagements modifiés par le parent depuis la dernière fois : le camp se reconstruit
+	# (police, tailles, couleurs) ; de même quand l'enfant change ses options.
+	Accessibility.changed.connect(_rebuild, CONNECT_ONE_SHOT)
+	await Accessibility.refresh()
 	_dev_goto()
 
 
@@ -72,6 +76,11 @@ func _build() -> void:
 	_message.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_message.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	top.add_child(_message)
+	var options := UiKit.button("Options", 56.0)
+	UiKit.style_secondary(options, _wt)
+	options.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	options.pressed.connect(_show_options)
+	top.add_child(options)
 	var switch := UiKit.button("Changer de joueur", 56.0)
 	UiKit.style_secondary(switch, _wt)
 	switch.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -79,10 +88,16 @@ func _build() -> void:
 	top.add_child(switch)
 	column.add_child(top)
 
+	# Défilement au doigt si le contenu dépasse (texte agrandi, boutons plus grands).
+	var scroll := ScrollContainer.new()
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	column.add_child(scroll)
 	var main := HBoxContainer.new()
 	main.add_theme_constant_override("separation", 20)
 	main.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	column.add_child(main)
+	main.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(main)
 
 	# Les trois donjons, l'un sous l'autre.
 	var dungeons := VBoxContainer.new()
@@ -248,6 +263,31 @@ func _launch(mode: String, params: Dictionary, scene: String, cache := "") -> vo
 		return
 	_message.text = "%s Réessaie dans un instant." % res.error.get("message", "")
 	_busy = false
+
+
+func _show_options() -> void:
+	if _busy:
+		return
+	var layer := CanvasLayer.new()
+	layer.layer = 20
+	var shade := ColorRect.new()
+	shade.color = Color(0, 0, 0, 0.55)
+	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	layer.add_child(shade)
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	layer.add_child(center)
+	var panel := OptionsPanel.new()
+	panel.setup(_wt)
+	center.add_child(panel)
+	add_child(layer)
+	panel.closed.connect(layer.queue_free)
+
+
+func _rebuild() -> void:
+	# Seulement si le camp est toujours affiché (l'enfant a pu partir entre-temps).
+	if is_inside_tree() and get_tree().current_scene == self and not _busy:
+		get_tree().reload_current_scene.call_deferred()
 
 
 func _switch_player() -> void:

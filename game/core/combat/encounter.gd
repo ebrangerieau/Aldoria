@@ -36,6 +36,7 @@ var enemy: Fighter
 var boss := false
 var tier := 1  # force de l'ennemi (dégâts infligés)
 var questions := 0
+var _correct_run := 0  # bonnes réponses d'affilée (coup critique « sans vitesse »)
 var _boss_base := {}
 
 
@@ -110,8 +111,16 @@ func _boss_level(role: String) -> int:
 
 
 func _resolve_success(action: String, item: Dictionary, result: Dictionary, hint_used: bool) -> void:
+	_correct_run += 1
 	var crit: bool = result.speed_ratio < CRIT_RATIO and not hint_used
 	var mult := CRIT_MULT if crit else (FAST_MULT if result.speed_ratio < 1.0 else 1.0)
+	if Accessibility.on("no_speed"):
+		# Aménagement « sans pénalité de lenteur » : la vitesse ne compte pas ; le coup
+		# critique récompense la régularité (3e bonne réponse d'affilée, sans indice).
+		crit = _correct_run >= 3 and not hint_used
+		mult = CRIT_MULT if crit else 1.0
+		if crit:
+			_correct_run = 0
 	var base: float = BASE_POWER[action]
 	if boss and action != "soin":
 		base = ceilf(enemy.max_hp / float(BOSS_HITS))
@@ -159,6 +168,7 @@ func _resolve_success(action: String, item: Dictionary, result: Dictionary, hint
 
 
 func _resolve_failure(item: Dictionary) -> void:
+	_correct_run = 0
 	Sfx.play("wrong")
 	hero.play(["Block_Hit", "Hit_B"], 0.8)
 	var panel := ExplanationPanel.new()

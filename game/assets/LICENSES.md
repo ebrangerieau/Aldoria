@@ -10,6 +10,7 @@ Tout asset ajouté au jeu est inscrit ici (IMPLEMENTATION_PLAN §1.2).
 | `kaykit/characters/Skeleton_Warrior.glb`, `Skeleton_Minion.glb` | KayKit Character Pack: Skeletons 1.0 | Kay Lousberg | https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Skeletons-1.0 | CC0 1.0 | 2026-10-10 |
 | `kaykit/characters/Skeleton_Mage.glb`, `Skeleton_Rogue.glb` | KayKit Character Pack: Skeletons 1.0 | Kay Lousberg | https://github.com/KayKit-Game-Assets/KayKit-Character-Pack-Skeletons-1.0 | CC0 1.0 | 2026-10-11 |
 | `kaykit/dungeon/` : 20 pièces de décor des nouveaux donjons (parquets, bannières, étagères, tables, coffres…) | KayKit Dungeon Remastered 1.0 | Kay Lousberg | https://github.com/KayKit-Game-Assets/KayKit-Dungeon-Remastered-1.0 | CC0 1.0 | 2026-10-11 |
+| `fonts/AtkinsonHyperlegible-Regular.ttf` (police très lisible, aménagement « dys ») | Atkinson Hyperlegible 1.006 | Braille Institute of America | https://github.com/googlefonts/atkinson-hyperlegible | SIL Open Font License 1.1 (voir `fonts/AtkinsonHyperlegible-OFL.txt`) | 2026-10-12 |
 | `fonts/DejaVuSans.ttf` | DejaVu Fonts 2.37 (police de secours des symboles) | Bitstream / DejaVu | https://github.com/dejavu-fonts/dejavu-fonts | Bitstream Vera License (libre, voir `fonts/DejaVu-LICENSE.txt`) | 2026-10-11 |
 | `sfx/*.wav` | Effets sonores synthétisés par `tools/make_sfx.py` | Projet Aldoria | (généré) | Domaine public | 2026-10-10 |
 | `addons/gut/` (outil, non exporté) | GUT 9.7.1 | Butch Wesley | https://github.com/bitwes/Gut | MIT | 2026-10-10 |

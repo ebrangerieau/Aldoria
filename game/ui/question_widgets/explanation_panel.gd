@@ -33,6 +33,8 @@ func setup(question: Dictionary, wt: WorldTheme) -> void:
 	box.add_child(UiKit.label(wt.wrong_title, 28, wt.accent))
 	box.add_child(UiKit.label("Réponse : %s" % QuestionPanel.expected_text(question), 30, wt.good))
 	box.add_child(UiKit.label(str(question.get("explanation", "")), 24))
+	if Accessibility.can_speak():
+		box.add_child(UiKit.listen_button(wt, spoken(question), Accessibility.auto_read()))
 
 	_report_box = VBoxContainer.new()
 	_report_box.add_theme_constant_override("separation", 8)
@@ -60,6 +62,20 @@ func setup(question: Dictionary, wt: WorldTheme) -> void:
 	ok.pressed.connect(func() -> void: closed.emit())
 	row.add_child(ok)
 	box.add_child(row)
+
+
+## Texte lu : la bonne réponse, puis l'explication (versions écrites pour la voix).
+static func spoken(question: Dictionary) -> String:
+	var said: Dictionary = question.get("speech", {})
+	var answer: Dictionary = question["answer"]
+	var expected := QuestionPanel.expected_text(question)
+	var choices: Array = said.get("choices", [])
+	if answer["kind"] == "choice" and int(answer["index"]) < choices.size():
+		expected = str(choices[int(answer["index"])])
+	elif answer["kind"] == "true_false" and int(answer["reason"]) < choices.size():
+		expected = "%s, car %s" % ["Vrai" if answer["value"] else "Faux", choices[int(answer["reason"])]]
+	expected = expected.replace("−", "moins ").replace("/", " sur ")
+	return "La bonne réponse est : %s. %s" % [expected, said.get("explanation", question.get("explanation", ""))]
 
 
 func _send_report(reason: String) -> void:

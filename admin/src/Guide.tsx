@@ -14,6 +14,7 @@ const SECTIONS = [
   { id: 'generateurs', title: 'Voir les questions du jeu' },
   { id: 'signalements', title: 'Traiter les signalements' },
   { id: 'reglages', title: 'Régler le jeu' },
+  { id: 'amenagements', title: 'Adapter le jeu (troubles « dys », attention)' },
   { id: 'jeu', title: 'Ce que vit votre enfant dans le jeu' },
   { id: 'faq', title: 'Questions fréquentes' },
 ]
@@ -326,6 +327,84 @@ export function Guide({ child, onOpen }: { child: Profile; onOpen: (page: GuideT
         </div>
       </Section>
 
+      <Section
+        id="amenagements"
+        title="Adapter le jeu (troubles « dys », attention)"
+        open={() => onOpen('settings')}
+        openLabel="Ouvrir les aménagements"
+      >
+        <p>
+          Si {child.name} est dyslexique, dyscalculique, dyspraxique, ou a du mal à rester concentré, le jeu peut s'adapter, comme les
+          aménagements d'un PAP en classe. Rien n'est imposé : vous choisissez, et vous pouvez revenir en arrière à tout moment.
+        </p>
+        <ol className="steps">
+          <li>
+            Ouvrez <strong>Réglages</strong>, rubrique <strong>Aménagements</strong>.
+          </li>
+          <li>
+            Touchez un ou plusieurs <strong>profils</strong> (ils se cumulent) : chacun coche les aménagements utiles.
+          </li>
+          <li>Ajustez case par case si besoin : chaque case explique ce qu'elle change.</li>
+          <li>
+            Cliquez sur <strong>Enregistrer</strong>. Le jeu applique les réglages au prochain retour au camp, sur tous les appareils.
+          </li>
+        </ol>
+        <table className="guide-table">
+          <thead>
+            <tr>
+              <th>Profil</th>
+              <th>Ce qui change dans le jeu</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Dyslexie</td>
+              <td>
+                Un bouton <strong>Écouter</strong> lit à voix haute l'énoncé (formules comprises : « 3/4 » devient « 3 sur 4 »), les
+                propositions, l'explication et les dialogues. Texte plus grand et aéré, police très lisible.
+              </td>
+            </tr>
+            <tr>
+              <td>Dyscalculie</td>
+              <td>
+                Plus aucune pénalité de lenteur : le temps ne compte ni dans les étoiles, ni dans les combats (le coup critique récompense
+                trois bonnes réponses d'affilée au lieu de la vitesse), ni dans le défi du jour. Un bouton <strong>Outils</strong> affiche
+                la table de multiplication et un tableau de numération où le nombre tapé se range chiffre par chiffre. Les sessions
+                commencent un cran plus facile.
+              </td>
+            </tr>
+            <tr>
+              <td>Dyspraxie</td>
+              <td>
+                Plus de joystick : toucher un endroit, un habitant ou un ennemi suffit pour y aller. Boutons plus grands. Aucune pénalité de
+                lenteur. Le jeu ne demande déjà jamais de geste rapide, de glisser-déposer ni d'écriture.
+              </td>
+            </tr>
+            <tr>
+              <td>Attention</td>
+              <td>
+                Mode calme (ni secousses d'écran, ni ralentis, moins d'étincelles, sons plus doux) et rappel de pause toutes les 15 minutes :
+                l'enfant peut faire une pause ou continuer.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+        <p>
+          Indépendamment des profils : <strong>couleurs adaptées</strong> pour un enfant daltonien (juste en bleu et faux en orange au lieu du vert et du rouge).
+        </p>
+        <div className="tip">
+          <strong>Et l'enfant ?</strong> Au camp, son bouton <strong>Options</strong> lui permet d'agrandir encore le texte, de régler le
+          volume et d'activer ou non la lecture automatique. Il ne peut pas retirer ce que vous avez choisi.
+        </div>
+        <div className="tip">
+          <strong>Conseil.</strong> Parlez-en avec {child.name} et, si possible, avec ses enseignants : les aménagements utiles en classe
+          sont souvent les bons dans le jeu. Commencez par un profil, observez quelques sessions, puis ajustez.
+        </div>
+        <div className="warn">
+          <strong>Données.</strong> Le jeu n'enregistre aucun diagnostic, seulement les réglages choisis, sur votre serveur.
+        </div>
+      </Section>
+
       <Section id="jeu" title="Ce que vit votre enfant dans le jeu">
         <p>Savoir ce qui se passe à l'écran aide à en parler avec {child.name} :</p>
         <ul className="bullets">
@@ -384,6 +463,14 @@ export function Guide({ child, onOpen }: { child: Profile; onOpen: (page: GuideT
           <p>
             Certaines notions du programme n'ont pas encore de questions automatiques. Elles deviennent jouables dès que vous publiez une question
             dans la banque pour elles.
+          </p>
+        </details>
+        <details>
+          <summary>La lecture à voix haute ne fonctionne pas ou la voix est en anglais</summary>
+          <p>
+            Le jeu utilise la voix du navigateur. Vérifiez le volume de l'appareil. Sur une tablette Android : Paramètres, puis « Synthèse
+            vocale » (ou « Sortie de la synthèse vocale »), choisissez le moteur Google et la langue française, et téléchargez la voix
+            française pour qu'elle marche aussi sans connexion. Sur un ordinateur Windows, une voix française est normalement déjà installée.
           </p>
         </details>
         <details>

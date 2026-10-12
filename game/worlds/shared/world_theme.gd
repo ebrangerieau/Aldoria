@@ -37,7 +37,12 @@ var wrong_title := ""
 
 
 static func for_world(world: String) -> WorldTheme:
-	return tom() if world == "tom" else jules()
+	var t := tom() if world == "tom" else jules()
+	if Accessibility.on("colorblind"):
+		# Juste / faux distinguables sans le rouge et le vert (daltonisme le plus fréquent).
+		t.good = Color("#3d8bfd")
+		t.bad = Color("#f08c00")
+	return t
 
 
 static func jules() -> WorldTheme:

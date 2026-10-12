@@ -41,6 +41,8 @@ class Profile(Base):
     # Incrémentée à chaque réinitialisation par le parent : une sauvegarde d'une époque
     # antérieure (appareil resté hors ligne) est refusée au lieu de restaurer la partie.
     save_epoch: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    # Aménagements (accessibilité, troubles « dys ») : engine/accommodations.py.
+    accommodations: Mapped[dict[str, Any]] = mapped_column(JSONType, default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 

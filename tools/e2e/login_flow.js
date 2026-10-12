@@ -74,6 +74,11 @@ const { chromium } = require('playwright-core');
   await page.waitForTimeout(2500);
   await shot('8_changer_joueur');
 
+  // Lecture à voix haute (aménagement « dys ») : voix françaises du navigateur, pour information.
+  const voices = await page.evaluate(() =>
+    'speechSynthesis' in window ? speechSynthesis.getVoices().filter((v) => v.lang.startsWith('fr')).map((v) => v.name) : null,
+  );
+  console.log(`Voix françaises du navigateur : ${voices === null ? 'synthèse vocale absente' : voices.join(', ') || 'aucune'}`);
   console.log('Appels API :\n  ' + api.join('\n  '));
   for (const call of ['200 POST /api/v1/play/session/start', '200 GET /api/v1/play/save', '200 GET /api/v1/play/progress']) {
     if (!api.includes(call)) problems.push(`appel manquant : ${call}`);

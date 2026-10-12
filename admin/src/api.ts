@@ -21,7 +21,25 @@ export interface Profile {
   avatar: string
   session_max_minutes: number
   ratios: Ratios
+  accommodations: Accommodations
   week?: Week
+}
+
+// Aménagements (accessibilité, troubles « dys ») : api/app/engine/accommodations.py.
+export interface Accommodations {
+  read_aloud: boolean
+  auto_read: boolean
+  text_size: number
+  spacing: boolean
+  readable_font: boolean
+  no_speed: boolean
+  math_tools: boolean
+  easy_start: boolean
+  tap_only: boolean
+  big_targets: boolean
+  calm: boolean
+  pause_minutes: number
+  colorblind: boolean
 }
 
 export interface Ratios {
@@ -222,6 +240,8 @@ export const api = {
     }),
   setMaxMinutes: (id: number, session_max_minutes: number) => request<Profile>('PATCH', `/profiles/${id}`, { session_max_minutes }),
   setRatios: (id: number, ratios: Ratios) => request<Profile>('PATCH', `/profiles/${id}`, { ratios }),
+  setAccommodations: (id: number, accommodations: Accommodations) =>
+    request<Profile>('PUT', `/profiles/${id}/accommodations`, accommodations),
   reset: (id: number, confirm: string) => request<Record<string, number>>('POST', `/profiles/${id}/reset`, { confirm }),
   indicators: (id: number) => request<Indicators>('GET', `/profiles/${id}/indicators`),
   bank: (level: Level) => request<BankRow[]>('GET', `/bank?level=${level}`),

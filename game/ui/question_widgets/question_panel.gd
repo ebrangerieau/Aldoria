@@ -22,6 +22,8 @@ var _hint_label: Label
 var _hint_button: Button
 var _done := false
 var _visual: Control
+var _tools: MathTools
+var _tools_layer: CanvasLayer
 
 
 func setup(question: Dictionary, title: String, wt: WorldTheme) -> void:
@@ -42,18 +44,25 @@ func setup(question: Dictionary, title: String, wt: WorldTheme) -> void:
 
 	var header := HBoxContainer.new()
 	header.add_theme_constant_override("separation", 16)
+	# Le titre se raccourcit (« … ») plutôt que d'élargir le panneau : avec un texte
+	# agrandi et aéré (aménagements), l'en-tête doit tenir dans la colonne.
 	var title_label := UiKit.label(title, 22, wt.accent)
 	title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	title_label.clip_text = true
+	title_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	title_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title_label.custom_minimum_size.x = 80
 	header.add_child(title_label)
 	var stars := UiKit.label(_stars(int(question["difficulty"])), 22, wt.accent)
 	stars.autowrap_mode = TextServer.AUTOWRAP_OFF
 	header.add_child(stars)
-	var header_gap := Control.new()
-	header_gap.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	header.add_child(header_gap)
 	_bonus = UiKit.label("⚡ Bonus éclair", 20, wt.good)
 	_bonus.autowrap_mode = TextServer.AUTOWRAP_OFF
+	# Aménagement « sans pénalité de lenteur » : aucune récompense liée à la vitesse.
+	_bonus.visible = not Accessibility.on("no_speed")
 	header.add_child(_bonus)
+	if Accessibility.can_speak():
+		header.add_child(UiKit.listen_button(wt, Accessibility.question_speech(question), Accessibility.auto_read()))
 	var glow := create_tween().set_loops()
 	glow.tween_property(_bonus, "modulate:a", 0.55, 0.6)
 	glow.tween_property(_bonus, "modulate:a", 1.0, 0.6)
@@ -125,6 +134,8 @@ func setup(question: Dictionary, title: String, wt: WorldTheme) -> void:
 		widget = keypad
 		columns.add_child(widget)
 	widget.connect("submitted", _on_submitted)
+	if Accessibility.on("math_tools") and question["type"] in ["numeric", "mcq", "expression", "order"]:
+		_build_tools(wt, widget as KeypadWidget)
 
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -135,6 +146,11 @@ func setup(question: Dictionary, title: String, wt: WorldTheme) -> void:
 	UiKit.style_secondary(_hint_button, wt)
 	_hint_button.pressed.connect(_show_hint)
 	footer.add_child(_hint_button)
+	if _tools:
+		var tools_button := UiKit.button("Outils", 52.0)
+		UiKit.style_secondary(tools_button, wt)
+		tools_button.pressed.connect(func() -> void: _tools_layer.visible = not _tools_layer.visible)
+		footer.add_child(tools_button)
 	_hint_label = UiKit.label(str(question.get("hint", "")), 20, wt.text_dim)
 	_hint_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_hint_label.visible = false
@@ -142,6 +158,27 @@ func setup(question: Dictionary, title: String, wt: WorldTheme) -> void:
 	box.add_child(footer)
 
 	_started_ms = Time.get_ticks_msec()
+
+
+## Outils de calcul (aménagement « dyscalculie ») : volet flottant en haut à gauche de
+## l'écran, pour ne pas agrandir le panneau ni cacher le pavé de saisie.
+func _build_tools(wt: WorldTheme, keypad: KeypadWidget) -> void:
+	_tools_layer = CanvasLayer.new()
+	_tools_layer.layer = 15
+	_tools_layer.visible = false
+	add_child(_tools_layer)
+	var holder := MarginContainer.new()
+	holder.set_anchors_preset(Control.PRESET_TOP_LEFT)
+	holder.add_theme_constant_override("margin_top", 10)
+	holder.add_theme_constant_override("margin_left", 10)
+	holder.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_tools_layer.add_child(holder)
+	var frame := PanelContainer.new()
+	frame.theme = UiKit.make_theme(wt)
+	holder.add_child(frame)
+	_tools = MathTools.new()
+	_tools.setup(wt, keypad)
+	frame.add_child(_tools)
 
 
 ## Après la validation : l'illustration montre le résultat (rayon tiré, masse révélée).

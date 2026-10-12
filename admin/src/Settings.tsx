@@ -1,11 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
+import { Accommodations } from './Accommodations'
 import { api, ApiError, type NotionToValidate, type Profile } from './api'
 
 export function Settings({ child }: { child: Profile }) {
   return (
     <div className="stack">
       <PlayTimeLimit key={child.id} child={child} />
+      <Accommodations key={`acc-${child.id}`} child={child} />
       <SessionMix key={`mix-${child.id}`} child={child} />
       <NotionsToValidate level={child.level} />
       <ResetProfile key={`reset-${child.id}`} child={child} />

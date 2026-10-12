@@ -67,8 +67,11 @@ func login(profile_id: int, pin: String) -> Dictionary:
 	if res.ok:
 		ApiClient.token = res.data["token"]
 		profile = res.data["profile"]
+		profile["accommodations"] = res.data.get("accommodations", {})
 		played_seconds = 0.0
 		_save_json(AUTH_FILE, {"token": ApiClient.token, "profile": profile})
+		Accessibility.load_prefs(int(profile.get("id", 0)))
+		Accessibility.apply_parent(profile["accommodations"])
 	return res
 
 
@@ -79,6 +82,8 @@ func logout() -> void:
 	await SaveManager.unload()
 	ApiClient.token = ""
 	profile = {}
+	Accessibility.apply_parent(Accessibility.DEFAULTS)
+	Accessibility.load_prefs(0)
 	session_id = ""
 	dungeon_code = ""
 	played_seconds = 0.0
@@ -227,8 +232,20 @@ func _apply_pack(data: Dictionary) -> void:
 	settings = data.get("settings", {})
 	start_levels = data.get("start_levels", {})
 	context = data.get("context", {})
+	if settings.has("accommodations"):
+		Accessibility.apply_parent(settings["accommodations"])
+		remember_accommodations(Accessibility.parent)
 	active_seconds = 0.0
 	_textures.clear()
+
+
+## Derniers aménagements connus, gardés avec la connexion (lancement hors ligne).
+func remember_accommodations(accommodations: Dictionary) -> void:
+	if profile.is_empty():
+		return
+	profile["accommodations"] = accommodations
+	if ApiClient.token != "":
+		_save_json(AUTH_FILE, {"token": ApiClient.token, "profile": profile})
 
 
 func _load_json(path: String, default: Variant) -> Variant:

@@ -3,6 +3,8 @@ extends Node3D
 ## « Game feel » du combat (PRD §9) : ce qui rend la bonne réponse jouissive.
 ## Chiffres de dégâts, secousse d'écran, arrêt sur image (hitstop), ralenti sur
 ## coup critique, projectile de sort, gerbes d'étincelles.
+## Aménagement « mode calme » (attention, sensibilité visuelle) : ni secousse, ni arrêt
+## sur image, ni ralenti, et trois fois moins de particules.
 
 var camera: Camera3D
 var _shake_strength := 0.0
@@ -26,12 +28,16 @@ func _process(delta: float) -> void:
 
 
 func shake(strength := 0.25, duration := 0.3) -> void:
+	if Accessibility.on("calm"):
+		return
 	_shake_strength = strength
 	_shake_time = duration
 
 
 ## Arrêt sur image très bref : donne du poids à l'impact.
 func hitstop(duration := 0.07) -> void:
+	if Accessibility.on("calm"):
+		return
 	Engine.time_scale = 0.05
 	await get_tree().create_timer(duration, true, false, true).timeout
 	Engine.time_scale = 1.0
@@ -39,6 +45,9 @@ func hitstop(duration := 0.07) -> void:
 
 ## Ralenti du coup critique (réponse juste et rapide).
 func slow_motion(time_scale := 0.3, duration := 0.5) -> void:
+	if Accessibility.on("calm"):
+		await get_tree().create_timer(duration * 0.5).timeout
+		return
 	Engine.time_scale = time_scale
 	await get_tree().create_timer(duration, true, false, true).timeout
 	Engine.time_scale = 1.0
@@ -65,6 +74,9 @@ func floating_text(text: String, at: Vector3, color: Color, size := 96) -> void:
 
 
 func burst(at: Vector3, color: Color, amount := 40, speed := 4.0) -> void:
+	if Accessibility.on("calm"):
+		amount = maxi(4, amount / 3)
+		speed *= 0.6
 	var p := CPUParticles3D.new()
 	p.position = at
 	p.one_shot = true

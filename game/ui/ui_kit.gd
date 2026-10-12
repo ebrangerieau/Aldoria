@@ -8,6 +8,8 @@ const TEXT_SCALES := [1.0, 1.15, 1.3]
 const BASE_FONT := 24
 
 static var text_scale := 1.0
+## Cibles agrandies (aménagement « gestes ») : hauteur des boutons multipliée.
+static var target_scale := 1.0
 
 
 static func font_size(base := BASE_FONT) -> int:
@@ -17,6 +19,9 @@ static func font_size(base := BASE_FONT) -> int:
 static func make_theme(wt: WorldTheme) -> Theme:
 	var theme := Theme.new()
 	theme.default_font_size = font_size()
+	# Police et espacement des aménagements (lisibilité, troubles « dys »).
+	theme.default_font = Accessibility.font()
+	theme.set_constant("line_spacing", "Label", Accessibility.line_spacing())
 
 	theme.set_stylebox("panel", "PanelContainer", _box(wt.panel, wt.panel_border, 3, 18, 22))
 	theme.set_stylebox("panel", "Panel", _box(wt.panel, wt.panel_border, 3, 18, 0))
@@ -69,7 +74,7 @@ static func label(text: String, size := BASE_FONT, color := Color(0, 0, 0, 0)) -
 static func button(text: String, min_height := 64.0) -> Button:
 	var b := Button.new()
 	b.text = text
-	b.custom_minimum_size = Vector2(0, min_height)
+	b.custom_minimum_size = Vector2(0, min_height * target_scale)
 	b.focus_mode = Control.FOCUS_NONE
 	b.pressed.connect(func() -> void: Sfx.play("click"))
 	return b
@@ -85,9 +90,38 @@ static func message_panel(wt: WorldTheme, title: String, body: String, button_te
 	panel.add_child(box)
 	box.add_child(label(title, 34, wt.accent))
 	box.add_child(label(body, 24))
+	if Accessibility.can_speak():
+		box.add_child(listen_button(wt, "%s. %s" % [title, body], Accessibility.auto_read()))
 	var main := button(button_text, 64.0)
 	box.add_child(main)
 	return [panel, main]
+
+
+## Bouton « Écouter » (aménagement lecture à voix haute) ; `auto` : lit dès l'affichage.
+## La lecture s'arrête quand le bouton disparaît.
+static func listen_button(wt: WorldTheme, text: String, auto := false) -> Button:
+	var b := button("Écouter", 52.0)
+	style_secondary(b, wt)
+	b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	b.custom_minimum_size.x = 170
+	b.pressed.connect(func() -> void: Accessibility.speak(text))
+	b.tree_exiting.connect(Accessibility.stop_speaking)
+	if auto:
+		b.ready.connect(func() -> void: Accessibility.speak(text), CONNECT_ONE_SHOT)
+	return b
+
+
+## Rappel de pause (aménagement attention, bien-être) : [panneau, continuer, arrêter].
+static func pause_panel(wt: WorldTheme) -> Array:
+	var minutes := roundi(Session.played_seconds / 60.0)
+	var panel := message_panel(wt, "Petite pause ?",
+		"Tu joues depuis %d minutes. Bois un verre d'eau, étire-toi, regarde au loin… Ta progression est sauvegardée." % minutes,
+		"Je fais une pause")
+	var box: VBoxContainer = (panel[0] as PanelContainer).get_child(0)
+	var keep := button("Je continue encore un peu", 56.0)
+	style_secondary(keep, wt)
+	box.add_child(keep)
+	return [panel[0], keep, panel[1]]
 
 
 ## Affichage « joli » d'une saisie : x² au lieu de x^2, × au lieu de *, − au lieu de -.

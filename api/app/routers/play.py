@@ -16,7 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.auth import CurrentProfile, create_token, verify_pin
 from app.config import get_settings
 from app.db import get_db
-from app.engine import tracking
+from app.engine import accommodations, tracking
 from app.engine.generators import REGISTRY
 from app.errors import ApiError
 from app.models import Attempt, Chapter, GameSession, Profile, Report
@@ -45,6 +45,8 @@ class LoginOut(BaseModel):
     token: str
     expires_at: datetime
     profile: ProfileOut
+    # Aménagements (accessibilité) réglés par le parent : engine/accommodations.py.
+    accommodations: dict[str, Any] = Field(default_factory=dict)
 
 
 class EnigmaIn(BaseModel):
@@ -185,7 +187,21 @@ async def login(body: LoginIn, db: Db) -> LoginOut:
     profile.locked_until = None
     await db.commit()
     token, expires = create_token(profile.id)
-    return LoginOut(token=token, expires_at=expires, profile=_profile_out(profile))
+    return LoginOut(
+        token=token,
+        expires_at=expires,
+        profile=_profile_out(profile),
+        accommodations=accommodations.of(profile.accommodations).model_dump(),
+    )
+
+
+@router.get("/me")
+async def me(profile: CurrentProfile) -> dict[str, Any]:
+    """Profil connecté et ses aménagements (relus par le jeu au retour au camp)."""
+    return {
+        "profile": _profile_out(profile).model_dump(),
+        "accommodations": accommodations.of(profile.accommodations).model_dump(),
+    }
 
 
 @router.post("/session/start", response_model=SessionStartOut)
@@ -219,7 +235,10 @@ async def start_session(
         items=pack["items"],
         formulas=pack["formulas"],
         start_levels=pack["start_levels"],
-        settings={"session_max_minutes": profile.session_max_minutes},
+        settings={
+            "session_max_minutes": profile.session_max_minutes,
+            "accommodations": accommodations.of(profile.accommodations).model_dump(),
+        },
         context=pack.get("context", {}),
     )
 

@@ -12,7 +12,7 @@ import statistics
 from datetime import UTC, datetime
 from typing import Any
 
-from app.engine import selector
+from app.engine import selector, speech
 from app.engine.formulas import formula_hash, render_svg
 from app.engine.generators import Generator, for_level, for_notion
 from app.engine.items import Item
@@ -55,6 +55,7 @@ def item_data(item: Item, category: str, formulas: dict[str, str]) -> dict[str, 
     """Item tel qu'envoyé au client (sans `meta`), formule SVG ajoutée à `formulas`."""
     data = item.model_dump(exclude={"meta"})
     data["category"] = category
+    data["speech"] = speech.for_item(data)
     if item.latex:
         key = formula_hash(item.latex)
         data["latex_hash"] = key

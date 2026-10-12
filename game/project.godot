@@ -22,6 +22,11 @@ Session="*res://autoload/session.gd"
 SaveManager="*res://autoload/save_manager.gd"
 QuestionService="*res://autoload/question_service.gd"
 Sfx="*res://autoload/sfx.gd"
+Accessibility="*res://autoload/accessibility.gd"
+
+[audio]
+
+general/text_to_speech=true
 
 [display]
 

@@ -157,6 +157,8 @@ func _process(delta: float) -> void:
 		_check_npcs()
 		if Session.time_over():
 			_session_end()
+		elif Accessibility.pause_due():
+			_pause_reminder()
 		_target = _camera_target()
 	_update_camera(delta)
 
@@ -332,6 +334,24 @@ func _message(title: String, body: String, button_text: String) -> void:
 	_hud.show_panel(panel[0])
 	await (panel[1] as Button).pressed
 	_hud.clear_panel()
+
+
+## Rappel de pause (bien-être) : l'enfant continue ou rentre au camp.
+func _pause_reminder() -> void:
+	_pause_exploration()
+	var panel := UiKit.pause_panel(_wt)
+	_hud.show_panel(panel[0])
+	var choice: Array = []
+	(panel[1] as Button).pressed.connect(func() -> void: choice.append("continuer"))
+	(panel[2] as Button).pressed.connect(func() -> void: choice.append("pause"))
+	while choice.is_empty():
+		await get_tree().process_frame
+	_hud.clear_panel()
+	if choice[0] == "pause":
+		_quit()
+		return
+	Accessibility.snooze_pause()
+	_explore()
 
 
 func _session_end() -> void:

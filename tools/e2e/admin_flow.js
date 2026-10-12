@@ -84,6 +84,14 @@ const { chromium } = require('playwright-core');
   await page.getByRole('button', { name: 'Réglages' }).click();
   await page.getByText('Notions à confirmer').waitFor();
   await page.getByText('Mélange des questions').waitFor();
+  // Aménagements : un préréglage, enregistré puis retiré (banc réutilisé).
+  await page.getByRole('button', { name: /^Dyslexie/ }).click();
+  await page.locator('#amenagements').getByRole('button', { name: 'Enregistrer' }).click();
+  await page.waitForResponse((r) => r.url().includes('/accommodations') && r.request().method() === 'PUT');
+  await page.locator('#amenagements').getByText('Enregistré ✓').waitFor();
+  await page.getByRole('button', { name: 'Tout désactiver' }).click();
+  await page.locator('#amenagements').getByRole('button', { name: 'Enregistrer' }).click();
+  await page.waitForResponse((r) => r.url().includes('/accommodations') && r.request().method() === 'PUT');
   await page.getByRole('button', { name: /Tom/ }).click();
   await page.waitForTimeout(800);
   await shot('8_reglages_tom');

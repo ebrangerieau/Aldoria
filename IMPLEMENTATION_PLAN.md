@@ -295,6 +295,26 @@ lancer la lecture à voix haute, sans pouvoir retirer les aménagements choisis 
 À vérifier sur la tablette : synthèse vocale française du navigateur (Chrome Android) via
 `DisplayServer.tts_speak`, poids de la police ajoutée.
 
+> ✅ **Livré le 2026-10-12.** Rubrique « Aménagements » des Réglages (préréglages Dyslexie, Dyscalculie,
+> Dyspraxie, Attention, cumulables, puis case par case), décrite dans le guide ; migration 0007.
+> - Lecture à voix haute : bouton « Écouter » sur les questions, les explications et tous les dialogues, lecture
+>   automatique en option ; le serveur fournit pour chaque item un texte écrit pour la voix (`item.speech` :
+>   « 3/4 » → « 3 sur 4 », formules LaTeX, intervalles, puissances, unités, P_L(C)…), vérifié sur toutes les
+>   questions générées. Dans l'export web, le texte part bien à `speechSynthesis` (contrôle e2e) ; voix
+>   françaises présentes sous Windows (Hortense, Julie, Paul), **à écouter sur la tablette**.
+> - Texte : 3 tailles (l'enfant peut agrandir, pas réduire), texte aéré, police Atkinson Hyperlegible (55 Ko).
+>   Le camp défile quand le contenu dépasse ; l'en-tête des questions raccourcit le titre au lieu de déborder.
+> - Calcul : sans pénalité de lenteur (maîtrise côté serveur, coup critique = 3e bonne réponse d'affilée sans
+>   indice, pas de badge « Bonus éclair », pas de temps au défi du jour) ; outils (table de multiplication,
+>   tableau de numération rempli au fil de la saisie) dans un volet flottant ; départ un cran plus bas.
+> - Gestes : déplacement au toucher seul, boutons 30 % plus hauts. Attention : mode calme, rappel de pause
+>   (10 à 30 min) au donjon, au village, à l'arène et au défi. Couleurs : juste en bleu, faux en orange ;
+>   ✓ et ✗ sur les pastilles du défi.
+> - Enfant : bouton « Options » au camp (taille du texte, volume, lecture automatique).
+> Écarts : pas d'aides visuelles propres à chaque question (droite graduée à la demande) au-delà des deux
+> outils ; les marques ✓/✗ ne sont ajoutées qu'au défi du jour (ailleurs le texte suffit : « Presque ! »,
+> « Réponse : … ») ; pas de volume de musique séparé (le jeu n'a pas encore de musique).
+
 **Admin complet** : CRUD des items avec aperçu identique au rendu en jeu (SVG de l'API), import CSV et JSON (5 Mo maximum, rapport ligne par ligne avant validation), aperçu de 10 items par générateur, signalements d'erreur venant des enfants, réglages (durée, ratios), réinitialisation d'un profil (droit à l'effacement), tableau des indicateurs du PRD §2 (sessions spontanées, régularité, questions par session, progression entre la 1ère et la 4ème exposition, note de plaisir).
 
 **Exploitation** : service `backup` (pg_dump quotidien, rétention 14 jours, copie hors du VPS), healthcheck sur `/api/v1/health`, logs JSON conservés 30 jours sans données de réponse, en-têtes de sécurité, fichiers versionnés par hash. CI complète : pytest, GUT headless, Playwright, export, images Docker, déploiement.

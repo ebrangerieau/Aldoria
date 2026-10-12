@@ -39,6 +39,8 @@ uv run --directory api ruff check .
 Jeu sur PC contre l'API locale (Docker, port 8098) — options réservées au PC, ignorées sur le web :
 `godot --path game -- --autologin=<id> --pin=<code> [--goto=donjon|village|defi|arene|archives] [--dungeon=<code>]
 [--room=N] [--approach=1] [--npc=<code>] [--autoaction=chapitre] [--screenshot=x.png --shot-delay=4]`.
+Galerie avec aménagements : `--acc=read_aloud,spacing,readable_font,math_tools,… [--text-size=1] [--tools=table]
+[--wrong=1]` (outils ouverts, panneau d'explication).
 `--goto` part du camp vers une destination ; `--dungeon` choisit le donjon (code d'un `DungeonDef`, même fermé) ;
 `--npc` place le héros devant un habitant du village et accepte sa quête ;
 `--room` démarre le donjon dans la salle N (0 à 5) ;
@@ -69,6 +71,14 @@ Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-
   fois publiée (`session_pack.build_items`, identifiant `banque:<id>:<version>`). Les signalements des enfants
   passent par `POST /play/reports`. Réinitialisation d'un profil : `save_epoch` change, le client
   (`SaveManager._restart`) abandonne l'ancienne partie au lieu de la renvoyer.
+- Accessibilité (troubles « dys ») : aménagements réglés par le parent (`Profile.accommodations`, validés par
+  `engine/accommodations.py`) et appliqués par l'autoload `Accessibility` (police, espacement, taille du texte,
+  cibles agrandies, mode calme, couleurs, lecture à voix haute, rappel de pause). Toute interface passe par
+  `UiKit` (thème, boutons, `message_panel` avec « Écouter ») ; un effet ou une récompense liés à la vitesse
+  respectent `Accessibility.on("no_speed")`, un effet visuel fort `on("calm")`. Le texte lu vient de
+  `item["speech"]` (engine/speech.py) : un nouveau symbole ou une nouvelle commande LaTeX dans un générateur
+  doit y être traduit (`tests/test_accessibility.py` le vérifie sur toutes les questions générées).
+  Rédaction : énoncés courts, une idée par phrase.
 - Combat : `Encounter` (core/combat) est partagé par l'arène et le donjon ; une scène ne réécrit pas le tour par tour.
 - Progression du joueur : `SaveManager` (XP, donjons, bestiaire, défis quotidiens), jamais de fichier de
   sauvegarde écrit à la main. Défi du jour : règles de série et de coffre dans `DailyChallenge`, sans compte à

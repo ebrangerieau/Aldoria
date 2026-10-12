@@ -84,6 +84,35 @@ func _build() -> void:
 	column.add_child(_stage)
 
 
+## « , en 2 min 14 s » ; rien avec l'aménagement « sans pénalité de lenteur ».
+func _time_text(ms: int) -> String:
+	return "" if Accessibility.on("no_speed") else ", en %s" % DailyChallenge.format_duration(ms)
+
+
+func _continue_after_pause() -> bool:
+	var panel := UiKit.pause_panel(_wt)
+	_show(panel[0])
+	var choice: Array = []
+	(panel[1] as Button).pressed.connect(func() -> void: choice.append(true))
+	(panel[2] as Button).pressed.connect(func() -> void: choice.append(false))
+	while choice.is_empty():
+		await get_tree().process_frame
+	if choice[0]:
+		Accessibility.snooze_pause()
+	return choice[0]
+
+
+## Pastille du résultat : couleur et symbole (lisible aussi sans distinguer les couleurs).
+func _mark(pip: Panel, correct: bool) -> void:
+	_paint(pip, _wt.good if correct else _wt.bad)
+	var sign := UiKit.label("✓" if correct else "✗", 18, Color.WHITE)
+	sign.autowrap_mode = TextServer.AUTOWRAP_OFF
+	sign.set_anchors_preset(Control.PRESET_FULL_RECT)
+	sign.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	sign.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	pip.add_child(sign)
+
+
 func _paint(pip: Panel, color: Color) -> void:
 	var box := StyleBoxFlat.new()
 	box.bg_color = color
@@ -100,6 +129,8 @@ func _show(panel: Control) -> void:
 
 func _intro() -> void:
 	var body := "Dix questions d'automatismes, à ton rythme : pas de chrono à l'écran. À la fin, ton temps est comparé à ton record."
+	if Accessibility.on("no_speed"):
+		body = "Dix questions d'automatismes, à ton rythme. Prends tout ton temps : seules les bonnes réponses comptent."
 	if _day == "":
 		body += "\nTu as déjà relevé le défi aujourd'hui : celui-ci est pour t'entraîner."
 	elif _day != _today:
@@ -111,6 +142,9 @@ func _intro() -> void:
 
 func _run() -> void:
 	for i in DailyChallenge.QUESTIONS:
+		if i > 0 and Accessibility.pause_due() and not await _continue_after_pause():
+			_leave()
+			return
 		_counter.text = "%d / %d" % [i + 1, DailyChallenge.QUESTIONS]
 		var item := QuestionService.next_item("automatisme")
 		if item.is_empty():
@@ -125,7 +159,7 @@ func _run() -> void:
 		var result := QuestionService.submit(item, res[0], res[1], res[2], GAME_MODE)
 		_time_ms += int(res[1])
 		question.reveal(result.correct)
-		_paint(_pips[i], _wt.good if result.correct else _wt.bad)
+		_mark(_pips[i], result.correct)
 		if result.correct:
 			_correct += 1
 			_xp += roundi(Progression.answer_xp(int(item["difficulty"])) * float(result.reward_factor))
@@ -150,15 +184,15 @@ func _results() -> void:
 	SaveManager.record_daily(_day, _correct, _time_ms, _today)
 	var days := SaveManager.daily_days()
 	var lines: Array[String] = [
-		"%d bonnes réponses sur %d, en %s." % [_correct, DailyChallenge.QUESTIONS, DailyChallenge.format_duration(_time_ms)],
+		"%d bonnes réponses sur %d%s." % [_correct, DailyChallenge.QUESTIONS, _time_text(_time_ms)],
 	]
 	var record := _correct > int(before["correct"]) or (_correct == int(before["correct"]) and _time_ms < int(before["ms"]))
 	if int(before["correct"]) == 0 and int(before["ms"]) == 0:
 		lines.append("Premier défi : c'est ton record à battre !")
 	elif record:
-		lines.append("Nouveau record ! (avant : %d sur %d en %s)" % [int(before["correct"]), DailyChallenge.QUESTIONS, DailyChallenge.format_duration(int(before["ms"]))])
+		lines.append("Nouveau record ! (avant : %d sur %d%s)" % [int(before["correct"]), DailyChallenge.QUESTIONS, _time_text(int(before["ms"]))])
 	else:
-		lines.append("Ton record : %d sur %d en %s." % [int(before["correct"]), DailyChallenge.QUESTIONS, DailyChallenge.format_duration(int(before["ms"]))])
+		lines.append("Ton record : %d sur %d%s." % [int(before["correct"]), DailyChallenge.QUESTIONS, _time_text(int(before["ms"]))])
 	var streak := DailyChallenge.streak(days, _today)
 	lines.append("Série : %d jour%s d'affilée." % [streak, "s" if streak > 1 else ""])
 	lines.append("Coffre de la semaine : %d / %d défis." % [mini(DailyChallenge.week_count(days, _today), DailyChallenge.WEEKLY_GOAL), DailyChallenge.WEEKLY_GOAL])

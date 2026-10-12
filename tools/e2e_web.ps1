@@ -2,6 +2,7 @@
 #   export web (image de la CI) → nginx « web » + API + PostgreSQL de test
 #   → proxy « edge » (rôle de Traefik : même origine pour le jeu et /api)
 #   → parcours joueur dans Edge headless (tools/e2e/login_flow.js)
+#   → lecture à voix haute appelée dans le navigateur (tools/e2e/tts_check.js)
 #   → espace parent, et refus d'un Remote-User forgé sur l'hôte public (tools/e2e/admin_flow.js).
 # Prérequis : Docker Desktop, conteneurs aldoria-pg et aldoria-api-test (réseau aldoria-test)
 # avec un profil de test (PIN 1234). Usage : powershell -File tools/e2e_web.ps1 [-SkipExport]
@@ -37,7 +38,9 @@ $out = Join-Path $env:TEMP "aldoria-e2e"
 New-Item -ItemType Directory -Force $out | Out-Null
 node "$e2e/login_flow.js" "http://127.0.0.1:8097/" $out
 $game = $LASTEXITCODE
+node "$e2e/tts_check.js" "http://127.0.0.1:8097/" "http://127.0.0.1:8098" "cle-de-test-locale-uniquement-0123456789"
+$tts = $LASTEXITCODE
 node "$e2e/admin_flow.js" "http://aldoria-admin.localhost:8097/" "http://127.0.0.1:8097/" $out
 $admin = $LASTEXITCODE
 Write-Host "Captures : $out"
-exit [Math]::Max($game, $admin)
+exit [Math]::Max([Math]::Max($game, $admin), $tts)
