@@ -148,7 +148,7 @@ func _resolve_success(action: String, item: Dictionary, result: Dictionary, hint
 		Sfx.play("spell")
 		await fx.projectile(hero.chest(), enemy.chest(), wt.accent)
 	else:
-		hero.play(["1H_Melee_Attack_Chop", "2H_Melee_Attack_Chop", "Unarmed_Melee_Attack_Punch_A"], 1.2)
+		hero.play(hero.attack_animations, 1.2)  # selon l'arme choisie (Wardrobe)
 		await get_tree().create_timer(0.35).timeout
 
 	enemy.damage(power)

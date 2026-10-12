@@ -18,6 +18,7 @@ var _room: DungeonRoom
 var _fx: CombatFx
 var _hud: CombatHud
 var _hero: Fighter
+var _pet: Companion  # renard du monde de Jules (null pour Tom)
 var _enemy: Fighter
 var _encounter: Encounter
 var _wave := 1
@@ -35,11 +36,18 @@ func _ready() -> void:
 	add_child(_fx)
 	_fx.camera = _build_camera()
 
-	_hero = Fighter.create(_wt.hero_model, _wt.hero_name, Progression.hero_max_hp(SaveManager.level()))
+	_hero = Fighter.create_hero(SaveManager.look(), _wt.hero_name, Progression.hero_max_hp(SaveManager.level()))
 	_hero.position = Vector3(-2.4, 0, 1.5)
 	_hero.rotation_degrees.y = 65.0  # de trois quarts, face à l'ennemi
 	add_child(_hero)
 	_room.adapt_character(_hero)
+	if _wt.companion:
+		# Le renard reste assis près du héros et fête les victoires.
+		_pet = Companion.create(SaveManager.look())
+		_pet.position = _hero.position + Vector3(-0.9, 0, 1.4)
+		_pet.rotation_degrees.y = 65.0
+		add_child(_pet)
+		_room.adapt_character(_pet)
 
 	_hud = CombatHud.new()
 	add_child(_hud)
@@ -67,6 +75,8 @@ func _run() -> void:
 		var outcome := await _encounter.fight(_enemy, _wave, 25 * _wave)
 		match outcome:
 			"victory":
+				if _pet:
+					_pet.celebrate()
 				await _show_message("Ennemi vaincu !",
 					"%d bonnes réponses sur %d. +%d XP." % [QuestionService.correct_count, QuestionService.answered, 25 * _wave],
 					"Combat suivant")

@@ -1,7 +1,7 @@
 extends Node
 ## Sauvegarde de partie (TRD §2.7) : XP, progression dans les donjons, bestiaire,
 ## défis quotidiens (jours faits, record, coffres de la semaine ouverts), quêtes du
-## village (dernier jour où chaque habitant a été aidé).
+## village (dernier jour où chaque habitant a été aidé), apparence (« look », facultative).
 ##
 ## Écrite d'abord dans `user://` (IndexedDB sur le web), puis envoyée au serveur
 ## (`PUT /play/save` avec la révision sur laquelle elle s'appuie). Deux appareils
@@ -97,6 +97,28 @@ func daily() -> Dictionary:
 
 func daily_days() -> Array:
 	return daily()["days"]
+
+
+## Donjons du monde terminés au moins une fois (déblocages de la garde-robe).
+func dungeons_done() -> int:
+	var count := 0
+	for d in DungeonDef.all_for_world(Session.world()):
+		if int(dungeon(d.code)["completed"]) > 0:
+			count += 1
+	return count
+
+
+## Apparence du héros et compagnon (Wardrobe), toujours valide et autorisée : une
+## sauvegarde ancienne ou d'un autre appareil n'a pas forcément de clé « look ».
+func look() -> Dictionary:
+	_ensure_loaded()
+	return Wardrobe.sanitize(data.get("look"), Session.world(), level(), dungeons_done())
+
+
+func set_look(look: Dictionary) -> void:
+	_ensure_loaded()
+	data["look"] = Wardrobe.sanitize(look, Session.world(), level(), dungeons_done())
+	_touch()
 
 
 ## Habitant déjà aidé ce jour-là (une quête par habitant et par jour).

@@ -5,9 +5,10 @@ extends RefCounted
 
 var id := ""
 var title := ""
-# Personnages (KayKit, voir game/assets/LICENSES.md)
-var hero_model := ""
+# Personnages (KayKit, voir game/assets/LICENSES.md) ; l'apparence du héros est choisie
+# par l'enfant (Wardrobe), le compagnon animal n'existe que dans le monde de Jules (PRD §3).
 var hero_name := ""
+var companion := false
 var enemy_models: Array[String] = []
 var enemy_names: Array[String] = []
 # Actions de combat
@@ -49,7 +50,7 @@ static func jules() -> WorldTheme:
 	var t := WorldTheme.new()
 	t.id = "jules"
 	t.title = "Les Chroniques d'Aldoria"
-	t.hero_model = "Knight"
+	t.companion = true
 	t.hero_name = "Jules, apprenti Archiviste"
 	t.enemy_models = ["Skeleton_Minion", "Skeleton_Minion", "Skeleton_Rogue", "Skeleton_Mage"]
 	t.enemy_names = ["Petit squelette égaré", "Squelette grognon", "Squelette farceur", "Gardien des os"]
@@ -80,7 +81,6 @@ static func tom() -> WorldTheme:
 	var t := WorldTheme.new()
 	t.id = "tom"
 	t.title = "Les Chroniques d'Aldoria"
-	t.hero_model = "Rogue_Hooded"
 	t.hero_name = "Tom, Archiviste"
 	t.enemy_models = ["Skeleton_Warrior", "Skeleton_Rogue", "Skeleton_Warrior", "Skeleton_Mage"]
 	t.enemy_names = ["Sentinelle du Brouillard", "Spectre d'os", "Gardien oublié", "Héraut du Brouillard"]

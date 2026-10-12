@@ -26,6 +26,7 @@ var _def: DungeonDef
 var _wt: WorldTheme
 var _level: DungeonLevel
 var _hero: HeroController
+var _pet: Companion  # renard du monde de Jules (null pour Tom)
 var _camera: Camera3D
 var _fx: CombatFx
 var _hud: CombatHud
@@ -51,7 +52,7 @@ func _ready() -> void:
 	add_child(_level)
 	_level.build(_def.room_count())
 
-	_hero = HeroController.create(_wt.hero_model, _wt.hero_name, Progression.hero_max_hp(SaveManager.level()))
+	_hero = HeroController.create(SaveManager.look(), _wt.hero_name, Progression.hero_max_hp(SaveManager.level()))
 	add_child(_hero)
 	_level.adapt_character(_hero)
 
@@ -87,6 +88,11 @@ func _ready() -> void:
 	SaveManager.level_up.connect(_on_level_up)
 
 	_populate()
+	if _wt.companion:
+		_pet = Companion.create(SaveManager.look())
+		add_child(_pet)
+		_level.adapt_character(_pet)
+		_pet.follow(_hero)
 	_set_camera_goal(EXPLORE, _explore_target(), true)
 	_refresh_status()
 	_start()
@@ -348,6 +354,8 @@ func _fight(entry: Dictionary) -> void:
 		"victory":
 			entry["defeated"] = true
 			SaveManager.record_defeat(spec["name"])
+			if _pet:
+				_pet.celebrate()
 			_hud.set_enemy_visible(false)
 			if entry["boss"]:
 				await _boss_defeated(entry["room"])
@@ -407,12 +415,17 @@ func _open_chest() -> void:
 	Sfx.play("victory")
 	_fx.burst(chest.position + Vector3(0, 1.0, 0), Color("#ffd447"), 80, 5.0)
 	_fx.rising_sparkles(chest.position, Color("#ffd447"))
+	if _pet:
+		_pet.celebrate()
+	var before := Vector2i(SaveManager.level(), SaveManager.dungeons_done())
 	SaveManager.add_xp(_def.chest_xp)
 	SaveManager.complete_dungeon(_def.code)
+	var unlocked := Wardrobe.newly_unlocked(before, Vector2i(SaveManager.level(), SaveManager.dungeons_done()), _wt.companion)
 	await get_tree().create_timer(1.2).timeout
-	await _message("%s : terminé !" % _def.title,
-		"%s\n%d bonnes réponses sur %d. +%d XP dans le coffre." % [_def.outro, QuestionService.correct_count, QuestionService.answered, _def.chest_xp],
-		"Continuer")
+	var text := "%s\n%d bonnes réponses sur %d. +%d XP dans le coffre." % [_def.outro, QuestionService.correct_count, QuestionService.answered, _def.chest_xp]
+	if not unlocked.is_empty():
+		text += "\nNouveau dans l'apparence (au camp) : %s." % ", ".join(unlocked)
+	await _message("%s : terminé !" % _def.title, text, "Continuer")
 	var rating := RatingPanel.new()
 	rating.setup(_wt, _def.title)
 	_hud.show_panel(rating)

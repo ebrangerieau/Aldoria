@@ -41,7 +41,7 @@ Jeu sur PC contre l'API locale (Docker, port 8098) — options réservées au PC
 [--room=N] [--approach=1] [--npc=<code>] [--autoaction=chapitre] [--screenshot=x.png --shot-delay=4]`.
 Galerie avec aménagements : `--acc=read_aloud,spacing,readable_font,math_tools,… [--text-size=1] [--tools=table]
 [--wrong=1]` (outils ouverts, panneau d'explication).
-`--goto` part du camp vers une destination ; `--dungeon` choisit le donjon (code d'un `DungeonDef`, même fermé) ;
+`--goto` part du camp vers une destination (`apparence` : écran de personnalisation) ; `--dungeon` choisit le donjon (code d'un `DungeonDef`, même fermé) ;
 `--npc` place le héros devant un habitant du village et accepte sa quête ;
 `--room` démarre le donjon dans la salle N (0 à 5) ;
 `--approach` mène le héros au premier ennemi ou piédestal de la salle (captures d'un combat, d'une énigme) ;
@@ -82,6 +82,12 @@ Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-
   `item["speech"]` (engine/speech.py) : un nouveau symbole ou une nouvelle commande LaTeX dans un générateur
   doit y être traduit (`tests/test_accessibility.py` le vérifie sur toutes les questions générées).
   Rédaction : énoncés courts, une idée par phrase.
+- Personnalisation (`Wardrobe`, core/progression) : apparence du héros (silhouette KayKit, une arme par main,
+  couvre-chef, cape et sa couleur) et renard du monde de Jules (`Companion`, core/world : suit les traces du
+  héros, jamais à travers un mur). Rangée dans la partie (`SaveManager.look()`, toujours validée : choix
+  inconnus ou verrouillés remplacés). Un héros se crée par `Fighter.create_hero(SaveManager.look(), …)` ou
+  `HeroController.create(SaveManager.look(), …)` ; tout aventurier KayKit est habillé par `Wardrobe.dress`
+  (le .glb contient toutes les armes). Déblocages au niveau ou aux donjons terminés, annoncés au coffre.
 - Combat : `Encounter` (core/combat) est partagé par l'arène et le donjon ; une scène ne réécrit pas le tour par tour.
 - Progression du joueur : `SaveManager` (XP, donjons, bestiaire, défis quotidiens), jamais de fichier de
   sauvegarde écrit à la main. Défi du jour : règles de série et de coffre dans `DailyChallenge`, sans compte à

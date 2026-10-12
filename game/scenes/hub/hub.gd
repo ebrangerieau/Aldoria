@@ -1,7 +1,7 @@
 extends Control
 ## Camp de base : niveau et XP du héros, les trois donjons du monde (ouverts l'un
-## après l'autre), le village et ses quêtes, le défi du jour, l'arène d'entraînement et
-## les Archives. Récupère la sauvegarde du serveur à l'arrivée (autre appareil, TRD §2.7).
+## après l'autre), le village et ses quêtes, le défi du jour, l'arène d'entraînement,
+## les Archives et l'apparence du héros (★ quand un choix vient de se débloquer). Récupère la sauvegarde du serveur à l'arrivée (autre appareil, TRD §2.7).
 
 var _wt: WorldTheme
 var _dungeons: Array[DungeonDef] = []
@@ -13,6 +13,7 @@ var _village: VillageDef
 var _village_state: Label
 var _daily_state: Label
 var _daily_button: Button
+var _look_button: Button
 var _message: Label
 var _busy := false
 
@@ -139,6 +140,10 @@ func _build() -> void:
 	archives.pressed.connect(func() -> void:
 		get_tree().change_scene_to_file("res://scenes/archives/archives.tscn"))
 	small.add_child(archives)
+	_look_button = UiKit.button("Apparence", 60.0)
+	_look_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_look_button.pressed.connect(_open_wardrobe)
+	small.add_child(_look_button)
 
 
 ## Carte en ligne : titre, sous-titre et état à gauche, bouton à droite.
@@ -175,6 +180,8 @@ func _refresh() -> void:
 	for i in _dungeons.size():
 		_refresh_dungeon(i)
 	_refresh_daily()
+	var unlocked := Wardrobe.unlocked_count(level, SaveManager.dungeons_done(), _wt.companion)
+	_look_button.text = "Apparence ★" if unlocked > int(SaveManager.look()["seen"]) else "Apparence"
 	var waiting := _village.pending_quests(DailyChallenge.today())
 	var plural := waiting > 1
 	_village_state.text = "Tout le monde est aidé aujourd'hui ✓" if waiting == 0 else \
@@ -265,6 +272,11 @@ func _launch(mode: String, params: Dictionary, scene: String, cache := "") -> vo
 	_busy = false
 
 
+func _open_wardrobe() -> void:
+	if not _busy:
+		get_tree().change_scene_to_file("res://scenes/wardrobe/wardrobe.tscn")
+
+
 func _show_options() -> void:
 	if _busy:
 		return
@@ -298,7 +310,7 @@ func _switch_player() -> void:
 	get_tree().change_scene_to_file("res://scenes/profile/profile_select.tscn")
 
 
-## Développement, PC uniquement : `-- --goto=donjon|village|defi|arene|archives`
+## Développement, PC uniquement : `-- --goto=donjon|village|defi|arene|archives|apparence`
 ## (`--dungeon=<code>` pour un autre donjon que le premier).
 func _dev_goto() -> void:
 	if OS.has_feature("web"):
@@ -320,3 +332,5 @@ func _dev_goto() -> void:
 			_enter_arena()
 		"archives":
 			get_tree().change_scene_to_file("res://scenes/archives/archives.tscn")
+		"apparence":
+			_open_wardrobe()

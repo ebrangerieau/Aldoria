@@ -25,7 +25,7 @@ var _waypoints: Array[Vector3] = []
 var _stuck_time := 0.0
 
 
-static func create(model: String, name_text: String, max_hp: int) -> HeroController:
+static func create(look: Dictionary, name_text: String, max_hp: int) -> HeroController:
 	_ensure_actions()
 	var hero := HeroController.new()
 	hero.motion_mode = CharacterBody3D.MOTION_MODE_FLOATING
@@ -36,7 +36,7 @@ static func create(model: String, name_text: String, max_hp: int) -> HeroControl
 	shape.shape = capsule
 	shape.position.y = 0.9
 	hero.add_child(shape)
-	hero.fighter = Fighter.create(model, name_text, max_hp)
+	hero.fighter = Fighter.create_hero(look, name_text, max_hp)
 	hero.add_child(hero.fighter)
 	return hero
 

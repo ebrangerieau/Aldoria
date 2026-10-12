@@ -431,6 +431,12 @@ export function Guide({ child, onOpen }: { child: Profile; onOpen: (page: GuideT
             manqué peut se rattraper le lendemain ; 5 défis dans la semaine ouvrent un coffre.
           </li>
           <li>
+            <strong>L'apparence</strong> : au camp, le bouton <strong>Apparence</strong> permet de choisir l'allure du héros (chevalier,
+            rôdeur, voleur, barbare, mage), son arme, sa cape et sa couleur{tom ? '' : ', ainsi que le nom et le pelage de son renard, qui le suit partout'}.
+            Certains choix se gagnent en montant de niveau ou en terminant des donjons : une étoile ★ sur le bouton signale une nouveauté.
+            C'est uniquement décoratif, rien ne s'achète.
+          </li>
+          <li>
             <strong>L'arène</strong> : des combats à la chaîne pour s'entraîner. <strong>Les Archives</strong> : les étoiles de chaque notion, comme
             dans votre tableau de bord, et le bestiaire des créatures vaincues.
           </li>

@@ -10,7 +10,7 @@ func before_each() -> void:
 	_level = DungeonLevel.new()
 	add_child(_level)
 	_level.build(3)
-	_hero = HeroController.create("Knight", "Test", 100)
+	_hero = HeroController.create(Wardrobe.default_look("jules"), "Test", 100)
 	_hero.position = Vector3(6, 0, 10)
 	add_child(_hero)
 

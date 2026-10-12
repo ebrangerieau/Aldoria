@@ -1,5 +1,5 @@
 // Test de bout en bout du jeu web : titre → profil → PIN → camp → donjon (marche
-// au clavier) → Quitter → camp → Archives → camp → village → Quitter → camp → défi
+// au clavier) → Quitter → camp → Archives → camp → Apparence → camp → village → Quitter → camp → défi
 // du jour (1re question) → Quitter → camp → Changer de joueur → profils.
 // Pilote Edge (ou Chrome) en headless via playwright-core, sur le banc local
 // (tools/e2e_web.ps1) : jamais sur la production avec les vrais codes des enfants.
@@ -51,10 +51,15 @@ const { chromium } = require('playwright-core');
   await shot('4_donjon_marche');
   await page.mouse.click(1210, 63);  // « Quitter » → camp
   await page.waitForTimeout(3000);
-  await page.mouse.click(1128, 724); // « Archives »
+  await page.mouse.click(984, 724);  // « Archives »
   await page.waitForTimeout(3000);
   await shot('5_archives');
   await page.mouse.click(1170, 52);  // « Retour au camp »
+  await page.waitForTimeout(2500);
+  await page.mouse.click(1145, 724); // « Apparence » (héros et renard en 3D)
+  await page.waitForTimeout(3000);
+  await shot('5b_apparence');
+  await page.mouse.click(1135, 52);  // « Retour au camp »
   await page.waitForTimeout(2500);
   await page.mouse.click(1138, 252); // « Y aller » : le village
   await page.waitForTimeout(6000);

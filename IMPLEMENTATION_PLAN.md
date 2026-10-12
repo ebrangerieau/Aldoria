@@ -270,6 +270,17 @@ Livrables du TRD §13 : une salle, un ennemi, 3 widgets, 4 générateurs, et les
   - Le lien donjon ↔ chapitre reste paramétrable par Eric.
 - Rituels : **défi quotidien** de 3 minutes (10 automatismes chronométrés qui rechargent le mana), série de jours, coffre hebdomadaire en jeu. Aucune récompense réelle et aucun FOMO agressif : une série cassée se répare par un défi rattrapé.
 - Personnalisation : apparence du héros et compagnon animal pour Jules.
+
+> ✅ **Livré le 2026-10-12.** Écran « Apparence » au camp (aperçu 3D qu'on tourne du doigt) : 5 silhouettes
+> KayKit (chevalier et rôdeur d'emblée ; voleur, barbare, mage aux niveaux 2, 3, 5), arme, autre main, couvre-chef,
+> cape et 6 couleurs (3 débloquées par les donjons terminés). Renard (Quaternius, CC0, 1 848 triangles) pour Jules :
+> nom au choix parmi 8, 5 pelages (3 par les donjons) ; il suit le héros sur ses traces au donjon et au village,
+> s'assoit près de lui à l'arène et fête les victoires. Nouveautés annoncées à l'ouverture du coffre et par une ★
+> sur le bouton du camp. L'arme choisie donne l'animation d'attaque (sort, arbalète, deux mains…). Au passage :
+> les aventuriers KayKit (héros, habitants) n'affichent plus toutes leurs armes à la fois.
+> Tablette (profil tablette) : donjon 78 appels de dessin / 63 k triangles en combat, village 69 / 59 k.
+> Écarts : nom du renard choisi dans une liste (pas de saisie libre au clavier) ; pas de compagnon pour Tom (PRD) ;
+> pas de « maison à aménager » (PRD §6, hors MVP).
 - Note de 1 à 5 donnée par l'enfant en fin de donjon.
 
 **Bien-être et accessibilité** : durée maximale de session réglable par le parent, rappel de pause, temps compté uniquement quand le jeu est actif ; tailles de texte, mode daltonien, sous-titres ; volumes musique et effets séparés.

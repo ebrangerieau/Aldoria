@@ -53,10 +53,21 @@ static func create(model: String, name_text: String, hp_max: int, idle_name := "
 	return f
 
 
+## Le héros, habillé selon l'apparence choisie (Wardrobe) ; son attaque suit son arme.
+static func create_hero(look: Dictionary, name_text: String, hp_max: int) -> Fighter:
+	var model := str(look["model"])
+	var f := create(model, name_text, hp_max)
+	Wardrobe.dress(f.get_child(0) as Node3D, model, look)
+	f.attack_animations = Wardrobe.attacks_for(look)
+	return f
+
+
 ## Modèle prêt à animer : son AnimationPlayer, ou un nouveau qui reçoit la
-## bibliothèque d'animations de son donneur.
+## bibliothèque d'animations de son donneur. Un aventurier ne tient qu'une arme par
+## main (le .glb les contient toutes) : apparence par défaut de Wardrobe.
 static func instantiate_model(model: String) -> Node3D:
 	var body: Node3D = (load(MODELS % model) as PackedScene).instantiate()
+	Wardrobe.dress(body, model)
 	if ANIMATION_DONORS.has(model) and body.find_child("AnimationPlayer", true, false) == null:
 		var player := AnimationPlayer.new()
 		player.name = "AnimationPlayer"

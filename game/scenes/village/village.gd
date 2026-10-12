@@ -41,11 +41,16 @@ func _ready() -> void:
 	for i in _def.room_count():
 		_level.open_door(i, false)
 
-	_hero = HeroController.create(_wt.hero_model, _wt.hero_name, Progression.hero_max_hp(SaveManager.level()))
+	_hero = HeroController.create(SaveManager.look(), _wt.hero_name, Progression.hero_max_hp(SaveManager.level()))
 	add_child(_hero)
 	_level.adapt_character(_hero)
 	_hero.position = _level.room_origin(0) + Vector3(3, 0, 10)
 	_hero.fighter.rotation_degrees.y = 90.0
+	if _wt.companion:
+		var pet := Companion.create(SaveManager.look())
+		add_child(pet)
+		_level.adapt_character(pet)
+		pet.follow(_hero)
 
 	_camera = Camera3D.new()
 	_camera.far = 200.0
