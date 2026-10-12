@@ -2,7 +2,8 @@ import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 
 // En développement : `npm run dev` relaie /api vers l'API locale (port 8098) en
-// ajoutant l'identité et le secret que Traefik pose en production.
+// ajoutant le secret que Traefik pose en production ; on s'y connecte avec un compte
+// adulte du banc (python -m app.cli create-adult …).
 const DEV_KEY = process.env.ALDORIA_ADMIN_KEY ?? ''
 
 export default defineConfig({
@@ -12,7 +13,7 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:8098',
-        headers: { 'Remote-User': 'parent', 'Remote-Name': 'Parent (dev)', 'X-Aldoria-Admin-Key': DEV_KEY },
+        headers: { 'X-Aldoria-Admin-Key': DEV_KEY },
       },
     },
   },

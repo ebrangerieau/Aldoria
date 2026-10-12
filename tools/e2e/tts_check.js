@@ -3,15 +3,21 @@
 // confiée à la synthèse vocale du navigateur (speechSynthesis.speak). Le navigateur
 // headless n'a pas de voix : on intercepte les appels au lieu d'écouter.
 //
-// Usage : node tts_check.js <url du jeu> <url de l'API locale> <clé admin locale> [pin]
+// Usage : node tts_check.js <url du jeu> <url de l'API locale> <clé admin locale> <code de liaison>
+//        <e-mail du parent du banc> <mot de passe du parent du banc> [pin]
 const { chromium } = require('playwright-core');
 
 (async () => {
-  const [url, apiUrl, adminKey, pin = '1234'] = process.argv.slice(2);
+  const [url, apiUrl, adminKey, pairing, email, password, pin = '1234'] = process.argv.slice(2);
+  // Session du parent du banc (API parent appelée directement, avec le secret du routeur admin).
+  const base = { 'Content-Type': 'application/json', 'X-Aldoria-Admin-Key': adminKey, 'X-Requested-With': 'aldoria' };
+  const login = await fetch(`${apiUrl}/api/v1/admin/login`, { method: 'POST', headers: base, body: JSON.stringify({ email, password }) });
+  if (!login.ok) throw new Error(`connexion du parent du banc : ${login.status}`);
+  const cookie = login.headers.get('set-cookie').split(';')[0];
   const admin = (body) =>
     fetch(`${apiUrl}/api/v1/admin/profiles/1/accommodations`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json', 'X-Aldoria-Admin-Key': adminKey, 'Remote-Email': 'parent@test.local' },
+      headers: { ...base, Cookie: cookie },
       body: JSON.stringify(body),
     });
   let failed = false;
@@ -33,6 +39,11 @@ const { chromium } = require('playwright-core');
     await page.waitForTimeout(8000);
     await page.mouse.click(640, 400); // écran titre
     await page.waitForTimeout(2500);
+    for (const digit of pairing) {     // liaison de l'appareil (navigateur neuf)
+      await page.keyboard.press(digit);
+      await page.waitForTimeout(120);
+    }
+    await page.waitForTimeout(3000);
     await page.mouse.click(640, 403); // Jules
     await page.waitForTimeout(800);
     for (const digit of pin) {

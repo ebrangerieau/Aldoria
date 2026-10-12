@@ -16,7 +16,9 @@ services:
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME}.tls.certresolver=letsencrypt"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME}.priority=1"
       - "traefik.http.services.${COMPOSE_PROJECT_NAME}.loadbalancer.server.port=80"
-      # Espace parent : même conteneur nginx (bloc server de l'hôte admin), derrière TinyAuth.
+      # Espace parent : même conteneur nginx (bloc server de l'hôte admin). Les adultes s'y
+      # connectent avec leur compte Aldoria ; TinyAuth reste devant pendant la bascule
+      # (IMPLEMENTATION_PLAN, chantier « plusieurs familles »), puis sera retiré.
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-admin.rule=Host(`${COMPOSE_PROJECT_NAME}-admin.${TRAEFIK_HOST}`)"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-admin.entrypoints=websecure"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-admin.tls.certresolver=letsencrypt"
@@ -37,7 +39,8 @@ services:
       ALDORIA_DATABASE_URL: postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB}
       ALDORIA_JWT_SECRET: ${ALDORIA_JWT_SECRET}
       ALDORIA_ADMIN_KEY: ${ALDORIA_ADMIN_KEY}
-      ALDORIA_ADMIN_USERS: ${ALDORIA_ADMIN_USERS}
+      # Adresse de l'espace parent, pour les liens d'invitation.
+      ALDORIA_ADMIN_URL: https://${COMPOSE_PROJECT_NAME}-admin.${TRAEFIK_HOST}
       ALDORIA_BACKUP_STATUS_DIR: /etat-sauvegardes
     volumes:
       # État des sauvegardes seulement (pas les sauvegardes elles-mêmes), pour l'espace parent.
@@ -59,7 +62,18 @@ services:
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-api.priority=10"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-api.middlewares=${COMPOSE_PROJECT_NAME}-strip-identity"
       - "traefik.http.services.${COMPOSE_PROJECT_NAME}-api.loadbalancer.server.port=8000"
-      # Un en-tête vide le supprime : empêche un client de se faire passer pour le parent.
+      # Connexion d'un enfant et liaison d'un appareil : débit limité (essais de codes).
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-play-auth.rule=Host(`${COMPOSE_PROJECT_NAME}.${TRAEFIK_HOST}`) && (Path(`/api/v1/play/login`) || Path(`/api/v1/play/devices/pair`))"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-play-auth.entrypoints=websecure"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-play-auth.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-play-auth.priority=15"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-play-auth.service=${COMPOSE_PROJECT_NAME}-api"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-play-auth.middlewares=${COMPOSE_PROJECT_NAME}-strip-identity,${COMPOSE_PROJECT_NAME}-auth-limit"
+      # 20 essais par minute et par adresse IP (une famille entière partage la même).
+      - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME}-auth-limit.ratelimit.average=20"
+      - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME}-auth-limit.ratelimit.period=1m"
+      - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME}-auth-limit.ratelimit.burst=10"
+      # Un en-tête vide le supprime : empêche un client de se faire passer pour l'espace parent.
       - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME}-strip-identity.headers.customrequestheaders.Remote-User="
       - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME}-strip-identity.headers.customrequestheaders.Remote-Email="
       - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME}-strip-identity.headers.customrequestheaders.Remote-Name="
@@ -73,6 +87,13 @@ services:
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-admin-api.priority=20"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-admin-api.service=${COMPOSE_PROJECT_NAME}-api"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-admin-api.middlewares=${COMPOSE_PROJECT_NAME}-admin-auth,${COMPOSE_PROJECT_NAME}-admin-key"
+      # Connexion d'un adulte et liens d'invitation : débit limité.
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-admin-auth-api.rule=Host(`${COMPOSE_PROJECT_NAME}-admin.${TRAEFIK_HOST}`) && (Path(`/api/v1/admin/login`) || PathPrefix(`/api/v1/admin/invitations`))"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-admin-auth-api.entrypoints=websecure"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-admin-auth-api.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-admin-auth-api.priority=30"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-admin-auth-api.service=${COMPOSE_PROJECT_NAME}-api"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-admin-auth-api.middlewares=${COMPOSE_PROJECT_NAME}-admin-auth,${COMPOSE_PROJECT_NAME}-admin-key,${COMPOSE_PROJECT_NAME}-auth-limit"
       - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME}-admin-key.headers.customrequestheaders.X-Aldoria-Admin-Key=${ALDORIA_ADMIN_KEY}"
 
   db:

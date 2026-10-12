@@ -1,27 +1,33 @@
-// Test de bout en bout du jeu web : titre → profil → PIN → camp → donjon (marche
+// Test de bout en bout du jeu web : titre → liaison de l'appareil (code à 8 chiffres)
+// → profil → PIN → camp → donjon (marche
 // au clavier) → Quitter → camp → Archives → camp → Apparence → camp → village → Quitter → camp → défi
 // du jour (1re question) → Quitter → camp → Changer de joueur → profils.
 // Pilote Edge (ou Chrome) en headless via playwright-core, sur le banc local
 // (tools/e2e_web.ps1) : jamais sur la production avec les vrais codes des enfants.
 //
-// Usage : node login_flow.js <url> <dossier captures> [pin]
+// Usage : node login_flow.js <url> <dossier captures> <code de liaison> [pin]
 // Échoue (code 1) si un appel /api/ ne répond pas 2xx ou si la console du jeu
 // signale une erreur [Aldoria/api].
 const { chromium } = require('playwright-core');
 
 (async () => {
-  const [url, outDir, pin = '1234'] = process.argv.slice(2);
+  const [url, outDir, pairing, pin = '1234'] = process.argv.slice(2);
+  let paired = false;
   const browser = await chromium.launch({ channel: 'msedge', headless: true, args: ['--use-angle=d3d11'] });
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
   const problems = [];
   const api = [];
   page.on('console', (m) => {
+    // Avant la liaison, le refus attendu de /play/profiles (401) est journalisé par le navigateur.
+    if (!paired && m.text().includes('status of 401')) return;
     if (m.text().includes('[Aldoria/api]') || m.type() === 'error') problems.push(`console: ${m.text()}`);
   });
   page.on('pageerror', (e) => problems.push(`pageerror: ${e.message}`));
   page.on('response', (r) => {
     if (!r.url().includes('/api/')) return;
     api.push(`${r.status()} ${r.request().method()} ${new URL(r.url()).pathname}`);
+    // Navigateur neuf : la liste des profils est refusée tant que l'appareil n'est pas relié.
+    if (!paired && r.status() === 401 && r.url().endsWith('/play/profiles')) return;
     if (r.status() >= 300) problems.push(`api: ${r.status()} ${r.url()}`);
   });
 
@@ -30,6 +36,13 @@ const { chromium } = require('playwright-core');
   await page.waitForTimeout(8000);   // chargement du moteur
   await page.mouse.click(640, 400);  // écran titre
   await page.waitForTimeout(2500);
+  await shot('0_liaison');
+  for (const digit of pairing) {     // code de liaison (espace parent → Famille → Appareils)
+    await page.keyboard.press(digit);
+    await page.waitForTimeout(120);
+  }
+  paired = true;
+  await page.waitForTimeout(3000);
   await shot('1_profils');
   await page.mouse.click(640, 403);  // premier profil (Jules)
   await page.waitForTimeout(800);
@@ -85,7 +98,7 @@ const { chromium } = require('playwright-core');
   );
   console.log(`Voix françaises du navigateur : ${voices === null ? 'synthèse vocale absente' : voices.join(', ') || 'aucune'}`);
   console.log('Appels API :\n  ' + api.join('\n  '));
-  for (const call of ['200 POST /api/v1/play/session/start', '200 GET /api/v1/play/save', '200 GET /api/v1/play/progress']) {
+  for (const call of ['200 POST /api/v1/play/devices/pair', '200 POST /api/v1/play/session/start', '200 GET /api/v1/play/save', '200 GET /api/v1/play/progress']) {
     if (!api.includes(call)) problems.push(`appel manquant : ${call}`);
   }
   const starts = api.filter((line) => line === '200 POST /api/v1/play/session/start').length;

@@ -2,10 +2,11 @@ import type { Profile } from './api'
 import type { View } from './Questions'
 import { Stars } from './Stars'
 
-export type GuideTarget = 'dashboard' | 'program' | 'questions' | 'reports' | 'settings'
+export type GuideTarget = 'dashboard' | 'program' | 'questions' | 'reports' | 'settings' | 'family'
 
 const SECTIONS = [
   { id: 'demarrer', title: 'Démarrer en 3 gestes' },
+  { id: 'famille', title: 'Votre famille : enfants, adultes, appareils' },
   { id: 'enfant', title: 'Choisir l’enfant' },
   { id: 'tableau', title: 'Suivre la progression' },
   { id: 'programme', title: 'Dire au jeu ce qui se passe en classe' },
@@ -20,8 +21,9 @@ const SECTIONS = [
 ]
 
 // Guide de l'espace parent : tout ce qu'il est possible de faire, et comment, pas à pas.
-export function Guide({ child, onOpen }: { child: Profile; onOpen: (page: GuideTarget, view?: View) => void }) {
-  const tom = child.level === '2nde'
+export function Guide({ child, onOpen }: { child?: Profile; onOpen: (page: GuideTarget, view?: View) => void }) {
+  const tom = child?.level === '2nde'
+  const name = child?.name ?? 'votre enfant'
   return (
     <div className="stack guide">
       <section className="card">
@@ -31,7 +33,7 @@ export function Guide({ child, onOpen }: { child: Profile; onOpen: (page: GuideT
           programme. L'espace parent sert à trois choses : <strong>voir où en est chaque enfant</strong>, <strong>orienter les questions</strong>{' '}
           vers ce qu'il travaille en classe, et <strong>ajouter vos propres questions</strong>.
         </p>
-        <p className="muted small">Les exemples de ce guide concernent {child.name} ; changez d'enfant en haut à droite pour adapter les exemples.</p>
+        <p className="muted small">Les exemples de ce guide concernent {name} ; changez d'enfant en haut à droite pour adapter les exemples.</p>
         <nav className="toc" aria-label="Sommaire du guide">
           <ol>
             {SECTIONS.map((s) => (
@@ -47,7 +49,7 @@ export function Guide({ child, onOpen }: { child: Profile; onOpen: (page: GuideT
         <p>Si vous ne deviez faire que trois choses :</p>
         <ol className="steps">
           <li>
-            <strong>Dans Programme</strong>, passez en « En cours en classe » le ou les chapitres que {child.name} travaille en ce moment. C'est le
+            <strong>Dans Programme</strong>, passez en « En cours en classe » le ou les chapitres que {name} travaille en ce moment. C'est le
             réglage qui a le plus d'effet sur les questions posées.
           </li>
           <li>
@@ -64,10 +66,44 @@ export function Guide({ child, onOpen }: { child: Profile; onOpen: (page: GuideT
         </div>
       </Section>
 
+      <Section id="famille" title="Votre famille : enfants, adultes, appareils" open={() => onOpen('family')} openLabel="Ouvrir Famille">
+        <p>L'onglet <strong>Famille</strong> regroupe tout ce qui concerne les personnes et les appareils :</p>
+        <ul className="bullets">
+          <li>
+            <strong>Ajouter un enfant</strong> : son prénom, sa classe (6ème ou seconde) et son code secret à 4 chiffres, tapé deux fois. Il
+            apparaît aussitôt dans le jeu, sur les appareils de la famille.
+          </li>
+          <li>
+            <strong>Relier un appareil</strong> (une seule fois par tablette ou ordinateur) : donnez-lui un nom, cliquez sur{' '}
+            <strong>Créer un code</strong>, puis ouvrez le jeu sur l'appareil et tapez les 8 chiffres affichés (valables 30 minutes). Le jeu
+            n'affiche les enfants que sur un appareil relié : un inconnu qui ouvre l'adresse du jeu ne voit personne.
+          </li>
+          <li>
+            <strong>Inviter un adulte</strong> (l'autre parent, un grand-parent…) : <strong>Créer un lien d'invitation</strong>, puis envoyez
+            ce lien comme vous voulez (SMS, messagerie). La personne y choisit son e-mail et son mot de passe. Le lien ne sert qu'une fois et
+            expire au bout de 7 jours.
+          </li>
+          <li>
+            <strong>Mot de passe oublié</strong> : un autre adulte de la famille clique sur <strong>Lien « mot de passe oublié »</strong> à
+            côté de son nom et le lui envoie.
+          </li>
+          <li>
+            <strong>Retirer</strong> un appareil perdu ou un adulte qui ne doit plus accéder : l'effet est immédiat.
+          </li>
+          <li>
+            <strong>Mon compte</strong> : changer son mot de passe, déconnecter ses autres appareils, se déconnecter.
+          </li>
+        </ul>
+        <div className="warn">
+          <strong>Supprimer un enfant ou la famille</strong> efface définitivement toutes ses données (droit à l'effacement). Il faut écrire son
+          nom pour confirmer.
+        </div>
+      </Section>
+
       <Section id="enfant" title="Choisir l’enfant">
         <p>
-          Les boutons en haut à droite (<span className="pill">Jules 6ème</span> <span className="pill">Tom Seconde</span>) choisissent l'enfant
-          affiché. Tous les onglets s'adaptent : tableau de bord, programme, questions (de son niveau) et réglages.
+          Les boutons en haut à droite (un par enfant, avec sa classe, par exemple <span className="pill">{child?.name ?? 'Jules'} 6ème</span>)
+          choisissent l'enfant affiché. Tous les onglets s'adaptent : tableau de bord, programme, questions (de son niveau) et réglages.
         </p>
       </Section>
 
@@ -274,14 +310,14 @@ export function Guide({ child, onOpen }: { child: Profile; onOpen: (page: GuideT
           réponse attendue, l'indice et l'explication. « Autres exemples » en tire dix nouvelles.
         </p>
         <p>
-          C'est utile pour savoir ce que {child.name} rencontre réellement, et pour vérifier qu'une forme de question correspond à ce qui est fait en
+          C'est utile pour savoir ce que {name} rencontre réellement, et pour vérifier qu'une forme de question correspond à ce qui est fait en
           classe. Les questions « d'énigme ou de quête » demandent une illustration (carte, balance, tableau…), résumée en une ligne dans l'aperçu.
         </p>
       </Section>
 
       <Section id="signalements" title="Traiter les signalements" open={() => onOpen('reports')} openLabel="Ouvrir les signalements">
         <p>
-          Quand {child.name} se trompe, le jeu affiche la bonne réponse et l'explication. S'il pense que c'est la question qui est fausse, il touche{' '}
+          Quand {name} se trompe, le jeu affiche la bonne réponse et l'explication. S'il pense que c'est la question qui est fausse, il touche{' '}
           <strong>Signaler une erreur</strong> et choisit un motif : réponse attendue fausse, énoncé faux, ou question incompréhensible.
         </p>
         <ol className="steps">
@@ -345,7 +381,7 @@ export function Guide({ child, onOpen }: { child: Profile; onOpen: (page: GuideT
         openLabel="Ouvrir les aménagements"
       >
         <p>
-          Si {child.name} est dyslexique, dyscalculique, dyspraxique, ou a du mal à rester concentré, le jeu peut s'adapter, comme les
+          Si {name} est dyslexique, dyscalculique, dyspraxique, ou a du mal à rester concentré, le jeu peut s'adapter, comme les
           aménagements d'un PAP en classe. Rien n'est imposé : vous choisissez, et vous pouvez revenir en arrière à tout moment.
         </p>
         <ol className="steps">
@@ -408,7 +444,7 @@ export function Guide({ child, onOpen }: { child: Profile; onOpen: (page: GuideT
           volume et d'activer ou non la lecture automatique. Il ne peut pas retirer ce que vous avez choisi.
         </div>
         <div className="tip">
-          <strong>Conseil.</strong> Parlez-en avec {child.name} et, si possible, avec ses enseignants : les aménagements utiles en classe
+          <strong>Conseil.</strong> Parlez-en avec {name} et, si possible, avec ses enseignants : les aménagements utiles en classe
           sont souvent les bons dans le jeu. Commencez par un profil, observez quelques sessions, puis ajustez.
         </div>
         <div className="warn">
@@ -417,7 +453,7 @@ export function Guide({ child, onOpen }: { child: Profile; onOpen: (page: GuideT
       </Section>
 
       <Section id="jeu" title="Ce que vit votre enfant dans le jeu">
-        <p>Savoir ce qui se passe à l'écran aide à en parler avec {child.name} :</p>
+        <p>Savoir ce qui se passe à l'écran aide à en parler avec {name} :</p>
         <ul className="bullets">
           <li>
             <strong>Le camp</strong> : point de départ, avec le niveau et l'expérience du héros. L'enfant se connecte en touchant son avatar puis en tapant
@@ -457,8 +493,22 @@ export function Guide({ child, onOpen }: { child: Profile; onOpen: (page: GuideT
         <details>
           <summary>Mon enfant peut-il jouer sur l'ordinateur et sur la tablette ?</summary>
           <p>
-            Oui. La partie est enregistrée sur le serveur : il retrouve sa progression sur l'autre appareil. Si les deux ont joué, la partie la plus
-            avancée l'emporte.
+            Oui, une fois chaque appareil relié à la famille (Famille → Appareils). La partie est enregistrée sur le serveur : il retrouve sa
+            progression sur l'autre appareil. Si les deux ont joué, la partie la plus avancée l'emporte.
+          </p>
+        </details>
+        <details>
+          <summary>Le jeu demande un code à 8 chiffres</summary>
+          <p>
+            L'appareil n'est pas (ou plus) relié à la famille : navigateur nouveau, données du navigateur effacées, navigation privée, ou appareil
+            retiré. Créez un code dans Famille → Appareils et tapez-le dans le jeu.
+          </p>
+        </details>
+        <details>
+          <summary>J'ai oublié mon mot de passe</summary>
+          <p>
+            Demandez à un autre adulte de la famille de vous envoyer un lien « mot de passe oublié » (Famille → Adultes). Si vous êtes le seul
+            adulte, l'exploitant du serveur peut en créer un.
           </p>
         </details>
         <details>
@@ -501,8 +551,9 @@ export function Guide({ child, onOpen }: { child: Profile; onOpen: (page: GuideT
         <details>
           <summary>Quelles données sont conservées ?</summary>
           <p>
-            Les réponses (juste ou faux, temps de réponse), les sessions et la partie de chaque enfant, sur votre serveur, et leurs sauvegardes
-            sur le serveur et sur l'ordinateur de la maison. Aucune donnée ne part ailleurs. La réinitialisation, dans les Réglages, efface tout
+            Les réponses (juste ou faux, temps de réponse), les sessions et la partie de chaque enfant, les comptes des adultes (e-mail, mot de
+            passe chiffré) et les appareils reliés, sur le serveur d'Aldoria, ainsi que leurs sauvegardes. Aucune donnée ne part ailleurs, et
+            aucune autre famille ne voit les vôtres. La réinitialisation, dans les Réglages, efface tout
             pour un enfant ; ses anciennes données disparaissent des sauvegardes au bout de 14 jours sur le serveur (60 sur l'ordinateur de la
             maison).
           </p>

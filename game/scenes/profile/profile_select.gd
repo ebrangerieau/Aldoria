@@ -1,14 +1,19 @@
 extends Control
-## Choix du profil puis code PIN (PRD US-01 : retrouver sa partie sans mot de
-## passe compliqué). Les profils sont créés par le parent (CLI, puis éditeur en phase 2).
+## Choix du profil puis code PIN (PRD US-01 : retrouver sa partie sans mot de passe
+## compliqué). Les enfants sont ceux de la famille de l'appareil : un appareil pas
+## encore relié (ou retiré par un parent) demande d'abord le code de liaison à
+## 8 chiffres créé dans l'espace parent (Famille → Appareils).
 
 const PIN_LENGTH := 4
+const PAIRING_LENGTH := 8
 
 var _wt := WorldTheme.jules()
 var _root: VBoxContainer
 var _message: Label
 var _profile: Dictionary
-var _pin := ""
+var _digits := ""
+var _length := PIN_LENGTH
+var _pairing := false  # saisie du code de liaison (chiffres visibles) plutôt que du PIN
 var _dots: Label
 var _busy := false
 
@@ -22,6 +27,7 @@ func _ready() -> void:
 func _build_frame() -> void:
 	for child in get_children():
 		child.queue_free()
+	_dots = null
 	theme = UiKit.make_theme(_wt)
 	var bg := ColorRect.new()
 	bg.color = _wt.bg
@@ -43,6 +49,10 @@ func _load_profiles() -> void:
 	_message = UiKit.label("Chargement…", 22, _wt.text_dim)
 	_root.add_child(_message)
 	var res := await ApiClient.get_json("/play/profiles", false)
+	if not res.ok and res.status == 401:
+		ApiClient.forget_device()
+		_show_pairing()
+		return
 	if not res.ok:
 		_message.text = res.error.get("message", "Erreur.")
 		var retry := UiKit.button("Réessayer")
@@ -51,7 +61,8 @@ func _load_profiles() -> void:
 			_load_profiles())
 		_root.add_child(retry)
 		return
-	_message.text = ""
+	_message.text = "" if not res.data.is_empty() else \
+		"Aucun enfant dans cette famille pour l'instant : un parent peut en ajouter dans l'espace parent (onglet Famille)."
 	for p in res.data:
 		var label := "%s   ·   %s" % [p["name"], "6ème" if p["level"] == "6e" else "Seconde"]
 		var b := UiKit.button(label, 88.0)
@@ -60,13 +71,32 @@ func _load_profiles() -> void:
 		_root.add_child(b)
 
 
+## Appareil pas encore relié : le code à 8 chiffres de l'espace parent.
+func _show_pairing() -> void:
+	_wt = WorldTheme.jules()
+	_pairing = true
+	_build_frame()
+	_root.add_child(_title("Relier cet appareil"))
+	var help := UiKit.label("Demande à un parent le code à 8 chiffres : espace parent, onglet Famille, Appareils.", 22, _wt.text)
+	help.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	_root.add_child(help)
+	_keypad(PAIRING_LENGTH, false)
+
+
 func _choose(profile: Dictionary) -> void:
 	_profile = profile
 	_wt = WorldTheme.for_world(profile["world"])
-	_pin = ""
+	_pairing = false
 	_build_frame()
 	_root.add_child(_title("Code secret de %s" % profile["name"]))
-	_dots = UiKit.label("", 56, _wt.accent)
+	_keypad(PIN_LENGTH, true)
+
+
+## Pavé numérique (PIN ou code de liaison) ; « Retour » ne sert qu'au PIN.
+func _keypad(length: int, with_back: bool) -> void:
+	_length = length
+	_digits = ""
+	_dots = UiKit.label("", 56 if length == PIN_LENGTH else 48, _wt.accent)
 	_dots.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_root.add_child(_dots)
 	_message = UiKit.label("", 22, _wt.bad)
@@ -76,7 +106,10 @@ func _choose(profile: Dictionary) -> void:
 	grid.columns = 3
 	grid.add_theme_constant_override("h_separation", 12)
 	grid.add_theme_constant_override("v_separation", 12)
-	for key in ["1", "2", "3", "4", "5", "6", "7", "8", "9", "Retour", "0", "Effacer"]:
+	for key in ["1", "2", "3", "4", "5", "6", "7", "8", "9", "Retour" if with_back else "", "0", "Effacer"]:
+		if key == "":
+			grid.add_child(Control.new())
+			continue
 		var b := UiKit.button(key, 72.0)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		if key.length() > 1:
@@ -98,13 +131,15 @@ func _key(key: String) -> void:
 			_build_frame()
 			_load_profiles()
 		"Effacer":
-			_pin = _pin.substr(0, _pin.length() - 1)
+			_digits = _digits.substr(0, _digits.length() - 1)
 			_refresh_dots()
 		_:
-			if _pin.length() < PIN_LENGTH:
-				_pin += key
+			if _digits.length() < _length:
+				_digits += key
 				_refresh_dots()
-				if _pin.length() == PIN_LENGTH:
+				if _digits.length() == _length and _pairing:
+					_submit_pairing()
+				elif _digits.length() == _length:
 					_submit()
 
 
@@ -120,10 +155,27 @@ func _unhandled_key_input(event: InputEvent) -> void:
 		_key("Effacer")
 
 
+func _submit_pairing() -> void:
+	_busy = true
+	_message.text = ""
+	var res := await ApiClient.pair(_digits)
+	_busy = false
+	if res.ok:
+		_pairing = false
+		_build_frame()
+		_load_profiles()
+		return
+	_message.add_theme_color_override("font_color", _wt.bad)
+	_message.text = res.error.get("message", "Erreur.")
+	Sfx.play("wrong")
+	_digits = ""
+	_refresh_dots()
+
+
 func _submit() -> void:
 	_busy = true
 	_message.text = ""
-	var res := await Session.login(int(_profile["id"]), _pin)
+	var res := await Session.login(int(_profile["id"]), _digits)
 	if res.ok:
 		_message.add_theme_color_override("font_color", _wt.good)
 		_message.text = "C'est parti !"
@@ -138,17 +190,31 @@ func _submit() -> void:
 		"locked":
 			var wait := int(res.error.get("details", {}).get("retry_after_s", 300))
 			_message.text = "Trop d'essais : attends %d minute%s." % [ceili(wait / 60.0), "s" if wait > 60 else ""]
+		"device_unknown":
+			_busy = false
+			ApiClient.forget_device()
+			_show_pairing()
+			return
 		_:
 			_message.text = res.error.get("message", "Erreur.")
-	_pin = ""
+	_digits = ""
 	_refresh_dots()
 	_busy = false
 
 
 func _refresh_dots() -> void:
+	if _pairing:
+		# Code de liaison : chiffres visibles, groupés par 4 comme dans l'espace parent.
+		var shown := ""
+		for i in _length:
+			shown += _digits[i] if i < _digits.length() else "_"
+			if i == 3:
+				shown += "  "
+		_dots.text = shown
+		return
 	var dots := PackedStringArray()
-	for i in PIN_LENGTH:
-		dots.append("●" if i < _pin.length() else "○")
+	for i in _length:
+		dots.append("●" if i < _digits.length() else "○")
 	_dots.text = " ".join(dots)
 
 

@@ -39,6 +39,10 @@ var wrong_title := ""
 
 static func for_world(world: String) -> WorldTheme:
 	var t := tom() if world == "tom" else jules()
+	# Prénom de l'enfant connecté (toute famille), titre propre à chaque monde.
+	var player := str(Session.profile.get("name", ""))
+	if player != "":
+		t.hero_name = ("%s, apprenti Archiviste" if world != "tom" else "%s, Archiviste") % player
 	if Accessibility.on("colorblind"):
 		# Juste / faux distinguables sans le rouge et le vert (daltonisme le plus fréquent).
 		t.good = Color("#3d8bfd")
@@ -51,7 +55,7 @@ static func jules() -> WorldTheme:
 	t.id = "jules"
 	t.title = "Les Chroniques d'Aldoria"
 	t.companion = true
-	t.hero_name = "Jules, apprenti Archiviste"
+	t.hero_name = "Apprenti Archiviste"
 	t.enemy_models = ["Skeleton_Minion", "Skeleton_Minion", "Skeleton_Rogue", "Skeleton_Mage"]
 	t.enemy_names = ["Petit squelette égaré", "Squelette grognon", "Squelette farceur", "Gardien des os"]
 	t.action_names = {"automatisme": "Coup d'épée", "chapitre": "Sort d'étoiles", "soin": "Potion"}
@@ -81,7 +85,7 @@ static func tom() -> WorldTheme:
 	var t := WorldTheme.new()
 	t.id = "tom"
 	t.title = "Les Chroniques d'Aldoria"
-	t.hero_name = "Tom, Archiviste"
+	t.hero_name = "Archiviste"
 	t.enemy_models = ["Skeleton_Warrior", "Skeleton_Rogue", "Skeleton_Warrior", "Skeleton_Mage"]
 	t.enemy_names = ["Sentinelle du Brouillard", "Spectre d'os", "Gardien oublié", "Héraut du Brouillard"]
 	t.action_names = {"automatisme": "Frappe", "chapitre": "Arcane", "soin": "Régénération"}

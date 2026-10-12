@@ -1,5 +1,5 @@
 // Accès à l'API parent (/api/v1/admin), servie sur la même origine que cette page.
-// L'authentification est faite en amont par TinyAuth (cookie SSO) : rien à gérer ici.
+// Connexion d'un adulte : cookie de session posé par l'API (HttpOnly, envoyé tout seul).
 
 export type Level = '6e' | '2nde'
 export type ChapterStatus = 'a_venir' | 'en_cours' | 'controle_bientot' | 'termine'
@@ -187,10 +187,44 @@ export interface NotionToValidate {
   in_program: boolean | null
 }
 
-export interface Parent {
-  user: string
-  email: string
+// Adulte connecté et sa famille (comptes propres à Aldoria, cookie de session).
+export interface Me {
+  adult: { id: number; name: string; email: string; is_operator: boolean }
+  family: { id: number; name: string }
+}
+
+export interface Invitation {
+  kind: 'adulte' | 'famille' | 'mot_de_passe'
+  family: string | null
+  adult: { name: string; email: string } | null
+  expires_at: string
+}
+
+export interface Adults {
+  adults: { id: number; name: string; email: string; is_me: boolean; is_operator: boolean; last_login_at: string | null }[]
+  invitations: { id: string; note: string; expires_at: string }[]
+}
+
+export interface Device {
+  id: number
   name: string
+  created_at: string
+  last_seen_at: string | null
+}
+
+export interface FamilyRow {
+  id: number
+  name: string
+  created_at: string
+  adults: number
+  children: number
+  devices: number
+  last_activity: string | null
+}
+
+export interface Link {
+  link: string
+  expires_at: string
 }
 
 // État des sauvegardes de la base (service backup sur le VPS, copie à la maison).
@@ -221,7 +255,8 @@ export class ApiError extends Error {
 async function request<T>(method: string, path: string, body?: unknown): Promise<T> {
   const response = await fetch(`/api/v1/admin${path}`, {
     method,
-    headers: { Accept: 'application/json', ...(body ? { 'Content-Type': 'application/json' } : {}) },
+    // X-Requested-With : exigé par l'API pour toute modification (protection CSRF).
+    headers: { Accept: 'application/json', 'X-Requested-With': 'aldoria', ...(body ? { 'Content-Type': 'application/json' } : {}) },
     body: body ? JSON.stringify(body) : undefined,
     credentials: 'same-origin',
   })
@@ -243,7 +278,28 @@ function safeJson(text: string): unknown {
 }
 
 export const api = {
-  me: () => request<Parent>('GET', '/me'),
+  me: () => request<Me>('GET', '/me'),
+  login: (email: string, password: string) => request<Me>('POST', '/login', { email, password }),
+  logout: () => request<null>('POST', '/logout'),
+  invitation: (token: string) => request<Invitation>('GET', `/invitations/${encodeURIComponent(token)}`),
+  acceptInvitation: (token: string, form: { password: string; name?: string; email?: string; family_name?: string }) =>
+    request<Me>('POST', `/invitations/${encodeURIComponent(token)}/accept`, form),
+  changePassword: (current: string, next: string) => request<null>('PUT', '/me/password', { current, new: next }),
+  logoutOthers: () => request<{ closed: number }>('POST', '/me/logout-others'),
+  adults: () => request<Adults>('GET', '/adults'),
+  inviteAdult: (note: string) => request<Link>('POST', '/adults/invitations', { note }),
+  cancelInvitation: (id: string) => request<null>('DELETE', `/adults/invitations/${id}`),
+  passwordLink: (id: number) => request<Link>('POST', `/adults/${id}/password-link`),
+  removeAdult: (id: number) => request<null>('DELETE', `/adults/${id}`),
+  renameFamily: (name: string) => request<Me>('PUT', '/family', { name }),
+  deleteFamily: (confirm: string) => request<null>('POST', '/family/delete', { confirm }),
+  createChild: (name: string, level: Level, pin: string) => request<Profile>('POST', '/profiles', { name, level, pin }),
+  deleteChild: (id: number, confirm: string) => request<null>('POST', `/profiles/${id}/delete`, { confirm }),
+  devices: () => request<Device[]>('GET', '/devices'),
+  deviceCode: (name: string) => request<{ code: string; expires_at: string }>('POST', '/devices/code', { name }),
+  removeDevice: (id: number) => request<null>('DELETE', `/devices/${id}`),
+  families: () => request<FamilyRow[]>('GET', '/families'),
+  inviteFamily: (note: string) => request<Link>('POST', '/families/invitations', { note }),
   backups: () => request<BackupStatus>('GET', '/backups'),
   profiles: () => request<Profile[]>('GET', '/profiles'),
   dashboard: (id: number) => request<Dashboard>('GET', `/profiles/${id}/dashboard`),

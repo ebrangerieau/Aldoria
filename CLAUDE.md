@@ -37,7 +37,7 @@ uv run --directory api ruff check .
 ```
 
 Jeu sur PC contre l'API locale (Docker, port 8098) — options réservées au PC, ignorées sur le web :
-`godot --path game -- --autologin=<id> --pin=<code> [--goto=donjon|village|defi|arene|archives] [--dungeon=<code>]
+`godot --path game -- --autologin=<id> --pin=<code> [--pair=<code à 8 chiffres>] [--goto=donjon|village|defi|arene|archives] [--dungeon=<code>]
 [--room=N] [--approach=1] [--npc=<code>] [--autoaction=chapitre] [--screenshot=x.png --shot-delay=4]`.
 Galerie avec aménagements : `--acc=read_aloud,spacing,readable_font,math_tools,… [--text-size=1] [--tools=table]
 [--wrong=1]` (outils ouverts, panneau d'explication).
@@ -46,7 +46,9 @@ Galerie avec aménagements : `--acc=read_aloud,spacing,readable_font,math_tools,
 `--room` démarre le donjon dans la salle N (0 à 5) ;
 `--approach` mène le héros au premier ennemi ou piédestal de la salle (captures d'un combat, d'une énigme) ;
 `--autoaction` choisit une action dans l'arène.
-Profils locaux : `docker exec <conteneur api> python -m app.cli create --name … --level 6e|2nde --avatar … --pin …`.
+Profils locaux : `docker exec <conteneur api> python -m app.cli create --family 1 --name … --level 6e|2nde --pin …`.
+Un PC ou un navigateur neuf doit être relié à la famille : `python -m app.cli pairing-code --family 1 --name PC`
+donne un code à passer une fois avec `--pair=` (enregistré ensuite dans `user://device.json`).
 
 Test de bout en bout **dans le navigateur** (à lancer avant tout déploiement touchant le réseau,
 l'interface ou les polices) : `powershell -File tools/e2e_web.ps1` — export web, nginx + API + PostgreSQL
@@ -107,8 +109,14 @@ Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-
 - Options de test : `?quality=haut|tablette|bas`, `?perf`, `?scale=`, `?lights=fake|real|0`, `?vertex=0|1`,
   `?shadows=0`, `?merge=0` dans l'URL (web) ou `-- --quality=bas` (PC).
 - JSON en snake_case, dates ISO 8601 UTC, erreurs `{"error": {"code", "message"}}`.
-- API parent (`/api/v1/admin`) : jamais de route parent sans la dépendance `CurrentParent` (secret
-  `X-Aldoria-Admin-Key` posé par Traefik + identité TinyAuth dans `ALDORIA_ADMIN_USERS`).
+- Plusieurs familles : enfants, banque de questions, appareils, adultes et décisions « hors programme »
+  (`family_notion`) appartiennent à une famille. API parent (`/api/v1/admin`) : jamais de route sans
+  `CurrentParent` (accounts.py : secret `X-Aldoria-Admin-Key` posé par Traefik, session d'un adulte dans un
+  cookie, `X-Requested-With: aldoria` pour une modification), et toute requête filtre sur
+  `parent.family_id` (un enfant d'une autre famille est « inconnu », 404 : `admin._profile`). Côté jeu, la liste
+  des enfants et la connexion exigent un appareil relié (`CurrentDevice`, en-tête `X-Aldoria-Device`).
+  Effacement d'un enfant ou d'une famille : `erasure.py` (toute nouvelle table liée à un enfant y est ajoutée).
+  Exploitant (`adult.is_operator`) : familles et sauvegardes (`CurrentOperator`).
   L'espace parent n'utilise aucun style en ligne (CSP `style-src 'self'`) : graphiques en SVG.
   Toute fonction ajoutée ou modifiée dans l'espace parent est décrite dans son guide (`admin/src/Guide.tsx`),
   en langage simple, avec les étapes pour s'en servir.

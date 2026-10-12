@@ -2,6 +2,8 @@ extends Node
 ## Client HTTP de l'API (TRD §2.3). Chaque appel renvoie un dictionnaire :
 ## {ok: bool, status: int, data: Variant, error: {code, message, details?}}.
 ## Une erreur réseau (status 0) bascule `online` à faux, sans bloquer le jeu.
+## L'appareil est relié à une famille par un code à 8 chiffres créé par un parent
+## (`pair`) : son jeton accompagne chaque requête (en-tête X-Aldoria-Device).
 
 signal online_changed(online: bool)
 
@@ -14,14 +16,38 @@ const NETWORK_RESULTS := [
 ]
 # 127.0.0.1 et non localhost : Godot essaie d'abord IPv6 (::1), où Docker n'écoute pas.
 const DEFAULT_DEV_API := "http://127.0.0.1:8098"
+const DEVICE_FILE := "user://device.json"
 
 var base_url := ""
 var token := ""
+var device_token := ""
 var online := true
 
 
 func _ready() -> void:
 	base_url = _detect_base_url()
+	if FileAccess.file_exists(DEVICE_FILE):
+		var stored: Variant = JSON.parse_string(FileAccess.get_file_as_string(DEVICE_FILE))
+		if stored is Dictionary:
+			device_token = str(stored.get("token", ""))
+
+
+## Relie l'appareil à une famille (code donné par un parent, espace parent → Famille).
+func pair(code: String) -> Dictionary:
+	var res := await post_json("/play/devices/pair", {"code": code}, false)
+	if res.ok:
+		device_token = str(res.data["device_token"])
+		var file := FileAccess.open(DEVICE_FILE, FileAccess.WRITE)
+		if file:
+			file.store_string(JSON.stringify({"token": device_token, "family": res.data["family"]}))
+	return res
+
+
+## Appareil retiré par un parent (ou jeton perdu) : il faudra un nouveau code.
+func forget_device() -> void:
+	device_token = ""
+	if FileAccess.file_exists(DEVICE_FILE):
+		DirAccess.remove_absolute(DEVICE_FILE)
 
 
 func get_json(path: String, auth := true) -> Dictionary:
@@ -47,6 +73,8 @@ func _request(method: HTTPClient.Method, path: String, body: Variant, auth: bool
 	var headers := PackedStringArray(["Content-Type: application/json", "Accept: application/json"])
 	if auth and token != "":
 		headers.append("Authorization: Bearer %s" % token)
+	if device_token != "":
+		headers.append("X-Aldoria-Device: %s" % device_token)
 	var payload := "" if body == null else JSON.stringify(body)
 	var err := http.request(base_url + path, headers, method, payload)
 	if err != OK:

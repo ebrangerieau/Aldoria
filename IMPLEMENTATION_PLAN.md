@@ -373,6 +373,13 @@ séparation des hôtes (secret `X-Aldoria-Admin-Key`) et limite le débit des ro
   parents, registre, durée de conservation, hébergement UE), la règle « aucune donnée hors du foyer » devient
   « aucune donnée hors du serveur d'Aldoria ».
 
+> ✅ **Réalisé le 2026-10-12** (migration 0008 ; tests : 390 API dont 10 sur les familles, 90 jeu, parcours
+> navigateur avec liaison de l'appareil, connexion d'un adulte, onglets Famille et Exploitation). Limitation de
+> débit Traefik : 20 essais par minute et par IP sur la connexion des enfants, la liaison d'un appareil, la
+> connexion des adultes et les invitations. Écarts : pas d'e-mail envoyé par le serveur (liens à copier) ; la
+> suppression d'une famille par l'exploitant lui-même se fait en ligne de commande ; l'avatar d'un enfant créé
+> dans l'espace parent suit sa classe (le jeu n'affiche pas d'avatar).
+
 ### Phases suivantes (à détailler le moment venu)
 
 - **V2** : français et langues vivantes ; génération d'items par IA validée par le parent (route admin uniquement, sortie JSON validée par le schéma, statut `brouillon`) ; **grimoire Python** (Pyodide 314 auto-hébergé, Web Worker, `aldoriaPy.run(code, tests)` appelé via `JavaScriptBridge` avec des callbacks conservés en variables membres et des échanges en JSON, délai par `terminate()`) ; cinématiques ; résumé hebdomadaire au parent ; lecture vocale.

@@ -1,28 +1,42 @@
-// Test de bout en bout de l'espace parent sur le banc local (TinyAuth simulé par le
-// proxy edge) : tableau de bord (indicateurs) → Programme (changement de statut) →
-// Questions (générateurs, création d'une question avec aperçu, import vérifié) →
-// Signalements → Réglages.
-// Recette de sécurité : sur l'hôte public, un Remote-User forgé n'ouvre pas l'API parent.
+// Test de bout en bout de l'espace parent sur le banc local (le proxy edge joue Traefik) :
+// connexion (mauvais puis bon mot de passe) → tableau de bord (indicateurs) → Programme →
+// Questions (générateurs, création d'une question avec aperçu, import vérifié) → Signalements
+// → Réglages → Famille (enfant ajouté puis supprimé, lien d'invitation, code d'appareil)
+// → Exploitation (sauvegardes) → Guide → déconnexion.
+// Recette de sécurité : sur l'hôte public, même avec une session valide, l'API parent n'existe pas.
 //
-// Usage : node admin_flow.js <url admin> <url publique> <dossier captures>
+// Usage : node admin_flow.js <url admin> <url publique> <dossier captures> <e-mail> <mot de passe>
 const { chromium } = require('playwright-core');
 
 (async () => {
-  const [adminUrl, publicUrl, outDir] = process.argv.slice(2);
+  const [adminUrl, publicUrl, outDir, email, password] = process.argv.slice(2);
   const browser = await chromium.launch({ channel: 'msedge', headless: true });
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   const problems = [];
   const api = [];
-  page.on('console', (m) => { if (m.type() === 'error') problems.push(`console: ${m.text()}`); });
+  page.on('console', (m) => {
+    // Le navigateur journalise les réponses 401 attendues (voir plus bas) : elles ne comptent pas.
+    if (m.type() === 'error' && !m.text().includes('status of 401')) problems.push(`console: ${m.text()}`);
+  });
   page.on('pageerror', (e) => problems.push(`pageerror: ${e.message}`));
   page.on('response', (r) => {
     if (!r.url().includes('/api/')) return;
     api.push(`${r.status()} ${r.request().method()} ${new URL(r.url()).pathname}`);
+    // Attendus : /me avant connexion, puis le mauvais mot de passe.
+    if (r.status() === 401 && (r.url().endsWith('/admin/me') || r.url().endsWith('/admin/login'))) return;
     if (r.status() >= 300) problems.push(`api: ${r.status()} ${r.url()}`);
   });
   const shot = (name) => page.screenshot({ path: `${outDir}/admin_${name}.png`, fullPage: true });
 
   await page.goto(adminUrl);
+  await page.getByRole('heading', { name: 'Connexion' }).waitFor({ timeout: 15000 });
+  await page.getByLabel('E-mail').fill(email);
+  await page.getByLabel('Mot de passe').fill('pas le bon mot de passe');
+  await page.getByRole('button', { name: 'Se connecter' }).click();
+  await page.getByText('E-mail ou mot de passe incorrect.').waitFor();
+  await shot('0_connexion');
+  await page.getByLabel('Mot de passe').fill(password);
+  await page.getByRole('button', { name: 'Se connecter' }).click();
   await page.getByText('À retravailler').waitFor({ timeout: 15000 });
   await page.getByText('Objectifs du projet').waitFor();
   await shot('1_tableau_de_bord');
@@ -92,10 +106,6 @@ const { chromium } = require('playwright-core');
   await page.getByRole('button', { name: 'Tout désactiver' }).click();
   await page.locator('#amenagements').getByRole('button', { name: 'Enregistrer' }).click();
   await page.waitForResponse((r) => r.url().includes('/accommodations') && r.request().method() === 'PUT');
-  // Sauvegardes : le service du banc a fait sa première sauvegarde, pas encore de copie à la maison.
-  await page.locator('#sauvegardes').getByText('✓ Dernière sauvegarde').waitFor();
-  await page.locator('#sauvegardes').getByText('Aucune copie à la maison').waitFor();
-  await page.locator('#sauvegardes').screenshot({ path: `${outDir}/admin_8b_sauvegardes.png` });
   await page.getByRole('button', { name: /Tom/ }).click();
   await page.waitForTimeout(800);
   // Code secret : deux saisies différentes bloquent le bouton ; puis le même code que
@@ -110,6 +120,36 @@ const { chromium } = require('playwright-core');
   if ((await code.getByLabel('Nouveau code').inputValue()) !== '') problems.push('le code reste affiché après le changement');
   await shot('8_reglages_tom');
 
+  // Famille : un enfant ajouté puis supprimé (banc réutilisé), un lien d'invitation, un code d'appareil.
+  await page.getByRole('button', { name: 'Famille', exact: true }).click();
+  const kids = page.locator('#enfants');
+  await kids.getByLabel('Prénom').fill('Zoé');
+  await kids.getByLabel('Code secret (4 chiffres)').fill('2468');
+  await kids.getByLabel('Encore une fois').fill('2468');
+  await kids.getByRole('button', { name: 'Ajouter' }).click();
+  await kids.getByText('Enfant ajouté ✓').waitFor();
+  await page.getByRole('button', { name: /^Zoé/ }).waitFor();
+  await page.locator('#adultes').getByRole('button', { name: "Créer un lien d'invitation" }).click();
+  const link = await page.locator('#adultes').getByLabel('Lien à transmettre').inputValue();
+  if (!link.includes('/#invitation=')) problems.push(`lien d'invitation inattendu : ${link}`);
+  await page.locator('#appareils').getByLabel("Nom de l'appareil").fill('Tablette du banc');
+  await page.locator('#appareils').getByRole('button', { name: 'Créer un code' }).click();
+  const pairingCode = await page.locator('.pairing-code').innerText();
+  if (!/^\d{4} \d{4}$/.test(pairingCode)) problems.push(`code d'appareil inattendu : ${pairingCode}`);
+  await shot('10_famille');
+  const zoe = kids.locator('li', { hasText: 'Zoé' });
+  await zoe.getByRole('button', { name: 'Supprimer…' }).click();
+  await zoe.getByPlaceholder('Écrivez « Zoé »').fill('Zoé');
+  await zoe.getByRole('button', { name: 'Supprimer', exact: true }).click();
+  await zoe.waitFor({ state: 'detached' });
+  await page.locator('#adultes').getByRole('button', { name: 'Annuler' }).first().click();
+
+  // Exploitation : sauvegardes (le service du banc a fait sa première sauvegarde).
+  await page.getByRole('button', { name: 'Exploitation' }).click();
+  await page.locator('#sauvegardes').getByText('✓ Dernière sauvegarde').waitFor();
+  await page.locator('#familles').getByText('Famille test').or(page.locator('#familles td').first()).first().waitFor();
+  await shot('11_exploitation');
+
   // Guide : bandeau de première visite, puis un bouton « Ouvrir … » mène à la rubrique.
   await page.getByRole('button', { name: 'Guide', exact: true }).click();
   await page.getByRole('heading', { name: "Guide de l'espace parent" }).waitFor();
@@ -121,12 +161,18 @@ const { chromium } = require('playwright-core');
   await page.locator('section.chapter').first().waitFor();
   if ((await page.getByText('Première visite ?').count()) !== 0) problems.push('bandeau du guide encore affiché après lecture');
 
-  // Recette : Remote-User forgé sur l'hôte public → l'API parent reste introuvable.
+  // Recette : sur l'hôte public, même la session valide du parent n'ouvre pas l'API parent.
+  const session = (await page.context().cookies()).find((c) => c.name === 'aldoria_parent');
+  if (!session || !session.httpOnly || session.sameSite !== 'Strict') problems.push('cookie de session sans HttpOnly / SameSite=Strict');
   const forged = await page.request.get(`${publicUrl}api/v1/admin/profiles`, {
-    headers: { 'Remote-User': 'parent', 'Remote-Email': 'parent@test.local' },
+    headers: { Cookie: `aldoria_parent=${session?.value}`, 'X-Requested-With': 'aldoria' },
   });
-  if (forged.status() !== 404) problems.push(`Remote-User forgé accepté sur l'hôte public (${forged.status()})`);
-  else console.log('Recette : Remote-User forgé sur l\'hôte public → 404');
+  if (forged.status() !== 404) problems.push(`API parent ouverte sur l'hôte public (${forged.status()})`);
+  else console.log("Recette : session du parent présentée sur l'hôte public → 404");
+
+  // Déconnexion : retour à l'écran de connexion.
+  await page.getByRole('button', { name: 'Se déconnecter' }).first().click();
+  await page.getByRole('heading', { name: 'Connexion' }).waitFor();
 
   console.log('Appels API :\n  ' + api.join('\n  '));
   if (problems.length) {

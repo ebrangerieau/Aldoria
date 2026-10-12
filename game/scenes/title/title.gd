@@ -69,13 +69,18 @@ func _build_returning_player(box: VBoxContainer) -> void:
 
 
 ## Développement, PC uniquement : `-- --autologin=<id profil> --pin=<code>`
-## (puis `--goto=donjon|arene|archives`, voir le camp). Jamais sur le web (le code
-## apparaîtrait dans l'URL).
+## (puis `--goto=donjon|arene|archives`, voir le camp) ; `--pair=<code à 8 chiffres>`
+## relie d'abord ce PC à la famille (`python -m app.cli pairing-code`). Jamais sur le
+## web (le code apparaîtrait dans l'URL).
 func _dev_autologin() -> void:
 	var profile_id := Quality.option("autologin")
 	if profile_id == "" or OS.has_feature("web"):
 		return
 	_started = true
+	if Quality.option("pair") != "":
+		var paired := await ApiClient.pair(Quality.option("pair"))
+		if not paired.ok:
+			printerr("[Aldoria/dev] pair : ", paired.error)
 	var res := await Session.login(int(profile_id), Quality.option("pin"))
 	if res.ok:
 		get_tree().change_scene_to_file("res://scenes/hub/hub.tscn")

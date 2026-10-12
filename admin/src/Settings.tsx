@@ -11,7 +11,6 @@ export function Settings({ child }: { child: Profile }) {
       <Accommodations key={`acc-${child.id}`} child={child} />
       <SessionMix key={`mix-${child.id}`} child={child} />
       <NotionsToValidate level={child.level} />
-      <Backups />
       <ResetProfile key={`reset-${child.id}`} child={child} />
     </div>
   )
@@ -128,7 +127,7 @@ function ChildPin({ child }: { child: Profile }) {
 }
 
 // Sauvegardes de la base (toute la famille) : nuit sur le serveur, puis copie à la maison.
-function Backups() {
+export function Backups() {
   const query = useQuery({ queryKey: ['backups'], queryFn: api.backups })
   return (
     <section className="card" id="sauvegardes">
