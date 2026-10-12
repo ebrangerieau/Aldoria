@@ -212,11 +212,9 @@ func _answer(action: String, correct: bool) -> void:
 	var panel: QuestionPanel = await _wait_for(QuestionPanel)
 	assert_not_null(panel, "panneau de question")
 	var answer: Dictionary = panel.item["answer"]
-	var value: Variant = "0/7"
-	if answer["kind"] == "choice":
-		value = int(answer["index"]) if correct else 99
-	elif correct:
-		value = answer["value"] if answer["kind"] == "vector" else str(answer["value"])
+	var value: Variant = AnswerInputs.correct_for(answer) if correct else "0/7"
+	if not correct and answer["kind"] == "choice":
+		value = 99
 	panel.answered.emit(value, 1500, false)
 	if not correct:
 		var explanation: ExplanationPanel = await _wait_for(ExplanationPanel)
