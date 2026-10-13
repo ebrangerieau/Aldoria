@@ -10,8 +10,10 @@ extends Node
 ## laisse l'ennemi frapper plus fort.
 ##
 ## Boss de synthèse : chaque bonne réponse brise un des BOSS_HITS sceaux (moins avec
-## des critiques, plus avec des indices : de 8 à 12 questions), et la difficulté monte
-## de question en question, quelle que soit l'action choisie.
+## des critiques, plus avec des indices : de 7 à 11 questions), et la difficulté monte
+## de question en question (d'un cran sous le niveau du joueur à un cran au-dessus),
+## quelle que soit l'action choisie. Retours des enfants : 10 sceaux et deux crans
+## au-dessus, c'était trop dur.
 ##
 ## `fight()` rend « victory », « retreat » (héros à 0 PV : la scène le replie, sans
 ## rien lui faire perdre) ou « time_over » (durée de jeu fixée par le parent atteinte).
@@ -24,8 +26,8 @@ const CRIT_MULT := 1.6
 const FAST_MULT := 1.2
 const HINT_MULT := 0.7
 const GUARD_MULT := 0.5  # dégâts subis après une bonne réponse
-const BOSS_HITS := 10
-const BOSS_CRIT_MULT := 1.25  # au mieux 8 questions
+const BOSS_HITS := 8
+const BOSS_CRIT_MULT := 1.25  # au mieux 7 questions
 
 var hero: Fighter
 var hud: CombatHud
@@ -102,11 +104,11 @@ func _turn(action: String, reward_xp: int) -> String:
 	return ""
 
 
-## Difficulté du boss : de un cran sous le niveau du joueur à deux crans au-dessus.
+## Difficulté du boss : d'un cran sous le niveau du joueur à un cran au-dessus.
 func _boss_level(role: String) -> int:
 	var base: int = _boss_base.get(role, 1)
 	var low := maxi(1, base - 1)
-	var high := mini(5, base + 2)
+	var high := mini(5, base + 1)
 	return low + roundi((high - low) * minf(1.0, questions / float(BOSS_HITS - 1)))
 
 

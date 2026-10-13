@@ -23,6 +23,9 @@ var _actions: HBoxContainer
 var _buttons: Dictionary = {}
 var _overlay: VBoxContainer
 var _banner: Label
+var _bubble: PanelContainer
+var _bubble_text: Label
+var _bubble_tween: Tween
 
 
 func setup(wt: WorldTheme, hero_name: String) -> void:
@@ -94,6 +97,19 @@ func setup(wt: WorldTheme, hero_name: String) -> void:
 	_banner.modulate.a = 0.0
 	_banner.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	root.add_child(_banner)
+
+	# Bulle du héros (HeroVoice) : en haut à gauche, sous sa barre de vie, loin du joystick.
+	_bubble = PanelContainer.new()
+	_bubble.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_bubble.position = Vector2(16, 112)
+	_bubble.custom_minimum_size = Vector2(460, 0)
+	_bubble.size = Vector2(460, 0)
+	_bubble.modulate.a = 0.0
+	_bubble_text = UiKit.label("", 22, wt.text)
+	_bubble_text.custom_minimum_size.x = 430
+	_bubble_text.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_bubble.add_child(_bubble_text)
+	root.add_child(_bubble)
 
 	_overlay = VBoxContainer.new()
 	_overlay.alignment = BoxContainer.ALIGNMENT_END
@@ -188,6 +204,24 @@ func banner(text: String, color: Color, duration := 1.1) -> void:
 	tween.tween_property(_banner, "scale", Vector2.ONE, 0.18).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tween.tween_interval(duration)
 	tween.tween_property(_banner, "modulate:a", 0.0, 0.3)
+
+
+## Le héros parle : bulle qui s'efface d'elle-même (le temps de lire), lue à voix haute
+## si la lecture automatique est activée. Ne bloque pas l'exploration.
+func say(text: String) -> void:
+	if text == "":
+		return
+	_bubble_text.text = "« %s »" % text
+	_bubble.reset_size()
+	if _bubble_tween != null:
+		_bubble_tween.kill()
+	_bubble.modulate.a = 0.0
+	_bubble_tween = create_tween()
+	_bubble_tween.tween_property(_bubble, "modulate:a", 1.0, 0.25)
+	_bubble_tween.tween_interval(clampf(2.5 + text.length() * 0.06, 3.5, 9.0))
+	_bubble_tween.tween_property(_bubble, "modulate:a", 0.0, 0.4)
+	if Accessibility.auto_read():
+		Accessibility.say(text)
 
 
 func _refresh_sync() -> void:

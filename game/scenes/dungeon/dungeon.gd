@@ -104,6 +104,7 @@ func _start() -> void:
 		await _message(_def.title, _def.intro, "En avant !")
 	else:
 		_hud.banner("Reprise : %s" % _def.rooms[checkpoint]["title"], Color.WHITE, 1.2)
+	_hud.say(HeroVoice.before_room(_wt.id, _def.rooms, maxi(1, checkpoint), true))
 	_explore()
 	_dev_approach()
 
@@ -345,6 +346,11 @@ func _fight(entry: Dictionary) -> void:
 	enemy.rotation_degrees.y = -65.0
 	_hud.set_enemy_visible(true)
 	if entry["boss"]:
+		# Grand combat : le héros l'aborde avec toutes ses forces.
+		if _hero.fighter.hp < _hero.fighter.max_hp:
+			_hero.fighter.restore()
+			Sfx.play("heal")
+			_fx.rising_sparkles(_hero.fighter.global_position + Vector3(0, 0.8, 0), _wt.good)
 		_hud.banner(spec["name"], _wt.bad, 1.2)
 		enemy.play(["Taunt", "Idle_Combat"])
 	await get_tree().create_timer(0.9).timeout
@@ -367,7 +373,8 @@ func _fight(entry: Dictionary) -> void:
 		"retreat":
 			await _message("Repli", _wt.retreat_text, "Reprendre l'exploration")
 			_hero.fighter.restore()
-			enemy.restore()
+			# Les coups portés restent acquis (rien n'est perdu) : l'ennemi, boss compris,
+			# garde ses blessures et le combat reprend là où il en était.
 			enemy.rotation_degrees.y = -90.0
 			_hero.position = _level.entry_point(entry["room"]) if entry["room"] > 0 else _level.room_origin(0) + Vector3(3, 0, 10)
 			Sfx.play("heal")
@@ -392,6 +399,7 @@ func _check_room_cleared(room: int) -> void:
 	Sfx.play("spell", 0.8)
 	_hud.banner("La porte s'ouvre !", _wt.accent, 1.2)
 	SaveManager.set_checkpoint(_def.code, room + 1)
+	_hud.say(HeroVoice.before_room(_wt.id, _def.rooms, room + 1))
 
 
 func _boss_defeated(room: int) -> void:

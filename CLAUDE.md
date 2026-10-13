@@ -113,6 +113,10 @@ Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-
   foi (`api/app/play_time.py`, renvoyé par `login`, `/play/me` et `session/start`), le jeu le relit
   (`Session.sync_play_time`, `time_over`, `rest_text`). Le camp refuse de lancer une activité tant que la pause n'est pas finie.
 - Combat : `Encounter` (core/combat) est partagé par l'arène et le donjon ; une scène ne réécrit pas le tour par tour.
+  Boss : `BOSS_HITS` sceaux, difficulté d'un cran sous le niveau à un cran au-dessus ; forces rendues avant le boss ;
+  après un repli, l'ennemi garde ses blessures (rien n'est perdu).
+- Le héros parle entre les salles (`HeroVoice`, core/world ; bulle `CombatHud.say`, lue si lecture automatique) :
+  phrases par ton de monde, combinées, les dernières dites ne reviennent pas.
 - Progression du joueur : `SaveManager` (XP, donjons, bestiaire, défis quotidiens), jamais de fichier de
   sauvegarde écrit à la main. Défi du jour : règles de série et de coffre dans `DailyChallenge`, sans compte à
   rebours à l'écran (les enfants l'ont vécu comme un chrono).
