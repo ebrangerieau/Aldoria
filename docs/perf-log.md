@@ -66,3 +66,9 @@ Mesures d'Eric, FPS moyen sur 10 s, scène d'étalonnage. Le navigateur se cale 
 - éclairage par sommet sur tablette (`MobileLighting.apply_vertex_shading`) ;
 - pas d'ombres temps réel sur tablette (ombres « peintes » ou blobs sous les personnages si besoin) ;
 - particules et personnages animés : coût négligeable à ce niveau, pas de contrainte particulière.
+
+## 2026-10-13 – Monstres Quaternius (souhait des enfants)
+
+14 monstres animés ajoutés (3,9 Mo de .glb, animations non jouées retirées). Export web : 18,2 → 19,95 Mo
+compressés (+1,75 Mo ; les maillages pèsent plus que les animations, l'élagage n'a gagné que 0,25 Mo).
+À mesurer sur la tablette au prochain test : temps de premier chargement, fps dans une salle à deux monstres.

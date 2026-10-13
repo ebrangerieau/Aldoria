@@ -112,18 +112,18 @@ static func tour_fractions() -> DungeonDef:
 	d.rooms = [
 		{"kind": "entree", "title": "Le Hall d'entrée"},
 		{"kind": "combat", "title": "La Salle des Moitiés", "enemies": [
-			_enemy("Skeleton_Minion", "Petit squelette égaré", 60, 1, 30, Vector2(11, 7)),
+			_enemy("Mushnub", "Champignon des moitiés", 60, 1, 30, Vector2(11, 7)),
 		]},
 		{"kind": "combat", "title": "Le Couloir des Quarts", "enemies": [
 			_enemy("Skeleton_Minion", "Squelette grognon", 70, 2, 35, Vector2(8, 5)),
-			_enemy("Skeleton_Minion", "Squelette farceur", 80, 2, 35, Vector2(12.5, 10)),
+			_enemy("GreenBlob", "Gelée farceuse", 80, 2, 35, Vector2(12.5, 10)),
 		]},
 		{"kind": "enigme", "title": "La Salle des Balances"},
 		{"kind": "combat", "title": "La Galerie des Tiers", "enemies": [
 			_enemy("Skeleton_Warrior", "Gardien des os", 110, 3, 50, Vector2(11, 7)),
 		]},
 		{"kind": "boss", "title": "Le Sommet de la Tour", "enemies": [
-			_enemy("Skeleton_Warrior", "Le Grand Diviseur", 200, 4, 150, Vector2(11, 6), 1.45),
+			_enemy("MushnubEvolved", "Le Grand Diviseur", 200, 4, 150, Vector2(11, 6), 1.45),
 		]},
 	]
 	return d
@@ -145,18 +145,18 @@ static func atelier_balances() -> DungeonDef:
 	d.rooms = [
 		{"kind": "entree", "title": "La Cour de l'Atelier"},
 		{"kind": "combat", "title": "L'Établi des Poids", "enemies": [
-			_enemy("Skeleton_Minion", "Apprenti tout en os", 70, 1, 35, Vector2(11, 7)),
+			_enemy("Goleling", "Petit golem de poids", 70, 1, 35, Vector2(11, 7)),
 		]},
 		{"kind": "combat", "title": "La Réserve des Barres", "enemies": [
 			_enemy("Skeleton_Rogue", "Chapardeur de poids", 80, 2, 40, Vector2(8, 5)),
-			_enemy("Skeleton_Minion", "Squelette mal mesuré", 80, 2, 40, Vector2(12.5, 10)),
+			_enemy("Cactoro", "Cactus mal mesuré", 80, 2, 40, Vector2(12.5, 10)),
 		]},
 		{"kind": "enigme", "title": "La Salle des Cartes"},
 		{"kind": "combat", "title": "Le Comptoir des Échelles", "enemies": [
 			_enemy("Skeleton_Mage", "Arpenteur maudit", 120, 3, 55, Vector2(11, 7)),
 		]},
 		{"kind": "boss", "title": "La Grande Balance", "enemies": [
-			_enemy("Skeleton_Warrior", "Le Faux Peseur", 220, 4, 160, Vector2(11, 6), 1.45),
+			_enemy("GolelingEvolved", "Le Faux Peseur", 220, 4, 160, Vector2(11, 6), 1.45),
 		]},
 	]
 	d.decor = {
@@ -191,18 +191,18 @@ static func observatoire_angles() -> DungeonDef:
 	d.rooms = [
 		{"kind": "entree", "title": "Le Parvis des Étoiles"},
 		{"kind": "combat", "title": "La Galerie des Angles aigus", "enemies": [
-			_enemy("Skeleton_Rogue", "Guetteur pointu", 80, 2, 40, Vector2(11, 7)),
+			_enemy("Armabee", "Abeille pointue", 80, 2, 40, Vector2(11, 7)),
 		]},
 		{"kind": "combat", "title": "La Rotonde des Angles droits", "enemies": [
 			_enemy("Skeleton_Minion", "Squelette à l'équerre", 90, 2, 45, Vector2(8, 5)),
-			_enemy("Skeleton_Mage", "Astrologue d'os", 90, 3, 45, Vector2(12.5, 10)),
+			_enemy("Ghost", "Feu follet astral", 90, 3, 45, Vector2(12.5, 10)),
 		]},
 		{"kind": "enigme", "title": "La Salle des Automates"},
 		{"kind": "combat", "title": "Le Belvédère des Hasards", "enemies": [
 			_enemy("Skeleton_Warrior", "Gardien des dés", 130, 3, 60, Vector2(11, 7)),
 		]},
 		{"kind": "boss", "title": "La Coupole", "enemies": [
-			_enemy("Skeleton_Mage", "L'Astronome Squelette", 240, 5, 170, Vector2(11, 6), 1.45),
+			_enemy("Dragon", "Le Dragon des Constellations", 240, 5, 170, Vector2(11, 6), 1.45),
 		]},
 	]
 	d.decor = {
@@ -238,11 +238,11 @@ static func bibliotheque_langues() -> DungeonDef:
 	d.rooms = [
 		{"kind": "entree", "title": "Le Hall des Langues"},
 		{"kind": "combat", "title": "Le Rayon des Couleurs", "enemies": [
-			_enemy("Skeleton_Minion", "Squelette bavard", 60, 1, 30, Vector2(11, 7)),
+			_enemy("Ghost", "Fantôme des pages", 60, 1, 30, Vector2(11, 7)),
 		]},
 		{"kind": "combat", "title": "La Salle des Dictionnaires", "enemies": [
 			_enemy("Skeleton_Rogue", "Voleur de mots", 75, 2, 35, Vector2(8, 5)),
-			_enemy("Skeleton_Minion", "Squelette muet", 75, 2, 35, Vector2(12.5, 10)),
+			_enemy("GreenBlob", "Gelée d'encre", 75, 2, 35, Vector2(12.5, 10)),
 		]},
 		{"kind": "enigme", "title": "La Salle des Livres en désordre"},
 		{"kind": "combat", "title": "La Galerie des Grammaires", "enemies": [
@@ -293,10 +293,10 @@ static func labyrinthe_vecteurs() -> DungeonDef:
 		]},
 		{"kind": "enigme", "title": "La Salle des Miroirs"},
 		{"kind": "combat", "title": "La Galerie Colinéaire", "enemies": [
-			_enemy("Skeleton_Warrior", "Héraut du Brouillard", 120, 3, 55, Vector2(11, 7)),
+			_enemy("GhostSkull", "Héraut du Brouillard", 120, 3, 55, Vector2(11, 7)),
 		]},
 		{"kind": "boss", "title": "Le Cœur du Labyrinthe", "enemies": [
-			_enemy("Skeleton_Warrior", "L'Architecte du Brouillard", 220, 5, 150, Vector2(11, 6), 1.45),
+			_enemy("BlueDemon", "L'Architecte du Brouillard", 220, 5, 150, Vector2(11, 6), 1.45),
 		]},
 	]
 	return d
@@ -321,7 +321,7 @@ static func forge_algebre() -> DungeonDef:
 			_enemy("Skeleton_Rogue", "Faussaire de formules", 80, 2, 40, Vector2(11, 7)),
 		]},
 		{"kind": "combat", "title": "Le Hall des Équations", "enemies": [
-			_enemy("Skeleton_Warrior", "Marteleur d'inconnues", 90, 3, 45, Vector2(8, 5)),
+			_enemy("Orc", "Marteleur d'inconnues", 90, 3, 45, Vector2(8, 5)),
 			_enemy("Skeleton_Minion", "Soufflet hargneux", 85, 2, 45, Vector2(12.5, 10)),
 		]},
 		{"kind": "enigme", "title": "La Salle des Sceaux"},
@@ -329,7 +329,7 @@ static func forge_algebre() -> DungeonDef:
 			_enemy("Skeleton_Mage", "Fondeur de l'ombre", 130, 4, 60, Vector2(11, 7)),
 		]},
 		{"kind": "boss", "title": "L'Enclume", "enemies": [
-			_enemy("Skeleton_Warrior", "Le Maître de Forge", 240, 5, 170, Vector2(11, 6), 1.45),
+			_enemy("Demon", "Le Maître de Forge", 240, 5, 170, Vector2(11, 6), 1.45),
 		]},
 	]
 	d.decor = {
@@ -367,14 +367,14 @@ static func citadelle_fonctions() -> DungeonDef:
 		]},
 		{"kind": "combat", "title": "Le Chemin de ronde", "enemies": [
 			_enemy("Skeleton_Rogue", "Archer des pentes", 90, 3, 50, Vector2(8, 5)),
-			_enemy("Skeleton_Mage", "Liseur d'ombres", 95, 3, 50, Vector2(12.5, 10)),
+			_enemy("GhostSkull", "Liseur d'ombres", 95, 3, 50, Vector2(12.5, 10)),
 		]},
 		{"kind": "enigme", "title": "La Salle des Vigies"},
 		{"kind": "combat", "title": "La Tour des Variations", "enemies": [
-			_enemy("Skeleton_Warrior", "Capitaine décroissant", 140, 4, 65, Vector2(11, 7)),
+			_enemy("Yeti", "Capitaine décroissant", 140, 4, 65, Vector2(11, 7)),
 		]},
 		{"kind": "boss", "title": "Le Donjon du Veilleur", "enemies": [
-			_enemy("Skeleton_Mage", "Le Seigneur des Courbes", 260, 5, 180, Vector2(11, 6), 1.45),
+			_enemy("Dragon", "Le Seigneur des Courbes", 260, 5, 180, Vector2(11, 6), 1.45),
 		]},
 	]
 	d.decor = {

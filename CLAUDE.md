@@ -133,6 +133,9 @@ Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-
   `vertex_shading`, `shadows`. En `fake`, utiliser `MobileLighting.make_fake_light` ; si `vertex_shading`,
   appliquer `MobileLighting.apply_vertex_shading`. Jamais d'`OmniLight3D` en dur dans une scène.
 - Tout asset ajouté est inscrit dans `game/assets/LICENSES.md`.
+- Monstres (Quaternius, `assets/quaternius/monsters/`, animations importées) : déclarés dans `Fighter.MONSTERS`
+  (hauteur visée ; taille et hauteur au sol calculées) ; `Fighter.play` traduit les noms d'animation KayKit
+  (`MONSTER_ANIMS`). Chemin d'un modèle : `Fighter.model_path`. `tests/unit/test_monsters.gd` vérifie leurs animations.
 - Personnage KayKit ajouté : l'importer sans animations (`animation/import=false` dans son `.import`) et
   l'inscrire dans `Fighter.ANIMATION_DONORS` ; toujours l'instancier par `Fighter.create` ou
   `Fighter.instantiate_model`. Chaque copie des animations pèse 1,3 à 1,8 Mo dans l'export web.

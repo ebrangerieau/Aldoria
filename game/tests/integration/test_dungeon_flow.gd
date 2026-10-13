@@ -164,7 +164,7 @@ func test_every_dungeon_builds_with_its_own_decor_and_enemies() -> void:
 				assert_true(ResourceLoader.exists(DungeonLevel.DUNGEON % piece), "pièce de décor %s" % piece)
 			for room in def.rooms:
 				for enemy in room.get("enemies", []):
-					assert_true(ResourceLoader.exists(Fighter.MODELS % enemy["model"]), enemy["model"])
+					assert_true(ResourceLoader.exists(Fighter.model_path(enemy["model"])), enemy["model"])
 			_scene.queue_free()
 			await wait_process_frames(2)
 

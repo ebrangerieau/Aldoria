@@ -57,8 +57,8 @@ static func lumineux() -> WorldTheme:
 	t.title = "Les Chroniques d'Aldoria"
 	t.companion = true
 	t.hero_name = "Apprenti Archiviste"
-	t.enemy_models = ["Skeleton_Minion", "Skeleton_Minion", "Skeleton_Rogue", "Skeleton_Mage"]
-	t.enemy_names = ["Petit squelette égaré", "Squelette grognon", "Squelette farceur", "Gardien des os"]
+	t.enemy_models = ["Mushnub", "Skeleton_Minion", "GreenBlob", "Goleling", "Cactoro", "Skeleton_Mage"]
+	t.enemy_names = ["Champignon égaré", "Squelette grognon", "Gelée sautillante", "Petit golem", "Cactus piquant", "Gardien des os"]
 	t.action_names = {"automatisme": "Coup d'épée", "chapitre": "Sort d'étoiles", "soin": "Potion"}
 	t.bg = Color("#2b1d3a")
 	t.panel = Color("#fff7e8")
@@ -87,8 +87,8 @@ static func brouillard() -> WorldTheme:
 	t.id = "brouillard"
 	t.title = "Les Chroniques d'Aldoria"
 	t.hero_name = "Archiviste"
-	t.enemy_models = ["Skeleton_Warrior", "Skeleton_Rogue", "Skeleton_Warrior", "Skeleton_Mage"]
-	t.enemy_names = ["Sentinelle du Brouillard", "Spectre d'os", "Gardien oublié", "Héraut du Brouillard"]
+	t.enemy_models = ["Skeleton_Warrior", "GhostSkull", "Orc", "Skeleton_Rogue", "BlueDemon", "Skeleton_Mage"]
+	t.enemy_names = ["Sentinelle du Brouillard", "Spectre du Brouillard", "Orc des brumes", "Spectre d'os", "Démon bleu", "Héraut du Brouillard"]
 	t.action_names = {"automatisme": "Frappe", "chapitre": "Arcane", "soin": "Régénération"}
 	t.bg = Color("#0d1117")
 	t.panel = Color("#161b22")

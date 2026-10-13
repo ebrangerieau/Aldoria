@@ -16,4 +16,6 @@ Chaque phase se termine par une session observée avec chaque enfant (IMPLEMENTA
 4. Une carte d'un monde imaginaire avec les lieux et les progressions possibles. → à concevoir.
 5. Que le héros parle entre les salles : encouragements et indices sur la suite, phrases variées. → fait le jour
    même (`HeroVoice` : phrases combinées, les 24 dernières ne reviennent pas).
-6. Des monstres variés, pas seulement des squelettes. → à concevoir (nouveaux modèles CC0 animés).
+6. Des monstres variés, pas seulement des squelettes. → fait le 2026-10-13 : 14 monstres Quaternius (champignons,
+   gelée, golems, cactus, abeille, fantômes, dragon, démons, orc, yéti), propres à chaque donjon et à l'arène ;
+   les squelettes restent pour moitié environ.
