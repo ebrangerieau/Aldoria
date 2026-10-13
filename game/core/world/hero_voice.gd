@@ -22,6 +22,7 @@ const LINES := {
 			"Hop, la porte est ouverte !", "Mes leçons me servent vraiment.", "Je progresse, je le sens.",
 			"Allez, on continue !", "Rien ne m'arrête aujourd'hui.", "Je n'ai même pas tremblé !",
 			"Encore un mystère résolu.", "Quelle équipe on fait !", "Youpi, la voie est libre !",
+			"On monte, on monte !", "Un étage de plus, et toc !", "Ça grimpe, mais je tiens bon !",
 		],
 		"combat": [
 			"J'entends des os qui craquent derrière la porte.", "Je vois une ombre bouger plus loin.",
@@ -41,7 +42,7 @@ const LINES := {
 			"Le chef des lieux m'attend. Pas de panique : une question à la fois.",
 			"C'est le grand combat. Je suis prêt !", "Le boss est tout proche. Je vais lui montrer ce que je sais.",
 		],
-		"left": ["Encore %d salles avant le boss.", "Il reste %d salles à traverser.", "Plus que %d salles jusqu'au bout !"],
+		"left": ["Encore %d étages avant le boss.", "Il reste %d étages à grimper.", "Plus que %d étages jusqu'au sommet !"],
 	},
 	"brouillard": {
 		"start": [
@@ -51,7 +52,7 @@ const LINES := {
 		"cleared": [
 			"Une de moins.", "Le Brouillard recule.", "Propre.", "Ça avance.", "Méthodique. Efficace.",
 			"Archive suivante.", "Je garde le rythme.", "Rien d'insurmontable.", "Proprement réglé.",
-			"La lumière revient, peu à peu.",
+			"La lumière revient, peu à peu.", "Un étage plus haut.", "On grimpe. Le sommet approche.",
 		],
 		"combat": [
 			"Des pas derrière la porte. Il va falloir se battre.", "Une silhouette dans le Brouillard. Combat en vue.",
@@ -65,7 +66,7 @@ const LINES := {
 			"Dernière porte. Le maître des lieux m'attend.", "Le boss est là. Une question à la fois.",
 			"Fin du parcours. Tout ce que je sais va servir.", "Le cœur du donjon. Calme et précision.",
 		],
-		"left": ["Encore %d salles.", "%d salles avant le cœur du donjon.", "Il en reste %d."],
+		"left": ["Encore %d étages.", "%d étages avant le sommet.", "Il en reste %d."],
 	},
 }
 

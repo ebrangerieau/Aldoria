@@ -22,7 +22,7 @@ func test_hint_matches_the_next_room() -> void:
 	assert_true(bank["enigme"].any(func(l: String) -> bool: return l in before_enigma), before_enigma)
 	var before_boss := HeroVoice.before_room("lumineux", rooms, 5)
 	assert_true(bank["boss"].any(func(l: String) -> bool: return l in before_boss), before_boss)
-	assert_false("salles" in before_boss, "pas de décompte devant le boss")
+	assert_false("étages" in before_boss, "pas de décompte devant le boss")
 	var first := HeroVoice.before_room("lumineux", rooms, 1, true)
 	assert_true(bank["start"].any(func(l: String) -> bool: return l.begins_with(first.get_slice(" ", 0))), first)
 	assert_string_contains(first, "4")

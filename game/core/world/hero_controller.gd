@@ -21,6 +21,8 @@ var fighter: Fighter
 var controls_enabled := true
 ## Joystick virtuel : x vers la droite, y vers le bas de l'écran (= vers le sud).
 var stick_vector := Vector2.ZERO
+## Hauteur du sol sous le héros (donjon qui monte : DungeonLevel.height_at) ; vide : sol à 0.
+var floor_height: Callable
 var _waypoints: Array[Vector3] = []
 var _stuck_time := 0.0
 
@@ -91,7 +93,7 @@ func _physics_process(delta: float) -> void:
 		_waypoints.clear()
 	velocity = velocity.move_toward(wish * SPEED, ACCEL * delta)
 	move_and_slide()
-	position.y = 0.0
+	position.y = floor_height.call(position) if floor_height.is_valid() else 0.0
 	_animate(delta)
 
 

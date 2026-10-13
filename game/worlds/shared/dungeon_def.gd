@@ -11,7 +11,8 @@ extends Resource
 ##
 ## Salles, d'ouest en est : `kind` = entree | combat | enigme | boss.
 ## Ennemi : {model, name, hp, tier (force), xp, at: Vector2 (position dans la salle,
-## en mètres depuis son coin nord-ouest), scale}.
+## en mètres depuis son coin nord-ouest), scale}. Le quart est de la salle, autour de la
+## porte (x > 11, z de 7 à 13), est réservé à l'escalier qui monte vers la salle suivante.
 ## Décor (`decor`, lu par DungeonLevel) : sol, murs du fond, bannières, objets le long
 ## des murs, couleur des torches. Absent : décor de la Tour et du Labyrinthe.
 
@@ -116,7 +117,7 @@ static func tour_fractions() -> DungeonDef:
 		]},
 		{"kind": "combat", "title": "Le Couloir des Quarts", "enemies": [
 			_enemy("Skeleton_Minion", "Squelette grognon", 70, 2, 35, Vector2(8, 5)),
-			_enemy("GreenBlob", "Gelée farceuse", 80, 2, 35, Vector2(12.5, 10)),
+			_enemy("GreenBlob", "Gelée farceuse", 80, 2, 35, Vector2(10.5, 14)),
 		]},
 		{"kind": "enigme", "title": "La Salle des Balances"},
 		{"kind": "combat", "title": "La Galerie des Tiers", "enemies": [
@@ -149,7 +150,7 @@ static func atelier_balances() -> DungeonDef:
 		]},
 		{"kind": "combat", "title": "La Réserve des Barres", "enemies": [
 			_enemy("Skeleton_Rogue", "Chapardeur de poids", 80, 2, 40, Vector2(8, 5)),
-			_enemy("Cactoro", "Cactus mal mesuré", 80, 2, 40, Vector2(12.5, 10)),
+			_enemy("Cactoro", "Cactus mal mesuré", 80, 2, 40, Vector2(10.5, 14)),
 		]},
 		{"kind": "enigme", "title": "La Salle des Cartes"},
 		{"kind": "combat", "title": "Le Comptoir des Échelles", "enemies": [
@@ -195,7 +196,7 @@ static func observatoire_angles() -> DungeonDef:
 		]},
 		{"kind": "combat", "title": "La Rotonde des Angles droits", "enemies": [
 			_enemy("Skeleton_Minion", "Squelette à l'équerre", 90, 2, 45, Vector2(8, 5)),
-			_enemy("Ghost", "Feu follet astral", 90, 3, 45, Vector2(12.5, 10)),
+			_enemy("Ghost", "Feu follet astral", 90, 3, 45, Vector2(10.5, 14)),
 		]},
 		{"kind": "enigme", "title": "La Salle des Automates"},
 		{"kind": "combat", "title": "Le Belvédère des Hasards", "enemies": [
@@ -242,7 +243,7 @@ static func bibliotheque_langues() -> DungeonDef:
 		]},
 		{"kind": "combat", "title": "La Salle des Dictionnaires", "enemies": [
 			_enemy("Skeleton_Rogue", "Voleur de mots", 75, 2, 35, Vector2(8, 5)),
-			_enemy("GreenBlob", "Gelée d'encre", 75, 2, 35, Vector2(12.5, 10)),
+			_enemy("GreenBlob", "Gelée d'encre", 75, 2, 35, Vector2(10.5, 14)),
 		]},
 		{"kind": "enigme", "title": "La Salle des Livres en désordre"},
 		{"kind": "combat", "title": "La Galerie des Grammaires", "enemies": [
@@ -289,7 +290,7 @@ static func labyrinthe_vecteurs() -> DungeonDef:
 		]},
 		{"kind": "combat", "title": "La Salle des Translations", "enemies": [
 			_enemy("Skeleton_Minion", "Spectre d'os", 80, 2, 40, Vector2(8, 5)),
-			_enemy("Skeleton_Warrior", "Gardien oublié", 90, 3, 40, Vector2(12.5, 10)),
+			_enemy("Skeleton_Warrior", "Gardien oublié", 90, 3, 40, Vector2(10.5, 14)),
 		]},
 		{"kind": "enigme", "title": "La Salle des Miroirs"},
 		{"kind": "combat", "title": "La Galerie Colinéaire", "enemies": [
@@ -322,7 +323,7 @@ static func forge_algebre() -> DungeonDef:
 		]},
 		{"kind": "combat", "title": "Le Hall des Équations", "enemies": [
 			_enemy("Orc", "Marteleur d'inconnues", 90, 3, 45, Vector2(8, 5)),
-			_enemy("Skeleton_Minion", "Soufflet hargneux", 85, 2, 45, Vector2(12.5, 10)),
+			_enemy("Skeleton_Minion", "Soufflet hargneux", 85, 2, 45, Vector2(10.5, 14)),
 		]},
 		{"kind": "enigme", "title": "La Salle des Sceaux"},
 		{"kind": "combat", "title": "La Fonderie des Inéquations", "enemies": [
@@ -367,7 +368,7 @@ static func citadelle_fonctions() -> DungeonDef:
 		]},
 		{"kind": "combat", "title": "Le Chemin de ronde", "enemies": [
 			_enemy("Skeleton_Rogue", "Archer des pentes", 90, 3, 50, Vector2(8, 5)),
-			_enemy("GhostSkull", "Liseur d'ombres", 95, 3, 50, Vector2(12.5, 10)),
+			_enemy("GhostSkull", "Liseur d'ombres", 95, 3, 50, Vector2(10.5, 14)),
 		]},
 		{"kind": "enigme", "title": "La Salle des Vigies"},
 		{"kind": "combat", "title": "La Tour des Variations", "enemies": [

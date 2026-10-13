@@ -14,6 +14,8 @@ const TELEPORT_DISTANCE := 9.0  # héros téléporté (reprise, porte) : le rena
 
 var pet_name := ""
 var _target: Node3D
+## Hauteur du sol (donjon qui monte : DungeonLevel.height_at) ; vide : il garde sa hauteur.
+var floor_height: Callable
 var _trail: Array[Vector3] = []
 var _anim: AnimationPlayer
 var _idle_time := 0.0
@@ -87,6 +89,8 @@ func _physics_process(delta: float) -> void:
 	if to_goal.length() > 0.15:
 		var speed := RUN_SPEED if position.distance_to(hero) > FOLLOW_GAP * 2.2 else WALK_SPEED
 		position += to_goal.normalized() * minf(to_goal.length(), speed * delta)
+		if floor_height.is_valid():
+			position.y = floor_height.call(position)
 		rotation.y = lerp_angle(rotation.y, atan2(to_goal.x, to_goal.z), minf(1.0, 10.0 * delta))
 		_idle_time = 0.0
 		_busy = 0.0

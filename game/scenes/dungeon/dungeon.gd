@@ -48,11 +48,13 @@ func _ready() -> void:
 	_def = DungeonDef.by_code(Session.level(), chosen_code())
 	QuestionService.reset()
 
-	_level = DungeonLevel.new().use_theme(_wt).use_decor(_def.decor)
+	# Donjon qui monte (souhait des enfants) : chaque salle un étage plus haut.
+	_level = DungeonLevel.new().use_theme(_wt).use_decor(_def.decor).use_climb()
 	add_child(_level)
 	_level.build(_def.room_count())
 
 	_hero = HeroController.create(SaveManager.look(), _wt.hero_name, Progression.hero_max_hp(SaveManager.level()))
+	_hero.floor_height = _level.height_at
 	add_child(_hero)
 	_level.adapt_character(_hero)
 
@@ -92,6 +94,7 @@ func _ready() -> void:
 		_pet = Companion.create(SaveManager.look())
 		add_child(_pet)
 		_level.adapt_character(_pet)
+		_pet.floor_height = _level.height_at
 		_pet.follow(_hero)
 	_set_camera_goal(EXPLORE, _explore_target(), true)
 	_refresh_status()
@@ -112,6 +115,17 @@ func _start() -> void:
 ## Développement, PC uniquement : `-- --approach` mène le héros au premier ennemi ou
 ## piédestal de la salle de départ (captures d'écran d'un combat ou d'une énigme).
 func _dev_approach() -> void:
+	if Quality.option("stairs") != "" and not OS.has_feature("web"):
+		# Capture de l'escalier : porte ouverte, le héros monte vers la salle suivante.
+		var from := _level.room_at(_hero.position.x)
+		for entry in _enemies:
+			if entry["room"] == from:
+				entry["defeated"] = true
+				(entry["node"] as Node3D).visible = false
+		_level.open_door(from, false)
+		_hero.position = _level.room_origin(from) + Vector3(DungeonLevel.ROOM_W - DungeonLevel.STAIR_RUN - 3.0, 0, DungeonLevel.DOOR_Z + 1.0)
+		_hero.go_to(_level.path(_hero.position, _level.entry_point(from + 1)))
+		return
 	if Quality.option("approach") == "" or OS.has_feature("web"):
 		return
 	await get_tree().create_timer(0.5).timeout
@@ -312,7 +326,7 @@ func _refresh_status() -> void:
 	if _room < 0:
 		return
 	var xp := SaveManager.xp()
-	_hud.set_status(_def.rooms[_room]["title"], "Niveau %d · %d XP" % [Progression.level_for_xp(xp), xp])
+	_hud.set_status(_def.rooms[_room]["title"], "%s · Niveau %d · %d XP" % [_level.floor_label(_room), Progression.level_for_xp(xp), xp])
 
 
 func _on_level_up(level: int) -> void:
@@ -496,7 +510,7 @@ func _solve_pedestal(p: Dictionary) -> void:
 
 func _explore_target() -> Vector3:
 	var length := _def.room_count() * DungeonLevel.ROOM_W
-	return Vector3(clampf(_hero.position.x, 8.0, length - 8.0), 0, clampf(_hero.position.z, 6.0, 12.0))
+	return Vector3(clampf(_hero.position.x, 8.0, length - 8.0), _level.height_at(_hero.position), clampf(_hero.position.z, 6.0, 12.0))
 
 
 func _set_camera_goal(params: Dictionary, target: Vector3, snap := false) -> void:

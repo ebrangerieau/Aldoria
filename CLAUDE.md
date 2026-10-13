@@ -43,7 +43,7 @@ Galerie avec aménagements : `--acc=read_aloud,spacing,readable_font,math_tools,
 [--wrong=1]` (outils ouverts, panneau d'explication).
 `--goto` part du camp vers une destination (`apparence` : écran de personnalisation) ; `--dungeon` choisit le donjon (code d'un `DungeonDef`, même fermé) ;
 `--npc` place le héros devant un habitant du village et accepte sa quête ;
-`--room` démarre le donjon dans la salle N (0 à 5) ;
+`--room` démarre le donjon dans la salle N (0 à 5) ; `--stairs=1` vide la salle et fait monter le héros par son escalier ;
 `--approach` mène le héros au premier ennemi ou piédestal de la salle (captures d'un combat, d'une énigme) ;
 `--autoaction` choisit une action dans l'arène.
 Profils locaux : `docker exec <conteneur api> python -m app.cli create --family 1 --name … --level 6e|2nde --pin …`.
@@ -68,6 +68,9 @@ Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-
   Un donjon (`DungeonDef`) appartient à une matière (`subject`, une région par matière, un onglet au camp ; dans
   une région, ouverts l'un après l'autre : `DungeonDef.previous`). Son paquet reste dans sa matière (`tracking`).
   Sans automatismes dans la matière, la frappe rapide prend une question du chapitre un cran plus facile.
+  Donjon qui monte (`DungeonLevel.use_climb`, un étage de 4 m par salle, escalier contre le mur est, quart est
+  autour de la porte réservé : pas d'ennemi en x > 11, z de 7 à 13) ; le héros et le compagnon suivent
+  `height_at` (`floor_height`) ; le village reste à plat.
   Il ne transmet que ses chapitres et son générateur d'énigme à
   `session/start` ; `api/tests/test_dungeon.py` vérifie qu'ils existent côté API. Son décor (`decor`) est lu
   par `DungeonLevel`.

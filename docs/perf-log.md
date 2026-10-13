@@ -72,3 +72,9 @@ Mesures d'Eric, FPS moyen sur 10 s, scène d'étalonnage. Le navigateur se cale 
 14 monstres animés ajoutés (3,9 Mo de .glb, animations non jouées retirées). Export web : 18,2 → 19,95 Mo
 compressés (+1,75 Mo ; les maillages pèsent plus que les animations, l'élagage n'a gagné que 0,25 Mo).
 À mesurer sur la tablette au prochain test : temps de premier chargement, fps dans une salle à deux monstres.
+
+## 2026-10-13 – Donjons qui montent
+
+Chaque salle un étage plus haut : un escalier, un mur est et une rangée de murs sous le bord sud par salle
+(fusionnés avec la salle : pas d'appel de dessin en plus). Sur PC, profil haut : 100 à 110 appels de dessin et
+170 000 à 235 000 triangles à l'écran (escalier compris). À mesurer sur la tablette avec le profil « tablette ».

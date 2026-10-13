@@ -10,7 +10,12 @@ extends Node3D
 ## caméra), fausses lumières et éclairage par sommet selon `Quality.settings()`,
 ## particules actives seulement autour de la salle du héros.
 ##
-## Repère d'une salle i : coin nord-ouest en (16·i, 0, 0), x vers l'est, z vers le sud.
+## Repère d'une salle i : coin nord-ouest en (16·i, hauteur, 0), x vers l'est, z vers le sud.
+##
+## Donjon qui monte (`use_climb`, souhait des enfants) : chaque salle est `rise` mètres plus
+## haut que la précédente ; un escalier muré, à l'est de chaque salle, mène à la porte de la
+## suivante. Le héros et le compagnon suivent le sol (`height_at`) ; sous les salles, des murs
+## ferment la vue en coupe. Sans montée (village), la disposition reste à plat.
 
 const TILE := 4.0
 const ROOM_W := 16.0
@@ -23,6 +28,9 @@ const WALL_T := 0.6
 const DUNGEON := "res://assets/kaykit/dungeon/%s.glb"
 const REAL_LIGHTS_DIMMING := 0.75
 const DOOR_OPEN_ANGLE := -1.75  # radians : le battant s'ouvre vers l'est
+const CLIMB_RISE := 4.0  # mètres entre deux salles d'un donjon qui monte (un étage : escalier KayKit à sa taille)
+const STAIR_RUN := 4.0  # longueur de l'escalier (pièce KayKit « stairs », 4 × 5 m)
+const STAIR_HALF := 2.5  # demi-largeur de l'escalier, de part et d'autre de DOOR_Z
 
 var background := Color(0.06, 0.05, 0.09)
 var ambient := Color(0.45, 0.42, 0.55)
@@ -43,6 +51,7 @@ const DEFAULT_PROPS := [
 ]
 
 var room_count := 0
+var rise := 0.0
 var built_settings: Dictionary
 var sun: DirectionalLight3D
 var _material: StandardMaterial3D
@@ -69,6 +78,12 @@ func use_decor(dungeon_decor: Dictionary) -> DungeonLevel:
 
 
 ## Construit `count` salles (à appeler une fois le nœud dans l'arbre).
+## Donjon qui monte : chaque salle plus haut que la précédente, reliées par un escalier.
+func use_climb(height := CLIMB_RISE) -> DungeonLevel:
+	rise = height
+	return self
+
+
 func build(count: int) -> void:
 	room_count = count
 	built_settings = Quality.settings()
@@ -91,7 +106,21 @@ func build(count: int) -> void:
 # --- Repères ---------------------------------------------------------------------
 
 func room_origin(i: int) -> Vector3:
-	return Vector3(i * ROOM_W, 0, 0)
+	return Vector3(i * ROOM_W, i * rise, 0)
+
+
+## Hauteur du sol sous un point : celle de sa salle, ou de l'escalier qui monte vers la suivante.
+func height_at(p: Vector3) -> float:
+	var i := room_at(p.x)
+	var base := i * rise
+	var local := p.x - i * ROOM_W
+	if _has_stairs(i) and local > ROOM_W - STAIR_RUN and absf(p.z - DOOR_Z) < STAIR_HALF:
+		return base + (local - (ROOM_W - STAIR_RUN)) / STAIR_RUN * rise
+	return base
+
+
+func _has_stairs(i: int) -> bool:
+	return rise > 0.0 and i < room_count - 1
 
 
 func room_at(x: float) -> int:
@@ -101,6 +130,11 @@ func room_at(x: float) -> int:
 ## Point d'arrivée dans une salle, juste après la porte ouest.
 func entry_point(i: int) -> Vector3:
 	return room_origin(i) + Vector3(2.5, 0, DOOR_Z)
+
+
+## Étage d'une salle pour l'affichage (« Étage 3 / 6 »).
+func floor_label(i: int) -> String:
+	return "Étage %d / %d" % [i + 1, room_count]
 
 
 func is_door_open(i: int) -> bool:
@@ -118,10 +152,16 @@ func path(from: Vector3, to: Vector3) -> Array[Vector3]:
 	while i != b:
 		var door := mini(i, i + step)
 		var door_x := (door + 1) * ROOM_W
+		# Escalier : on y entre et on en sort par son pied, à l'ouest de la porte.
+		var foot := Vector3(door_x - STAIR_RUN - 0.6, 0, DOOR_Z)
+		if _has_stairs(door) and step > 0:
+			points.append(foot)
 		points.append(Vector3(door_x - step * 1.2, 0, DOOR_Z))
 		if not is_door_open(door):
 			return points
 		points.append(Vector3(door_x + step * 1.2, 0, DOOR_Z))
+		if _has_stairs(door) and step < 0:
+			points.append(foot)
 		i += step
 	points.append(Vector3(to.x, 0, clampf(to.z, 0.8, ROOM_D - 0.8)))
 	return points
@@ -152,9 +192,9 @@ func _make_door(i: int, room: Node3D, doorway: Node3D) -> void:
 	leaf.reparent(room)  # garde sa position ; exclu de la fusion pour pouvoir pivoter
 	var shape := CollisionShape3D.new()
 	var box := BoxShape3D.new()
-	box.size = Vector3(WALL_T, 4, DOOR_HALF * 2 + 0.4)
+	box.size = Vector3(WALL_T, 8, DOOR_HALF * 2 + 0.4)
 	shape.shape = box
-	shape.position = Vector3(i * ROOM_W, 2, DOOR_Z)
+	shape.position = Vector3(i * ROOM_W, i * rise + 2, DOOR_Z)
 	_body.add_child(shape)
 	_doors[i - 1] = {"leaf": leaf, "shape": shape}
 
@@ -227,8 +267,10 @@ func _build_room(i: int) -> void:
 	if i == room_count - 1:
 		for iz in TILES_Z:
 			_place(static_root, "wall", Vector3(ROOM_W, 0, 2 + iz * TILE), -90.0)
+	elif rise > 0.0:
+		_build_climb(i, static_root)
 	_place(static_root, "pillar_decorated", Vector3(0, 0, 0))
-	if i == room_count - 1:
+	if i == room_count - 1 or rise > 0.0:
 		_place(static_root, "pillar_decorated", Vector3(ROOM_W, 0, 0))
 
 	# Décor contre les murs (jamais sur le passage des portes ni au centre).
@@ -246,23 +288,53 @@ func _build_room(i: int) -> void:
 		_place(static_root, "torch_mounted", Vector3(x, 2.2, 0.1))
 		_add_torch(room, i, Vector3(x, 3.0, 0.7))
 	_add_dust(room, i)
+	if rise > 0.0:
+		_build_foundation(static_root)
 
 	if Quality.option("merge", "1") != "0":
 		StaticBatcher.merge(static_root, _material)
 
 
+## Escalier d'une salle vers la suivante, contre son mur est : muret côté escalier (la
+## porte de la salle suivante est au-dessus), mur plein ailleurs, murs sous la salle.
+func _build_climb(i: int, root: Node3D) -> void:
+	for iz in TILES_Z:
+		var wall := _place(root, "wall", Vector3(ROOM_W, 0, 2 + iz * TILE), -90.0)
+		if iz == 2:
+			wall.scale.y = rise / 4.0  # sous la porte de la salle suivante
+	# La pièce monte vers l'est une fois tournée de -90° ; 4 m de haut à l'échelle 1.
+	var stairs := _place(root, "stairs", Vector3(ROOM_W - STAIR_RUN / 2.0, 0, DOOR_Z), -90.0)
+	stairs.scale = Vector3(1, rise / 4.0, 1)
+
+
+## Mur sous le bord sud d'une salle (vue en coupe : pas de sol flottant). Une rangée suffit :
+## les caméras d'exploration et de combat ne voient guère plus bas que le sol.
+func _build_foundation(root: Node3D) -> void:
+	for ix in TILES_X:
+		_place(root, "wall", Vector3(2 + ix * TILE, -4.0, ROOM_D), 180.0)
+
+
 func _build_colliders() -> void:
 	var length := room_count * ROOM_W
-	_box(Vector3(length / 2.0, 2, -WALL_T / 2.0), Vector3(length, 4, WALL_T))  # nord
-	_box(Vector3(length / 2.0, 2, ROOM_D + 0.3), Vector3(length, 4, WALL_T))  # bord sud
-	_box(Vector3(-WALL_T / 2.0, 2, ROOM_D / 2.0), Vector3(WALL_T, 4, ROOM_D))  # ouest
-	_box(Vector3(length + WALL_T / 2.0, 2, ROOM_D / 2.0), Vector3(WALL_T, 4, ROOM_D))  # est
+	# Murs assez hauts pour toutes les salles (donjon qui monte).
+	var top := (room_count - 1) * rise + 4.0
+	var mid := top / 2.0
+	var tall := top + 4.0
+	_box(Vector3(length / 2.0, mid, -WALL_T / 2.0), Vector3(length, tall, WALL_T))  # nord
+	_box(Vector3(length / 2.0, mid, ROOM_D + 0.3), Vector3(length, tall, WALL_T))  # bord sud
+	_box(Vector3(-WALL_T / 2.0, mid, ROOM_D / 2.0), Vector3(WALL_T, tall, ROOM_D))  # ouest
+	_box(Vector3(length + WALL_T / 2.0, mid, ROOM_D / 2.0), Vector3(WALL_T, tall, ROOM_D))  # est
 	for i in range(1, room_count):  # séparations, avec l'ouverture de la porte
 		var x := i * ROOM_W
 		var north := DOOR_Z - DOOR_HALF
 		var south := ROOM_D - (DOOR_Z + DOOR_HALF)
-		_box(Vector3(x, 2, north / 2.0), Vector3(WALL_T, 4, north))
-		_box(Vector3(x, 2, DOOR_Z + DOOR_HALF + south / 2.0), Vector3(WALL_T, 4, south))
+		_box(Vector3(x, mid, north / 2.0), Vector3(WALL_T, tall, north))
+		_box(Vector3(x, mid, DOOR_Z + DOOR_HALF + south / 2.0), Vector3(WALL_T, tall, south))
+		if _has_stairs(i - 1):
+			# Côtés de l'escalier : on y monte par son pied, pas par le flanc.
+			var run_x := x - STAIR_RUN / 2.0 + 0.3
+			for side in [-1.0, 1.0]:
+				_box(Vector3(run_x, mid, DOOR_Z + side * (STAIR_HALF + 0.1)), Vector3(STAIR_RUN - 0.6, tall, 0.3))
 
 
 func _box(center: Vector3, size: Vector3) -> void:

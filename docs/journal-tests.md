@@ -12,7 +12,8 @@ Chaque phase se termine par une session observée avec chaque enfant (IMPLEMENTA
 2. Des récompenses, utiles dans le jeu à certains moments. → fait le jour même : sac de quatre objets choisis par
    Eric (plume du sage, parchemin d'indice, bouclier, potion d'urgence), gagnés au coffre d'un donjon, à une énigme,
    au coffre de la semaine, aux quêtes du village et toutes les trois vagues de l'arène.
-3. Dans les donjons, avoir l'impression de monter. → à concevoir (salles à des hauteurs croissantes, escaliers).
+3. Dans les donjons, avoir l'impression de monter. → fait le 2026-10-13 : chaque salle un étage (4 m) plus haut,
+   escalier KayKit vers la porte suivante, « Étage 3 / 6 » en haut de l'écran, le héros parle des étages.
 4. Une carte d'un monde imaginaire avec les lieux et les progressions possibles. → à concevoir.
 5. Que le héros parle entre les salles : encouragements et indices sur la suite, phrases variées. → fait le jour
    même (`HeroVoice` : phrases combinées, les 24 dernières ne reviennent pas).

@@ -199,10 +199,24 @@ func test_tap_path_goes_through_open_doors_only() -> void:
 	await _open("jules")
 	var level: DungeonLevel = _scene._level
 	var to_room_1 := level.path(Vector3(3, 0, 4), level.room_origin(1) + Vector3(8, 0, 4))
-	assert_eq(to_room_1.size(), 3, "porte ouverte : passage puis destination")
+	assert_eq(to_room_1.size(), 4, "porte ouverte : pied de l'escalier, passage, destination")
 	assert_almost_eq(to_room_1[0].z, DungeonLevel.DOOR_Z, 0.01)
 	var to_room_2 := level.path(Vector3(3, 0, 4), level.room_origin(2) + Vector3(8, 0, 4))
-	assert_eq(to_room_2.size(), 3, "arrêt devant la porte fermée")
+	assert_eq(to_room_2.size(), 5, "arrêt devant la porte fermée (en haut du 2e escalier)")
+
+
+func test_dungeon_climbs_one_floor_per_room() -> void:
+	await _open("jules")
+	var level: DungeonLevel = _scene._level
+	var rise := DungeonLevel.CLIMB_RISE
+	assert_eq(level.room_origin(3).y, 3 * rise)
+	var door_z := DungeonLevel.DOOR_Z
+	var foot := level.room_origin(1) + Vector3(DungeonLevel.ROOM_W - DungeonLevel.STAIR_RUN, 0, door_z)
+	assert_almost_eq(level.height_at(foot), rise, 0.01, "pied de l'escalier : sol de la salle")
+	assert_almost_eq(level.height_at(foot + Vector3(DungeonLevel.STAIR_RUN / 2.0, 0, 0)), 1.5 * rise, 0.01, "à mi-hauteur")
+	assert_almost_eq(level.height_at(foot + Vector3(0, 0, 4.0)), rise, 0.01, "à côté de l'escalier : sol plat")
+	assert_eq(level.height_at(level.room_origin(5) + Vector3(15, 0, door_z)), 5 * rise, "pas d'escalier dans la dernière salle")
+	assert_string_contains(level.floor_label(2), "Étage 3 / 6")
 
 
 # --- Aides ----------------------------------------------------------------------
