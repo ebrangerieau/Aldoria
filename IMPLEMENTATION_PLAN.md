@@ -382,11 +382,87 @@ séparation des hôtes (secret `X-Aldoria-Admin-Key`) et limite le débit des ro
 > Bascule terminée le 2026-10-13 : compte d'Eric (exploitant) vérifié, TinyAuth retiré de l'espace parent et
 > `ALDORIA_ADMIN_USERS` supprimé du `.env` du VPS.
 
-### Phases suivantes (à détailler le moment venu)
+### Feuille de route après le MVP (réflexion avec Eric, 2026-10-13)
 
-- **V2** : français et langues vivantes ; génération d'items par IA validée par le parent (route admin uniquement, sortie JSON validée par le schéma, statut `brouillon`) ; **grimoire Python** (Pyodide 314 auto-hébergé, Web Worker, `aldoriaPy.run(code, tests)` appelé via `JavaScriptBridge` avec des callbacks conservés en variables membres et des échanges en JSON, délai par `terminate()`) ; cinématiques ; résumé hebdomadaire au parent ; lecture vocale.
-- **V3** : histoire-géographie, EMC, sciences ; saisons trimestrielles ; arène coopérative si elle est retenue.
-- **V4** : SES, SNT, arts, musique, EPS ; PWA avec cache hors ligne (service worker, en-têtes d'isolation désactivés).
+Trois constats : le jeu ne couvre que les maths ; Jules et Tom vont changer de classe (septembre 2027 :
+Jules en 5e, Tom en 1ère) et le code ne connaît que la 6e et la seconde, chaque niveau étant lié à un monde ;
+l'intérêt s'usera sans renouvellement. Le goulot n'est pas le moteur mais **le contenu** : hors maths, peu de
+générateurs naturels, donc des questions à rédiger.
+
+**Échéances fixes**
+
+| Quand | Quoi |
+| --- | --- |
+| Printemps 2027 | Tom choisit ses spécialités de 1ère (conseil de classe du 2e trimestre) |
+| Juillet – août 2027 | Mode « vacances » : révision de l'année écoulée, préparation de la suivante |
+| Septembre 2027 | Rentrée : Jules en 5e, Tom en 1ère ; programmes, passage de classe et régions prêts |
+| Juin 2028 | Tom : épreuve anticipée de mathématiques et épreuves anticipées de français (fin de 1ère) |
+| Juin 2030 | Jules : diplôme national du brevet (3e) |
+
+**Étape A – Fondations « plusieurs matières, plusieurs niveaux »** (sans contenu nouveau, avant tout le reste)
+- Niveaux en données (6e à terminale) au lieu de `Literal["6e", "2nde"]` et de la table `WORLDS` : un
+  programme (seed) par niveau et par matière ; codes de notion `<niveau>.<matière>.<chapitre>.<notion>`
+  (déjà le format, seule la matière `maths` existe).
+- Générateurs paramétrés par niveau quand une notion se prolonge (fractions, nombres relatifs, équations)
+  plutôt que dupliqués.
+- Monde (ton, palette, compagnon) **séparé de la classe** : choisi par l'enfant ou le parent, et qui peut
+  « grandir » (Jules voudra peut-être un ton plus sombre en 4e). Chaque année ouvre une **nouvelle région**
+  sans effacer les précédentes.
+- Espace parent : la matière devient une dimension (Programme, tableau de bord, banque, indicateurs) ;
+  passage de classe à la rentrée (le parent change la classe, confirmation, historique gardé).
+- Passage de classe côté jeu : héros, XP, apparence, compagnon et bestiaire conservés ; les notions acquises
+  l'année d'avant restent en révision espacée comme prérequis.
+
+**Étape B – Atelier de contenu**
+- Génération assistée par IA (ex-V2) : à partir d'un chapitre, ou d'une photo de la leçon ou du cahier de
+  textes, l'IA propose des questions en `brouillon` (même validation `engine/bank.py`), publiées après relecture
+  du parent. Seul le contenu scolaire est envoyé, jamais de donnée d'enfant ; route parent uniquement.
+- Générateurs hors maths là où c'est naturel : conjugaison et accords, vocabulaire de langue (listes de
+  mots + répétition espacée), frise chronologique, placer un lieu sur une carte.
+- Nouveaux formats de question : réponse écrite tolérante (accents, majuscules) pour l'orthographe ; écoute
+  d'un mot en langue étrangère (synthèse vocale du navigateur dans la langue cible, déjà utilisée pour les
+  « dys ») ; carte ; frise. Chaque format respecte les aménagements (lecture, cibles, sans pénalité de lenteur).
+- Récit : l'Archiviste restaure **tous** les savoirs du royaume ; une matière = une région (Bibliothèque des
+  Langues, Salle des Chroniques, Observatoire…).
+
+**Étape C – Une matière pilote par enfant** (choix à faire avec Eric et les enfants)
+- Tom : le **français** est le candidat le plus utile (épreuves anticipées de juin 2028) ; sinon anglais.
+- Jules : **anglais** (vocabulaire, écoute) ou **histoire-géographie** (frises, cartes).
+- Critère de passage : l'enfant joue la matière pilote spontanément deux semaines de suite.
+
+**Étape D – Rentrée 2027** (prête avant juillet 2027)
+- Programmes de 5e (Jules) et de 1ère (tronc commun + spécialités de Tom, connues au printemps 2027).
+- Mode « vacances » (juillet – août), nouvelle région par enfant, passage de classe testé sur une copie de la
+  base de production.
+
+**Étape E – Ensuite**
+- **Mode examen** (avant juin 2028 pour Tom, puis brevet pour Jules) : date d'examen, compte à rebours et plan
+  de révision à rebours, sujets du type annales, entraînement en conditions (chronomètre facultatif, désactivé
+  par l'aménagement « sans pénalité de lenteur »).
+- **Défi fraternel** : un même combat ou boss partagé où chacun reçoit les questions de sa classe ; en
+  coopération (l'écart d'âge rendrait un duel injuste).
+- **Saisons** trimestrielles (ennemis, cosmétiques, événements) pour l'usure de la nouveauté ; les indicateurs
+  de l'espace parent signalent la baisse d'intérêt.
+- **Apprendre à apprendre** : fiche imprimable des notions fragiles avant un contrôle ; montrer à l'enfant
+  pourquoi une notion revient (« tu l'avais ratée il y a 3 jours »).
+- **Lien avec l'école** : pas d'interface ouverte Pronote / ENT ; une photo du cahier de textes analysée par l'IA
+  pourrait proposer les statuts de chapitres et les dates de contrôle (validés par le parent).
+- **Grimoire Python** pour Tom (SNT, NSI s'il la choisit) : conception inchangée (Pyodide 314 auto-hébergé, Web
+  Worker, `aldoriaPy.run(code, tests)` appelé via `JavaScriptBridge` avec des callbacks conservés en variables
+  membres et des échanges en JSON, délai par `terminate()`).
+- **Hors connexion** (PWA, service worker, en-têtes d'isolation désactivés) : tablette en voiture ou en vacances.
+- **Autres familles** : si l'ouverture se confirme, banque de questions partagée et relue entre familles (en
+  partie la réponse au coût du contenu), après les obligations RGPD du chantier « plusieurs familles ».
+- Toujours au programme : cinématiques, résumé hebdomadaire au parent (dans l'espace parent : le serveur
+  n'envoie pas d'e-mail), autres matières (sciences, EMC, SES, SNT, arts, musique, EPS) au fil des besoins.
+
+**Décisions attendues d'Eric** : matière pilote de chaque enfant (avec eux) ; spécialités envisagées par Tom ;
+degré d'ouverture à d'autres familles (priorité de la banque partagée). À recueillir aussi auprès des enfants
+(`docs/journal-tests.md`) : la matière qu'ils voudraient dans le jeu et ce qui les lasse déjà.
+
+L'ancien découpage V2 / V3 / V4 (par matières : français et langues, puis histoire-géographie et sciences,
+puis le reste) est remplacé par cette feuille de route : on construit d'abord les fondations et l'atelier de
+contenu, puis on ajoute les matières selon les besoins réels des enfants.
 
 ---
 
