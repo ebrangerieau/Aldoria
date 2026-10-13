@@ -90,6 +90,13 @@ Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-
   inconnus ou verrouillés remplacés). Un héros se crée par `Fighter.create_hero(SaveManager.look(), …)` ou
   `HeroController.create(SaveManager.look(), …)` ; tout aventurier KayKit est habillé par `Wardrobe.dress`
   (le .glb contient toutes les armes). Déblocages au niveau ou aux donjons terminés, annoncés au coffre.
+- Classes et mondes (`api/app/engine/levels.py`) : classes de la 6e à la terminale, « disponibles » si leur
+  programme est chargé (`content/seed/<classe>/`) ; jamais de liste de classes écrite en dur ailleurs. Le **monde**
+  (`lumineux` | `brouillard`, choisi par le parent) ne donne que l'ambiance (`WorldTheme`, compagnon) ; la **classe**
+  donne le contenu : `DungeonDef.all_for_level`, `VillageDef.for_level` (vides ou null tant qu'une classe n'a pas
+  ses régions : le camp l'annonce). Passage de classe : `PATCH /admin/profiles/{id}` ; les notions déjà travaillées
+  des classes précédentes reviennent en révision seulement (`tracking._prior_notions`, `NotionInfo.prior`).
+  Le jeu relit le profil au retour au camp (`Session.update_profile`, signal `profile_changed`).
 - Combat : `Encounter` (core/combat) est partagé par l'arène et le donjon ; une scène ne réécrit pas le tour par tour.
 - Progression du joueur : `SaveManager` (XP, donjons, bestiaire, défis quotidiens), jamais de fichier de
   sauvegarde écrit à la main. Défi du jour : règles de série et de coffre dans `DailyChallenge`, sans compte à

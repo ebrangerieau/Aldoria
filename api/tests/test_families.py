@@ -220,13 +220,16 @@ async def test_families_are_sealed_off(client, sessionmaker, profiles, curriculu
     assert (await client.get(f"{ADMIN}/families", headers=martin)).status_code == 403
 
 
-async def test_children_are_created_and_deleted_by_parents(client, sessionmaker, profiles):
+async def test_children_are_created_and_deleted_by_parents(
+    client, sessionmaker, profiles, curriculum
+):
     martin = parent(await _new_family(client, sessionmaker))
     lea = await client.post(
         f"{ADMIN}/profiles", json={"name": "Léa", "level": "2nde", "pin": "1234"}, headers=martin
     )
     assert lea.status_code == 201
-    assert lea.json()["world"] == "tom"
+    assert lea.json()["world"] == "brouillard"
+    assert lea.json()["level_label"] == "Seconde"
     # Même prénom ou même code qu'un enfant de la famille : refusé ; autre famille : libre.
     same = await client.post(
         f"{ADMIN}/profiles", json={"name": "léa", "level": "6e", "pin": "5555"}, headers=martin
@@ -248,7 +251,7 @@ async def test_children_are_created_and_deleted_by_parents(client, sessionmaker,
     assert names == ["Jules"]
 
 
-async def test_devices_pair_and_are_revoked(client, sessionmaker, profiles):
+async def test_devices_pair_and_are_revoked(client, sessionmaker, profiles, curriculum):
     martin = parent(await _new_family(client, sessionmaker))
     await client.post(
         f"{ADMIN}/profiles", json={"name": "Léa", "level": "2nde", "pin": "2468"}, headers=martin
@@ -309,7 +312,7 @@ async def test_profiles_need_a_paired_device(client, profiles):
     assert response.status_code == 401
 
 
-async def test_a_family_is_erased(client, sessionmaker, profiles, login):
+async def test_a_family_is_erased(client, sessionmaker, profiles, login, curriculum):
     session = await _new_family(client, sessionmaker)
     martin = parent(session)
     lea = (

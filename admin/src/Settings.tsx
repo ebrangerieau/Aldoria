@@ -1,11 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { Accommodations } from './Accommodations'
-import { api, ApiError, type BackupStatus, type NotionToValidate, type Profile } from './api'
+import { api, ApiError, LEVEL_LABELS, type BackupStatus, type Level, type NotionToValidate, type Profile, type World } from './api'
 
 export function Settings({ child }: { child: Profile }) {
   return (
     <div className="stack">
+      <ClassAndWorld key={`class-${child.id}`} child={child} />
       <PlayTimeLimit key={child.id} child={child} />
       <ChildPin key={`pin-${child.id}`} child={child} />
       <Accommodations key={`acc-${child.id}`} child={child} />
@@ -44,7 +45,7 @@ function SessionMix({ child }: { child: Profile }) {
           <input type="range" min={0} max={100 - chapter} step={5} value={review} onChange={(e) => setReview(Number(e.target.value))} />
         </label>
         <p>
-          Automatismes (calcul rapide{child.level === '2nde' ? ", format de l'épreuve anticipée" : ''}) : <strong>{automatisms} %</strong>
+          Automatismes (calcul rapide{['2nde', '1ere'].includes(child.level) ? ", format de l'épreuve anticipée" : ''}) : <strong>{automatisms} %</strong>
         </p>
       </div>
       <div className="row">
@@ -53,6 +54,72 @@ function SessionMix({ child }: { child: Profile }) {
         </button>
         {mutation.isSuccess && !changed && <span className="ok">Enregistré ✓</span>}
       </div>
+    </section>
+  )
+}
+
+// Classe (passage de classe à la rentrée) et monde (ambiance) de l'enfant.
+function ClassAndWorld({ child }: { child: Profile }) {
+  const client = useQueryClient()
+  const info = useQuery({ queryKey: ['levels'], queryFn: api.levels })
+  const [level, setLevel] = useState<Level>(child.level)
+  const changeLevel = useMutation({
+    mutationFn: () => api.setLevel(child.id, level),
+    onSuccess: () => client.invalidateQueries(),
+  })
+  const changeWorld = useMutation({
+    mutationFn: (world: World) => api.setWorld(child.id, world),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['profiles'] }),
+  })
+  return (
+    <section className="card" id="classe">
+      <h2>Classe et monde de {child.name}</h2>
+      <form
+        className="row"
+        onSubmit={(e) => {
+          e.preventDefault()
+          changeLevel.mutate()
+        }}
+      >
+        <label>
+          Classe{' '}
+          <select value={level} onChange={(e) => setLevel(e.target.value as Level)}>
+            {info.data?.levels.map((l) => (
+              <option key={l.code} value={l.code} disabled={!l.available}>
+                {l.label}
+                {l.available ? '' : ' (bientôt)'}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button className="primary" type="submit" disabled={level === child.level || changeLevel.isPending}>
+          Passer en {LEVEL_LABELS[level] ?? level}
+        </button>
+      </form>
+      {changeLevel.isError && <p className="status-line bad">{(changeLevel.error as ApiError).message}</p>}
+      <p className="muted small">
+        À la rentrée : le programme, les donjons et le village suivent la nouvelle classe. Le héros, son niveau, son apparence et ses
+        trophées restent ; les notions déjà travaillées l'an dernier reviennent de temps en temps en révision. Pensez ensuite à indiquer les
+        chapitres en cours dans Programme.
+      </p>
+      <div className="row">
+        <span>Monde :</span>
+        {info.data?.worlds.map((w) => (
+          <button
+            key={w.code}
+            className={w.code === child.world ? 'chip active' : 'chip'}
+            aria-pressed={w.code === child.world}
+            disabled={changeWorld.isPending}
+            onClick={() => changeWorld.mutate(w.code)}
+          >
+            {w.label}
+          </button>
+        ))}
+      </div>
+      <p className="muted small">
+        Le monde ne change que l'ambiance (couleurs, ton, compagnon), pas les questions. À choisir avec {child.name} : un enfant qui grandit
+        préfère parfois le Brouillard.
+      </p>
     </section>
   )
 }

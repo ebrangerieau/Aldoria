@@ -7,7 +7,7 @@ extends Control
 const PIN_LENGTH := 4
 const PAIRING_LENGTH := 8
 
-var _wt := WorldTheme.jules()
+var _wt := WorldTheme.lumineux()
 var _root: VBoxContainer
 var _message: Label
 var _profile: Dictionary
@@ -64,7 +64,7 @@ func _load_profiles() -> void:
 	_message.text = "" if not res.data.is_empty() else \
 		"Aucun enfant dans cette famille pour l'instant : un parent peut en ajouter dans l'espace parent (onglet Famille)."
 	for p in res.data:
-		var label := "%s   ·   %s" % [p["name"], "6ème" if p["level"] == "6e" else "Seconde"]
+		var label := "%s   ·   %s" % [p["name"], p.get("level_label", p["level"])]
 		var b := UiKit.button(label, 88.0)
 		b.add_theme_font_size_override("font_size", UiKit.font_size(32))
 		b.pressed.connect(_choose.bind(p))
@@ -73,7 +73,7 @@ func _load_profiles() -> void:
 
 ## Appareil pas encore relié : le code à 8 chiffres de l'espace parent.
 func _show_pairing() -> void:
-	_wt = WorldTheme.jules()
+	_wt = WorldTheme.lumineux()
 	_pairing = true
 	_build_frame()
 	_root.add_child(_title("Relier cet appareil"))
@@ -127,7 +127,7 @@ func _key(key: String) -> void:
 		return
 	match key:
 		"Retour":
-			_wt = WorldTheme.jules()
+			_wt = WorldTheme.lumineux()
 			_build_frame()
 			_load_profiles()
 		"Effacer":

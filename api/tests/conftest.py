@@ -58,7 +58,7 @@ async def profiles(sessionmaker):
             name="Jules",
             avatar="renard",
             level="6e",
-            world="jules",
+            world="lumineux",
             pin_hash=hash_pin("1234"),
         )
         tom = Profile(
@@ -66,7 +66,7 @@ async def profiles(sessionmaker):
             name="Tom",
             avatar="loup",
             level="2nde",
-            world="tom",
+            world="brouillard",
             pin_hash=hash_pin("9876"),
         )
         db.add_all([jules, tom])

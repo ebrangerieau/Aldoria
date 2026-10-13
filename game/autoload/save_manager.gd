@@ -99,11 +99,13 @@ func daily_days() -> Array:
 	return daily()["days"]
 
 
-## Donjons du monde terminés au moins une fois (déblocages de la garde-robe).
+## Donjons terminés au moins une fois, toutes classes confondues (déblocages de la
+## garde-robe) : un passage de classe ne reprend rien de ce qui a été gagné.
 func dungeons_done() -> int:
+	_ensure_loaded()
 	var count := 0
-	for d in DungeonDef.all_for_world(Session.world()):
-		if int(dungeon(d.code)["completed"]) > 0:
+	for state: Variant in (data.get("dungeons", {}) as Dictionary).values():
+		if state is Dictionary and int(state.get("completed", 0)) > 0:
 			count += 1
 	return count
 

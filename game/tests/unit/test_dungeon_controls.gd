@@ -10,7 +10,7 @@ func before_each() -> void:
 	_level = DungeonLevel.new()
 	add_child(_level)
 	_level.build(3)
-	_hero = HeroController.create(Wardrobe.default_look("jules"), "Test", 100)
+	_hero = HeroController.create(Wardrobe.default_look("lumineux"), "Test", 100)
 	_hero.position = Vector3(6, 0, 10)
 	add_child(_hero)
 
@@ -48,7 +48,7 @@ func test_waypoints_lead_through_an_open_door() -> void:
 
 func test_vector_widget_emits_both_coordinates() -> void:
 	var widget := VectorWidget.new()
-	widget.setup(WorldTheme.tom())
+	widget.setup(WorldTheme.brouillard())
 	add_child_autofree(widget)
 	watch_signals(widget)
 	for key in ["3", ";", "−", "2"]:

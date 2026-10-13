@@ -15,6 +15,7 @@ const SECTIONS = [
   { id: 'generateurs', title: 'Voir les questions du jeu' },
   { id: 'signalements', title: 'Traiter les signalements' },
   { id: 'reglages', title: 'Régler le jeu' },
+  { id: 'classe', title: 'Changer de classe ou de monde' },
   { id: 'amenagements', title: 'Adapter le jeu (troubles « dys », attention)' },
   { id: 'jeu', title: 'Ce que vit votre enfant dans le jeu' },
   { id: 'faq', title: 'Questions fréquentes' },
@@ -374,6 +375,36 @@ export function Guide({ child, onOpen }: { child?: Profile; onOpen: (page: Guide
         </div>
       </Section>
 
+      <Section id="classe" title="Changer de classe ou de monde" open={() => onOpen('settings')} openLabel="Ouvrir les réglages">
+        <p>
+          La <strong>classe</strong> fixe ce que le jeu fait travailler : le programme, les donjons et le village. Le <strong>monde</strong> ne
+          change que l'ambiance : Aldoria lumineuse (ton chaleureux, renard compagnon) ou le Brouillard (plus sombre et épuré).
+        </p>
+        <ol className="steps">
+          <li>
+            Ouvrez <strong>Réglages</strong>, rubrique <strong>Classe et monde</strong>.
+          </li>
+          <li>
+            <strong>À la rentrée</strong>, choisissez la nouvelle classe puis cliquez sur <strong>Passer en …</strong>. Une classe marquée
+            « bientôt » n'est pas encore dans le jeu.
+          </li>
+          <li>
+            Indiquez ensuite les chapitres en cours dans <strong>Programme</strong> : c'est ce qui oriente le plus les questions.
+          </li>
+          <li>
+            Pour le <strong>monde</strong>, touchez celui qui plaît à {name} : le changement se voit au prochain retour au camp.
+          </li>
+        </ol>
+        <div className="tip">
+          <strong>Rien n'est perdu au passage de classe.</strong> Le héros garde son niveau, son apparence, son renard et ses trophées ; les
+          notions travaillées l'année d'avant reviennent de temps en temps en révision, pour ne pas les oublier.
+        </div>
+        <div className="tip">
+          <strong>Une classe sans donjons pour l'instant ?</strong> Le camp l'annonce à l'enfant ; l'arène, le défi du jour et les Archives
+          fonctionnent avec les questions de sa classe.
+        </div>
+      </Section>
+
       <Section
         id="amenagements"
         title="Adapter le jeu (troubles « dys », attention)"
@@ -502,6 +533,13 @@ export function Guide({ child, onOpen }: { child?: Profile; onOpen: (page: Guide
           <p>
             L'appareil n'est pas (ou plus) relié à la famille : navigateur nouveau, données du navigateur effacées, navigation privée, ou appareil
             retiré. Créez un code dans Famille → Appareils et tapez-le dans le jeu.
+          </p>
+        </details>
+        <details>
+          <summary>Que faire à la rentrée ?</summary>
+          <p>
+            Dans Réglages → Classe et monde, passez chaque enfant dans sa nouvelle classe, puis marquez ses premiers chapitres « En cours » dans
+            Programme. Sa progression de l'année d'avant reste visible dans le jeu (héros, trophées) et ses notions reviennent en révision.
           </p>
         </details>
         <details>

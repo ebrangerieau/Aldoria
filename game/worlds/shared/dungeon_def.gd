@@ -29,22 +29,25 @@ extends Resource
 @export var decor: Dictionary = {}
 
 
-static func all_for_world(world: String) -> Array[DungeonDef]:
-	if world == "tom":
-		return [labyrinthe_vecteurs(), forge_algebre(), citadelle_fonctions()]
-	return [tour_fractions(), atelier_balances(), observatoire_angles()]
+## Donjons d'une classe (leurs chapitres en dépendent) ; l'ambiance vient du monde de
+## l'enfant (WorldTheme). Une classe sans donjon pour l'instant renvoie une liste vide :
+## le camp propose alors l'arène, le défi du jour et le village s'il existe.
+static func all_for_level(level: String) -> Array[DungeonDef]:
+	match level:
+		"6e":
+			return [tour_fractions(), atelier_balances(), observatoire_angles()]
+		"2nde":
+			return [labyrinthe_vecteurs(), forge_algebre(), citadelle_fonctions()]
+	return []
 
 
-static func by_code(world: String, dungeon_code: String) -> DungeonDef:
-	for d in all_for_world(world):
+## Donjon d'après son code (null si la classe n'en a pas) ; code inconnu : le premier.
+static func by_code(level: String, dungeon_code: String) -> DungeonDef:
+	var dungeons := all_for_level(level)
+	for d in dungeons:
 		if d.code == dungeon_code:
 			return d
-	return all_for_world(world)[0]
-
-
-## Premier donjon du monde (raccourci des tests et de la tranche verticale).
-static func for_world(world: String) -> DungeonDef:
-	return all_for_world(world)[0]
+	return dungeons[0] if not dungeons.is_empty() else null
 
 
 ## Paramètres de `POST /play/session/start`.

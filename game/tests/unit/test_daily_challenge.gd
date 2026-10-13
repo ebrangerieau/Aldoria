@@ -79,8 +79,8 @@ func test_old_save_without_daily_section_is_completed() -> void:
 
 
 func test_dungeons_open_one_after_the_other() -> void:
-	for world in ["jules", "tom"]:
-		var dungeons := DungeonDef.all_for_world(world)
+	for level in ["6e", "2nde"]:
+		var dungeons := DungeonDef.all_for_level(level)
 		assert_eq(dungeons.size(), 3)
 		assert_true(SaveManager.dungeon_unlocked(dungeons, 0))
 		assert_false(SaveManager.dungeon_unlocked(dungeons, 1))

@@ -13,7 +13,7 @@ func before_each() -> void:
 	_saved_token = ApiClient.token
 	ApiClient.token = ""
 	Session._queue.clear()
-	Session.profile = {"name": "Test", "world": "jules", "level": "6e"}
+	Session.profile = {"name": "Test", "world": "lumineux", "level": "6e"}
 	Session._apply_pack(JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/pack_6e.json")))
 	_combat = (load(COMBAT) as PackedScene).instantiate()
 	add_child(_combat)

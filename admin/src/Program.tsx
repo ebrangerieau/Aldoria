@@ -17,8 +17,11 @@ export function Program({ child }: { child: Profile }) {
         Indiquez où en est {child.name} en classe. Les chapitres <strong>en cours</strong> fournissent la moitié des questions ; un{' '}
         <strong>contrôle bientôt</strong> en fournit 70 %. Le reste : révisions espacées et automatismes.
       </p>
-      {query.data.map((chapter) => (
-        <ChapterCard key={chapter.code} child={child} chapter={chapter} />
+      {query.data.map((chapter, i) => (
+        <div key={chapter.code} className="stack">
+          {chapter.subject.code !== query.data[i - 1]?.subject.code && <h2 className="subject-title">{chapter.subject.label}</h2>}
+          <ChapterCard child={child} chapter={chapter} />
+        </div>
       ))}
     </div>
   )

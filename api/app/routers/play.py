@@ -19,7 +19,7 @@ from app.accounts import CurrentDevice, aware, utcnow
 from app.auth import CurrentProfile, create_token, verify_pin
 from app.config import get_settings
 from app.db import get_db
-from app.engine import accommodations, tracking
+from app.engine import accommodations, levels, tracking
 from app.engine.generators import REGISTRY
 from app.errors import ApiError
 from app.models import Attempt, Chapter, Device, Family, GameSession, PairingCode, Profile, Report
@@ -36,6 +36,7 @@ class ProfileOut(BaseModel):
     name: str
     avatar: str
     level: str
+    level_label: str
     world: str
 
 
@@ -157,7 +158,14 @@ class SessionEndIn(BaseModel):
 
 
 def _profile_out(p: Profile) -> ProfileOut:
-    return ProfileOut(id=p.id, name=p.name, avatar=p.avatar, level=p.level, world=p.world)
+    return ProfileOut(
+        id=p.id,
+        name=p.name,
+        avatar=p.avatar,
+        level=p.level,
+        level_label=levels.label(p.level),
+        world=p.world,
+    )
 
 
 @router.post("/devices/pair", response_model=PairOut)

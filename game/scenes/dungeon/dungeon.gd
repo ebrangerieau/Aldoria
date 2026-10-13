@@ -45,7 +45,7 @@ var _ending := false
 
 func _ready() -> void:
 	_wt = WorldTheme.for_world(Session.world())
-	_def = DungeonDef.by_code(Session.world(), chosen_code())
+	_def = DungeonDef.by_code(Session.level(), chosen_code())
 	QuestionService.reset()
 
 	_level = DungeonLevel.new().use_theme(_wt).use_decor(_def.decor)

@@ -76,7 +76,7 @@ const ATTACKS := {
 
 ## Apparence de départ d'un monde : celle du héros d'avant la personnalisation.
 static func default_look(world: String) -> Dictionary:
-	var model := "Rogue_Hooded" if world == "tom" else "Knight"
+	var model := "Rogue_Hooded" if world == "brouillard" else "Knight"
 	var look := defaults_for(model)
 	look["pet_name"] = PET_NAMES[0]
 	look["pet_fur"] = PET_FURS[0]["id"]

@@ -13,7 +13,7 @@ from sqlalchemy import delete
 from sqlalchemy import select as sql_select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.engine import accommodations, mastery, selector, session_pack
+from app.engine import accommodations, levels, mastery, selector, session_pack
 from app.engine.generators import Generator, playable_notions
 from app.engine.scheduler import LeitnerScheduler, Scheduler
 from app.models import (
@@ -182,13 +182,15 @@ async def _combat_pack(
         )
     )
     level_chapters = {c.code for _, c in rows}
+    prior = [] if daily or focus_chapters else await _prior_notions(db, profile, playable, states)
     focus = [code for code in focus_chapters if code in level_chapters]
     if focus:
         statuses = {code: "en_cours" for code in focus}  # donjon : ses chapitres seuls
     infos = [selector.NotionInfo(n.code, c.code, n.is_automatism) for n, c in rows]
+    infos += [selector.NotionInfo(n.code, c.code, n.is_automatism, prior=True) for n, c in prior]
     progress = {
         n.code: selector.NotionProgress(st.mastery, st.seen, _aware(st.due_at))
-        for n, _ in rows
+        for n, _ in rows + prior
         if (st := states.get(n.id)) is not None
     }
     ratios = (profile.ratio_chapter, profile.ratio_review, profile.ratio_automatisms)
@@ -199,6 +201,21 @@ async def _combat_pack(
         infos, progress, statuses, list(reversed(recent)), ratios, datetime.now(UTC), rng, size
     )
     return session_pack.build_items(slots, rng, bank)
+
+
+async def _prior_notions(
+    db: AsyncSession, profile: Profile, playable: set[str], states: dict[int, NotionState]
+) -> list[tuple[Notion, Chapter]]:
+    """Notions des classes précédentes que l'enfant a déjà travaillées (passage de classe) :
+    elles restent en révision espacée tant qu'elles sont jouables."""
+    rows: list[tuple[Notion, Chapter]] = []
+    for level in levels.earlier(profile.level):
+        bank = await published_bank(db, level, profile.family_id)
+        for notion, chapter in await _level_notions(db, level, profile.family_id):
+            st = states.get(notion.id)
+            if st is not None and st.seen > 0 and (notion.code in playable or notion.code in bank):
+                rows.append((notion, chapter))
+    return rows
 
 
 async def published_bank(
@@ -297,6 +314,9 @@ async def progress(db: AsyncSession, profile: Profile) -> list[dict[str, Any]]:
             sql_select(ChapterStatus).where(ChapterStatus.profile_id == profile.id)
         )
     }
+    subjects = {
+        s.id: {"code": s.code, "label": s.label} for s in await db.scalars(sql_select(Subject))
+    }
     chapters: dict[int, dict[str, Any]] = {}
     for notion, chapter in await _level_notions(db, profile.level, profile.family_id):
         entry = chapters.setdefault(
@@ -304,6 +324,7 @@ async def progress(db: AsyncSession, profile: Profile) -> list[dict[str, Any]]:
             {
                 "code": chapter.code,
                 "title": chapter.title,
+                "subject": subjects.get(chapter.subject_id, {"code": "", "label": ""}),
                 "status": statuses.get(chapter.id, "a_venir"),
                 "notions": [],
             },

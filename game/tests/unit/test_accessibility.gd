@@ -37,7 +37,7 @@ func test_readable_and_spaced_font() -> void:
 	var font := Accessibility.font() as FontVariation
 	assert_eq(font.spacing_glyph, 2)
 	assert_eq((font.base_font as FontFile).resource_path, Accessibility.READABLE_FONT)
-	var theme := UiKit.make_theme(WorldTheme.jules())
+	var theme := UiKit.make_theme(WorldTheme.lumineux())
 	assert_eq(theme.default_font, font)
 	assert_eq(theme.get_constant("line_spacing", "Label"), 8)
 	# Les symboles mathématiques (absents de la police lisible) restent affichables.
@@ -45,9 +45,9 @@ func test_readable_and_spaced_font() -> void:
 
 
 func test_colorblind_palette_avoids_red_and_green() -> void:
-	var normal := WorldTheme.jules()
+	var normal := WorldTheme.lumineux()
 	_with({"colorblind": true})
-	var adapted := WorldTheme.for_world("jules")
+	var adapted := WorldTheme.for_world("lumineux")
 	assert_ne(adapted.good, normal.good)
 	assert_true(adapted.good.b > adapted.good.g, "juste en bleu")
 	assert_true(adapted.bad.r > adapted.bad.b, "faux en orange")
@@ -60,13 +60,13 @@ func test_question_panel_reads_aloud_and_hides_speed_bonus() -> void:
 		"speech": {"prompt": "Compare 3 sur 4 et 1 sur 2.", "choices": ["inférieur à", "égale", "supérieur à"]},
 	}
 	var plain := QuestionPanel.new()
-	plain.setup(item, "Test", WorldTheme.jules())
+	plain.setup(item, "Test", WorldTheme.lumineux())
 	add_child_autofree(plain)
 	assert_true(plain._bonus.visible)
 	assert_eq(_buttons(plain, "Écouter"), 0, "sans aménagement : pas de bouton Écouter")
 	_with({"read_aloud": true, "no_speed": true, "math_tools": true})
 	var adapted := QuestionPanel.new()
-	adapted.setup(item, "Test", WorldTheme.jules())
+	adapted.setup(item, "Test", WorldTheme.lumineux())
 	add_child_autofree(adapted)
 	assert_false(adapted._bonus.visible, "pas de bonus de vitesse")
 	assert_eq(_buttons(adapted, "Écouter"), 1)
@@ -77,7 +77,7 @@ func test_question_panel_reads_aloud_and_hides_speed_bonus() -> void:
 
 func test_numeration_table_places_each_digit() -> void:
 	var tools := MathTools.new()
-	tools.setup(WorldTheme.jules())
+	tools.setup(WorldTheme.lumineux())
 	add_child_autofree(tools)
 	tools.show_number("2,15")
 	var digits: Array = tools._digits.map(func(l: Label) -> String: return l.text)

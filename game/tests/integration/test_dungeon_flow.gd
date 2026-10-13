@@ -34,11 +34,11 @@ func after_each() -> void:
 
 func _open(world: String, checkpoint := 0, dungeon := "") -> void:
 	var level := "2nde" if world == "tom" else "6e"
-	Session.profile = {"name": "Test", "world": world, "level": level}
+	Session.profile = {"name": "Test", "world": "brouillard" if world == "tom" else "lumineux", "level": level}
 	Session.dungeon_code = dungeon
 	Session._apply_pack(JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/pack_%s.json" % level)))
 	if checkpoint > 0:
-		SaveManager.set_checkpoint(DungeonDef.by_code(world, dungeon).code, checkpoint)
+		SaveManager.set_checkpoint(DungeonDef.by_code(level, dungeon).code, checkpoint)
 	_scene = (load(DUNGEON) as PackedScene).instantiate()
 	add_child(_scene)
 	await wait_process_frames(3)
@@ -147,9 +147,9 @@ func test_boss_then_chest_completes_the_dungeon() -> void:
 
 
 func test_every_dungeon_builds_with_its_own_decor_and_enemies() -> void:
-	for world in ["jules", "tom"]:
-		for def in DungeonDef.all_for_world(world):
-			await _open(world, 0, def.code)
+	for level in ["6e", "2nde"]:
+		for def in DungeonDef.all_for_level(level):
+			await _open("tom" if level == "2nde" else "jules", 0, def.code)
 			assert_eq(_scene._def.code, def.code)
 			assert_eq(_scene._level.room_count, def.room_count())
 			assert_eq(_scene._enemies.size(), def.enemy_count(), def.code)
@@ -170,17 +170,17 @@ func test_every_dungeon_builds_with_its_own_decor_and_enemies() -> void:
 
 
 func test_dungeon_session_params_name_its_chapters_and_enigma() -> void:
-	var forge := DungeonDef.by_code("tom", "forge_algebre")
+	var forge := DungeonDef.by_code("2nde", "forge_algebre")
 	var params := forge.session_params()
 	assert_eq(params["mode"], "donjon")
 	assert_eq(params["focus_chapters"], ["2nde.maths.calcul_litteral", "2nde.maths.equations", "2nde.maths.valeur_absolue"])
 	assert_eq(params["enigma"]["generator"], "2nde.equations.signe")
-	assert_eq(DungeonDef.by_code("jules", "inconnu").code, "tour_fractions", "code inconnu : premier donjon")
+	assert_eq(DungeonDef.by_code("6e", "inconnu").code, "tour_fractions", "code inconnu : premier donjon")
 
 
 func test_rating_panel_returns_the_stars_or_zero() -> void:
 	var panel := RatingPanel.new()
-	panel.setup(WorldTheme.jules(), "Test")
+	panel.setup(WorldTheme.lumineux(), "Test")
 	add_child_autofree(panel)
 	watch_signals(panel)
 	panel._choose(4)
@@ -188,7 +188,7 @@ func test_rating_panel_returns_the_stars_or_zero() -> void:
 	await wait_for_signal(panel.rated, 2.0)
 	assert_signal_emitted_with_parameters(panel, "rated", [4])
 	var skipped := RatingPanel.new()
-	skipped.setup(WorldTheme.tom(), "Test")
+	skipped.setup(WorldTheme.brouillard(), "Test")
 	add_child_autofree(skipped)
 	watch_signals(skipped)
 	skipped._finish(0)

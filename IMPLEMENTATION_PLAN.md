@@ -413,6 +413,16 @@ générateurs naturels, donc des questions à rédiger.
 - Passage de classe côté jeu : héros, XP, apparence, compagnon et bestiaire conservés ; les notions acquises
   l'année d'avant restent en révision espacée comme prérequis.
 
+> ✅ **Étape A réalisée le 2026-10-13** (migration 0009 ; 400 tests API, 95 tests jeu, parcours navigateur).
+> Référentiel des classes (6e → terminale, disponibles selon le programme chargé), mondes renommés
+> `lumineux` / `brouillard` et choisis par le parent (Réglages → Classe et monde, ou à la création de l'enfant),
+> donjons et village selon la classe, camp prévu pour une classe sans région, passage de classe qui garde héros,
+> apparence, compagnon et trophées (déblocages comptés sur tous les donjons terminés) et remet en révision les
+> notions des classes précédentes, matière affichée dans le Programme et les progressions.
+> Écarts : les textes des donjons gardent le ton de leur monde d'origine (un enfant de 6e dans le Brouillard lit
+> les textes lumineux de la Tour des Fractions) ; les Archives du jeu ne regroupent pas encore par matière (une
+> seule matière) ; pas d'historique des classes en dehors des réponses enregistrées.
+
 **Étape B – Atelier de contenu**
 - Génération assistée par IA (ex-V2) : à partir d'un chapitre, ou d'une photo de la leçon ou du cahier de
   textes, l'IA propose des questions en `brouillon` (même validation `engine/bank.py`), publiées après relecture

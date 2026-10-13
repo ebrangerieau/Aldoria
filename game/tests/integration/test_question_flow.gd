@@ -141,7 +141,7 @@ func test_formulas_render_from_pack() -> void:
 
 
 func test_question_panel_for_each_type() -> void:
-	var wt := WorldTheme.tom()
+	var wt := WorldTheme.brouillard()
 	for level in ["6e", "2nde"]:
 		_load_pack(level)
 		# Les 12 premiers, plus un item de chaque type présent dans le paquet.
@@ -166,7 +166,7 @@ func test_question_panel_for_each_type() -> void:
 
 func test_keypad_builds_expression_from_keys() -> void:
 	var keypad := KeypadWidget.new()
-	keypad.setup("expression", WorldTheme.tom())
+	keypad.setup("expression", WorldTheme.brouillard())
 	add_child_autofree(keypad)
 	watch_signals(keypad)
 	for key in ["x²", "+", "6", "x", "+", "9", "OK"]:
@@ -186,7 +186,7 @@ func _find_widget(panel: Node) -> Node:
 
 func test_number_line_snaps_to_graduation() -> void:
 	var line := NumberLineWidget.new()
-	line.setup({"min": 0, "max": 2, "subdivisions": 4, "mode": "place"}, WorldTheme.jules())
+	line.setup({"min": 0, "max": 2, "subdivisions": 4, "mode": "place"}, WorldTheme.lumineux())
 	line.size = Vector2(800, 200)
 	add_child_autofree(line)
 	await wait_process_frames(2)
@@ -205,7 +205,7 @@ func test_number_line_snaps_to_graduation() -> void:
 
 func test_order_widget_collects_taps_in_order() -> void:
 	var order := OrderWidget.new()
-	order.setup(["2,5", "2,15", "2,9"], WorldTheme.jules())
+	order.setup(["2,5", "2,15", "2,9"], WorldTheme.lumineux())
 	add_child_autofree(order)
 	watch_signals(order)
 	order._pick(1)
@@ -221,7 +221,7 @@ func test_order_widget_collects_taps_in_order() -> void:
 
 func test_true_false_needs_verdict_then_reason() -> void:
 	var widget := TrueFalseWidget.new()
-	widget.setup(["raison A", "raison B", "raison C"], WorldTheme.tom())
+	widget.setup(["raison A", "raison B", "raison C"], WorldTheme.brouillard())
 	add_child_autofree(widget)
 	watch_signals(widget)
 	widget._choose_reason(1)  # pas encore de verdict : ignoré
@@ -234,7 +234,7 @@ func test_true_false_needs_verdict_then_reason() -> void:
 
 func test_sign_table_cycles_and_submits_row_by_row() -> void:
 	var table := SignTableWidget.new()
-	table.setup({"roots": ["−4"], "rows": ["2x + 8"]}, WorldTheme.tom())
+	table.setup({"roots": ["−4"], "rows": ["2x + 8"]}, WorldTheme.brouillard())
 	add_child_autofree(table)
 	watch_signals(table)
 	table._cycle(0)  # « + »
@@ -254,7 +254,7 @@ func test_child_can_report_a_question_with_the_answer_given() -> void:
 	assert_eq(QuestionService.last_input_for(item), "12/7")
 	assert_eq(QuestionService.last_input_for({"id": "autre"}), "")
 	var panel := ExplanationPanel.new()
-	panel.setup(item, WorldTheme.jules())
+	panel.setup(item, WorldTheme.lumineux())
 	add_child_autofree(panel)
 	watch_signals(panel)
 	assert_false(panel._report_box.visible, "motifs cachés tant qu'on n'a pas demandé")

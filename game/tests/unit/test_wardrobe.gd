@@ -15,39 +15,39 @@ func after_each() -> void:
 
 
 func test_default_look_matches_each_world() -> void:
-	var jules := Wardrobe.default_look("jules")
-	assert_eq(jules["model"], "Knight")
-	assert_eq(jules["main"], "1H_Sword")
-	assert_eq(jules["off"], "Round_Shield")
-	assert_eq(jules["pet_fur"], "roux")
-	assert_eq(Wardrobe.default_look("tom")["model"], "Rogue_Hooded")
+	var bright := Wardrobe.default_look("lumineux")
+	assert_eq(bright["model"], "Knight")
+	assert_eq(bright["main"], "1H_Sword")
+	assert_eq(bright["off"], "Round_Shield")
+	assert_eq(bright["pet_fur"], "roux")
+	assert_eq(Wardrobe.default_look("brouillard")["model"], "Rogue_Hooded")
 
 
 func test_sanitize_rejects_unknown_and_locked_choices() -> void:
-	var look := Wardrobe.sanitize({"model": "Dragon", "main": "Bazooka"}, "jules", 1, 0)
+	var look := Wardrobe.sanitize({"model": "Dragon", "main": "Bazooka"}, "lumineux", 1, 0)
 	assert_eq(look["model"], "Knight")
 	assert_eq(look["main"], "1H_Sword")
 	# Mage : niveau 5 ; cape or : trois donjons ; pelage arctique : un donjon.
 	var wanted := {"model": "Mage", "cape_color": "or", "pet_fur": "arctique", "pet_name": "Inconnu"}
-	look = Wardrobe.sanitize(wanted, "jules", 1, 0)
+	look = Wardrobe.sanitize(wanted, "lumineux", 1, 0)
 	assert_eq(look["model"], "Knight")
 	assert_eq(look["cape_color"], "origine")
 	assert_eq(look["pet_fur"], "roux")
 	assert_eq(look["pet_name"], "Roux")
-	look = Wardrobe.sanitize(wanted, "jules", 5, 3)
+	look = Wardrobe.sanitize(wanted, "lumineux", 5, 3)
 	assert_eq(look["model"], "Mage")
 	assert_eq(look["main"], "1H_Wand", "une nouvelle silhouette prend ses pièces par défaut")
 	assert_eq(look["cape_color"], "or")
 	assert_eq(look["pet_fur"], "arctique")
-	assert_eq(Wardrobe.sanitize("pas un dictionnaire", "tom", 1, 0)["model"], "Rogue_Hooded")
+	assert_eq(Wardrobe.sanitize("pas un dictionnaire", "brouillard", 1, 0)["model"], "Rogue_Hooded")
 
 
 func test_two_handed_weapon_frees_nothing_else() -> void:
-	var look := Wardrobe.sanitize({"model": "Knight", "main": "2H_Sword", "off": "Spike_Shield"}, "jules", 1, 0)
+	var look := Wardrobe.sanitize({"model": "Knight", "main": "2H_Sword", "off": "Spike_Shield"}, "lumineux", 1, 0)
 	assert_eq(look["off"], "")
 	assert_eq(Wardrobe.attacks_for(look)[0], "2H_Melee_Attack_Chop")
 	# Le voleur n'a pas de couvre-chef.
-	assert_false(Wardrobe.sanitize({"model": "Rogue", "head": true}, "tom", 2, 0)["head"])
+	assert_false(Wardrobe.sanitize({"model": "Rogue", "head": true}, "brouillard", 2, 0)["head"])
 
 
 func test_attack_follows_weapon() -> void:
@@ -70,7 +70,7 @@ func test_unlocks_are_announced_once() -> void:
 
 
 func test_dress_shows_one_weapon_per_hand_and_paints_the_cape() -> void:
-	var look := Wardrobe.sanitize({"model": "Knight", "main": "2H_Sword", "head": false, "cape_color": "rouge"}, "jules", 1, 0)
+	var look := Wardrobe.sanitize({"model": "Knight", "main": "2H_Sword", "head": false, "cape_color": "rouge"}, "lumineux", 1, 0)
 	var fighter := Fighter.create_hero(look, "Test", 100)
 	add_child_autofree(fighter)
 	var shown := {}
@@ -102,7 +102,7 @@ func test_villagers_hold_a_single_weapon_too() -> void:
 func test_companion_follows_on_the_heros_footsteps() -> void:
 	var hero := Node3D.new()
 	add_child_autofree(hero)
-	var pet := Companion.create(Wardrobe.sanitize({"pet_fur": "sable"}, "jules", 1, 0))
+	var pet := Companion.create(Wardrobe.sanitize({"pet_fur": "sable"}, "lumineux", 1, 0))
 	add_child_autofree(pet)
 	pet.follow(hero)
 	var start := pet.position
@@ -122,7 +122,7 @@ func test_companion_follows_on_the_heros_footsteps() -> void:
 
 
 func test_companion_fur_is_painted() -> void:
-	var pet := Companion.create(Wardrobe.sanitize({"pet_fur": "sable"}, "jules", 1, 0))
+	var pet := Companion.create(Wardrobe.sanitize({"pet_fur": "sable"}, "lumineux", 1, 0))
 	add_child_autofree(pet)
 	var colors: Array[Color] = []
 	for node in pet.find_children("*", "MeshInstance3D", true, false):
@@ -136,7 +136,7 @@ func test_companion_fur_is_painted() -> void:
 
 
 func test_look_is_saved_and_rechecked() -> void:
-	Session.profile = {"world": "jules"}
+	Session.profile = {"world": "lumineux"}
 	assert_eq(SaveManager.look()["model"], "Knight", "partie sans apparence : celle par défaut")
 	SaveManager.set_look({"model": "Rogue_Hooded", "main": "1H_Crossbow", "cape_color": "or"})
 	assert_eq(SaveManager.data["look"]["main"], "1H_Crossbow")
@@ -154,7 +154,7 @@ func _button(screen: Node, text: String) -> Button:
 
 
 func test_screen_buttons_change_the_look() -> void:
-	Session.profile = {"world": "jules"}
+	Session.profile = {"world": "lumineux"}
 	var screen: Control = (load("res://scenes/wardrobe/wardrobe.tscn") as PackedScene).instantiate()
 	add_child_autofree(screen)
 	_button(screen, "Grande épée").pressed.emit()

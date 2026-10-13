@@ -20,8 +20,9 @@ var _busy := false
 
 func _ready() -> void:
 	_wt = WorldTheme.for_world(Session.world())
-	_dungeons = DungeonDef.all_for_world(Session.world())
-	_village = VillageDef.for_world(Session.world())
+	# Le monde donne l'ambiance ; la classe donne les donjons et le village.
+	_dungeons = DungeonDef.all_for_level(Session.level())
+	_village = VillageDef.for_level(Session.level())
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	theme = UiKit.make_theme(_wt)
 	_build()
@@ -31,6 +32,8 @@ func _ready() -> void:
 	# Aménagements modifiés par le parent depuis la dernière fois : le camp se reconstruit
 	# (police, tailles, couleurs) ; de même quand l'enfant change ses options.
 	Accessibility.changed.connect(_rebuild, CONNECT_ONE_SHOT)
+	# Classe, monde ou prénom changés par le parent : même reconstruction.
+	Session.profile_changed.connect(_rebuild, CONNECT_ONE_SHOT)
 	await Accessibility.refresh()
 	_dev_goto()
 
@@ -111,16 +114,29 @@ func _build() -> void:
 		var row := _row(dungeons, d.title, d.chapter_title)
 		row["button"].pressed.connect(_enter_dungeon.bind(i))
 		_dungeon_rows.append(row)
+	if _dungeons.is_empty():
+		# Classe dont les régions sont encore en préparation : le reste du camp fonctionne.
+		var soon := PanelContainer.new()
+		soon.size_flags_vertical = Control.SIZE_EXPAND_FILL
+		dungeons.add_child(soon)
+		var text := VBoxContainer.new()
+		text.alignment = BoxContainer.ALIGNMENT_CENTER
+		soon.add_child(text)
+		text.add_child(UiKit.label("De nouvelles régions se préparent", 27, _wt.accent))
+		text.add_child(UiKit.label(
+			"Les donjons de ta classe (%s) arrivent bientôt. En attendant, l'arène, le défi du jour et les Archives t'attendent." \
+				% Session.profile.get("level_label", Session.level()), 19, _wt.text))
 
 	# Village, défi du jour, puis arène et Archives en plus petit.
 	var side := VBoxContainer.new()
 	side.add_theme_constant_override("separation", 12)
 	side.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	main.add_child(side)
-	var village := _row(side, _village.title, "Les habitants ont besoin de toi.")
-	_village_state = village["state"]
-	village["button"].text = "Y aller"
-	village["button"].pressed.connect(_enter_village)
+	if _village != null:
+		var village := _row(side, _village.title, "Les habitants ont besoin de toi.")
+		_village_state = village["state"]
+		village["button"].text = "Y aller"
+		village["button"].pressed.connect(_enter_village)
 	var daily := _row(side, "Défi du jour", "Dix automatismes, à ton rythme.")
 	_daily_state = daily["state"]
 	_daily_button = daily["button"]
@@ -182,10 +198,11 @@ func _refresh() -> void:
 	_refresh_daily()
 	var unlocked := Wardrobe.unlocked_count(level, SaveManager.dungeons_done(), _wt.companion)
 	_look_button.text = "Apparence ★" if unlocked > int(SaveManager.look()["seen"]) else "Apparence"
-	var waiting := _village.pending_quests(DailyChallenge.today())
-	var plural := waiting > 1
-	_village_state.text = "Tout le monde est aidé aujourd'hui ✓" if waiting == 0 else \
-		"%d habitant%s attend%s ton aide" % [waiting, "s" if plural else "", "ent" if plural else ""]
+	if _village != null:
+		var waiting := _village.pending_quests(DailyChallenge.today())
+		var plural := waiting > 1
+		_village_state.text = "Tout le monde est aidé aujourd'hui ✓" if waiting == 0 else \
+			"%d habitant%s attend%s ton aide" % [waiting, "s" if plural else "", "ent" if plural else ""]
 
 
 func _refresh_dungeon(i: int) -> void:
@@ -244,6 +261,8 @@ func _enter_dungeon(i: int) -> void:
 
 
 func _enter_village() -> void:
+	if _village == null:
+		return
 	await _launch("village", _village.session_params(), "res://scenes/village/village.tscn")
 
 
@@ -297,8 +316,10 @@ func _show_options() -> void:
 
 
 func _rebuild() -> void:
-	# Seulement si le camp est toujours affiché (l'enfant a pu partir entre-temps).
+	# Seulement si le camp est toujours affiché (l'enfant a pu partir entre-temps), et une
+	# seule fois même si aménagements et profil changent ensemble.
 	if is_inside_tree() and get_tree().current_scene == self and not _busy:
+		_busy = true
 		get_tree().reload_current_scene.call_deferred()
 
 
@@ -317,6 +338,8 @@ func _dev_goto() -> void:
 		return
 	match Quality.option("goto"):
 		"donjon":
+			if _dungeons.is_empty():
+				return
 			var index := 0
 			for i in _dungeons.size():
 				if _dungeons[i].code == Quality.option("dungeon"):

@@ -13,6 +13,8 @@ const QUEUE_FILE := "user://attempts_queue.json"
 const FLUSH_RETRY_S := 10.0
 const BATCH_SIZE := 50
 
+signal profile_changed
+
 var profile: Dictionary = {}
 var session_id := ""
 var items: Array = []
@@ -58,8 +60,31 @@ func is_logged_in() -> bool:
 	return ApiClient.token != "" and not profile.is_empty()
 
 
+## Monde (ambiance) de l'enfant ; anciens identifiants (prénoms) d'avant la migration 0009.
 func world() -> String:
-	return profile.get("world", "jules")
+	var value := str(profile.get("world", "lumineux"))
+	return {"jules": "lumineux", "tom": "brouillard"}.get(value, value)
+
+
+## Classe de l'enfant : elle fixe les donjons, le village et les questions.
+func level() -> String:
+	return str(profile.get("level", "6e"))
+
+
+## Profil relu au retour au camp (`GET /play/me`) : le parent a pu changer la classe, le
+## monde ou le prénom ; le camp se reconstruit alors (signal `profile_changed`).
+func update_profile(fresh: Dictionary) -> void:
+	if profile.is_empty() or fresh.is_empty():
+		return
+	var changed := false
+	for key in ["name", "level", "level_label", "world"]:
+		if fresh.has(key) and str(profile.get(key, "")) != str(fresh[key]):
+			profile[key] = fresh[key]
+			changed = true
+	if changed:
+		if ApiClient.token != "":
+			_save_json(AUTH_FILE, {"token": ApiClient.token, "profile": profile})
+		profile_changed.emit()
 
 
 func login(profile_id: int, pin: String) -> Dictionary:

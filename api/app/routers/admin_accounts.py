@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import re
 from datetime import UTC, datetime, timedelta
-from typing import Annotated, Any, Literal
+from typing import Annotated, Any
 
 from fastapi import APIRouter, Depends, Request, Response
 from pydantic import BaseModel, Field
@@ -17,6 +17,8 @@ from app import accounts, erasure
 from app.accounts import AdminHost, CurrentAdult, CurrentOperator, aware, utcnow
 from app.auth import hash_pin, verify_pin
 from app.db import get_db
+from app.engine import levels
+from app.engine.levels import LevelCode, WorldCode
 from app.errors import ApiError
 from app.models import (
     Adult,
@@ -33,8 +35,6 @@ router = APIRouter(prefix="/admin", tags=["admin"])
 Db = Annotated[AsyncSession, Depends(get_db)]
 
 EMAIL = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
-WORLDS = {"6e": "jules", "2nde": "tom"}
-AVATARS = {"6e": "renard", "2nde": "loup"}
 BAD_CREDENTIALS = "E-mail ou mot de passe incorrect."
 INVALID_LINK = "Ce lien n'est plus valable : demandez-en un nouveau à un adulte de la famille."
 
@@ -73,7 +73,8 @@ class ConfirmIn(BaseModel):
 
 class ChildIn(BaseModel):
     name: str = Field(min_length=1, max_length=40)
-    level: Literal["6e", "2nde"]
+    level: LevelCode
+    world: WorldCode | None = None  # par défaut selon le cycle (levels.default_world)
     pin: str = Field(pattern=r"^[0-9]{4}$")
 
 
@@ -318,6 +319,10 @@ async def create_child(body: ChildIn, adult: CurrentAdult, db: Db) -> dict[str, 
     siblings = list(await db.scalars(select(Profile).where(Profile.family_id == adult.family_id)))
     if not name:
         raise ApiError(422, "missing_name", "Indiquez le prénom de l'enfant.")
+    if body.level not in await levels.available(db):
+        raise ApiError(
+            422, "level_unavailable", f"La {levels.label(body.level)} n'est pas encore dans le jeu."
+        )
     if any(p.name.lower() == name.lower() for p in siblings):
         raise ApiError(409, "name_taken", f"{name} existe déjà dans la famille.")
     for other in siblings:
@@ -327,12 +332,13 @@ async def create_child(body: ChildIn, adult: CurrentAdult, db: Db) -> dict[str, 
                 "pin_taken",
                 f"Ce code est déjà celui de {other.name} : choisissez-en un autre.",
             )
+    world = body.world or levels.default_world(body.level)
     profile = Profile(
         family_id=adult.family_id,
         name=name,
         level=body.level,
-        world=WORLDS[body.level],
-        avatar=AVATARS[body.level],
+        world=world,
+        avatar=levels.AVATARS[world],
         pin_hash=hash_pin(body.pin),
     )
     db.add(profile)

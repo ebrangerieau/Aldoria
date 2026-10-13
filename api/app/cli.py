@@ -26,11 +26,9 @@ from sqlalchemy import select
 from app import accounts
 from app.auth import hash_pin
 from app.db import get_sessionmaker
+from app.engine import levels
 from app.engine.tracking import rebuild, seed_curriculum
 from app.models import Adult, Device, Family, Profile
-
-LEVELS = {"6e": "jules", "2nde": "tom"}
-AVATARS = {"6e": "renard", "2nde": "loup"}
 
 
 async def _family(db, family_id: int) -> Family:
@@ -103,12 +101,13 @@ async def _run(args: argparse.Namespace) -> None:
                 print(code)
             case "create":
                 await _family(db, args.family)
+                world = args.world or levels.default_world(args.level)
                 profile = Profile(
                     family_id=args.family,
                     name=args.name,
-                    avatar=args.avatar or AVATARS[args.level],
+                    avatar=args.avatar or levels.AVATARS[world],
                     level=args.level,
-                    world=args.world or LEVELS[args.level],
+                    world=world,
                     pin_hash=hash_pin(args.pin),
                 )
                 db.add(profile)
@@ -159,8 +158,8 @@ def main() -> None:
     create = sub.add_parser("create")
     create.add_argument("--family", type=int, default=1)
     create.add_argument("--name", required=True)
-    create.add_argument("--level", required=True, choices=sorted(LEVELS))
-    create.add_argument("--world", choices=sorted(set(LEVELS.values())))
+    create.add_argument("--level", required=True, choices=[lv.code for lv in levels.LEVELS])
+    create.add_argument("--world", choices=sorted(levels.WORLDS))
     create.add_argument("--avatar")
     create.add_argument("--pin", required=True)
     for command in ("set-pin", "unlock"):

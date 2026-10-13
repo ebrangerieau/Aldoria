@@ -19,13 +19,14 @@ from sqlalchemy import func, select
 from app.engine import bank, session_pack
 from app.engine.generators import REGISTRY, for_level
 from app.engine.items import Item
+from app.engine.levels import LevelCode
 from app.errors import ApiError
 from app.models import Adult, BankItem, Chapter, Notion, Profile, Report
 from app.routers.admin import CurrentParent, Db
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
-Level = Literal["6e", "2nde"]
+Level = LevelCode
 
 
 class BankItemIn(BaseModel):

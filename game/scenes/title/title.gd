@@ -5,7 +5,7 @@ extends Control
 ## joueur » ; toucher le fond ne lance rien, pour qu'un frère n'entre pas dans la
 ## partie de l'autre. `?scene=calibration` ouvre la scène de mesure.
 
-var _wt := WorldTheme.jules()
+var _wt := WorldTheme.lumineux()
 var _hint: Label
 var _started := false
 

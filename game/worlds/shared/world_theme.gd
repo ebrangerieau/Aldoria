@@ -1,7 +1,8 @@
 class_name WorldTheme
 extends RefCounted
-## Ambiance d'un monde (PRD §3 et §9) : même moteur, deux tons.
-## Jules : lumineux, chaleureux, encourageant. Tom : sombre, épuré, plus mature.
+## Ambiance d'un monde (PRD §3 et §9) : même moteur, deux tons, choisis par le parent
+## pour chaque enfant (indépendants de la classe, api/app/engine/levels.py).
+## « lumineux » : chaleureux, encourageant, renard compagnon. « brouillard » : sombre, épuré.
 
 var id := ""
 var title := ""
@@ -38,11 +39,11 @@ var wrong_title := ""
 
 
 static func for_world(world: String) -> WorldTheme:
-	var t := tom() if world == "tom" else jules()
+	var t := brouillard() if world == "brouillard" else lumineux()
 	# Prénom de l'enfant connecté (toute famille), titre propre à chaque monde.
 	var player := str(Session.profile.get("name", ""))
 	if player != "":
-		t.hero_name = ("%s, apprenti Archiviste" if world != "tom" else "%s, Archiviste") % player
+		t.hero_name = ("%s, Archiviste" if world == "brouillard" else "%s, apprenti Archiviste") % player
 	if Accessibility.on("colorblind"):
 		# Juste / faux distinguables sans le rouge et le vert (daltonisme le plus fréquent).
 		t.good = Color("#3d8bfd")
@@ -50,9 +51,9 @@ static func for_world(world: String) -> WorldTheme:
 	return t
 
 
-static func jules() -> WorldTheme:
+static func lumineux() -> WorldTheme:
 	var t := WorldTheme.new()
-	t.id = "jules"
+	t.id = "lumineux"
 	t.title = "Les Chroniques d'Aldoria"
 	t.companion = true
 	t.hero_name = "Apprenti Archiviste"
@@ -81,9 +82,9 @@ static func jules() -> WorldTheme:
 	return t
 
 
-static func tom() -> WorldTheme:
+static func brouillard() -> WorldTheme:
 	var t := WorldTheme.new()
-	t.id = "tom"
+	t.id = "brouillard"
 	t.title = "Les Chroniques d'Aldoria"
 	t.hero_name = "Archiviste"
 	t.enemy_models = ["Skeleton_Warrior", "Skeleton_Rogue", "Skeleton_Warrior", "Skeleton_Mage"]

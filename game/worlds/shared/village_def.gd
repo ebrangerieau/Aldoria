@@ -22,8 +22,14 @@ const ANSWER_XP := 10
 @export var decor: Dictionary = {}
 
 
-static func for_world(world: String) -> VillageDef:
-	return brumegarde() if world == "tom" else clairval()
+## Village d'une classe (ses enquêtes en dépendent) ; null si la classe n'en a pas encore.
+static func for_level(level: String) -> VillageDef:
+	match level:
+		"6e":
+			return clairval()
+		"2nde":
+			return brumegarde()
+	return null
 
 
 ## Paramètres de `POST /play/session/start` : les enquêtes, deux quêtes d'avance chacune.

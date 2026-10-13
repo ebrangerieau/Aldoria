@@ -12,7 +12,7 @@ func before_each() -> void:
 	Session._queue.clear()
 	SaveManager._profile_id = 0
 	SaveManager.data = SaveManager.default_data()
-	Session.profile = {"name": "Test", "world": "jules", "level": "6e"}
+	Session.profile = {"name": "Test", "world": "lumineux", "level": "6e"}
 	Session._apply_pack(JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/pack_6e.json")))
 
 

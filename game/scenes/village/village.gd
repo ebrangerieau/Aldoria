@@ -31,7 +31,7 @@ var _ending := false
 
 func _ready() -> void:
 	_wt = WorldTheme.for_world(Session.world())
-	_def = VillageDef.for_world(Session.world())
+	_def = VillageDef.for_level(Session.level())
 	_today = DailyChallenge.today()
 	QuestionService.reset()
 

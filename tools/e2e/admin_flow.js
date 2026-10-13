@@ -119,6 +119,16 @@ const { chromium } = require('playwright-core');
   await code.getByText('Code changé ✓').waitFor();
   if ((await code.getByLabel('Nouveau code').inputValue()) !== '') problems.push('le code reste affiché après le changement');
   await shot('8_reglages_tom');
+  // Classe et monde : une classe sans programme est proposée « bientôt » ; le monde se change puis revient.
+  const classe = page.locator('#classe');
+  await classe.locator('option').first().waitFor({ state: 'attached' });
+  const options = await classe.locator('select').evaluate((select) => [...select.options].map((o) => [o.value, o.disabled]));
+  const fifth = options.find(([value]) => value === '5e');
+  if (!fifth || !fifth[1]) problems.push(`5ème proposable sans programme : ${JSON.stringify(options)}`);
+  await classe.getByRole('button', { name: /lumineuse/ }).click();
+  await page.waitForResponse((r) => r.url().includes('/profiles/') && r.request().method() === 'PATCH');
+  await classe.getByRole('button', { name: /Brouillard/ }).click();
+  await page.waitForResponse((r) => r.url().includes('/profiles/') && r.request().method() === 'PATCH');
 
   // Famille : un enfant ajouté puis supprimé (banc réutilisé), un lien d'invitation, un code d'appareil.
   await page.getByRole('button', { name: 'Famille', exact: true }).click();

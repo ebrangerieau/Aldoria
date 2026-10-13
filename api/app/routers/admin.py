@@ -24,8 +24,9 @@ from app.accounts import CurrentAdult, CurrentOperator
 from app.auth import hash_pin, verify_pin
 from app.config import get_settings
 from app.db import get_db
-from app.engine import accommodations, tracking
+from app.engine import accommodations, levels, tracking
 from app.engine.accommodations import Accommodations
+from app.engine.levels import LevelCode, WorldCode
 from app.errors import ApiError
 from app.models import (
     Adult,
@@ -70,6 +71,9 @@ class RatiosIn(BaseModel):
 class ProfileSettingsIn(BaseModel):
     session_max_minutes: int | None = Field(default=None, ge=5, le=120)
     ratios: RatiosIn | None = None
+    # Passage de classe (une classe dont le programme est chargé) et monde de l'enfant.
+    level: LevelCode | None = None
+    world: WorldCode | None = None
 
 
 class PinIn(BaseModel):
@@ -85,6 +89,19 @@ class NotionDecisionIn(BaseModel):
 
 
 # --- Routes ---------------------------------------------------------------------------
+
+
+@router.get("/levels")
+async def list_levels(parent: CurrentParent, db: Db) -> dict[str, Any]:
+    """Classes (disponibles si leur programme est chargé) et mondes, pour les formulaires."""
+    ready = await levels.available(db)
+    return {
+        "levels": [
+            {"code": lv.code, "label": lv.label, "available": lv.code in ready}
+            for lv in levels.LEVELS
+        ],
+        "worlds": [{"code": code, "label": text} for code, text in levels.WORLDS.items()],
+    }
 
 
 @router.get("/backups")
@@ -111,6 +128,18 @@ async def update_profile(
     profile_id: int, body: ProfileSettingsIn, parent: CurrentParent, db: Db
 ) -> dict[str, Any]:
     profile = await _profile(db, profile_id, parent)
+    if body.level is not None and body.level != profile.level:
+        if body.level not in await levels.available(db):
+            raise ApiError(
+                422,
+                "level_unavailable",
+                f"La {levels.label(body.level)} n'est pas encore dans le jeu.",
+            )
+        # Les réponses, le suivi des notions et la partie sont gardés : les notions de
+        # l'année précédente reviennent en révision (tracking._prior_notions).
+        profile.level = body.level
+    if body.world is not None:
+        profile.world = body.world
     if body.session_max_minutes is not None:
         profile.session_max_minutes = body.session_max_minutes
     if body.ratios is not None:
@@ -488,6 +517,7 @@ def _profile_out(p: Profile) -> dict[str, Any]:
         "id": p.id,
         "name": p.name,
         "level": p.level,
+        "level_label": levels.label(p.level),
         "world": p.world,
         "avatar": p.avatar,
         "session_max_minutes": p.session_max_minutes,

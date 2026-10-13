@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { api, ApiError, type Level, type Link, type Me, type Profile } from './api'
+import { api, ApiError, type Level, type Link, type Me, type Profile, type World } from './api'
 
 // Onglet « Famille » : enfants, adultes, appareils reliés, mon compte, suppression.
 export function Family({ me, children }: { me: Me; children: Profile[] }) {
@@ -93,14 +93,17 @@ function FamilyName({ me }: { me: Me }) {
 function Children({ children }: { children: Profile[] }) {
   const client = useQueryClient()
   const [name, setName] = useState('')
+  const info = useQuery({ queryKey: ['levels'], queryFn: api.levels })
   const [level, setLevel] = useState<Level>('6e')
+  const [world, setWorld] = useState<World | ''>('')
   const [pin, setPin] = useState('')
   const [again, setAgain] = useState('')
   const [removing, setRemoving] = useState<number | null>(null)
   const [confirm, setConfirm] = useState('')
   const digits = (value: string) => value.replace(/[^0-9]/g, '').slice(0, 4)
   const create = useMutation({
-    mutationFn: () => api.createChild(name.trim(), level, pin),
+    // Monde par défaut selon le cycle : lumineux au collège, Brouillard au lycée.
+    mutationFn: () => api.createChild(name.trim(), level, world || (['2nde', '1ere', 'term'].includes(level) ? 'brouillard' : 'lumineux'), pin),
     onSuccess: () => {
       setName('')
       setPin('')
@@ -126,7 +129,7 @@ function Children({ children }: { children: Profile[] }) {
           <li key={p.id}>
             <div className="row spread">
               <span>
-                <strong>{p.name}</strong> <span className="muted">· {p.level === '6e' ? '6ème' : 'Seconde'}</span>
+                <strong>{p.name}</strong> <span className="muted">· {p.level_label}</span>
               </span>
               {removing !== p.id && (
                 <button
@@ -176,8 +179,23 @@ function Children({ children }: { children: Profile[] }) {
         <label>
           Classe{' '}
           <select value={level} onChange={(e) => setLevel(e.target.value as Level)}>
-            <option value="6e">6ème</option>
-            <option value="2nde">Seconde</option>
+            {info.data?.levels.map((l) => (
+              <option key={l.code} value={l.code} disabled={!l.available}>
+                {l.label}
+                {l.available ? '' : ' (bientôt)'}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Monde{' '}
+          <select value={world} onChange={(e) => setWorld(e.target.value as World | '')}>
+            <option value="">Selon la classe</option>
+            {info.data?.worlds.map((w) => (
+              <option key={w.code} value={w.code}>
+                {w.label}
+              </option>
+            ))}
           </select>
         </label>
         <label>
@@ -196,8 +214,8 @@ function Children({ children }: { children: Profile[] }) {
       {create.isError && <p className="status-line bad">{errorText(create.error)}</p>}
       {create.isSuccess && <p className="status-line ok">Enfant ajouté ✓ Il apparaît dans le jeu sur les appareils de la famille.</p>}
       <p className="muted small">
-        6ème : le monde lumineux d'Aldoria et un renard compagnon. Seconde : le monde du Brouillard, plus sombre, avec les automatismes de
-        l'épreuve anticipée.
+        La classe fixe les questions, les donjons et le village ; le monde ne change que l'ambiance (Aldoria lumineuse avec un renard
+        compagnon, ou le Brouillard, plus sombre). Par défaut : lumineux au collège, Brouillard au lycée ; modifiable dans Réglages.
       </p>
     </section>
   )

@@ -13,7 +13,7 @@ func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	_dev_accommodations()
 	var level := Quality.option("level", "6e")
-	var world := "tom" if level == "2nde" else "jules"
+	var world := "brouillard" if level == "2nde" else "lumineux"
 	var wt := WorldTheme.for_world(world)
 	var bg := ColorRect.new()
 	bg.color = wt.background

@@ -33,7 +33,7 @@ func after_each() -> void:
 
 func _load(world: String) -> void:
 	var level := "2nde" if world == "tom" else "6e"
-	Session.profile = {"name": "Test", "world": world, "level": level}
+	Session.profile = {"name": "Test", "world": "brouillard" if world == "tom" else "lumineux", "level": level}
 	Session._apply_pack(JSON.parse_string(FileAccess.get_file_as_string("res://tests/fixtures/pack_%s.json" % level)))
 
 
@@ -74,8 +74,8 @@ func test_quests_once_per_day() -> void:
 
 
 func test_villages_reference_existing_models_and_generators() -> void:
-	for world in ["jules", "tom"]:
-		var village := VillageDef.for_world(world)
+	for level in ["6e", "2nde"]:
+		var village := VillageDef.for_level(level)
 		assert_gt(village.npcs.size(), 2)
 		var codes := {}
 		for npc in village.npcs:

@@ -117,7 +117,7 @@ function Space() {
         <nav className="children" aria-label="Enfant">
           {children.map((p) => (
             <button key={p.id} className={p.id === child?.id ? 'chip active' : 'chip'} onClick={() => setChildId(p.id)}>
-              {p.name} <span className="muted">{p.level === '6e' ? '6ème' : 'Seconde'}</span>
+              {p.name} <span className="muted">{p.level_label}</span>
             </button>
           ))}
         </nav>

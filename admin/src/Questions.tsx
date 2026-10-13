@@ -13,6 +13,7 @@ import {
   type QuestionType,
   TYPE_LABELS,
 } from './api'
+import { LEVEL_LABELS } from './api'
 import { QuestionPreview } from './QuestionPreview'
 
 export type View = 'bank' | 'import' | 'generators'
@@ -456,7 +457,7 @@ function Import({ level, onDone }: { level: Level; onDone: () => void }) {
   }
   return (
     <section className="card stack">
-      <h2>Importer des questions ({level === '6e' ? '6ème' : 'Seconde'})</h2>
+      <h2>Importer des questions ({LEVEL_LABELS[level] ?? level})</h2>
       <p className="muted small">
         Le fichier est d'abord vérifié ligne par ligne, sans rien enregistrer. Les questions valides sont ensuite ajoutées en brouillon : relisez-les
         et publiez-les depuis la banque.

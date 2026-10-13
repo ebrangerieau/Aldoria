@@ -33,6 +33,9 @@ class NotionInfo:
     code: str
     chapter: str
     automatism: bool
+    # Notion d'une classe précédente déjà travaillée : seulement en révision espacée
+    # (prérequis), jamais comme nouveau chapitre ni comme automatisme.
+    prior: bool = False
 
 
 @dataclass(frozen=True)
@@ -80,8 +83,8 @@ def select(
     if not notions:
         return []
     state = {n.code: progress.get(n.code, NotionProgress()) for n in notions}
-    learning = [n for n in notions if not n.automatism]
-    automatisms = [n for n in notions if n.automatism]
+    learning = [n for n in notions if not n.automatism and not n.prior]
+    automatisms = [n for n in notions if n.automatism and not n.prior]
 
     current = {c for c, s in chapter_status.items() if s in CURRENT}
     test_soon = {c for c, s in chapter_status.items() if s == "controle_bientot"}

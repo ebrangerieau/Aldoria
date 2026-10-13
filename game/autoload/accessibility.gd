@@ -121,6 +121,7 @@ func refresh() -> void:
 	if res.ok:
 		apply_parent(res.data.get("accommodations", {}))
 		Session.remember_accommodations(parent)
+		Session.update_profile(res.data.get("profile", {}))
 
 
 func set_pref(key: String, value: Variant) -> void:

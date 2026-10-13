@@ -1,7 +1,24 @@
 // Accès à l'API parent (/api/v1/admin), servie sur la même origine que cette page.
 // Connexion d'un adulte : cookie de session posé par l'API (HttpOnly, envoyé tout seul).
 
-export type Level = '6e' | '2nde'
+// Classes de la 6e à la terminale (api/app/engine/levels.py) ; une classe n'est proposée
+// que si son programme est dans le jeu (`available`).
+export type Level = '6e' | '5e' | '4e' | '3e' | '2nde' | '1ere' | 'term'
+export type World = 'lumineux' | 'brouillard'
+export const LEVEL_LABELS: Record<string, string> = {
+  '6e': '6ème',
+  '5e': '5ème',
+  '4e': '4ème',
+  '3e': '3ème',
+  '2nde': 'Seconde',
+  '1ere': 'Première',
+  term: 'Terminale',
+}
+
+export interface LevelsInfo {
+  levels: { code: Level; label: string; available: boolean }[]
+  worlds: { code: World; label: string }[]
+}
 export type ChapterStatus = 'a_venir' | 'en_cours' | 'controle_bientot' | 'termine'
 export type NotionState = 'acquise' | 'fragile' | 'non acquise' | 'non vue'
 
@@ -17,7 +34,8 @@ export interface Profile {
   id: number
   name: string
   level: Level
-  world: string
+  level_label: string
+  world: World
   avatar: string
   session_max_minutes: number
   ratios: Ratios
@@ -156,6 +174,7 @@ export interface Notion {
 export interface Chapter {
   code: string
   title: string
+  subject: { code: string; label: string }
   status: ChapterStatus
   test_date: string | null
   notions: Notion[]
@@ -293,7 +312,7 @@ export const api = {
   removeAdult: (id: number) => request<null>('DELETE', `/adults/${id}`),
   renameFamily: (name: string) => request<Me>('PUT', '/family', { name }),
   deleteFamily: (confirm: string) => request<null>('POST', '/family/delete', { confirm }),
-  createChild: (name: string, level: Level, pin: string) => request<Profile>('POST', '/profiles', { name, level, pin }),
+  createChild: (name: string, level: Level, world: World, pin: string) => request<Profile>('POST', '/profiles', { name, level, world, pin }),
   deleteChild: (id: number, confirm: string) => request<null>('POST', `/profiles/${id}/delete`, { confirm }),
   devices: () => request<Device[]>('GET', '/devices'),
   deviceCode: (name: string) => request<{ code: string; expires_at: string }>('POST', '/devices/code', { name }),
@@ -309,6 +328,9 @@ export const api = {
       status,
       test_date,
     }),
+  levels: () => request<LevelsInfo>('GET', '/levels'),
+  setLevel: (id: number, level: Level) => request<Profile>('PATCH', `/profiles/${id}`, { level }),
+  setWorld: (id: number, world: World) => request<Profile>('PATCH', `/profiles/${id}`, { world }),
   setMaxMinutes: (id: number, session_max_minutes: number) => request<Profile>('PATCH', `/profiles/${id}`, { session_max_minutes }),
   setRatios: (id: number, ratios: Ratios) => request<Profile>('PATCH', `/profiles/${id}`, { ratios }),
   setAccommodations: (id: number, accommodations: Accommodations) =>
