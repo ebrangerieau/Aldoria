@@ -65,7 +65,10 @@ Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-
 
 - GDScript typé, `class_name` pour les types partagés, signaux plutôt que couplage direct.
 - Le gameplay ne connaît jamais le contenu d'une question (TRD §2.3) : il passe par `QuestionService`.
-  Un donjon (`DungeonDef`, trois par monde) ne transmet que ses chapitres et son générateur d'énigme à
+  Un donjon (`DungeonDef`) appartient à une matière (`subject`, une région par matière, un onglet au camp ; dans
+  une région, ouverts l'un après l'autre : `DungeonDef.previous`). Son paquet reste dans sa matière (`tracking`).
+  Sans automatismes dans la matière, la frappe rapide prend une question du chapitre un cran plus facile.
+  Il ne transmet que ses chapitres et son générateur d'énigme à
   `session/start` ; `api/tests/test_dungeon.py` vérifie qu'ils existent côté API. Son décor (`decor`) est lu
   par `DungeonLevel`.
 - Village (`VillageDef`) : chaque habitant confie une quête de trois questions par jour (`revision`, `veille`,

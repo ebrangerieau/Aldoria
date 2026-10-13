@@ -52,7 +52,12 @@ const { chromium } = require('playwright-core');
   }
   await page.waitForTimeout(4000);   // connexion + sauvegarde → camp
   await shot('2_camp');
-  await page.mouse.click(642, 226);  // « Entrer » dans le premier donjon (paquet + scène 3D)
+  await page.mouse.click(578, 150);  // onglet « Anglais » : la Bibliothèque des Langues
+  await page.waitForTimeout(600);
+  await shot('2b_camp_anglais');
+  await page.mouse.click(205, 150);  // retour à l'onglet « Maths »
+  await page.waitForTimeout(600);
+  await page.mouse.click(642, 284);  // « Entrer » dans le premier donjon (paquet + scène 3D)
   await page.waitForTimeout(6000);
   await shot('3_donjon_intro');
   await page.mouse.click(640, 730);  // « En avant ! »

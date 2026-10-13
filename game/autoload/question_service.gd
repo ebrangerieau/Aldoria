@@ -53,6 +53,10 @@ func level_for(role: String) -> int:
 func next_item(role := "", level := 0) -> Dictionary:
 	var all_of_role: Array = Session.items.filter(func(it: Dictionary) -> bool:
 		return role == "" or it["role"] == role)
+	if all_of_role.is_empty() and role == "automatisme":
+		# Matière sans automatismes (donjon d'anglais) : la frappe rapide prend une question
+		# du chapitre, un cran plus facile.
+		return next_item("chapitre", level if level > 0 else maxi(1, level_for("chapitre") - 1))
 	var pool: Array = all_of_role.filter(func(it: Dictionary) -> bool: return not _used.has(it["id"]))
 	if pool.is_empty():
 		# Paquet épuisé pour ce rôle : on recommence (les items sont nombreux et variés).

@@ -1,6 +1,6 @@
 extends Control
-## Camp de base : niveau et XP du héros, les trois donjons du monde (ouverts l'un
-## après l'autre), le village et ses quêtes, le défi du jour, l'arène d'entraînement,
+## Camp de base : niveau et XP du héros, les donjons de la classe rangés par région (un
+## onglet par matière ; dans une région, ouverts l'un après l'autre), le village et ses quêtes, le défi du jour, l'arène d'entraînement,
 ## les Archives et l'apparence du héros (★ quand un choix vient de se débloquer). Récupère la sauvegarde du serveur à l'arrivée (autre appareil, TRD §2.7).
 
 var _wt: WorldTheme
@@ -9,6 +9,10 @@ var _level: Label
 var _xp_bar: ProgressBar
 var _xp_text: Label
 var _dungeon_rows: Array[Dictionary] = []  # {panel, state, button}
+var _region_tabs: Dictionary = {}  # matière → bouton d'onglet
+var _region_spacer: Control  # région de moins de trois donjons : chaque carte garde un tiers de la hauteur
+## Région affichée (matière), gardée tant que le jeu tourne.
+static var _region := ""
 var _village: VillageDef
 var _village_state: Label
 var _daily_state: Label
@@ -105,17 +109,34 @@ func _build() -> void:
 	main.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(main)
 
-	# Les trois donjons, l'un sous l'autre.
+	# Les donjons de la région choisie, l'un sous l'autre ; un onglet par matière.
 	var dungeons := VBoxContainer.new()
 	dungeons.add_theme_constant_override("separation", 12)
 	dungeons.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	dungeons.size_flags_stretch_ratio = 1.55
 	main.add_child(dungeons)
+	var subjects := DungeonDef.subjects(_dungeons)
+	if not _region in subjects:
+		_region = subjects[0] if not subjects.is_empty() else ""
+	if subjects.size() > 1:
+		var tabs := HBoxContainer.new()
+		tabs.add_theme_constant_override("separation", 10)
+		for subject in subjects:
+			var tab := UiKit.button(DungeonDef.SUBJECT_LABELS.get(subject, subject), 52.0)
+			tab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+			tab.pressed.connect(_show_region.bind(subject))
+			tabs.add_child(tab)
+			_region_tabs[subject] = tab
+		dungeons.add_child(tabs)
 	for i in _dungeons.size():
 		var d := _dungeons[i]
 		var row := _row(dungeons, d.title, d.chapter_title)
 		row["button"].pressed.connect(_enter_dungeon.bind(i))
 		_dungeon_rows.append(row)
+	_region_spacer = Control.new()
+	_region_spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	dungeons.add_child(_region_spacer)
+	_show_region(_region)
 	if _dungeons.is_empty():
 		# Classe dont les régions sont encore en préparation : le reste du camp fonctionne.
 		var soon := PanelContainer.new()
@@ -197,6 +218,7 @@ func _refresh() -> void:
 	_xp_text.text = "%d / %d XP" % [xp, Progression.xp_for_level(level + 1)]
 	for i in _dungeons.size():
 		_refresh_dungeon(i)
+	_show_region(_region)
 	_refresh_daily()
 	var unlocked := Wardrobe.unlocked_count(level, SaveManager.dungeons_done(), _wt.companion)
 	_look_button.text = "Apparence ★" if unlocked > int(SaveManager.look()["seen"]) else "Apparence"
@@ -214,7 +236,7 @@ func _refresh_dungeon(i: int) -> void:
 	var b: Button = row["button"]
 	var panel: PanelContainer = row["panel"]
 	if not SaveManager.dungeon_unlocked(_dungeons, i):
-		state_label.text = "Termine « %s » pour l'ouvrir." % _dungeons[i - 1].title
+		state_label.text = "Termine « %s » pour l'ouvrir." % DungeonDef.previous(_dungeons, i).title
 		state_label.add_theme_color_override("font_color", _wt.text)
 		b.text = "Fermé"
 		b.disabled = true
@@ -235,6 +257,33 @@ func _refresh_dungeon(i: int) -> void:
 	else:
 		state_label.text = "%d salles, une énigme et un boss." % d.room_count()
 		b.text = "Entrer"
+
+
+## Onglet de région : ses donjons seulement. Une région jamais visitée est signalée.
+func _show_region(subject: String) -> void:
+	_region = subject
+	var shown := 0
+	for i in _dungeons.size():
+		(_dungeon_rows[i]["panel"] as Control).visible = _dungeons[i].subject == subject
+		shown += 1 if _dungeons[i].subject == subject else 0
+	if _region_spacer != null:
+		_region_spacer.visible = shown > 0 and shown < 3
+		_region_spacer.size_flags_stretch_ratio = maxf(1.0, 3.0 - shown)
+	var first: String = DungeonDef.subjects(_dungeons).front() if not _dungeons.is_empty() else ""
+	for key in _region_tabs:
+		var tab: Button = _region_tabs[key]
+		var label: String = DungeonDef.SUBJECT_LABELS.get(key, key)
+		var fresh := _dungeons.all(func(d: DungeonDef) -> bool:
+			var state := SaveManager.dungeon(d.code)
+			return d.subject != key or (int(state["completed"]) == 0 and int(state["checkpoint"]) == 0))
+		tab.text = label + (" · nouveau !" if fresh and key != subject and key != first else "")
+		if key == subject:
+			for style in ["normal", "hover", "pressed"]:
+				tab.remove_theme_stylebox_override(style)
+			for color in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
+				tab.remove_theme_color_override(color)
+		else:
+			UiKit.style_secondary(tab, _wt)
 
 
 func _refresh_daily() -> void:

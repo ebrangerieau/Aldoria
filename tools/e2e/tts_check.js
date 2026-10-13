@@ -51,7 +51,7 @@ const { chromium } = require('playwright-core');
       await page.waitForTimeout(120);
     }
     await page.waitForTimeout(5000);
-    await page.mouse.click(642, 226); // « Entrer » dans le premier donjon
+    await page.mouse.click(642, 284); // « Entrer » dans le premier donjon
     await page.waitForTimeout(7000);
     const spoken = await page.evaluate(() => window.__spoken);
     console.log('Textes confiés à la synthèse vocale :\n  ' + spoken.join('\n  '));

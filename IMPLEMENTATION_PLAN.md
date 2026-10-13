@@ -452,6 +452,14 @@ générateurs naturels, donc des questions à rédiger.
 - Jules : **anglais** (vocabulaire, écoute) ou **histoire-géographie** (frises, cartes).
 - Critère de passage : l'enfant joue la matière pilote spontanément deux semaines de suite.
 
+> 🚧 **Étape C en cours (2026-10-13)** : une région par matière au camp (onglets « Maths » / « Anglais », la
+> nouvelle signalée « nouveau ! », premier donjon de chaque région ouvert d'emblée). **La Bibliothèque des Langues**
+> (Jules) : 6 salles, questions d'anglais seulement (vocabulaire par le générateur, grammaire et communication par
+> la banque), énigme « Les Livres en désordre » (lettres d'un mot anglais à remettre dans l'ordre, mot prononcé,
+> notion « épeler et écrire »), boss « le Bibliothécaire Muet ». Les donjons de maths ne reçoivent plus de
+> questions d'anglais. Reste : le donjon de français de Tom (après une première série de questions publiées),
+> les Archives regroupées par matière, puis les deux semaines d'observation.
+
 **Étape D – Rentrée 2027** (prête avant juillet 2027)
 - Programmes de 5e (Jules) et de 1ère (tronc commun + spécialités de Tom, connues au printemps 2027).
 - Mode « vacances » (juillet – août), nouvelle région par enfant, passage de classe testé sur une copie de la

@@ -40,6 +40,16 @@ func test_next_item_respects_role_and_starts_easy() -> void:
 		assert_eq(int(item["difficulty"]), 1, "on commence au niveau 1")
 
 
+func test_quick_strike_without_automatisms_takes_an_easy_chapter_item() -> void:
+	# Donjon d'anglais : pas d'automatismes dans le paquet.
+	_load_pack("6e")
+	Session.items = Session.items.filter(func(it: Dictionary) -> bool: return it["role"] != "automatisme")
+	var item := QuestionService.next_item("automatisme")
+	assert_false(item.is_empty(), "la frappe rapide a toujours une question")
+	assert_eq(item["role"], "chapitre")
+	assert_eq(int(item["difficulty"]), 1)
+
+
 func test_difficulty_rises_after_two_successes_and_drops_after_error() -> void:
 	_load_pack("2nde")
 	for i in 2:

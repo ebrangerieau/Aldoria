@@ -162,6 +162,10 @@ async def _combat_pack(
     ]
     if not rows:  # programme pas encore chargé : paquet sans historique
         return session_pack.build(profile.level, rng)
+    if focus_chapters:
+        # Donjon : toutes ses questions (sorts, frappes, révisions) restent dans sa matière.
+        subjects = {c.subject_id for _, c in rows if c.code in focus_chapters}
+        rows = [(n, c) for n, c in rows if not subjects or c.subject_id in subjects]
     states = await _states(db, profile.id)
     statuses = {
         c.code: s.status

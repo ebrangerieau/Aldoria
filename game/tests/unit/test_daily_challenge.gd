@@ -80,7 +80,7 @@ func test_old_save_without_daily_section_is_completed() -> void:
 
 func test_dungeons_open_one_after_the_other() -> void:
 	for level in ["6e", "2nde"]:
-		var dungeons := DungeonDef.all_for_level(level)
+		var dungeons := DungeonDef.all_for_level(level).filter(func(d: DungeonDef) -> bool: return d.subject == "maths")
 		assert_eq(dungeons.size(), 3)
 		assert_true(SaveManager.dungeon_unlocked(dungeons, 0))
 		assert_false(SaveManager.dungeon_unlocked(dungeons, 1))
@@ -89,3 +89,15 @@ func test_dungeons_open_one_after_the_other() -> void:
 		SaveManager.complete_dungeon(dungeons[0].code)
 		assert_true(SaveManager.dungeon_unlocked(dungeons, 1))
 		assert_false(SaveManager.dungeon_unlocked(dungeons, 2))
+
+
+func test_each_region_opens_its_first_dungeon() -> void:
+	var dungeons := DungeonDef.all_for_level("6e")
+	assert_eq(DungeonDef.subjects(dungeons), ["maths", "anglais"] as Array[String])
+	var english := -1
+	for i in dungeons.size():
+		if dungeons[i].code == "bibliotheque_langues":
+			english = i
+	assert_true(english > 0)
+	assert_eq(DungeonDef.previous(dungeons, english), null, "premier donjon de sa région")
+	assert_true(SaveManager.dungeon_unlocked(dungeons, english), "ouvert sans finir les maths")

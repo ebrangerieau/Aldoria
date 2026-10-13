@@ -82,8 +82,10 @@ func bestiary() -> Dictionary:
 
 
 ## Un donjon est ouvert quand le précédent du même monde a été terminé une fois.
+## Premier donjon d'une région : ouvert ; sinon, le précédent de la région terminé une fois.
 func dungeon_unlocked(dungeons: Array[DungeonDef], index: int) -> bool:
-	return index == 0 or int(dungeon(dungeons[index - 1].code)["completed"]) > 0
+	var before := DungeonDef.previous(dungeons, index)
+	return before == null or int(dungeon(before.code)["completed"]) > 0
 
 
 func daily() -> Dictionary:

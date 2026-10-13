@@ -5,8 +5,9 @@ extends Resource
 ## ne connaît pas le contenu des questions : il transmet `session_params()` au
 ## serveur, qui compose le paquet (chapitres ciblés + items de l'énigme).
 ##
-## Trois donjons par monde, ouverts l'un après l'autre : le suivant s'ouvre quand le
-## précédent a été terminé une fois.
+## Les donjons d'une classe sont rangés par matière (`subject`), une région par matière
+## (`REGIONS`) : dans une région, ils s'ouvrent l'un après l'autre (le suivant quand le
+## précédent a été terminé une fois). Chaque région a son premier donjon ouvert.
 ##
 ## Salles, d'ouest en est : `kind` = entree | combat | enigme | boss.
 ## Ennemi : {model, name, hp, tier (force), xp, at: Vector2 (position dans la salle,
@@ -14,8 +15,16 @@ extends Resource
 ## Décor (`decor`, lu par DungeonLevel) : sol, murs du fond, bannières, objets le long
 ## des murs, couleur des torches. Absent : décor de la Tour et du Labyrinthe.
 
+const REGIONS := {
+	"maths": "Les Cimes Fractales",
+	"anglais": "La Bibliothèque des Langues",
+	"francais": "La Salle des Chroniques",
+}
+const SUBJECT_LABELS := {"maths": "Maths", "anglais": "Anglais", "francais": "Français"}
+
 @export var code := ""
 @export var title := ""
+@export var subject := "maths"
 @export var chapter_codes: Array[String] = []
 @export var chapter_title := ""
 @export var intro := ""
@@ -35,7 +44,7 @@ extends Resource
 static func all_for_level(level: String) -> Array[DungeonDef]:
 	match level:
 		"6e":
-			return [tour_fractions(), atelier_balances(), observatoire_angles()]
+			return [tour_fractions(), atelier_balances(), observatoire_angles(), bibliotheque_langues()]
 		"2nde":
 			return [labyrinthe_vecteurs(), forge_algebre(), citadelle_fonctions()]
 	return []
@@ -48,6 +57,23 @@ static func by_code(level: String, dungeon_code: String) -> DungeonDef:
 		if d.code == dungeon_code:
 			return d
 	return dungeons[0] if not dungeons.is_empty() else null
+
+
+## Donjon à terminer avant celui-ci (le précédent de sa région), null pour le premier.
+static func previous(dungeons: Array[DungeonDef], index: int) -> DungeonDef:
+	for i in range(index - 1, -1, -1):
+		if dungeons[i].subject == dungeons[index].subject:
+			return dungeons[i]
+	return null
+
+
+## Matières qui ont des donjons, dans l'ordre de la liste (maths d'abord).
+static func subjects(dungeons: Array[DungeonDef]) -> Array[String]:
+	var out: Array[String] = []
+	for d in dungeons:
+		if not d.subject in out:
+			out.append(d.subject)
+	return out
 
 
 ## Paramètres de `POST /play/session/start`.
@@ -190,6 +216,55 @@ static func observatoire_angles() -> DungeonDef:
 			["shelves", Vector3(14.9, 0, 5.2), -90.0, 0.8],
 		],
 		"torch_color": Color(0.78, 0.82, 1.0),
+	}
+	return d
+
+
+# Anglais : la Bibliothèque des Langues (matière pilote de Jules, étape C).
+static func bibliotheque_langues() -> DungeonDef:
+	var d := DungeonDef.new()
+	d.code = "bibliotheque_langues"
+	d.title = "La Bibliothèque des Langues"
+	d.subject = "anglais"
+	d.chapter_codes = ["6e.anglais.vocabulaire", "6e.anglais.grammaire", "6e.anglais.communication"]
+	d.chapter_title = "Anglais : vocabulaire et grammaire"
+	d.intro = "Le Bibliothécaire Muet a volé les mots anglais des livres : les pages sont blanches ! Reprends-lui chaque mot, salle après salle."
+	d.enigma_generator = "6e.anglais.lettres"
+	d.enigma_title = "Les Livres en désordre"
+	d.enigma_intro = "Trois livres ont perdu leur titre : les lettres sont tombées en vrac. Écoute chaque mot et remets ses lettres dans l'ordre."
+	d.enigma_xp = 45
+	d.chest_xp = 120
+	d.outro = "Les livres parlent de nouveau anglais. « Thank you, Archivist! » murmure la Bibliothèque."
+	d.rooms = [
+		{"kind": "entree", "title": "Le Hall des Langues"},
+		{"kind": "combat", "title": "Le Rayon des Couleurs", "enemies": [
+			_enemy("Skeleton_Minion", "Squelette bavard", 60, 1, 30, Vector2(11, 7)),
+		]},
+		{"kind": "combat", "title": "La Salle des Dictionnaires", "enemies": [
+			_enemy("Skeleton_Rogue", "Voleur de mots", 75, 2, 35, Vector2(8, 5)),
+			_enemy("Skeleton_Minion", "Squelette muet", 75, 2, 35, Vector2(12.5, 10)),
+		]},
+		{"kind": "enigme", "title": "La Salle des Livres en désordre"},
+		{"kind": "combat", "title": "La Galerie des Grammaires", "enemies": [
+			_enemy("Skeleton_Mage", "Grammairien d'os", 110, 3, 50, Vector2(11, 7)),
+		]},
+		{"kind": "boss", "title": "Le Bureau du Bibliothécaire", "enemies": [
+			_enemy("Skeleton_Mage", "Le Bibliothécaire Muet", 210, 4, 155, Vector2(11, 6), 1.45),
+		]},
+	]
+	d.decor = {
+		"floor": "floor_wood_large",
+		"floor_accent": "floor_wood_large_dark",
+		"walls": ["wall_shelves", "wall_window_open"],
+		"banners": ["banner_patternA_blue", "banner_patternC_white"],
+		"props": [
+			["shelf_large", Vector3(1.4, 0, 4.0), 90.0, 0.9],
+			["table_long_decorated_A", Vector3(2.4, 0, 1.4), 0.0, 1.0],
+			["candle_triple", Vector3(13.2, 0, 1.0), 0.0, 0.3],
+			["shelves", Vector3(14.9, 0, 5.2), -90.0, 0.8],
+			["shelf_small_candles", Vector3(14.4, 0, 1.0), 0.0, 0.6],
+		],
+		"torch_color": Color(1.0, 0.86, 0.62),
 	}
 	return d
 

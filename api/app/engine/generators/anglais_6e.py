@@ -6,6 +6,10 @@ Formes selon la difficulté :
 4. écriture : écrire le mot anglais (accents et majuscules ignorés) ;
 5. dictée : écouter puis écrire le mot anglais.
 Les intrus viennent du même thème (pas de devinette par élimination de thème).
+
+Lettres mélangées (`6e.anglais.lettres`, notion « épeler et écrire ») : l'enfant remet dans
+l'ordre les lettres d'un mot (traduit et prononcé, puis seulement prononcé). C'est l'énigme
+de la Bibliothèque des Langues ; elle sert aussi en combat.
 """
 
 from __future__ import annotations
@@ -271,3 +275,61 @@ GENERATORS = [
     )
     for theme, (title, _words) in THEMES.items()
 ]
+
+
+# --- Énigme : les lettres mélangées -----------------------------------------------------------
+
+# Mots d'une seule pièce, lettres toutes différentes (l'ordre attendu est alors unique).
+SPELLABLE = sorted(
+    {
+        (english, french)
+        for _title, words in THEMES.values()
+        for english, french, _alt in words
+        if english.isalpha() and english.islower() and len(set(english)) == len(english)
+    }
+)
+# Difficulté → (longueurs de mot, mot français affiché).
+SPELLING = {
+    1: ((3, 4), True),
+    2: ((4, 5), True),
+    3: ((5, 6), True),
+    4: ((4, 5), False),
+    5: ((5, 6), False),
+}
+
+
+def _letters(difficulty: int, rng: random.Random) -> dict[str, Any]:
+    lengths, with_french = SPELLING[difficulty]
+    english, french = rng.choice([w for w in SPELLABLE if len(w[0]) in lengths])
+    shown = list(range(len(english)))
+    while shown == sorted(shown):
+        rng.shuffle(shown)
+    prompt = (
+        f"Les lettres de « {french} » en anglais se sont mélangées. Remets-les dans l'ordre."
+        if with_french
+        else "Écoute le mot anglais, puis remets ses lettres dans l'ordre."
+    )
+    return {
+        "type": "order",
+        "prompt": prompt,
+        "choices": [english[i] for i in shown],
+        "choices_lang": LISTEN_LANG,
+        "listen": {"text": english, "lang": LISTEN_LANG},
+        "answer": {"kind": "order", "value": [shown.index(i) for i in range(len(english))]},
+        "hint": f"Le mot commence par « {english[0]} ».",
+        "explanation": f"Le mot était « {english} » ({french}) : {'-'.join(english)}.",
+        "time_target_ms": 20000 + 4000 * difficulty,
+        "meta": {"english": english, "french": french},
+    }
+
+
+LETTERS = register(
+    Generator(
+        code="6e.anglais.lettres",
+        level="6e",
+        notion="6e.anglais.vocabulaire.orthographe",
+        role="chapitre",
+        title="Lettres mélangées",
+        generate=_letters,
+    )
+)

@@ -231,19 +231,64 @@ def test_game_dungeons_match_curriculum_and_generators():
     root = Path(__file__).resolve().parents[2]
     source = (root / "game/worlds/shared/dungeon_def.gd").read_text(encoding="utf-8")
     chapters = {}
-    for level in ("6e", "2nde"):
-        seed = json.loads((root / f"content/seed/{level}/curriculum.json").read_text("utf-8"))
-        chapters |= {c["code"]: level for c in seed["chapters"]}
+    for path in (root / "content/seed").glob("*/*.json"):
+        seed = json.loads(path.read_text("utf-8"))
+        chapters |= {c["code"]: seed["level"] for c in seed["chapters"]}
     playable = {n.rsplit(".", 1)[0] for n in playable_notions()}
     dungeons = re.findall(
         r'd\.code = "(\w+)".*?d\.chapter_codes = \[(.*?)\].*?d\.enigma_generator = "([\w.]+)"',
         source,
         re.S,
     )
-    assert len(dungeons) == 6
+    assert len(dungeons) == 7
     for code, chapter_list, enigma in dungeons:
         codes = re.findall(r'"([\w.]+)"', chapter_list)
         levels = {chapters[c] for c in codes}  # KeyError : chapitre absent du programme
         assert len(levels) == 1, code
-        assert all(c in playable for c in codes), code
+        # Un chapitre sans générateur se nourrit de la banque ; au moins un a un générateur.
+        assert any(c in playable for c in codes), code
         assert REGISTRY[enigma].level == levels.pop(), code
+
+
+async def test_english_dungeon_stays_in_english(client, login, curriculum):
+    """Bibliothèque des Langues : sorts, frappes et révisions en anglais seulement (aucune
+    question de maths), énigme des lettres mélangées."""
+    headers = await login("jules", "1234")
+    body = (
+        await client.post(
+            f"{API}/session/start",
+            json={
+                "mode": "donjon",
+                "focus_chapters": [
+                    "6e.anglais.vocabulaire",
+                    "6e.anglais.grammaire",
+                    "6e.anglais.communication",
+                ],
+                "enigma": {"generator": "6e.anglais.lettres", "count": 6},
+            },
+            headers=headers,
+        )
+    ).json()
+    items = body["items"]
+    assert items
+    assert all(i["notions"][0].startswith("6e.anglais.") for i in items)
+    enigma = [i for i in items if i["role"] == "enigme"]
+    assert len(enigma) == 6
+    for i in enigma:
+        assert i["type"] == "order" and i["listen"]["lang"] == "en-GB"
+        word = "".join(i["choices"][k] for k in i["answer"]["value"])
+        assert word.isalpha() and len(set(word)) == len(word), "lettres toutes différentes"
+        assert i["choices"] != list(word), "présenté mélangé"
+        assert answers.check(i["answer"], i["answer"]["value"])
+
+
+async def test_maths_dungeon_has_no_english(client, login, curriculum):
+    headers = await login("jules", "1234")
+    items = (
+        await client.post(
+            f"{API}/session/start",
+            json={"mode": "donjon", "focus_chapters": ["6e.maths.fractions"]},
+            headers=headers,
+        )
+    ).json()["items"]
+    assert all(i["notions"][0].startswith("6e.maths.") for i in items)

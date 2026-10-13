@@ -14,7 +14,8 @@
       {"code": "6e.anglais.vocabulaire.ecole", "label": "L'école"},
       {"code": "6e.anglais.vocabulaire.maison", "label": "La maison"},
       {"code": "6e.anglais.vocabulaire.temps", "label": "Les jours, les mois et la météo"},
-      {"code": "6e.anglais.vocabulaire.loisirs", "label": "Les sports et les loisirs"}
+      {"code": "6e.anglais.vocabulaire.loisirs", "label": "Les sports et les loisirs"},
+      {"code": "6e.anglais.vocabulaire.orthographe", "label": "Épeler et écrire les mots"}
     ]},
     {"code": "6e.anglais.grammaire", "title": "Grammaire de base", "notions": [
       {"code": "6e.anglais.grammaire.be", "label": "Le verbe be (am, is, are)"},
