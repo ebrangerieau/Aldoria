@@ -1,7 +1,8 @@
 extends Node
 ## Sauvegarde de partie (TRD §2.7) : XP, progression dans les donjons, bestiaire,
 ## défis quotidiens (jours faits, record, coffres de la semaine ouverts), quêtes du
-## village (dernier jour où chaque habitant a été aidé), apparence (« look », facultative).
+## village (dernier jour où chaque habitant a été aidé), apparence (« look », facultative),
+## objets du sac (« items », Inventory).
 ##
 ## Écrite d'abord dans `user://` (IndexedDB sur le web), puis envoyée au serveur
 ## (`PUT /play/save` avec la révision sur laquelle elle s'appuie). Deux appareils
@@ -39,7 +40,7 @@ func _ready() -> void:
 
 
 static func default_data() -> Dictionary:
-	return {"schema_version": SCHEMA_VERSION, "xp": 0, "dungeons": {}, "bestiary": {}, "daily": _default_daily(), "village": {}}
+	return {"schema_version": SCHEMA_VERSION, "xp": 0, "dungeons": {}, "bestiary": {}, "daily": _default_daily(), "village": {}, "items": {}}
 
 
 static func _default_daily() -> Dictionary:
@@ -139,7 +140,38 @@ func record_quest(npc_code: String, day: String) -> void:
 	_touch()
 
 
+## Objets du sac : {id: nombre} (Inventory).
+func items() -> Dictionary:
+	_ensure_loaded()
+	if not data.get("items") is Dictionary:
+		data["items"] = {}
+	return data["items"]
+
+
+func item_count(id: String) -> int:
+	return int(items().get(id, 0))
+
+
 # --- Modifications ---------------------------------------------------------------------
+
+## Récompense : `count` objets tirés au hasard (Inventory.draw). Rend ceux gagnés.
+func give_items(count: int) -> Array[String]:
+	var won := Inventory.draw(items(), count)
+	for id in won:
+		items()[id] = mini(Inventory.MAX, item_count(id) + 1)
+	if not won.is_empty():
+		_touch()
+	return won
+
+
+## Utilise un objet ; faux si le sac n'en contient plus.
+func use_item(id: String) -> bool:
+	if item_count(id) <= 0:
+		return false
+	items()[id] = item_count(id) - 1
+	_touch()
+	return true
+
 
 func add_xp(amount: int) -> void:
 	if amount <= 0:

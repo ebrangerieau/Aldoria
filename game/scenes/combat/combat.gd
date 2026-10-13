@@ -77,9 +77,12 @@ func _run() -> void:
 			"victory":
 				if _pet:
 					_pet.celebrate()
-				await _show_message("Ennemi vaincu !",
-					"%d bonnes réponses sur %d. +%d XP." % [QuestionService.correct_count, QuestionService.answered, 25 * _wave],
-					"Combat suivant")
+				var text := "%d bonnes réponses sur %d. +%d XP." % [QuestionService.correct_count, QuestionService.answered, 25 * _wave]
+				if _wave % 3 == 0:  # toutes les trois vagues, un objet
+					var found := SaveManager.give_items(1)
+					if not found.is_empty():
+						text += "\n" + Inventory.found_text(found)
+				await _show_message("Ennemi vaincu !", text, "Combat suivant")
 				_wave += 1
 				_enemy.queue_free()
 				if Accessibility.pause_due() and not await _continue_after_pause():

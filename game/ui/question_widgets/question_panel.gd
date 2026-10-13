@@ -16,7 +16,9 @@ const CRIT_RATIO := 0.5
 var item: Dictionary
 var _wt: WorldTheme
 var _started_ms := 0
-var _hint_used := false
+var _hint_used := false  # indice ordinaire (puissance réduite en combat)
+var _assisted := false  # objet du sac utilisé (plume, parchemin) : aide sans baisse de puissance
+var _widget: Control
 var _bonus: Label
 var _hint_label: Label
 var _hint_button: Button
@@ -26,7 +28,8 @@ var _tools: MathTools
 var _tools_layer: CanvasLayer
 
 
-func setup(question: Dictionary, title: String, wt: WorldTheme) -> void:
+## `with_items` : plume et parchemin du sac proposés (pas au défi du jour).
+func setup(question: Dictionary, title: String, wt: WorldTheme, with_items := true) -> void:
 	item = question
 	_wt = wt
 	theme = UiKit.make_theme(wt)
@@ -142,6 +145,7 @@ func setup(question: Dictionary, title: String, wt: WorldTheme) -> void:
 		widget = keypad
 		columns.add_child(widget)
 	widget.connect("submitted", _on_submitted)
+	_widget = widget
 	if Accessibility.on("math_tools") and question["type"] in ["numeric", "mcq", "expression", "order"]:
 		_build_tools(wt, widget as KeypadWidget)
 
@@ -154,6 +158,8 @@ func setup(question: Dictionary, title: String, wt: WorldTheme) -> void:
 	UiKit.style_secondary(_hint_button, wt)
 	_hint_button.pressed.connect(_show_hint)
 	footer.add_child(_hint_button)
+	if with_items:
+		_add_item_buttons(footer, question, wt)
 	if _tools:
 		var tools_button := UiKit.button("Outils", 52.0)
 		UiKit.style_secondary(tools_button, wt)
@@ -257,6 +263,42 @@ func _process(_delta: float) -> void:
 		_bonus.visible = false
 
 
+## Objets du sac utilisables sur cette question : plume (QCM d'au moins trois choix),
+## parchemin (s'il y a un indice).
+func _add_item_buttons(footer: HBoxContainer, question: Dictionary, wt: WorldTheme) -> void:
+	var usable := {
+		"plume": _widget is McqWidget and (question.get("choices", []) as Array).size() >= 3,
+		"parchemin": str(question.get("hint", "")) != "",
+	}
+	for id in ["plume", "parchemin"]:
+		if not usable[id] or SaveManager.item_count(id) <= 0:
+			continue
+		var b := UiKit.button("%s ×%d" % [Inventory.ITEMS[id]["short"], SaveManager.item_count(id)], 52.0)
+		UiKit.style_secondary(b, wt)
+		b.tooltip_text = Inventory.ITEMS[id]["help"]
+		b.pressed.connect(_use_item.bind(id, b))
+		footer.add_child(b)
+
+
+func _use_item(id: String, button: Button) -> void:
+	if _done or not SaveManager.use_item(id):
+		return
+	_assisted = true
+	button.visible = false
+	Sfx.play("spell", 1.2)
+	if id == "plume":
+		(_widget as McqWidget).remove_wrong(int(item["answer"].get("index", -1)), 2)
+	else:
+		_hint_label.visible = true
+		_hint_button.visible = false
+
+
+## Vrai si l'indice ordinaire a été pris (la puissance du coup baisse) ; les objets du
+## sac aident sans cette baisse.
+func penalized_hint() -> bool:
+	return _hint_used
+
+
 func _show_hint() -> void:
 	_hint_used = true
 	_bonus.visible = false  # pas de coup critique avec un indice
@@ -268,7 +310,8 @@ func _on_submitted(value: Variant) -> void:
 	if _done:
 		return
 	_done = true
-	answered.emit(value, elapsed_ms(), _hint_used)
+	# Pour le suivi des notions, une aide reste une aide (indice ou objet).
+	answered.emit(value, elapsed_ms(), _hint_used or _assisted)
 
 
 static func _stars(difficulty: int) -> String:

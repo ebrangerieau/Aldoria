@@ -399,6 +399,11 @@ func _check_room_cleared(room: int) -> void:
 	Sfx.play("spell", 0.8)
 	_hud.banner("La porte s'ouvre !", _wt.accent, 1.2)
 	SaveManager.set_checkpoint(_def.code, room + 1)
+	if kind == "enigme":
+		# Énigme résolue : un objet attendait sur le dernier piédestal.
+		var found := SaveManager.give_items(1)
+		if not found.is_empty():
+			_hud.banner("Trouvé : %s !" % Inventory.describe(found), Color("#ffd447"), 1.6)
 	_hud.say(HeroVoice.before_room(_wt.id, _def.rooms, room + 1))
 
 
@@ -428,9 +433,12 @@ func _open_chest() -> void:
 	var before := Vector2i(SaveManager.level(), SaveManager.dungeons_done())
 	SaveManager.add_xp(_def.chest_xp)
 	SaveManager.complete_dungeon(_def.code)
+	var found := SaveManager.give_items(2)
 	var unlocked := Wardrobe.newly_unlocked(before, Vector2i(SaveManager.level(), SaveManager.dungeons_done()), _wt.companion)
 	await get_tree().create_timer(1.2).timeout
 	var text := "%s\n%d bonnes réponses sur %d. +%d XP dans le coffre." % [_def.outro, QuestionService.correct_count, QuestionService.answered, _def.chest_xp]
+	if not found.is_empty():
+		text += "\n" + Inventory.found_text(found)
 	if not unlocked.is_empty():
 		text += "\nNouveau dans l'apparence (au camp) : %s." % ", ".join(unlocked)
 	await _message("%s : terminé !" % _def.title, text, "Continuer")

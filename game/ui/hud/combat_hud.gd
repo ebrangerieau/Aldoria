@@ -5,7 +5,7 @@ extends CanvasLayer
 ## indicateur hors connexion discret (TRD §2.7). En exploration, la barre de
 ## l'ennemi et les actions sont masquées.
 
-signal action_chosen(action: String)  # « automatisme », « chapitre », « soin »
+signal action_chosen(action: String)  # « automatisme », « chapitre », « soin », « sac »
 signal quit_requested
 
 var _wt: WorldTheme
@@ -126,6 +126,13 @@ func setup(wt: WorldTheme, hero_name: String) -> void:
 		b.pressed.connect(func() -> void: action_chosen.emit(action))
 		_actions.add_child(b)
 		_buttons[action] = b
+	# Sac (bouclier, potion d'urgence) : ne coûte pas le tour.
+	var bag := UiKit.button("Sac\nobjets", 92.0)
+	UiKit.style_secondary(bag, wt)
+	bag.custom_minimum_size.x = 150
+	bag.pressed.connect(func() -> void: action_chosen.emit("sac"))
+	_actions.add_child(bag)
+	_buttons["sac"] = bag
 	column.add_child(_actions)
 
 	Session.queue_changed.connect(func(_n: int) -> void: _refresh_sync())
@@ -174,6 +181,7 @@ func set_enemy_visible(visible_enemy: bool) -> void:
 func show_actions(visible_actions: bool, heal_enabled := true) -> void:
 	_actions.visible = visible_actions
 	(_buttons["soin"] as Button).disabled = not heal_enabled
+	(_buttons["sac"] as Button).disabled = SaveManager.item_count("bouclier") + SaveManager.item_count("potion") == 0
 
 
 func show_panel(panel: Control) -> void:

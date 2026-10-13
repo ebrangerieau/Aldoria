@@ -115,6 +115,10 @@ Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-
 - Combat : `Encounter` (core/combat) est partagé par l'arène et le donjon ; une scène ne réécrit pas le tour par tour.
   Boss : `BOSS_HITS` sceaux, difficulté d'un cran sous le niveau à un cran au-dessus ; forces rendues avant le boss ;
   après un repli, l'ennemi garde ses blessures (rien n'est perdu).
+- Objets du sac (`Inventory`, core/progression ; `SaveManager.give_items` / `use_item`, 5 au plus par objet) :
+  plume et parchemin dans `QuestionPanel` (pas au défi du jour : `with_items = false`), bouclier et potion par le
+  bouton « Sac » du combat (`Encounter._open_bag`, sans perdre son tour). Aucun objet ne fait sauter une question ;
+  une aide par objet compte comme indice pour le suivi, sans baisse de puissance (`penalized_hint`).
 - Le héros parle entre les salles (`HeroVoice`, core/world ; bulle `CombatHud.say`, lue si lecture automatique) :
   phrases par ton de monde, combinées, les dernières dites ne reviennent pas.
 - Progression du joueur : `SaveManager` (XP, donjons, bestiaire, défis quotidiens), jamais de fichier de

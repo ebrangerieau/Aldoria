@@ -19,6 +19,7 @@ var _daily_state: Label
 var _daily_button: Button
 var _look_button: Button
 var _message: Label
+var _bag: Label
 var _busy := false
 
 
@@ -81,6 +82,9 @@ func _build() -> void:
 	_xp_text.autowrap_mode = TextServer.AUTOWRAP_OFF
 	level_row.add_child(_xp_text)
 	who.add_child(level_row)
+	_bag = UiKit.label("", 18, Color(1, 1, 1, 0.8))
+	_bag.autowrap_mode = TextServer.AUTOWRAP_OFF
+	who.add_child(_bag)
 	top.add_child(who)
 	_message = UiKit.label("", 22, _wt.panel_border)
 	_message.autowrap_mode = TextServer.AUTOWRAP_OFF
@@ -216,6 +220,7 @@ func _refresh() -> void:
 	_level.text = "Niveau %d" % level
 	_xp_bar.value = Progression.level_progress(xp)
 	_xp_text.text = "%d / %d XP" % [xp, Progression.xp_for_level(level + 1)]
+	_bag.text = Inventory.summary(SaveManager.items())
 	for i in _dungeons.size():
 		_refresh_dungeon(i)
 	_show_region(_region)

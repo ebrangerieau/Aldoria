@@ -5,6 +5,8 @@ extends Node
 ## - Frappe (automatisme) : rapide, dégâts moyens.
 ## - Sort (notion du chapitre) : plus puissant.
 ## - Soin : une question pour reprendre des PV.
+## - Sac : bouclier (le prochain coup ne touche pas) ou potion d'urgence (toute la vie),
+##   sans question et sans perdre son tour (Inventory).
 ## Justesse et vitesse modulent la puissance ; réponse juste en moins de la moitié
 ## du temps cible = coup critique (ralenti). Une erreur ouvre une explication et
 ## laisse l'ennemi frapper plus fort.
@@ -40,6 +42,7 @@ var tier := 1  # force de l'ennemi (dégâts infligés)
 var questions := 0
 var _correct_run := 0  # bonnes réponses d'affilée (coup critique « sans vitesse »)
 var _boss_base := {}
+var _shield := false  # bouclier levé : le prochain coup de l'ennemi ne touche pas
 
 
 func setup(hero_fighter: Fighter, combat_hud: CombatHud, combat_fx: CombatFx, theme: WorldTheme) -> Encounter:
@@ -66,6 +69,9 @@ func fight(foe: Fighter, foe_tier: int, reward_xp: int, is_boss := false) -> Str
 		hud.show_actions(true, hero.hp < hero.max_hp)
 		var action: String = await hud.action_chosen
 		hud.show_actions(false)
+		if action == "sac":
+			await _open_bag()
+			continue
 		var outcome := await _turn(action, reward_xp)
 		if outcome != "":
 			return outcome
@@ -88,7 +94,8 @@ func _turn(action: String, reward_xp: int) -> String:
 	questions += 1
 
 	if result.correct:
-		await _resolve_success(action, item, result, res[2])
+		# Seul l'indice ordinaire réduit la puissance (pas la plume ni le parchemin).
+		await _resolve_success(action, item, result, panel.penalized_hint())
 	else:
 		await _resolve_failure(item)
 
@@ -180,10 +187,58 @@ func _resolve_failure(item: Dictionary) -> void:
 	hud.clear_panel()
 
 
+## Sac : bouclier ou potion d'urgence. Rien n'est choisi : retour aux actions.
+func _open_bag() -> void:
+	var panel := PanelContainer.new()
+	panel.theme = UiKit.make_theme(wt)
+	panel.custom_minimum_size = Vector2(640, 0)
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 14)
+	panel.add_child(box)
+	box.add_child(UiKit.label("Ton sac", 32, wt.accent))
+	var chosen: Array[String] = []
+	for id in ["potion", "bouclier"]:
+		var count := SaveManager.item_count(id)
+		var b := UiKit.button("%s ×%d : %s" % [Inventory.ITEMS[id]["name"], count, Inventory.ITEMS[id]["help"]], 64.0)
+		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		b.disabled = count <= 0 or (id == "potion" and hero.hp >= hero.max_hp) or (id == "bouclier" and _shield)
+		b.pressed.connect(func() -> void: chosen.append(id))
+		box.add_child(b)
+	var close := UiKit.button("Fermer", 56.0)
+	UiKit.style_secondary(close, wt)
+	close.pressed.connect(func() -> void: chosen.append(""))
+	box.add_child(close)
+	hud.show_panel(panel)
+	while chosen.is_empty():
+		await get_tree().process_frame
+	hud.clear_panel()
+	if chosen[0] == "" or not SaveManager.use_item(chosen[0]):
+		return
+	if chosen[0] == "potion":
+		hero.play(["Use_Item", "Cheer"])
+		var healed := hero.heal(hero.max_hp)
+		Sfx.play("heal")
+		fx.rising_sparkles(hero.global_position + Vector3(0, 0.8, 0), wt.good)
+		fx.floating_text("+%d" % healed, hero.chest(), wt.good)
+	else:
+		_shield = true
+		hero.play(["Block", "Blocking", "Block_Hit"])
+		Sfx.play("spell", 0.9)
+		hud.banner("Bouclier levé !", wt.accent, 0.9)
+	await get_tree().create_timer(0.7).timeout
+
+
 func _enemy_turn(guarded: bool) -> void:
 	await get_tree().create_timer(0.25).timeout
 	enemy.play(enemy.attack_animations)
 	await get_tree().create_timer(0.45).timeout
+	if _shield:
+		_shield = false
+		hero.play(["Block_Hit", "Block"])
+		Sfx.play("hit", 1.3)
+		fx.floating_text("Bloqué !", hero.chest(), wt.accent, 80)
+		await get_tree().create_timer(0.6).timeout
+		return
 	var base := randi_range(6, 10) if wt.id == "lumineux" else randi_range(9, 14)
 	var dmg := roundi((base + tier) * (GUARD_MULT if guarded else 1.0))
 	hero.damage(dmg)

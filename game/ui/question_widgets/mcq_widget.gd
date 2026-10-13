@@ -21,6 +21,17 @@ func setup(choices: Array) -> void:
 		add_child(b)
 
 
+## Plume du sage : `count` mauvaises propositions disparaissent (au hasard).
+func remove_wrong(correct: int, count: int) -> void:
+	var wrong := range(get_child_count()).filter(func(i: int) -> bool:
+		return i != correct and not (get_child(i) as Button).disabled)
+	wrong.shuffle()
+	for i in wrong.slice(0, count):
+		var b := get_child(i) as Button
+		b.disabled = true
+		b.modulate.a = 0.25
+
+
 func _choose(index: int) -> void:
 	if _locked:
 		return

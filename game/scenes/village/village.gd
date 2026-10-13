@@ -281,13 +281,17 @@ func _run_quest(npc: Dictionary) -> void:
 	var xp := VillageDef.QUEST_XP + VillageDef.ANSWER_XP * correct
 	SaveManager.add_xp(xp)
 	SaveManager.record_quest(spec["code"], _today)
+	var found := SaveManager.give_items(1)
 	(npc["marker"] as Label3D).visible = false
 	var node: Fighter = npc["node"]
 	node.play(["Cheer", "Interact"])
 	Sfx.play("victory")
 	_fx.rising_sparkles(node.global_position + Vector3(0, 0.8, 0), Color("#ffd447"))
-	await _message(spec["name"], "%s\n%d bonne%s réponse%s sur %d. +%d XP" % [
-		spec["thanks"], correct, "s" if correct > 1 else "", "s" if correct > 1 else "", VillageDef.QUEST_SIZE, xp], "Avec plaisir !")
+	var thanks := "%s\n%d bonne%s réponse%s sur %d. +%d XP" % [
+		spec["thanks"], correct, "s" if correct > 1 else "", "s" if correct > 1 else "", VillageDef.QUEST_SIZE, xp]
+	if not found.is_empty():
+		thanks += "\n" + Inventory.found_text(found)
+	await _message(spec["name"], thanks, "Avec plaisir !")
 
 
 ## Demande d'un habitant : vrai si le joueur accepte la quête.

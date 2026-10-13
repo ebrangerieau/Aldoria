@@ -153,7 +153,7 @@ func _run() -> void:
 			await (panel[1] as Button).pressed
 			return
 		var question := QuestionPanel.new()
-		question.setup(item, "Question %d" % (i + 1), _wt)
+		question.setup(item, "Question %d" % (i + 1), _wt, false)  # défi du jour : sans objets
 		_show(question)
 		var res: Array = await question.answered
 		var result := QuestionService.submit(item, res[0], res[1], res[2], GAME_MODE)
@@ -204,8 +204,11 @@ func _results() -> void:
 		_show(chest[0])
 		await (chest[1] as Button).pressed
 		SaveManager.open_weekly_chest(_today)
+		var found := SaveManager.give_items(2)
 		Sfx.play("victory")
 		lines = ["Cinq défis cette semaine : le coffre s'ouvre !", "+%d XP" % DailyChallenge.WEEKLY_CHEST_XP]
+		if not found.is_empty():
+			lines.append(Inventory.found_text(found))
 		title = "Coffre de la semaine"
 	var panel := UiKit.message_panel(_wt, title, "\n".join(lines), "Retour au camp")
 	_show(panel[0])
