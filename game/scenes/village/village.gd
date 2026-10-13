@@ -364,7 +364,7 @@ func _session_end() -> void:
 		return
 	_ending = true
 	_pause_exploration()
-	await _message("Belle session !", "Ta progression est sauvegardée : à la prochaine aventure !", "Terminer")
+	await _message("Belle session !", Session.rest_text(), "Terminer")
 	_quit()
 
 

@@ -292,7 +292,7 @@ function ResetProfile({ child }: { child: Profile }) {
   )
 }
 
-// Durée maximale d'une session (PRD US-11) : le jeu propose une pause une fois atteinte.
+// Durée maximale d'une séance (PRD US-11) : une fois atteinte, pause de 30 minutes (api/app/play_time.py).
 function PlayTimeLimit({ child }: { child: Profile }) {
   const client = useQueryClient()
   const [minutes, setMinutes] = useState(child.session_max_minutes)
@@ -305,7 +305,8 @@ function PlayTimeLimit({ child }: { child: Profile }) {
     <section className="card">
       <h2>Durée de jeu</h2>
       <p className="muted">
-        Au-delà, le jeu félicite {child.name} et propose une pause (temps actif seulement : une page en arrière-plan ne compte pas).
+        Au-delà, le jeu félicite {child.name} et lui demande une pause de 30 minutes avant de rejouer (temps actif seulement, cumulé
+        d'une activité à l'autre et sur tous les appareils).
       </p>
       <form
         className="row"

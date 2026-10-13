@@ -94,8 +94,8 @@ func _run() -> void:
 				_fx.rising_sparkles(_hero.global_position + Vector3(0, 0.8, 0), _wt.good)
 			_:  # durée de jeu atteinte
 				await _show_message("Belle session !",
-					"%d bonnes réponses sur %d, %d XP. Une pause bien méritée : à la prochaine aventure !"
-						% [QuestionService.correct_count, QuestionService.answered, _xp],
+					"%d bonnes réponses sur %d, %d XP. %s"
+						% [QuestionService.correct_count, QuestionService.answered, _xp, Session.rest_text()],
 					"Terminer")
 				_quit()
 				return

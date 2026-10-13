@@ -537,7 +537,7 @@ func _session_end() -> void:
 	_ending = true
 	_pause_exploration()
 	await _message("Belle session !",
-		"%d bonnes réponses sur %d. Ta progression est sauvegardée : à la prochaine aventure !" % [QuestionService.correct_count, QuestionService.answered],
+		"%d bonnes réponses sur %d. %s" % [QuestionService.correct_count, QuestionService.answered, Session.rest_text()],
 		"Terminer")
 	_quit()
 

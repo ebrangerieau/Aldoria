@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import Integer, cast, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import accounts
+from app import accounts, play_time
 from app.accounts import CurrentDevice, aware, utcnow
 from app.auth import CurrentProfile, create_token, verify_pin
 from app.config import get_settings
@@ -61,6 +61,8 @@ class LoginOut(BaseModel):
     profile: ProfileOut
     # Aménagements (accessibilité) réglés par le parent : engine/accommodations.py.
     accommodations: dict[str, Any] = Field(default_factory=dict)
+    # Temps de jeu de la séance en cours (play_time.info) : limite fixée par le parent.
+    play_time: dict[str, Any] = Field(default_factory=dict)
 
 
 class EnigmaIn(BaseModel):
@@ -237,15 +239,17 @@ async def login(body: LoginIn, device: CurrentDevice, db: Db) -> LoginOut:
         expires_at=expires,
         profile=_profile_out(profile),
         accommodations=accommodations.of(profile.accommodations).model_dump(),
+        play_time=await play_time.info(db, profile),
     )
 
 
 @router.get("/me")
-async def me(profile: CurrentProfile) -> dict[str, Any]:
-    """Profil connecté et ses aménagements (relus par le jeu au retour au camp)."""
+async def me(profile: CurrentProfile, db: Db) -> dict[str, Any]:
+    """Profil connecté, aménagements et temps de jeu (relus par le jeu au retour au camp)."""
     return {
         "profile": _profile_out(profile).model_dump(),
         "accommodations": accommodations.of(profile.accommodations).model_dump(),
+        "play_time": await play_time.info(db, profile),
     }
 
 
@@ -269,6 +273,7 @@ async def start_session(
         )
         if known != set(focus):
             raise ApiError(422, "unknown_chapter", "Chapitre inconnu pour ce niveau.")
+    played = await play_time.info(db, profile)
     session = GameSession(id=str(uuid.uuid4()), profile_id=profile.id, mode=body.mode)
     db.add(session)
     await db.commit()
@@ -282,6 +287,7 @@ async def start_session(
         start_levels=pack["start_levels"],
         settings={
             "session_max_minutes": profile.session_max_minutes,
+            "play_time": played,
             "accommodations": accommodations.of(profile.accommodations).model_dump(),
         },
         context=pack.get("context", {}),

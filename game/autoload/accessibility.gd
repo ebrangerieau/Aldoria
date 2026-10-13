@@ -99,7 +99,7 @@ func apply_parent(received: Variant) -> void:
 		return
 	parent = merged
 	_apply()
-	_reset_pause_timer()
+	reset_pause_timer()
 	changed.emit()
 
 
@@ -122,6 +122,7 @@ func refresh() -> void:
 		apply_parent(res.data.get("accommodations", {}))
 		Session.remember_accommodations(parent)
 		Session.update_profile(res.data.get("profile", {}))
+		Session.sync_play_time(res.data.get("play_time", {}))
 
 
 func set_pref(key: String, value: Variant) -> void:
@@ -255,5 +256,5 @@ func snooze_pause() -> void:
 	_next_pause_s = Session.played_seconds + int(parent.get("pause_minutes", 0)) * 60.0
 
 
-func _reset_pause_timer() -> void:
+func reset_pause_timer() -> void:
 	_next_pause_s = 0.0

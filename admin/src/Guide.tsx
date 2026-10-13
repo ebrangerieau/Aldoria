@@ -391,8 +391,11 @@ export function Guide({ child, onOpen }: { child?: Profile; onOpen: (page: Guide
       <Section id="reglages" title="Régler le jeu" open={() => onOpen('settings')} openLabel="Ouvrir les réglages">
         <ul className="bullets">
           <li>
-            <strong>Durée de jeu</strong> : au-delà du temps choisi (25 minutes par défaut), le jeu félicite l'enfant et termine la partie en
-            proposant une pause. Seul le temps où le jeu est affiché compte.
+            <strong>Durée de jeu</strong> : au-delà du temps choisi (25 minutes par défaut), le jeu félicite l'enfant, termine la partie et
+            lui demande une pause de 30 minutes : d'ici là, le camp lui indique dans combien de minutes il pourra rejouer (l'apparence et les
+            Archives restent ouvertes). Le temps compte d'une activité à l'autre (donjon, arène, village, défi du jour), sur tous les appareils
+            de la famille ; seul le temps où le jeu est affiché compte. Pour lui accorder du temps en plus, augmentez la durée : c'est pris en
+            compte dès son retour au camp.
           </li>
           <li>
             <strong>Code secret</strong> : tapez deux fois les 4 nouveaux chiffres, puis <strong>Changer le code</strong>. Le code sert dès la

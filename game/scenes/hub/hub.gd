@@ -35,6 +35,8 @@ func _ready() -> void:
 	# Classe, monde ou prénom changés par le parent : même reconstruction.
 	Session.profile_changed.connect(_rebuild, CONNECT_ONE_SHOT)
 	await Accessibility.refresh()
+	if Session.time_over():
+		_message.text = "Pause : retour dans %d min" % Session.minutes_before_play()
 	_dev_goto()
 
 
@@ -277,6 +279,9 @@ func _enter_arena() -> void:
 func _launch(mode: String, params: Dictionary, scene: String, cache := "") -> void:
 	if _busy:
 		return
+	if Session.time_over():
+		_show_rest()
+		return
 	_busy = true
 	_message.text = "En route !"
 	var res := await Session.start(mode, params, cache)
@@ -289,6 +294,25 @@ func _launch(mode: String, params: Dictionary, scene: String, cache := "") -> vo
 		return
 	_message.text = "%s Réessaie dans un instant." % res.error.get("message", "")
 	_busy = false
+
+
+## Durée de jeu fixée par le parent atteinte : on explique au lieu de lancer l'activité
+## (elle s'arrêterait aussitôt). L'apparence et les Archives restent ouvertes.
+func _show_rest() -> void:
+	_message.text = "Pause : retour dans %d min" % Session.minutes_before_play()
+	var layer := CanvasLayer.new()
+	layer.layer = 20
+	var shade := ColorRect.new()
+	shade.color = Color(0, 0, 0, 0.55)
+	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
+	layer.add_child(shade)
+	var center := CenterContainer.new()
+	center.set_anchors_preset(Control.PRESET_FULL_RECT)
+	layer.add_child(center)
+	var panel := UiKit.message_panel(_wt, "Temps de jeu terminé", Session.rest_text(), "D'accord")
+	center.add_child(panel[0])
+	add_child(layer)
+	(panel[1] as Button).pressed.connect(layer.queue_free)
 
 
 func _open_wardrobe() -> void:

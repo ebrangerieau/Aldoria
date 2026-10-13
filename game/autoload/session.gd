@@ -27,8 +27,13 @@ var context: Dictionary = {}
 ## Donjon choisi au camp (code d'un DungeonDef du monde du joueur).
 var dungeon_code := ""
 var active_seconds := 0.0
-## Temps de jeu actif depuis la connexion (toutes sessions) : limite fixée par le parent.
+## Temps de jeu actif de la séance (toutes sessions qui se suivent) : limite fixée par le
+## parent. Une pause de `break_minutes` sans jouer ouvre une nouvelle séance. Le serveur fait
+## foi (api/app/play_time.py : même compteur sur tous les appareils, rechargement compris).
 var played_seconds := 0.0
+var max_minutes := 25
+var break_minutes := 30
+var _last_play_unix := 0.0
 
 var _queue: Array = []
 var _flushing := false
@@ -54,6 +59,7 @@ func _process(delta: float) -> void:
 	if session_id != "":
 		active_seconds += delta
 		played_seconds += delta
+		_last_play_unix = Time.get_unix_time_from_system()
 
 
 func is_logged_in() -> bool:
@@ -94,6 +100,7 @@ func login(profile_id: int, pin: String) -> Dictionary:
 		profile = res.data["profile"]
 		profile["accommodations"] = res.data.get("accommodations", {})
 		played_seconds = 0.0
+		sync_play_time(res.data.get("play_time", {}))
 		_save_json(AUTH_FILE, {"token": ApiClient.token, "profile": profile})
 		Accessibility.load_prefs(int(profile.get("id", 0)))
 		Accessibility.apply_parent(profile["accommodations"])
@@ -112,6 +119,7 @@ func logout() -> void:
 	session_id = ""
 	dungeon_code = ""
 	played_seconds = 0.0
+	_last_play_unix = 0.0
 	DirAccess.remove_absolute(AUTH_FILE)
 	# Les paquets hors connexion appartiennent au joueur précédent (autre niveau).
 	for file in DirAccess.get_files_at("user://"):
@@ -153,7 +161,41 @@ func end(rating := 0) -> void:
 
 ## Durée maximale de jeu atteinte (PRD US-11, réglée par le parent).
 func time_over() -> bool:
-	return played_seconds >= float(settings.get("session_max_minutes", 25)) * 60.0
+	_check_break()
+	return played_seconds >= max_minutes * 60.0
+
+
+## Minutes avant la fin de la pause (nouvelle séance), au moins 1.
+func minutes_before_play() -> int:
+	var idle := Time.get_unix_time_from_system() - _last_play_unix
+	return maxi(1, ceili((break_minutes * 60.0 - idle) / 60.0))
+
+
+## Phrase de fin de séance, montrée par chaque activité et par le camp.
+func rest_text() -> String:
+	return "Tu as joué %d minutes : c'est l'heure de la pause ! Tu pourras repartir à l'aventure dans %d minutes. Ta progression est sauvegardée." 		% [roundi(played_seconds / 60.0), minutes_before_play()]
+
+
+## Temps de la séance connu du serveur (connexion, retour au camp, début de session) : on
+## garde le plus avancé des deux compteurs (une fin de session a pu ne pas encore partir).
+func sync_play_time(info: Dictionary) -> void:
+	if info.is_empty():
+		return
+	max_minutes = int(info.get("session_max_minutes", max_minutes))
+	break_minutes = int(info.get("break_minutes", break_minutes))
+	var last := Time.get_unix_time_from_system() - float(info.get("idle_seconds", 0))
+	var local_valid := played_seconds > 0.0 and _last_play_unix >= last
+	played_seconds = maxf(played_seconds if local_valid else 0.0, float(info.get("played_seconds", 0)))
+	_last_play_unix = maxf(_last_play_unix, last)
+
+
+## Hors d'une activité, une pause assez longue remet la séance à zéro.
+func _check_break() -> void:
+	if session_id != "" or played_seconds <= 0.0:
+		return
+	if Time.get_unix_time_from_system() - _last_play_unix >= break_minutes * 60.0:
+		played_seconds = 0.0
+		Accessibility.reset_pause_timer()
 
 
 ## Enregistre une réponse (d'abord localement, puis envoi au serveur).
@@ -255,6 +297,7 @@ func _apply_pack(data: Dictionary) -> void:
 	items = data.get("items", [])
 	formulas = data.get("formulas", {})
 	settings = data.get("settings", {})
+	sync_play_time(settings.get("play_time", {}))
 	start_levels = data.get("start_levels", {})
 	context = data.get("context", {})
 	if settings.has("accommodations"):
