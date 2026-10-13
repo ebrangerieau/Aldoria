@@ -13,7 +13,8 @@ Format CSV (tableur, séparateur « ; » ou « , », première ligne d'en-têtes
     notion ; type ; difficulte ; enonce ; formule ; choix ; reponse ; indice ; explication
 - `choix` : propositions séparées par « | » (QCM, justifications d'un vrai/faux) ;
 - `reponse` : QCM → numéro du bon choix (1, 2…) ; nombre → « 12,5 » ou « 3/4 » ;
-  expression → « x^2+6x+9 » ; vrai/faux → « vrai | 2 » (verdict | numéro de la justification).
+  expression → « x^2+6x+9 » ; vrai/faux → « vrai | 2 » (verdict | numéro de la justification) ;
+  texte → réponses acceptées séparées par « | » (« mum | mom »).
 """
 
 from __future__ import annotations
@@ -30,7 +31,7 @@ from app.engine import answers
 from app.engine.formulas import render_svg
 from app.engine.items import Item
 
-TYPES = ("mcq", "numeric", "expression", "true_false", "order")
+TYPES = ("mcq", "numeric", "expression", "true_false", "order", "text")
 MAX_IMPORT_BYTES = 5 * 1024 * 1024
 MAX_IMPORT_LINES = 2000
 DEFAULT_TIME_MS = 30000
@@ -88,6 +89,7 @@ def validate(raw: dict[str, Any], notions: dict[str, tuple[str, bool]], level: s
         "hint": str(raw.get("hint") or "").strip(),
         "explanation": explanation,
         "time_target_ms": raw.get("time_target_ms") or DEFAULT_TIME_MS,
+        "listen": raw.get("listen") or None,
         "generator": "banque",
     }
     try:
@@ -102,7 +104,10 @@ def validate(raw: dict[str, Any], notions: dict[str, tuple[str, bool]], level: s
             errors.append(f"formule illisible : « {item.latex} »")
     if errors:
         return Checked(errors=errors)
-    return Checked(data=item.model_dump(exclude={"id", "seed", "meta", "game_modes", "visual"}))
+    data = item.model_dump(exclude={"id", "seed", "meta", "game_modes", "visual"})
+    if data.get("listen") is None:
+        data.pop("listen", None)
+    return Checked(data=data)
 
 
 _FIELD_NAMES = {
@@ -130,6 +135,7 @@ def _coherence(item: Item) -> list[str]:
         "true_false": "true_false",
         "order": "order",
         "expression": "expression",
+        "text": "text",
     }.get(item.type)
     if item.type == "numeric" and answer.kind not in ("number", "fraction"):
         return ["une question « nombre » attend une réponse nombre ou fraction"]
@@ -152,6 +158,12 @@ def _coherence(item: Item) -> list[str]:
     if item.type == "order":
         if sorted(answer.value) != list(range(len(choices))) or len(choices) < 2:
             return ["l'ordre attendu doit citer chaque proposition une fois"]
+        return []
+    if item.type == "text":
+        if not all(v.strip() for v in answer.value):
+            return ["une réponse acceptée est vide"]
+        if not answers.check(answer.model_dump(), answer.value[0]):
+            return [f"la réponse « {answer.value[0]} » n'est pas lisible par le jeu"]
         return []
     if not answers.check(answer.model_dump(), answer.value):
         return [f"la réponse « {answer.value} » n'est pas lisible par le jeu"]
@@ -213,9 +225,13 @@ def _parse_csv(content: str) -> tuple[list[tuple[int, dict[str, Any] | str]], st
 
 def _csv_question(cells: dict[str, str]) -> dict[str, Any]:
     kind = cells.get("type", "").lower()
-    kind = {"qcm": "mcq", "nombre": "numeric", "vrai_faux": "true_false", "ordre": "order"}.get(
-        kind, kind
-    )
+    kind = {
+        "qcm": "mcq",
+        "nombre": "numeric",
+        "vrai_faux": "true_false",
+        "ordre": "order",
+        "texte": "text",
+    }.get(kind, kind)
     choices = [c.strip() for c in cells.get("choix", "").split("|") if c.strip()]
     answer_text = cells.get("reponse", "")
     try:
@@ -237,6 +253,9 @@ def _csv_question(cells: dict[str, str]) -> dict[str, Any]:
         answer = {"kind": "order", "value": [_number(x) - 1 for x in answer_text.split("|")]}
     elif kind == "expression":
         answer = {"kind": "expression", "value": answer_text}
+    elif kind == "text":
+        # « dog | doggy » : formes acceptées ; accents comptés (orthographe).
+        answer = {"kind": "text", "value": [v.strip() for v in answer_text.split("|") if v.strip()]}
     else:
         frac = "/" in answer_text
         answer = {"kind": "fraction" if frac else "number", "value": answer_text}

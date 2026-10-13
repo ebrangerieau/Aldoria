@@ -99,15 +99,22 @@ static func message_panel(wt: WorldTheme, title: String, body: String, button_te
 
 ## Bouton « Écouter » (aménagement lecture à voix haute) ; `auto` : lit dès l'affichage.
 ## La lecture s'arrête quand le bouton disparaît.
-static func listen_button(wt: WorldTheme, text: String, auto := false) -> Button:
+## Bouton « Écouter » (lecture à voix haute) : un texte en français, ou des morceaux
+## [[texte, langue], …] (Accessibility.question_parts).
+static func listen_button(wt: WorldTheme, content: Variant, auto := false) -> Button:
 	var b := button("Écouter", 52.0)
 	style_secondary(b, wt)
 	b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	b.custom_minimum_size.x = 170
-	b.pressed.connect(func() -> void: Accessibility.speak(text))
+	var read := func() -> void:
+		if content is Array:
+			Accessibility.speak_parts(content)
+		else:
+			Accessibility.speak(str(content))
+	b.pressed.connect(read)
 	b.tree_exiting.connect(Accessibility.stop_speaking)
 	if auto:
-		b.ready.connect(func() -> void: Accessibility.speak(text), CONNECT_ONE_SHOT)
+		b.ready.connect(read, CONNECT_ONE_SHOT)
 	return b
 
 

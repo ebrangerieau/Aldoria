@@ -46,10 +46,10 @@ def seed_dir() -> Path:
 
 
 async def seed_curriculum(db: AsyncSession, directory: Path | None = None) -> dict[str, int]:
-    """Charge content/seed/*/curriculum.json (idempotent : mise à jour par code)."""
+    """Charge content/seed/<classe>/<matière>.json (idempotent : mise à jour par code)."""
     directory = directory or seed_dir()
     counts = {"chapters": 0, "notions": 0}
-    for path in sorted(directory.glob("*/curriculum.json")):
+    for path in sorted(directory.glob("*/*.json")):
         data = json.loads(path.read_text(encoding="utf-8"))
         subject = await db.scalar(
             sql_select(Subject).where(Subject.code == data["subject"]["code"])
@@ -93,7 +93,7 @@ async def _level_notions(
         sql_select(Notion, Chapter)
         .join(Chapter, Notion.chapter_id == Chapter.id)
         .where(Chapter.level == level, Notion.id.not_in(excluded))
-        .order_by(Chapter.position, Notion.id)
+        .order_by(Chapter.subject_id, Chapter.position, Notion.id)
     )
     return [(n, c) for n, c in rows]
 

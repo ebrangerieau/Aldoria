@@ -81,7 +81,16 @@ export interface Indicators {
   indicators: Indicator[]
 }
 
-export type QuestionType = 'mcq' | 'numeric' | 'expression' | 'true_false' | 'order'
+export type QuestionType = 'mcq' | 'numeric' | 'expression' | 'true_false' | 'order' | 'text'
+// Langues de l'écoute (synthèse vocale de l'appareil).
+export type ListenLang = 'en-GB' | 'en-US' | 'es-ES' | 'de-DE' | 'fr-FR'
+export const LISTEN_LANGS: Record<ListenLang, string> = {
+  'en-GB': 'anglais (britannique)',
+  'en-US': 'anglais (américain)',
+  'es-ES': 'espagnol',
+  'de-DE': 'allemand',
+  'fr-FR': 'français',
+}
 
 // Question telle que le jeu la reçoit (aperçu, signalement).
 export interface GameItem {
@@ -94,6 +103,7 @@ export interface GameItem {
   latex_hash?: string
   choices?: string[] | null
   answer: Record<string, unknown> & { kind: string }
+  listen?: { text: string; lang: string } | null
   hint?: string
   explanation?: string
   visual?: Record<string, unknown> | null
@@ -116,6 +126,7 @@ export interface QuestionIn {
   answer: Record<string, unknown> & { kind: string }
   hint?: string
   explanation: string
+  listen?: { text: string; lang: ListenLang } | null
 }
 
 export type BankStatus = 'brouillon' | 'publie'
@@ -371,6 +382,7 @@ export const TYPE_LABELS: Record<QuestionType, string> = {
   expression: 'Expression',
   true_false: 'Vrai ou faux justifié',
   order: "Remettre dans l'ordre",
+  text: 'Réponse écrite',
 }
 
 export const REASON_LABELS: Record<ReportRow['reason'], string> = {

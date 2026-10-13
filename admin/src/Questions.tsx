@@ -12,6 +12,8 @@ import {
   type QuestionIn,
   type QuestionType,
   TYPE_LABELS,
+  LISTEN_LANGS,
+  type ListenLang,
 } from './api'
 import { LEVEL_LABELS } from './api'
 import { QuestionPreview } from './QuestionPreview'
@@ -128,6 +130,10 @@ interface Form {
   value: string
   verdict: boolean
   reason: number
+  accepted: string
+  accents: boolean
+  listenText: string
+  listenLang: ListenLang
   hint: string
   explanation: string
   status: BankStatus
@@ -144,6 +150,10 @@ const EMPTY: Form = {
   value: '',
   verdict: true,
   reason: 0,
+  accepted: '',
+  accents: true,
+  listenText: '',
+  listenLang: 'en-GB',
   hint: '',
   explanation: '',
   status: 'brouillon',
@@ -179,6 +189,7 @@ function toQuestion(f: Form): QuestionIn {
     latex: f.latex.trim() || null,
     hint: f.hint,
     explanation: f.explanation,
+    listen: f.listenText.trim() ? { text: f.listenText.trim(), lang: f.listenLang } : null,
   }
   const choices = lines(f.choices)
   switch (f.type) {
@@ -196,6 +207,8 @@ function toQuestion(f: Form): QuestionIn {
     }
     case 'expression':
       return { ...base, choices: null, answer: { kind: 'expression', value: f.value.trim() } }
+    case 'text':
+      return { ...base, choices: null, answer: { kind: 'text', value: lines(f.accepted), accents: f.accents } }
     default:
       return { ...base, choices: null, answer: { kind: f.value.includes('/') ? 'fraction' : 'number', value: f.value.trim() } }
   }
@@ -217,6 +230,10 @@ function fromRow(row: BankRow): Form {
     value: ['number', 'fraction', 'expression'].includes(a.kind) ? String(a.value) : '',
     verdict: a.kind === 'true_false' ? Boolean(a.value) : true,
     reason: a.kind === 'true_false' ? Number(a.reason) : 0,
+    accepted: a.kind === 'text' ? (a.value as string[]).join('\n') : '',
+    accents: a.kind === 'text' ? a.accents !== false : true,
+    listenText: q.listen?.text ?? '',
+    listenLang: (q.listen?.lang as ListenLang | undefined) ?? 'en-GB',
     hint: q.hint ?? '',
     explanation: q.explanation ?? '',
     status: row.status,
@@ -372,6 +389,35 @@ function Editor({ level, id, notions, onClose }: { level: Level; id: number | nu
             />
           </label>
         )}
+        {form.type === 'text' && (
+          <>
+            <label>
+              Réponses acceptées (une par ligne)
+              <textarea rows={2} value={form.accepted} onChange={(e) => set({ accepted: e.target.value })} placeholder={'mum\nmom'} required />
+            </label>
+            <label className="inline">
+              <input type="checkbox" checked={form.accents} onChange={(e) => set({ accents: e.target.checked })} />
+              Les accents comptent (orthographe en français) ; décochez pour une langue étrangère
+            </label>
+            <p className="muted small">Majuscules, espaces en trop et point final ne comptent pas. L'enfant tape sur un clavier à l'écran.</p>
+          </>
+        )}
+        <div className="row">
+          <label>
+            Écoute (facultative) : mot ou phrase prononcé, non affiché
+            <input value={form.listenText} onChange={(e) => set({ listenText: e.target.value })} placeholder="ex. : dog" />
+          </label>
+          <label>
+            Langue
+            <select value={form.listenLang} onChange={(e) => set({ listenLang: e.target.value as ListenLang })}>
+              {(Object.keys(LISTEN_LANGS) as ListenLang[]).map((l) => (
+                <option key={l} value={l}>
+                  {LISTEN_LANGS[l]}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
         <label>
           Indice (facultatif)
           <input value={form.hint} onChange={(e) => set({ hint: e.target.value })} />

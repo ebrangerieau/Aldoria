@@ -62,13 +62,15 @@ func setup(question: Dictionary, title: String, wt: WorldTheme) -> void:
 	_bonus.visible = not Accessibility.on("no_speed")
 	header.add_child(_bonus)
 	if Accessibility.can_speak():
-		header.add_child(UiKit.listen_button(wt, Accessibility.question_speech(question), Accessibility.auto_read()))
+		header.add_child(UiKit.listen_button(wt, Accessibility.question_parts(question), Accessibility.auto_read()))
 	var glow := create_tween().set_loops()
 	glow.tween_property(_bonus, "modulate:a", 0.55, 0.6)
 	glow.tween_property(_bonus, "modulate:a", 1.0, 0.6)
 	box.add_child(header)
 
 	box.add_child(UiKit.label(str(question["prompt"]), 26))
+	if question.get("listen") is Dictionary:
+		box.add_child(_listen_exercise(question["listen"], wt))
 
 	if question.has("latex_hash"):
 		var texture := Session.formula_texture(question["latex_hash"], 1.25)
@@ -122,6 +124,12 @@ func setup(question: Dictionary, title: String, wt: WorldTheme) -> void:
 		vector.custom_minimum_size = Vector2(420, 0)
 		widget = vector
 		columns.add_child(widget)
+	elif question["type"] == "text":
+		var typing := TextAnswerWidget.new()
+		typing.setup(wt, bool(question["answer"].get("accents", true)))
+		typing.custom_minimum_size = Vector2(600, 0)
+		widget = typing
+		columns.add_child(widget)
 	elif question["type"] == "mcq":
 		var mcq := McqWidget.new()
 		mcq.setup(question["choices"])
@@ -158,6 +166,22 @@ func setup(question: Dictionary, title: String, wt: WorldTheme) -> void:
 	box.add_child(footer)
 
 	_started_ms = Time.get_ticks_msec()
+
+
+## Exercice d'écoute : le mot ou la phrase est prononcé dans sa langue (pas affiché),
+## une fois à l'arrivée de la question (après l'énoncé s'il est lu), puis à volonté.
+## Toujours actif : c'est la question elle-même, pas un aménagement.
+func _listen_exercise(listen: Dictionary, wt: WorldTheme) -> Button:
+	var text := str(listen.get("text", ""))
+	var lang := str(listen.get("lang", "en-GB"))
+	var names := {"en-GB": "anglais", "en-US": "anglais", "es-ES": "espagnol", "de-DE": "allemand", "fr-FR": "français"}
+	var b := UiKit.button("▶  Écouter (%s)" % names.get(lang, lang), 64.0)
+	b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
+	b.custom_minimum_size.x = 300
+	b.pressed.connect(func() -> void: Accessibility.say(text, lang, true, 0.85))
+	b.tree_exiting.connect(Accessibility.stop_speaking)
+	b.ready.connect(func() -> void: Accessibility.say(text, lang, false, 0.85), CONNECT_ONE_SHOT)
+	return b
 
 
 ## Outils de calcul (aménagement « dyscalculie ») : volet flottant en haut à gauche de
@@ -271,4 +295,6 @@ static func expected_text(question: Dictionary) -> String:
 		return " → ".join(labels)
 	if answer["kind"] == "vector":
 		return UiKit.pretty_math("(%s ; %s)" % [answer["value"][0], answer["value"][1]])
+	if answer["kind"] == "text":
+		return str(answer["value"][0])
 	return UiKit.pretty_math(str(answer["value"]))

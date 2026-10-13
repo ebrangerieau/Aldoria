@@ -12,4 +12,6 @@ static func correct_for(answer: Dictionary) -> Variant:
 			return answer["value"]
 		"true_false":
 			return {"value": answer["value"], "reason": answer["reason"]}
+		"text":
+			return str(answer["value"][0])
 	return str(answer["value"])

@@ -13,6 +13,11 @@ export function QuestionPreview({ item, formulas, given }: { item: GameItem; for
       {svg && <img className="formula" alt={item.latex ?? 'formule'} src={`data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`} />}
       {!svg && item.latex && <code>{item.latex}</code>}
       {item.visual && <VisualNote visual={item.visual} />}
+      {item.listen && (
+        <p className="small">
+          <span className="muted">Écoute (prononcé, pas affiché) : </span>« {item.listen.text} » ({item.listen.lang})
+        </p>
+      )}
       {item.choices && item.choices.length > 0 && (
         <ol className="choices">
           {item.choices.map((c, i) => (
@@ -58,6 +63,8 @@ export function answerText(item: GameItem): string {
       return `(${(a.value as string[]).join(' ; ')})`
     case 'signs':
       return (a.value as string[]).join(' ')
+    case 'text':
+      return (a.value as string[]).join(' ou ') + (a.accents === false ? ' (accents facultatifs)' : '')
     default:
       return String(a.value)
   }

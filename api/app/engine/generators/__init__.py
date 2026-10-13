@@ -19,7 +19,7 @@ GenerateFn = Callable[[int, random.Random], dict[str, Any]]
 @dataclass(frozen=True)
 class Generator:
     code: str
-    level: str  # « 6e » ou « 2nde »
+    level: str  # code de classe (engine/levels.py)
     notion: str
     role: str
     title: str
@@ -73,6 +73,7 @@ def playable_notions() -> set[str]:
 # Enregistrement des générateurs (import pour effet de bord).
 from app.engine.generators import (  # noqa: E402, F401
     algebre_2nde,
+    anglais_6e,
     developper_2nde,
     enquetes,
     evolutions_2nde,

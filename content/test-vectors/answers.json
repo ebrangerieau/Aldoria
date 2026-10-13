@@ -796,6 +796,139 @@
         "-"
       ],
       "expected": false
+    },
+    {
+      "note": "texte : réponse exacte",
+      "answer": {
+        "kind": "text",
+        "value": [
+          "dog"
+        ],
+        "accents": true
+      },
+      "input": "dog",
+      "expected": true
+    },
+    {
+      "note": "texte : majuscules et espaces ignorés",
+      "answer": {
+        "kind": "text",
+        "value": [
+          "dog"
+        ],
+        "accents": true
+      },
+      "input": "  Dog ",
+      "expected": true
+    },
+    {
+      "note": "texte : point final ignoré",
+      "answer": {
+        "kind": "text",
+        "value": [
+          "a red apple"
+        ],
+        "accents": true
+      },
+      "input": "A red  apple.",
+      "expected": true
+    },
+    {
+      "note": "texte : autre réponse acceptée",
+      "answer": {
+        "kind": "text",
+        "value": [
+          "mum",
+          "mom"
+        ],
+        "accents": true
+      },
+      "input": "Mom",
+      "expected": true
+    },
+    {
+      "note": "texte : faute d'orthographe",
+      "answer": {
+        "kind": "text",
+        "value": [
+          "dog"
+        ],
+        "accents": true
+      },
+      "input": "dogs",
+      "expected": false
+    },
+    {
+      "note": "texte : accents exigés",
+      "answer": {
+        "kind": "text",
+        "value": [
+          "élève"
+        ],
+        "accents": true
+      },
+      "input": "eleve",
+      "expected": false
+    },
+    {
+      "note": "texte : accents exigés, juste",
+      "answer": {
+        "kind": "text",
+        "value": [
+          "élève"
+        ],
+        "accents": true
+      },
+      "input": "Élève",
+      "expected": true
+    },
+    {
+      "note": "texte : accents facultatifs",
+      "answer": {
+        "kind": "text",
+        "value": [
+          "café"
+        ],
+        "accents": false
+      },
+      "input": "cafe",
+      "expected": true
+    },
+    {
+      "note": "texte : apostrophe typographique",
+      "answer": {
+        "kind": "text",
+        "value": [
+          "I'm"
+        ],
+        "accents": true
+      },
+      "input": "I’m",
+      "expected": true
+    },
+    {
+      "note": "texte : ligature œ",
+      "answer": {
+        "kind": "text",
+        "value": [
+          "cœur"
+        ],
+        "accents": false
+      },
+      "input": "coeur",
+      "expected": true
+    },
+    {
+      "note": "texte : vide",
+      "answer": {
+        "kind": "text",
+        "value": [
+          "dog"
+        ],
+        "accents": true
+      },
+      "input": "",
+      "expected": false
     }
   ]
 }

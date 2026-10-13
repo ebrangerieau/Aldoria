@@ -60,8 +60,46 @@ static func check(answer: Dictionary, user_input: Variant) -> bool:
 			return _check_true_false(answer, user_input)
 		"signs":
 			return _check_signs(answer, user_input)
+		"text":
+			var accents := bool(answer.get("accents", true))
+			var got := normalize_text(str(user_input), accents)
+			if got == "":
+				return false
+			for accepted in answer.get("value", []):
+				if normalize_text(str(accepted), accents) == got:
+					return true
+			return false
 	push_error("Type de réponse inconnu : %s" % answer.get("kind"))
 	return false
+
+
+## Lettres accentuées → lettre de base (même table que api/app/engine/answers.py).
+const ACCENTS := {
+	"à": "a", "á": "a", "â": "a", "ä": "a", "ã": "a", "å": "a", "ç": "c",
+	"è": "e", "é": "e", "ê": "e", "ë": "e", "ì": "i", "í": "i", "î": "i", "ï": "i",
+	"ñ": "n", "ò": "o", "ó": "o", "ô": "o", "ö": "o", "õ": "o",
+	"ù": "u", "ú": "u", "û": "u", "ü": "u", "ý": "y", "ÿ": "y", "œ": "oe", "æ": "ae",
+}
+
+
+## Réponse écrite comparable : minuscules, espaces réduits, apostrophe droite, sans point
+## final ; sans accents si `accents` est faux.
+static func normalize_text(text: String, accents := true) -> String:
+	var s := text.replace("’", "'").replace("‘", "'").replace(char(0xA0), " ").to_lower()
+	var words := PackedStringArray()
+	for word in s.split(" ", false):
+		for part in word.split("\t", false):
+			words.append(part)
+	s = " ".join(words)
+	while s.length() > 0 and s[-1] in [".", "!", "?"]:
+		s = s.substr(0, s.length() - 1)
+	s = s.strip_edges()
+	if not accents:
+		var plain := ""
+		for c in s:
+			plain += ACCENTS.get(c, c)
+		s = plain
+	return s
 
 
 static func _check_number(answer: Dictionary, text: String) -> bool:

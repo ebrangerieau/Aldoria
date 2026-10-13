@@ -1,0 +1,36 @@
+{
+  "level": "6e",
+  "subject": {"code": "anglais", "label": "Anglais"},
+  "source": "Programme de langues vivantes du cycle 3 (niveau A1 du CECRL), arrêté du 10 avril 2025. Vocabulaire : générateur 6e.anglais.vocabulaire (listes de mots) ; grammaire et communication : banque de questions (rédigées ou proposées par l'IA).",
+  "chapters": [
+    {"code": "6e.anglais.vocabulaire", "title": "Vocabulaire du quotidien", "notions": [
+      {"code": "6e.anglais.vocabulaire.couleurs", "label": "Les couleurs"},
+      {"code": "6e.anglais.vocabulaire.nombres", "label": "Les nombres"},
+      {"code": "6e.anglais.vocabulaire.famille", "label": "La famille"},
+      {"code": "6e.anglais.vocabulaire.corps", "label": "Le corps"},
+      {"code": "6e.anglais.vocabulaire.animaux", "label": "Les animaux"},
+      {"code": "6e.anglais.vocabulaire.nourriture", "label": "La nourriture"},
+      {"code": "6e.anglais.vocabulaire.vetements", "label": "Les vêtements"},
+      {"code": "6e.anglais.vocabulaire.ecole", "label": "L'école"},
+      {"code": "6e.anglais.vocabulaire.maison", "label": "La maison"},
+      {"code": "6e.anglais.vocabulaire.temps", "label": "Les jours, les mois et la météo"},
+      {"code": "6e.anglais.vocabulaire.loisirs", "label": "Les sports et les loisirs"}
+    ]},
+    {"code": "6e.anglais.grammaire", "title": "Grammaire de base", "notions": [
+      {"code": "6e.anglais.grammaire.be", "label": "Le verbe be (am, is, are)"},
+      {"code": "6e.anglais.grammaire.have_got", "label": "Have got (posséder)"},
+      {"code": "6e.anglais.grammaire.present_simple", "label": "Le présent simple (et le -s de la 3e personne)"},
+      {"code": "6e.anglais.grammaire.can", "label": "Can / can't (capacité)"},
+      {"code": "6e.anglais.grammaire.pronoms", "label": "Pronoms personnels et adjectifs possessifs"},
+      {"code": "6e.anglais.grammaire.pluriels", "label": "Le pluriel des noms"},
+      {"code": "6e.anglais.grammaire.there_is", "label": "There is / there are"},
+      {"code": "6e.anglais.grammaire.questions", "label": "Poser une question (what, where, who, how…)"}
+    ]},
+    {"code": "6e.anglais.communication", "title": "Se présenter et communiquer", "notions": [
+      {"code": "6e.anglais.communication.se_presenter", "label": "Saluer, se présenter, dire son âge"},
+      {"code": "6e.anglais.communication.heure_date", "label": "Dire l'heure et la date"},
+      {"code": "6e.anglais.communication.gouts", "label": "Dire ce qu'on aime ou n'aime pas"},
+      {"code": "6e.anglais.communication.civilisation", "label": "Repères culturels du monde anglophone"}
+    ]}
+  ]
+}

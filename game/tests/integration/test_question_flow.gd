@@ -29,14 +29,7 @@ func _load_pack(level: String) -> void:
 
 
 func _correct_input(item: Dictionary) -> Variant:
-	var answer: Dictionary = item["answer"]
-	if answer["kind"] == "choice":
-		return int(answer["index"])
-	if answer["kind"] in ["order", "vector", "signs"]:
-		return answer["value"]
-	if answer["kind"] == "true_false":
-		return {"value": answer["value"], "reason": answer["reason"]}
-	return str(answer["value"])
+	return AnswerInputs.correct_for(item["answer"])
 
 
 func test_next_item_respects_role_and_starts_easy() -> void:
@@ -178,7 +171,7 @@ func test_keypad_builds_expression_from_keys() -> void:
 func _find_widget(panel: Node) -> Node:
 	for node in panel.find_children("*", "", true, false):
 		if node is McqWidget or node is KeypadWidget or node is OrderWidget or node is VectorWidget \
-				or node is TrueFalseWidget or node is SignTableWidget \
+				or node is TrueFalseWidget or node is SignTableWidget or node is TextAnswerWidget \
 				or (node is NumberLineWidget and node._interactive):
 			return node
 	return null

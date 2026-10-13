@@ -37,7 +37,7 @@ var parent: Dictionary = DEFAULTS.duplicate()
 var prefs: Dictionary = {}
 
 var _font: Font
-var _voice := ""
+var _voices: Dictionary = {}  # langue (« en-GB ») → identifiant de voix
 var _next_pause_s := 0.0
 
 
@@ -165,38 +165,77 @@ func can_speak() -> bool:
 	return on("read_aloud")
 
 
-## Lit un texte avec la voix française du navigateur ou du système (interrompt la
-## lecture précédente). Sans voix française disponible : voix par défaut.
+## Lit un texte avec la voix française (aménagement « lecture à voix haute » ;
+## interrompt la lecture précédente).
 func speak(text: String) -> void:
-	if not can_speak() or text.strip_edges() == "":
+	if can_speak():
+		say(text, "fr-FR")
+
+
+## Lecture en plusieurs morceaux, chacun dans sa langue : [[texte, langue], …]
+## (énoncé en français, propositions en anglais…).
+func speak_parts(parts: Array) -> void:
+	if not can_speak():
 		return
 	DisplayServer.tts_stop()
-	DisplayServer.tts_speak(text, _french_voice(), roundi(volume() * 100), 1.0, 0.95)
+	for part: Array in parts:
+		say(str(part[0]), str(part[1]), false)
+
+
+## Prononce un texte dans une langue, que la lecture à voix haute soit activée ou non :
+## c'est le support d'un exercice d'écoute. Sans voix de cette langue : voix par défaut.
+func say(text: String, lang := "fr-FR", interrupt := true, rate := 0.95) -> void:
+	if text.strip_edges() == "":
+		return
+	if interrupt:
+		DisplayServer.tts_stop()
+	DisplayServer.tts_speak(text, voice_for(lang), roundi(volume() * 100), 1.0, rate)
 
 
 func stop_speaking() -> void:
-	if can_speak():
-		DisplayServer.tts_stop()
+	DisplayServer.tts_stop()
 
 
-func _french_voice() -> String:
-	if _voice == "":
-		var voices := DisplayServer.tts_get_voices_for_language("fr")
-		if not voices.is_empty():
-			_voice = voices[0]
-	return _voice
+## Voix d'une langue : d'abord la variante exacte (en-GB), sinon la langue (en).
+func voice_for(lang: String) -> String:
+	if not _voices.has(lang):
+		var wanted := lang.replace("_", "-").to_lower()
+		var found := ""
+		for voice: Dictionary in DisplayServer.tts_get_voices():
+			if str(voice.get("language", "")).replace("_", "-").to_lower() == wanted:
+				found = str(voice.get("id", ""))
+				break
+		if found == "":
+			var same_language := DisplayServer.tts_get_voices_for_language(lang.substr(0, 2))
+			found = same_language[0] if not same_language.is_empty() else ""
+		_voices[lang] = found
+	return _voices[lang]
 
 
-## Texte lu d'une question : énoncé (formule comprise), puis les propositions.
-static func question_speech(item: Dictionary) -> String:
+## Morceaux lus d'une question : énoncé (formule comprise), puis les propositions, dans
+## leur langue (`choices_lang`) quand ce n'est pas le français.
+static func question_parts(item: Dictionary) -> Array:
 	var said: Dictionary = item.get("speech", {})
-	var parts: Array[String] = [str(said.get("prompt", item.get("prompt", "")))]
+	var parts: Array = [[str(said.get("prompt", item.get("prompt", ""))), "fr-FR"]]
 	var choices: Array = said.get("choices", item.get("choices", []) if item.get("choices") else [])
+	var lang := str(item.get("choices_lang", "")) if item.get("choices_lang") else "fr-FR"
 	if item.get("type") == "true_false":
-		parts.append("Vrai ou faux ? Puis choisis pourquoi.")
+		parts.append(["Vrai ou faux ? Puis choisis pourquoi.", "fr-FR"])
 	for i in choices.size():
-		parts.append("Proposition %d : %s." % [i + 1, choices[i]])
-	return " ".join(parts)
+		if lang == "fr-FR":
+			parts.append(["Proposition %d : %s." % [i + 1, choices[i]], "fr-FR"])
+		else:
+			parts.append(["Proposition %d :" % (i + 1), "fr-FR"])
+			parts.append([str(choices[i]), lang])
+	return parts
+
+
+## Texte lu d'une question, d'un seul tenant (tests, affichage).
+static func question_speech(item: Dictionary) -> String:
+	var texts: Array[String] = []
+	for part: Array in question_parts(item):
+		texts.append(str(part[0]))
+	return " ".join(texts)
 
 
 # --- Rappel de pause -------------------------------------------------------------------

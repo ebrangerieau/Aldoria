@@ -13,6 +13,9 @@ Types de réponse attendue (`answer.kind`) :
 - `order`      : {"value": [2, 0, 1]}  (saisie : indices des choix dans l'ordre donné)
 - `true_false` : {"value": false, "reason": 1}  (saisie : {"value": bool, "reason": indice})
 - `signs`      : {"value": ["+", "-", "+"]}  (saisie : liste de « + » / « - », ou « − »)
+- `text`       : {"value": ["mum", "mom"], "accents": true}  (réponses écrites acceptées ;
+                 casse, espaces, apostrophe typographique et point final ignorés ; accents
+                 comptés seulement si `accents`)
 """
 
 from __future__ import annotations
@@ -81,7 +84,32 @@ def check(answer: dict[str, Any], user_input: Any) -> bool:
         return _check_true_false(answer, user_input)
     if kind == "signs":
         return _check_signs(answer, user_input)
+    if kind == "text":
+        got = normalize_text(str(user_input), bool(answer.get("accents", True)))
+        accepted = {
+            normalize_text(str(v), bool(answer.get("accents", True))) for v in answer["value"]
+        }
+        return got != "" and got in accepted
     raise ValueError(f"type de réponse inconnu : {kind}")
+
+
+# Lettres accentuées → lettre de base (même table que le client, answer_checker.gd).
+_ACCENTS = {
+    "à": "a", "á": "a", "â": "a", "ä": "a", "ã": "a", "å": "a", "ç": "c",
+    "è": "e", "é": "e", "ê": "e", "ë": "e", "ì": "i", "í": "i", "î": "i", "ï": "i",
+    "ñ": "n", "ò": "o", "ó": "o", "ô": "o", "ö": "o", "õ": "o",
+    "ù": "u", "ú": "u", "û": "u", "ü": "u", "ý": "y", "ÿ": "y", "œ": "oe", "æ": "ae",
+}  # fmt: skip
+
+
+def normalize_text(text: str, accents: bool = True) -> str:
+    """Réponse écrite comparable : minuscules, espaces réduits, apostrophe droite, sans
+    point final ; sans accents si `accents` est faux."""
+    s = text.replace("’", "'").replace("‘", "'").replace("\u00a0", " ").lower()
+    s = " ".join(s.split()).rstrip(".!?").strip()
+    if not accents:
+        s = "".join(_ACCENTS.get(c, c) for c in s)
+    return s
 
 
 def _check_true_false(answer: dict[str, Any], user_input: Any) -> bool:

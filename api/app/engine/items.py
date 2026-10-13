@@ -62,6 +62,23 @@ class SignsAnswer(BaseModel):
     value: list[Literal["+", "-"]] = Field(min_length=2)
 
 
+class TextAnswer(BaseModel):
+    """Réponse écrite : une des formes acceptées (answers.normalize_text). `accents` : les
+    accents comptent (orthographe) ; faux pour une langue étrangère tapée sans accents."""
+
+    kind: Literal["text"] = "text"
+    value: list[str] = Field(min_length=1, max_length=10)
+    accents: bool = True
+
+
+class Listen(BaseModel):
+    """Texte lu à voix haute par la synthèse vocale de l'appareil dans `lang` (écoute en
+    langue étrangère : il ne fait pas partie de l'énoncé affiché)."""
+
+    text: str = Field(min_length=1, max_length=300)
+    lang: Literal["fr-FR", "en-GB", "en-US", "es-ES", "de-DE"]
+
+
 Answer = Annotated[
     ChoiceAnswer
     | NumberAnswer
@@ -70,15 +87,25 @@ Answer = Annotated[
     | VectorAnswer
     | OrderAnswer
     | TrueFalseAnswer
-    | SignsAnswer,
+    | SignsAnswer
+    | TextAnswer,
     Field(discriminator="kind"),
 ]
 
 # number_line : placer un point sur une droite graduée (réponse fraction) ;
 # order : remettre des éléments dans l'ordre (réponse order).
-# true_false : vrai/faux puis justification ; sign_table : tableau de signes à compléter.
+# true_false : vrai/faux puis justification ; sign_table : tableau de signes à compléter ;
+# text : réponse écrite au clavier (langues, orthographe).
 ItemType = Literal[
-    "mcq", "numeric", "expression", "vector", "number_line", "order", "true_false", "sign_table"
+    "mcq",
+    "numeric",
+    "expression",
+    "vector",
+    "number_line",
+    "order",
+    "true_false",
+    "sign_table",
+    "text",
 ]
 # Rôle dans le combat : « automatisme » = Frappe (rapide), « chapitre » = Sort (puissant).
 Role = Literal["automatisme", "chapitre"]
@@ -100,6 +127,10 @@ class Item(BaseModel):
     game_modes: list[str] = ["combat"]
     # Données d'illustration pour le client (plateaux d'une balance, points d'un repère…).
     visual: dict[str, Any] | None = None
+    # Écoute en langue étrangère (bouton « Écouter » ; le texte n'est pas affiché).
+    listen: Listen | None = None
+    # Langue des propositions quand elle n'est pas le français (lecture à voix haute).
+    choices_lang: Literal["fr-FR", "en-GB", "en-US", "es-ES", "de-DE"] | None = None
     generator: str | None = None
     seed: int | None = None
     # Données internes du générateur (valeurs tirées), utiles aux tests ; ignorées par le client.

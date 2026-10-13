@@ -4,7 +4,7 @@ Usage (depuis la racine du dépôt) :
     uv run --directory api python ../tools/export_pack_fixture.py
 Écrit game/tests/fixtures/pack_6e.json et pack_2nde.json, avec les items des
 énigmes et enquêtes réservées aux donjons et au village (balance, carte ; miroirs,
-relevé statistique, tableau croisé).
+relevé statistique, tableau croisé) et des formes d'anglais (écoute, réponse écrite).
 """
 
 from __future__ import annotations
@@ -30,6 +30,8 @@ ENIGMAS = {
         ("2nde.probabilites.enquete", 3),
     ],
 }
+# Formes particulières à couvrir à coup sûr (générateur, difficultés) : écoute, réponse écrite.
+FORMS = {"6e": [("6e.anglais.animaux", (1, 3, 4, 5))], "2nde": []}
 
 
 def main() -> None:
@@ -41,6 +43,10 @@ def main() -> None:
             pack["items"] += session_pack.enigma_items(
                 REGISTRY[code], 30.0, count, rng, pack["formulas"]
             )
+        for code, difficulties in FORMS[level]:
+            for difficulty in difficulties:
+                item = REGISTRY[code].item(difficulty, rng.randrange(1_000_000))
+                pack["items"].append(session_pack.item_data(item, "chapitre", pack["formulas"]))
         pack["session_id"] = ""
         pack["settings"] = {"session_max_minutes": 25}
         path = OUT / f"pack_{level}.json"

@@ -1,0 +1,44 @@
+{
+  "level": "2nde",
+  "subject": {"code": "francais", "label": "Français"},
+  "source": "Programme de français de seconde générale et technologique (BO spécial n° 1 du 22 janvier 2019) : objets d'étude et étude de la langue ; vocabulaire de l'analyse utile aux épreuves anticipées de français de fin de première. Questions : banque (rédigées ou proposées par l'IA).",
+  "chapters": [
+    {"code": "2nde.francais.langue", "title": "Étude de la langue", "notions": [
+      {"code": "2nde.francais.langue.classes_mots", "label": "Classes grammaticales des mots"},
+      {"code": "2nde.francais.langue.fonctions", "label": "Fonctions dans la phrase"},
+      {"code": "2nde.francais.langue.accords", "label": "Accords dans le groupe nominal et entre le verbe et son sujet"},
+      {"code": "2nde.francais.langue.participe_passe", "label": "Accord du participe passé"},
+      {"code": "2nde.francais.langue.valeurs_temps", "label": "Valeurs des temps et des modes"},
+      {"code": "2nde.francais.langue.phrase_complexe", "label": "Phrase complexe : propositions subordonnées"},
+      {"code": "2nde.francais.langue.discours_rapporte", "label": "Discours direct, indirect, indirect libre"},
+      {"code": "2nde.francais.langue.lexique", "label": "Formation des mots, sens propre et figuré, champs lexicaux"}
+    ]},
+    {"code": "2nde.francais.figures", "title": "Figures de style", "notions": [
+      {"code": "2nde.francais.figures.analogie", "label": "Comparaison, métaphore, personnification, allégorie"},
+      {"code": "2nde.francais.figures.insistance", "label": "Anaphore, gradation, accumulation, hyperbole"},
+      {"code": "2nde.francais.figures.attenuation", "label": "Litote, euphémisme"},
+      {"code": "2nde.francais.figures.opposition", "label": "Antithèse, oxymore, chiasme, paradoxe"},
+      {"code": "2nde.francais.figures.substitution", "label": "Métonymie, périphrase"}
+    ]},
+    {"code": "2nde.francais.poesie", "title": "La poésie du Moyen Âge au XVIIIe siècle", "notions": [
+      {"code": "2nde.francais.poesie.versification", "label": "Versification : syllabes, rimes, strophes"},
+      {"code": "2nde.francais.poesie.formes", "label": "Formes poétiques (sonnet, ballade, rondeau…)"},
+      {"code": "2nde.francais.poesie.reperes", "label": "Repères : auteurs et mouvements (Pléiade, baroque, classicisme)"}
+    ]},
+    {"code": "2nde.francais.idees", "title": "La littérature d'idées et la presse du XIXe au XXIe siècle", "notions": [
+      {"code": "2nde.francais.idees.argumentation", "label": "Thèse, arguments, exemples"},
+      {"code": "2nde.francais.idees.connecteurs", "label": "Connecteurs logiques"},
+      {"code": "2nde.francais.idees.genres", "label": "Genres argumentatifs (essai, article, discours…)"}
+    ]},
+    {"code": "2nde.francais.recit", "title": "Le roman et le récit du XVIIIe au XXIe siècle", "notions": [
+      {"code": "2nde.francais.recit.narration", "label": "Narrateur et point de vue (focalisation)"},
+      {"code": "2nde.francais.recit.temps_recit", "label": "Ordre et rythme du récit"},
+      {"code": "2nde.francais.recit.reperes", "label": "Repères : auteurs et mouvements (réalisme, naturalisme…)"}
+    ]},
+    {"code": "2nde.francais.theatre", "title": "Le théâtre du XVIIe au XXIe siècle", "notions": [
+      {"code": "2nde.francais.theatre.vocabulaire", "label": "Vocabulaire du théâtre (tirade, aparté, didascalie…)"},
+      {"code": "2nde.francais.theatre.genres", "label": "Tragédie, comédie, drame ; règles classiques"},
+      {"code": "2nde.francais.theatre.enonciation", "label": "Double énonciation, registres"}
+    ]}
+  ]
+}
