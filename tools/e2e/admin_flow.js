@@ -79,6 +79,10 @@ const { chromium } = require('playwright-core');
   await page.getByRole('button', { name: 'Supprimer' }).click();
   await row.waitFor({ state: 'detached' });
 
+  // IA : le banc n'a pas de clé d'API, l'onglet l'explique (aucun appel payant en test).
+  await page.getByRole('button', { name: "Proposer avec l'IA" }).click();
+  await page.getByText("L'IA n'est pas activée sur ce serveur").waitFor();
+
   // Import : vérification ligne par ligne, sans rien enregistrer.
   await page.getByRole('button', { name: 'Importer' }).click();
   await page.getByLabel('Contenu à importer').fill(

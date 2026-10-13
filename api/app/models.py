@@ -307,6 +307,20 @@ class BankItem(Base):
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
 
 
+class AiUsage(Base):
+    """Demandes à l'IA (questions proposées) par famille et par jour : quota et coût."""
+
+    __tablename__ = "ai_usage"
+
+    family_id: Mapped[int] = mapped_column(
+        ForeignKey("family.id", ondelete="CASCADE"), primary_key=True
+    )
+    day: Mapped[date] = mapped_column(Date, primary_key=True)
+    requests: Mapped[int] = mapped_column(Integer, default=0)
+    input_tokens: Mapped[int] = mapped_column(Integer, default=0)
+    output_tokens: Mapped[int] = mapped_column(Integer, default=0)
+
+
 class Report(Base):
     """Signalement d'une question par un enfant (« il y a une erreur ») : la question
     telle qu'affichée, la réponse donnée, le motif. Traité par le parent."""

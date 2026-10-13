@@ -138,7 +138,7 @@ export interface BankRow {
   type: QuestionType
   difficulty: number
   status: BankStatus
-  source: 'parent' | 'import'
+  source: 'parent' | 'import' | 'ia'
   summary: string
   updated_at: string | null
   question?: GameItem & { notion: string }
@@ -250,6 +250,14 @@ export interface FamilyRow {
   children: number
   devices: number
   last_activity: string | null
+  ai_requests_month: number
+  ai_cost_month_usd: number
+}
+
+export interface AiResult {
+  created: BankRow[]
+  rejected: { summary: string; errors: string[] }[]
+  remaining: number
 }
 
 export interface Link {
@@ -329,6 +337,17 @@ export const api = {
   deviceCode: (name: string) => request<{ code: string; expires_at: string }>('POST', '/devices/code', { name }),
   removeDevice: (id: number) => request<null>('DELETE', `/devices/${id}`),
   families: () => request<FamilyRow[]>('GET', '/families'),
+  aiStatus: () => request<{ enabled: boolean; limit: number; remaining: number }>('GET', '/ai-questions'),
+  aiPropose: (body: {
+    level: Level
+    notion: string
+    count: number
+    difficulty: number | null
+    instructions: string
+    material_text: string
+    image_base64: string
+    image_type: string
+  }) => request<AiResult>('POST', '/ai-questions', body),
   inviteFamily: (note: string) => request<Link>('POST', '/families/invitations', { note }),
   backups: () => request<BackupStatus>('GET', '/backups'),
   profiles: () => request<Profile[]>('GET', '/profiles'),

@@ -435,6 +435,18 @@ générateurs naturels, donc des questions à rédiger.
 - Récit : l'Archiviste restaure **tous** les savoirs du royaume ; une matière = une région (Bibliothèque des
   Langues, Salle des Chroniques, Observatoire…).
 
+> ✅ **Étape B réalisée le 2026-10-13** (migration 0010 ; 435 tests API, 100 tests jeu, parcours navigateur).
+> Matières pilotes choisies par Eric : **anglais pour Jules (6e)**, **français pour Tom (seconde)** ; programmes
+> chargés (`content/seed/6e/anglais.json`, `content/seed/2nde/francais.json`). Formats : réponse écrite
+> (clavier de lettres à l'écran, accents comptés ou non, vérification identique serveur / jeu), écoute dans une
+> langue (synthèse vocale de l'appareil), propositions lues dans leur langue. Générateur de vocabulaire anglais
+> (11 thèmes, 5 formes). Atelier IA : « Proposer avec l'IA » (Claude Opus 5.5, sortie structurée, repli en cas
+> de refus), leçon en texte ou en photo, propositions validées puis ajoutées en brouillon, quota par famille et
+> par jour, coût du mois affiché à l'exploitant ; activé dès qu'une clé d'API est posée sur le serveur.
+> Écarts : pas de format « carte » ni « frise » dédiés (une frise se fait avec « remettre dans l'ordre » ; les
+> cartes demandent des illustrations) ; pas de générateur de français (questions par la banque et l'IA) ; les
+> notions des nouvelles matières se mêlent aux maths dans l'arène tant qu'il n'y a pas de région par matière.
+
 **Étape C – Une matière pilote par enfant** (choix à faire avec Eric et les enfants)
 - Tom : le **français** est le candidat le plus utile (épreuves anticipées de juin 2028) ; sinon anglais.
 - Jules : **anglais** (vocabulaire, écoute) ou **histoire-géographie** (frises, cartes).

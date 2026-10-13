@@ -9,19 +9,20 @@ banque et les signalements sont ceux de la famille de l'adulte connecté.
 from __future__ import annotations
 
 import random
-from datetime import UTC, datetime
-from typing import Any, Literal
+from datetime import UTC, date, datetime
+from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
 from pydantic import BaseModel, Field
 from sqlalchemy import func, select
 
-from app.engine import bank, session_pack
+from app.config import get_settings
+from app.engine import ai_author, bank, levels, session_pack
 from app.engine.generators import REGISTRY, for_level
 from app.engine.items import Item
 from app.engine.levels import LevelCode
 from app.errors import ApiError
-from app.models import Adult, BankItem, Chapter, Notion, Profile, Report
+from app.models import Adult, AiUsage, BankItem, Chapter, Notion, Profile, Report, Subject
 from app.routers.admin import CurrentParent, Db
 
 router = APIRouter(prefix="/admin", tags=["admin"])
@@ -47,6 +48,29 @@ class ImportIn(BaseModel):
     # Faux : rapport seulement (rien n'est enregistré) ; vrai : les lignes valides
     # sont ajoutées en brouillon.
     commit: bool = False
+
+
+class AiIn(BaseModel):
+    """Demande de questions à l'IA : une notion, et facultativement une consigne, le
+    texte ou la photo de la leçon."""
+
+    level: Level
+    notion: str = Field(max_length=120)
+    count: int = Field(default=5, ge=1, le=ai_author.MAX_QUESTIONS)
+    difficulty: int | None = Field(default=None, ge=1, le=5)
+    instructions: str = Field(default="", max_length=1000)
+    material_text: str = Field(default="", max_length=ai_author.MAX_MATERIAL_CHARS)
+    image_base64: str = Field(default="", max_length=7_000_000)  # environ 5 Mo d'image
+    image_type: Literal["", "image/jpeg", "image/png", "image/webp", "image/gif"] = ""
+
+
+def get_ai() -> Any:
+    """Client de l'IA, ou None si aucune clé n'est posée (remplacé dans les tests)."""
+    key = get_settings().anthropic_api_key
+    return ai_author.client(key) if key else None
+
+
+Ai = Annotated[Any, Depends(get_ai)]
 
 
 class ReportStatusIn(BaseModel):
@@ -195,6 +219,93 @@ async def import_bank(body: ImportIn, parent: CurrentParent, db: Db) -> dict[str
         "valid": len(valid),
         "invalid": len(report) - len(valid),
         "created": len(valid) if body.commit else 0,
+    }
+
+
+@router.get("/ai-questions")
+async def ai_status(parent: CurrentParent, db: Db, ai: Ai) -> dict[str, Any]:
+    limit = get_settings().ai_daily_limit
+    usage = await db.get(AiUsage, (parent.family_id, date.today()))
+    used = usage.requests if usage else 0
+    return {"enabled": ai is not None, "limit": limit, "remaining": max(0, limit - used)}
+
+
+@router.post("/ai-questions", status_code=201)
+async def ai_propose(body: AiIn, parent: CurrentParent, db: Db, ai: Ai) -> dict[str, Any]:
+    """L'IA propose des questions sur une notion ; celles qui passent la validation de la
+    banque sont ajoutées en brouillon (source « ia »), les autres sont listées."""
+    settings = get_settings()
+    if ai is None:
+        raise ApiError(503, "ai_disabled", "L'IA n'est pas activée sur ce serveur.")
+    row = (
+        await db.execute(
+            select(Notion, Chapter, Subject)
+            .join(Chapter, Notion.chapter_id == Chapter.id)
+            .join(Subject, Chapter.subject_id == Subject.id)
+            .where(Notion.code == body.notion)
+        )
+    ).first()
+    if row is None or row[1].level != body.level:
+        raise ApiError(422, "unknown_notion", "Notion inconnue pour cette classe.")
+    if body.image_base64 and not body.image_type:
+        raise ApiError(422, "image_type", "Format d'image non précisé.")
+    notion, chapter, subject = row
+    usage = await db.get(AiUsage, (parent.family_id, date.today()))
+    if usage is None:
+        usage = AiUsage(family_id=parent.family_id, day=date.today(), requests=0)
+        db.add(usage)
+    if usage.requests >= settings.ai_daily_limit:
+        raise ApiError(
+            429, "ai_quota", f"Limite de {settings.ai_daily_limit} demandes par jour atteinte."
+        )
+    # La demande compte même si l'IA échoue : le quota protège aussi le coût.
+    usage.requests += 1
+    await db.commit()
+    request = ai_author.Request(
+        level_label=levels.label(body.level),
+        subject=subject.code,
+        subject_label=subject.label,
+        chapter=chapter.title,
+        notion_code=notion.code,
+        notion_label=notion.label,
+        count=body.count,
+        difficulty=body.difficulty,
+        instructions=body.instructions,
+        material_text=body.material_text,
+        image_base64=body.image_base64,
+        image_type=body.image_type,
+    )
+    try:
+        draft = await ai_author.propose(ai, request, settings.ai_model)
+    except ai_author.AiRefused as exc:
+        raise ApiError(422, "ai_refused", str(exc)) from exc
+    except ai_author.AiUnavailable as exc:
+        raise ApiError(503, "ai_unavailable", str(exc)) from exc
+    usage.input_tokens = (usage.input_tokens or 0) + draft.input_tokens
+    usage.output_tokens = (usage.output_tokens or 0) + draft.output_tokens
+    notions = await _notions(db)
+    created, rejected = [], []
+    for raw in draft.raw:
+        checked = bank.validate(raw, notions, body.level)
+        if checked.errors:
+            rejected.append({"summary": bank.summary(raw), "errors": checked.errors})
+            continue
+        item = BankItem(
+            family_id=parent.family_id,
+            level=body.level,
+            notion=checked.data["notions"][0],
+            difficulty=checked.data["difficulty"],
+            status="brouillon",
+            source="ia",
+            data=checked.data,
+        )
+        db.add(item)
+        created.append(item)
+    await db.commit()
+    return {
+        "created": [_bank_out(item) for item in created],
+        "rejected": rejected,
+        "remaining": max(0, settings.ai_daily_limit - usage.requests),
     }
 
 

@@ -25,6 +25,7 @@ export function Operator() {
               <th>Appareils</th>
               <th>Créée le</th>
               <th>Dernière réponse</th>
+              <th>IA ce mois</th>
             </tr>
           </thead>
           <tbody>
@@ -36,6 +37,9 @@ export function Operator() {
                 <td>{f.devices}</td>
                 <td>{formatDate(f.created_at, false)}</td>
                 <td>{formatDate(f.last_activity, false)}</td>
+                <td>
+                  {f.ai_requests_month} demande{f.ai_requests_month > 1 ? 's' : ''} · ≈ {f.ai_cost_month_usd.toFixed(2)} $
+                </td>
               </tr>
             ))}
           </tbody>

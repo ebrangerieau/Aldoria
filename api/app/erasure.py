@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.models import (
     Adult,
     AdultSession,
+    AiUsage,
     Attempt,
     BankItem,
     ChapterStatus,
@@ -55,6 +56,6 @@ async def delete_family(db: AsyncSession, family_id: int) -> None:
             (Invitation.family_id == family_id) | Invitation.adult_id.in_(adults)
         )
     )
-    for model in (Adult, BankItem, Device, PairingCode, FamilyNotion):
+    for model in (Adult, BankItem, Device, PairingCode, FamilyNotion, AiUsage):
         await db.execute(delete(model).where(model.family_id == family_id))
     await db.execute(delete(Family).where(Family.id == family_id))

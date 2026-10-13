@@ -23,6 +23,11 @@ class Settings(BaseSettings):
     admin_key: str = ""
     # Adresse publique de l'espace parent, pour les liens d'invitation (accounts.py).
     admin_url: str = "http://localhost:5173"
+    # Questions proposées par l'IA (engine/ai_author.py) : clé d'API Anthropic (vide =
+    # fonction désactivée), modèle, et nombre de demandes par famille et par jour.
+    anthropic_api_key: str = ""
+    ai_model: str = "claude-opus-5-5"
+    ai_daily_limit: int = 20
     # Dossier où le service « backup » écrit l'état des sauvegardes (vide = non configuré).
     backup_status_dir: str = ""
 

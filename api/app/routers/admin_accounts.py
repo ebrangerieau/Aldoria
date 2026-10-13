@@ -17,12 +17,13 @@ from app import accounts, erasure
 from app.accounts import AdminHost, CurrentAdult, CurrentOperator, aware, utcnow
 from app.auth import hash_pin, verify_pin
 from app.db import get_db
-from app.engine import levels
+from app.engine import ai_author, levels
 from app.engine.levels import LevelCode, WorldCode
 from app.errors import ApiError
 from app.models import (
     Adult,
     AdultSession,
+    AiUsage,
     Attempt,
     Device,
     Family,
@@ -398,10 +399,20 @@ async def list_families(operator: CurrentOperator, db: Db) -> list[dict[str, Any
         last = await db.scalar(
             select(func.max(Attempt.answered_at)).where(Attempt.profile_id.in_(profile_ids))
         )
+        month = await db.execute(
+            select(
+                func.coalesce(func.sum(AiUsage.requests), 0),
+                func.coalesce(func.sum(AiUsage.input_tokens), 0),
+                func.coalesce(func.sum(AiUsage.output_tokens), 0),
+            ).where(AiUsage.family_id == family.id, AiUsage.day >= utcnow().date().replace(day=1))
+        )
+        requests, tokens_in, tokens_out = month.one()
         result.append(
             {
                 "id": family.id,
                 "name": family.name,
+                "ai_requests_month": int(requests),
+                "ai_cost_month_usd": round(ai_author.cost_usd(int(tokens_in), int(tokens_out)), 2),
                 "created_at": _iso(family.created_at),
                 "adults": await _count(db, Adult, family.id),
                 "children": await _count(db, Profile, family.id),

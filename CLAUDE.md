@@ -97,6 +97,14 @@ Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-
   ses régions : le camp l'annonce). Passage de classe : `PATCH /admin/profiles/{id}` ; les notions déjà travaillées
   des classes précédentes reviennent en révision seulement (`tracking._prior_notions`, `NotionInfo.prior`).
   Le jeu relit le profil au retour au camp (`Session.update_profile`, signal `profile_changed`).
+- Formats de question : `text` (réponse écrite, `answers.normalize_text` côté serveur et
+  `AnswerChecker.normalize_text` côté jeu, même table d'accents, vecteurs partagés) avec `TextAnswerWidget` (clavier
+  de lettres à l'écran) ; `listen` (écoute dans une langue, `Accessibility.say`, toujours actif) ; `choices_lang`
+  (propositions lues dans leur langue). Programmes : un fichier par matière, `content/seed/<classe>/<matière>.json`.
+- Questions proposées par l'IA (`engine/ai_author.py`, route `/admin/ai-questions`) : SDK `anthropic`, modèle
+  `claude-opus-5-5`, sortie structurée, `fallbacks="default"` ; chaque proposition repasse par `bank.validate` et
+  entre en brouillon (source `ia`) ; quota par famille et par jour (`ai_usage`). Jamais de donnée d'enfant dans
+  la requête. Tests : client simulé (`admin_content.get_ai` remplacé), aucun appel réel.
 - Combat : `Encounter` (core/combat) est partagé par l'arène et le donjon ; une scène ne réécrit pas le tour par tour.
 - Progression du joueur : `SaveManager` (XP, donjons, bestiaire, défis quotidiens), jamais de fichier de
   sauvegarde écrit à la main. Défi du jour : règles de série et de coffre dans `DailyChallenge`, sans compte à

@@ -16,9 +16,10 @@ import {
   type ListenLang,
 } from './api'
 import { LEVEL_LABELS } from './api'
+import { AiQuestions } from './AiQuestions'
 import { QuestionPreview } from './QuestionPreview'
 
-export type View = 'bank' | 'import' | 'generators'
+export type View = 'bank' | 'ai' | 'import' | 'generators'
 
 // Questions du niveau de l'enfant choisi : banque rédigée (jouée une fois publiée),
 // import d'un fichier, aperçu des générateurs.
@@ -32,6 +33,7 @@ export function Questions({ child, openItem, initialView = 'bank' }: { child: Pr
         {(
           [
             ['bank', 'Banque'],
+            ['ai', "Proposer avec l'IA"],
             ['import', 'Importer'],
             ['generators', 'Générateurs'],
           ] as [View, string][]
@@ -45,6 +47,16 @@ export function Questions({ child, openItem, initialView = 'bank' }: { child: Pr
       {view === 'bank' && editing !== null && (
         <Editor key={String(editing)} level={child.level} id={editing === 'new' ? null : editing} notions={notions} onClose={() => setEditing(null)} />
       )}
+      {view === 'ai' && (
+        <AiQuestions
+          level={child.level}
+          notions={notions}
+          onEdit={(id) => {
+            setEditing(id)
+            setView('bank')
+          }}
+        />
+      )}
       {view === 'import' && <Import level={child.level} onDone={() => setView('bank')} />}
       {view === 'generators' && <Generators level={child.level} />}
     </div>
@@ -56,7 +68,10 @@ type NotionOption = { code: string; label: string; chapter: string }
 function useNotions(child: Profile): NotionOption[] {
   const query = useQuery({ queryKey: ['chapters', child.id], queryFn: () => api.chapters(child.id) })
   return useMemo(
-    () => (query.data ?? []).flatMap((ch) => ch.notions.map((n) => ({ code: n.code, label: n.label, chapter: ch.title }))),
+    () =>
+      (query.data ?? []).flatMap((ch) =>
+        ch.notions.map((n) => ({ code: n.code, label: n.label, chapter: `${ch.subject.label} · ${ch.title}` })),
+      ),
     [query.data],
   )
 }

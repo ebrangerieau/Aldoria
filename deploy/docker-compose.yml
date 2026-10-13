@@ -34,6 +34,9 @@ services:
       ALDORIA_ADMIN_KEY: ${ALDORIA_ADMIN_KEY}
       # Adresse de l'espace parent, pour les liens d'invitation.
       ALDORIA_ADMIN_URL: https://${COMPOSE_PROJECT_NAME}-admin.${TRAEFIK_HOST}
+      # Questions proposées par l'IA (facultatif : sans clé, la fonction est désactivée).
+      ALDORIA_ANTHROPIC_API_KEY: ${ALDORIA_ANTHROPIC_API_KEY:-}
+      ALDORIA_AI_DAILY_LIMIT: ${ALDORIA_AI_DAILY_LIMIT:-20}
       ALDORIA_BACKUP_STATUS_DIR: /etat-sauvegardes
     volumes:
       # État des sauvegardes seulement (pas les sauvegardes elles-mêmes), pour l'espace parent.

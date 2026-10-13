@@ -11,6 +11,7 @@ const SECTIONS = [
   { id: 'tableau', title: 'Suivre la progression' },
   { id: 'programme', title: 'Dire au jeu ce qui se passe en classe' },
   { id: 'questions', title: 'Ajouter vos propres questions' },
+  { id: 'ia', title: "Faire proposer des questions par l'IA" },
   { id: 'import', title: 'Importer un fichier de questions' },
   { id: 'generateurs', title: 'Voir les questions du jeu' },
   { id: 'signalements', title: 'Traiter les signalements' },
@@ -255,8 +256,21 @@ export function Guide({ child, onOpen }: { child?: Profile; onOpen: (page: Guide
               <td>Touche les éléments dans l'ordre</td>
               <td>Les éléments dans le bon ordre : le jeu les mélange lui-même</td>
             </tr>
+            <tr>
+              <td>Réponse écrite</td>
+              <td>Écrit un mot ou une courte expression sur un clavier à l'écran</td>
+              <td>
+                Les réponses acceptées (une par ligne, par exemple <code>mum</code> et <code>mom</code>). Majuscules, espaces et point final ne
+                comptent pas ; cochez « les accents comptent » pour l'orthographe en français, décochez pour une langue étrangère.
+              </td>
+            </tr>
           </tbody>
         </table>
+        <div className="tip">
+          <strong>Écoute (langues vivantes).</strong> Pour n'importe quel type, remplissez « Écoute » : l'appareil prononce ce mot ou cette
+          phrase dans la langue choisie (anglais, espagnol, allemand…), sans l'écrire. Exemple : écoute « horse », question « Que veut dire ce
+          mot ? », propositions en français. Le bouton reste actif même sans l'aménagement de lecture à voix haute.
+        </div>
         <div className="tip">
           <strong>Où la question apparaît-elle ?</strong> Dans les combats et les quêtes qui portent sur sa notion, environ 4 fois sur 10 face aux
           questions automatiques, et au plus une fois par session. Une notion sans questions automatiques (comme la médiatrice en 6ème) devient
@@ -265,6 +279,41 @@ export function Guide({ child, onOpen }: { child?: Profile; onOpen: (page: Guide
         <div className="tip">
           <strong>Corriger une question</strong> : cliquez dessus dans la liste, modifiez, enregistrez. Le jeu la considère alors comme une
           nouvelle question. Les boutons « Toutes / Publiées / Brouillons » filtrent la liste.
+        </div>
+      </Section>
+
+      <Section id="ia" title="Faire proposer des questions par l'IA" open={() => onOpen('questions', 'ai')} openLabel="Ouvrir l'IA">
+        <p>
+          Pour une notion sans questions, ou pour coller à la leçon du moment, l'IA (Claude, d'Anthropic) peut rédiger des questions à votre
+          place. Vous gardez la main : elles arrivent en brouillon et ne sont jouées qu'une fois publiées par vous.
+        </p>
+        <ol className="steps">
+          <li>
+            Questions, puis <strong>Proposer avec l'IA</strong>.
+          </li>
+          <li>
+            Choisissez la <strong>notion</strong>, le nombre de questions et la difficulté. Une <strong>consigne</strong> est facultative
+            (« surtout des questions d'écoute », « vocabulaire de la ferme »).
+          </li>
+          <li>
+            Joignez si vous voulez la <strong>leçon</strong> : son texte, ou une photo du cahier ou du manuel. L'IA s'appuie alors sur ce que
+            {` ${name} `}a réellement vu en classe.
+          </li>
+          <li>
+            Cliquez sur <strong>Proposer des questions</strong> (jusqu'à une minute). Les questions valides s'ajoutent en brouillon ; celles qui
+            ne tiennent pas (réponse incohérente…) sont écartées et listées.
+          </li>
+          <li>
+            <strong>Relisez</strong> chaque question (bouton Relire) : corrigez si besoin, puis cochez <strong>Publiée</strong>.
+          </li>
+        </ol>
+        <div className="warn">
+          <strong>Ce qui est envoyé à l'IA :</strong> la classe, la matière, la notion, votre consigne et la leçon jointe. Jamais le prénom, les
+          réponses ni les résultats de votre enfant. Photographiez seulement la leçon : ni prénom, ni visage, ni copie notée.
+        </div>
+        <div className="tip">
+          <strong>Limite :</strong> un nombre de demandes par jour et par famille (le coût est à la charge de l'exploitant du serveur). Si
+          l'onglet indique que l'IA n'est pas activée, c'est que le serveur n'a pas de clé d'API.
         </div>
       </Section>
 
@@ -282,12 +331,13 @@ export function Guide({ child, onOpen }: { child?: Profile; onOpen: (page: Guide
             s'affiche dans l'onglet Générateurs, sous le nom du générateur.
           </li>
           <li>
-            Type : <code>qcm</code>, <code>nombre</code>, <code>expression</code>, <code>vrai_faux</code> ou <code>ordre</code>. Les propositions
-            se séparent par <code>|</code>.
+            Type : <code>qcm</code>, <code>nombre</code>, <code>expression</code>, <code>vrai_faux</code>, <code>ordre</code> ou{' '}
+            <code>texte</code> (réponse écrite). Les propositions se séparent par <code>|</code>.
           </li>
           <li>
             Réponse : le numéro du bon choix pour un QCM (<code>2</code>), le nombre ou la fraction (<code>3/4</code>), l'expression, ou pour un
-            vrai/faux le verdict et le numéro de la justification (<code>faux | 1</code>).
+            vrai/faux le verdict et le numéro de la justification (<code>faux | 1</code>), pour une réponse écrite les formes acceptées
+            (<code>mum | mom</code>).
           </li>
           <li>
             Questions, puis Importer : choisissez le fichier (ou collez son contenu) et cliquez sur <strong>Vérifier</strong>.
