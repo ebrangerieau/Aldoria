@@ -85,7 +85,7 @@ Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-
   doit y être traduit (`tests/test_accessibility.py` le vérifie sur toutes les questions générées).
   Rédaction : énoncés courts, une idée par phrase.
 - Personnalisation (`Wardrobe`, core/progression) : apparence du héros (silhouette KayKit, une arme par main,
-  couvre-chef, cape et sa couleur) et renard du monde de Jules (`Companion`, core/world : suit les traces du
+  couvre-chef, cape et sa couleur) et renard du monde lumineux (`Companion`, core/world : suit les traces du
   héros, jamais à travers un mur). Rangée dans la partie (`SaveManager.look()`, toujours validée : choix
   inconnus ou verrouillés remplacés). Un héros se crée par `Fighter.create_hero(SaveManager.look(), …)` ou
   `HeroController.create(SaveManager.look(), …)` ; tout aventurier KayKit est habillé par `Wardrobe.dress`

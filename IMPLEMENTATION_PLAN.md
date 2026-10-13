@@ -413,7 +413,7 @@ générateurs naturels, donc des questions à rédiger.
 - Passage de classe côté jeu : héros, XP, apparence, compagnon et bestiaire conservés ; les notions acquises
   l'année d'avant restent en révision espacée comme prérequis.
 
-> ✅ **Étape A réalisée le 2026-10-13** (migration 0009 ; 400 tests API, 95 tests jeu, parcours navigateur).
+> ✅ **Étape A réalisée le 2026-10-13** (migration 0009 ; 395 tests API, 95 tests jeu, parcours navigateur).
 > Référentiel des classes (6e → terminale, disponibles selon le programme chargé), mondes renommés
 > `lumineux` / `brouillard` et choisis par le parent (Réglages → Classe et monde, ou à la création de l'enfant),
 > donjons et village selon la classe, camp prévu pour une classe sans région, passage de classe qui garde héros,
