@@ -379,6 +379,8 @@ séparation des hôtes (secret `X-Aldoria-Admin-Key`) et limite le débit des ro
 > connexion des adultes et les invitations. Écarts : pas d'e-mail envoyé par le serveur (liens à copier) ; la
 > suppression d'une famille par l'exploitant lui-même se fait en ligne de commande ; l'avatar d'un enfant créé
 > dans l'espace parent suit sa classe (le jeu n'affiche pas d'avatar).
+> Bascule terminée le 2026-10-13 : compte d'Eric (exploitant) vérifié, TinyAuth retiré de l'espace parent et
+> `ALDORIA_ADMIN_USERS` supprimé du `.env` du VPS.
 
 ### Phases suivantes (à détailler le moment venu)
 
