@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app import accounts, erasure
 from app.accounts import AdminHost, CurrentAdult, CurrentOperator, aware, utcnow
 from app.auth import hash_pin, verify_pin
+from app.config import get_settings
 from app.db import get_db
 from app.engine import ai_author, levels
 from app.engine.levels import LevelCode, WorldCode
@@ -393,6 +394,7 @@ async def remove_device(device_id: int, adult: CurrentAdult, db: Db) -> None:
 
 @router.get("/families")
 async def list_families(operator: CurrentOperator, db: Db) -> list[dict[str, Any]]:
+    model = get_settings().ai_model
     result = []
     for family in await db.scalars(select(Family).order_by(Family.id)):
         profile_ids = select(Profile.id).where(Profile.family_id == family.id)
@@ -407,12 +409,13 @@ async def list_families(operator: CurrentOperator, db: Db) -> list[dict[str, Any
             ).where(AiUsage.family_id == family.id, AiUsage.day >= utcnow().date().replace(day=1))
         )
         requests, tokens_in, tokens_out = month.one()
+        cost = ai_author.cost_usd(int(tokens_in), int(tokens_out), model)
         result.append(
             {
                 "id": family.id,
                 "name": family.name,
                 "ai_requests_month": int(requests),
-                "ai_cost_month_usd": round(ai_author.cost_usd(int(tokens_in), int(tokens_out)), 2),
+                "ai_cost_month_usd": round(cost, 2),
                 "created_at": _iso(family.created_at),
                 "adults": await _count(db, Adult, family.id),
                 "children": await _count(db, Profile, family.id),

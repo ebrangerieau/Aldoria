@@ -440,7 +440,7 @@ générateurs naturels, donc des questions à rédiger.
 > chargés (`content/seed/6e/anglais.json`, `content/seed/2nde/francais.json`). Formats : réponse écrite
 > (clavier de lettres à l'écran, accents comptés ou non, vérification identique serveur / jeu), écoute dans une
 > langue (synthèse vocale de l'appareil), propositions lues dans leur langue. Générateur de vocabulaire anglais
-> (11 thèmes, 5 formes). Atelier IA : « Proposer avec l'IA » (Claude Opus 5.5, sortie structurée, repli en cas
+> (11 thèmes, 5 formes). Atelier IA : « Proposer avec l'IA » (Claude Sonnet 5.5, effort moyen, sortie structurée, repli en cas
 > de refus), leçon en texte ou en photo, propositions validées puis ajoutées en brouillon, quota par famille et
 > par jour, coût du mois affiché à l'exploitant ; activé dès qu'une clé d'API est posée sur le serveur.
 > Écarts : pas de format « carte » ni « frise » dédiés (une frise se fait avec « remettre dans l'ordre » ; les

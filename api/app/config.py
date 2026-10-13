@@ -1,4 +1,5 @@
 from functools import lru_cache
+from typing import Literal
 
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
@@ -24,9 +25,11 @@ class Settings(BaseSettings):
     # Adresse publique de l'espace parent, pour les liens d'invitation (accounts.py).
     admin_url: str = "http://localhost:5173"
     # Questions proposées par l'IA (engine/ai_author.py) : clé d'API Anthropic (vide =
-    # fonction désactivée), modèle, et nombre de demandes par famille et par jour.
+    # fonction désactivée), modèle, effort de réflexion (low, medium, high, xhigh, max) et
+    # nombre de demandes par famille et par jour.
     anthropic_api_key: str = ""
-    ai_model: str = "claude-opus-5-5"
+    ai_model: str = "claude-sonnet-5-5"
+    ai_effort: Literal["low", "medium", "high", "xhigh", "max"] = "medium"
     ai_daily_limit: int = 20
     # Dossier où le service « backup » écrit l'état des sauvegardes (vide = non configuré).
     backup_status_dir: str = ""

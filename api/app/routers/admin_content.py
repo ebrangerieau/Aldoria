@@ -276,7 +276,7 @@ async def ai_propose(body: AiIn, parent: CurrentParent, db: Db, ai: Ai) -> dict[
         image_type=body.image_type,
     )
     try:
-        draft = await ai_author.propose(ai, request, settings.ai_model)
+        draft = await ai_author.propose(ai, request, settings.ai_model, settings.ai_effort)
     except ai_author.AiRefused as exc:
         raise ApiError(422, "ai_refused", str(exc)) from exc
     except ai_author.AiUnavailable as exc:

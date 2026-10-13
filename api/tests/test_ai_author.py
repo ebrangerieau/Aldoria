@@ -115,7 +115,8 @@ async def test_proposals_become_drafts_after_validation(client, curriculum, prof
 
     # Ce qui part chez Anthropic : modèle, repli en cas de refus, sortie structurée, consigne.
     call = fake_ai.calls[0]
-    assert call["model"] == "claude-opus-5-5"
+    assert call["model"] == "claude-sonnet-5-5"
+    assert call["output_config"]["effort"] == "medium"
     assert call["fallbacks"] == "default" and ai_author.FALLBACK_BETA in call["betas"]
     assert call["output_config"]["format"]["type"] == "json_schema"
     sent = json.dumps(call, ensure_ascii=False)
@@ -191,3 +192,10 @@ def test_conversion_of_each_format():
     assert number["answer"] == {"kind": "fraction", "value": "3/4"}
     assert "listen" not in number
     assert accounts  # module chargé (cookies des tests)
+
+
+def test_cost_follows_the_model():
+    assert ai_author.cost_usd(1_000_000, 1_000_000, "claude-sonnet-5-5") == 12.0
+    assert ai_author.cost_usd(1_000_000, 1_000_000, "claude-opus-5-5") == 24.0
+    # Modèle inconnu : estimation haute plutôt qu'un coût sous-estimé.
+    assert ai_author.cost_usd(1_000_000, 0, "modele-inconnu") == 10.0

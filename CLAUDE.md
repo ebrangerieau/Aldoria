@@ -102,7 +102,8 @@ Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-
   de lettres à l'écran) ; `listen` (écoute dans une langue, `Accessibility.say`, toujours actif) ; `choices_lang`
   (propositions lues dans leur langue). Programmes : un fichier par matière, `content/seed/<classe>/<matière>.json`.
 - Questions proposées par l'IA (`engine/ai_author.py`, route `/admin/ai-questions`) : SDK `anthropic`, modèle
-  `claude-opus-5-5`, sortie structurée, `fallbacks="default"` ; chaque proposition repasse par `bank.validate` et
+  `claude-sonnet-5-5` et effort `medium` par défaut (`ALDORIA_AI_MODEL`, `ALDORIA_AI_EFFORT` ; prix par modèle
+  dans `PRICES_PER_MTOK`), sortie structurée, `fallbacks="default"` ; chaque proposition repasse par `bank.validate` et
   entre en brouillon (source `ia`) ; quota par famille et par jour (`ai_usage`). Jamais de donnée d'enfant dans
   la requête. Tests : client simulé (`admin_content.get_ai` remplacé), aucun appel réel.
 - Combat : `Encounter` (core/combat) est partagé par l'arène et le donjon ; une scène ne réécrit pas le tour par tour.

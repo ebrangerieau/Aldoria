@@ -18,10 +18,18 @@ from typing import Any, Protocol
 
 import anthropic
 
-MODEL = "claude-opus-5-5"
-# Prix d'Anthropic pour ce modèle, en dollars par million de jetons (entrée, sortie) :
-# estimation du coût affichée à l'exploitant.
-PRICE_PER_MTOK = (4.0, 20.0)
+MODEL = "claude-sonnet-5-5"
+# Effort de réflexion : « medium » laisse le modèle vérifier ses réponses sans gonfler le coût.
+EFFORT = "medium"
+EFFORTS = ("low", "medium", "high", "xhigh", "max")
+# Prix d'Anthropic en dollars par million de jetons (entrée, sortie) : estimation du coût
+# affichée à l'exploitant. Modèle absent de la table : prix du plus cher (estimation haute).
+PRICES_PER_MTOK = {
+    "claude-haiku-5-5": (0.10, 0.50),
+    "claude-sonnet-5-5": (2.0, 10.0),
+    "claude-opus-5-5": (4.0, 20.0),
+    "claude-fable-5-1": (10.0, 50.0),
+}
 MAX_QUESTIONS = 10
 MAX_MATERIAL_CHARS = 20_000
 FALLBACK_BETA = "server-side-fallback-2026-07-01"
@@ -102,8 +110,9 @@ ADVICE = {
 }
 
 
-def cost_usd(input_tokens: int, output_tokens: int) -> float:
-    return (input_tokens * PRICE_PER_MTOK[0] + output_tokens * PRICE_PER_MTOK[1]) / 1_000_000
+def cost_usd(input_tokens: int, output_tokens: int, model: str = MODEL) -> float:
+    price_in, price_out = PRICES_PER_MTOK.get(model, max(PRICES_PER_MTOK.values()))
+    return (input_tokens * price_in + output_tokens * price_out) / 1_000_000
 
 
 class AiUnavailable(Exception):
@@ -180,7 +189,7 @@ def user_content(req: Request) -> list[dict[str, Any]]:
     return content
 
 
-async def propose(ai: Client, req: Request, model: str = MODEL) -> Draft:
+async def propose(ai: Client, req: Request, model: str = MODEL, effort: str = EFFORT) -> Draft:
     """Questions proposées par Claude, converties au format de la banque (non validées)."""
     try:
         response = await ai.beta.messages.create(
@@ -189,7 +198,7 @@ async def propose(ai: Client, req: Request, model: str = MODEL) -> Draft:
             betas=[FALLBACK_BETA],
             fallbacks="default",
             output_config={
-                "effort": "high",
+                "effort": effort,
                 "format": {"type": "json_schema", "schema": SCHEMA},
             },
             system=SYSTEM,
