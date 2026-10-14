@@ -21,7 +21,7 @@ S = 2  # suréchantillonnage
 
 THEMES = {
     "lumineux": {
-        "paper": (246, 231, 196), "paper_dark": (214, 183, 128), "burn": (150, 104, 52),
+        "paper": (248, 236, 206), "paper_dark": (230, 210, 166), "burn": (160, 116, 62),
         "frame": (196, 146, 52), "frame_light": (246, 214, 128), "frame_dark": (110, 72, 24),
         "primary": [(250, 214, 120), (226, 160, 52)], "primary_edge": (122, 74, 20), "primary_depth": (150, 92, 26),
         "secondary": [(253, 244, 220), (240, 224, 186)], "secondary_edge": (168, 116, 42),
@@ -71,7 +71,8 @@ def save(img: Image.Image, name: str) -> None:
 # --- Panneau : parchemin (ou pierre) et cadre -----------------------------------------------------
 
 def surface(size: tuple[int, int], c: dict, seed: int) -> Image.Image:
-    """Fond du panneau : couleur, marbrures douces, bords assombris (vieux papier, pierre)."""
+    """Fond du panneau : couleur, marbrures douces, bords assombris (vieux papier, pierre).
+    Le texte se lit sur le centre : contraste vérifié ≥ 4,5:1 avec les encres de WorldTheme."""
     w, h = size
     base = Image.new("RGB", size, c["paper"])
     dark = Image.new("RGB", size, c["paper_dark"])
@@ -81,11 +82,11 @@ def surface(size: tuple[int, int], c: dict, seed: int) -> Image.Image:
     img = Image.composite(dark, img, grain)
     # Bords brûlés : distance au bord, floutée.
     edge = Image.new("L", size, 0)
-    inset = 26 * S
+    inset = min(26 * S, w // 7)  # petite carte : la brûlure reste au bord
     ImageDraw.Draw(edge).rectangle((inset, inset, w - inset, h - inset), fill=255)
-    edge = edge.filter(ImageFilter.GaussianBlur(14 * S))
+    edge = edge.filter(ImageFilter.GaussianBlur(min(14 * S, w // 12)))
     burn = Image.new("RGB", size, c["burn"])
-    return Image.composite(img, burn, edge.point(lambda v: 90 + v * 165 // 255))
+    return Image.composite(img, burn, edge.point(lambda v: 110 + v * 145 // 255))
 
 
 def frame(draw: ImageDraw.ImageDraw, size: tuple[int, int], c: dict, at: int, corner: int) -> None:

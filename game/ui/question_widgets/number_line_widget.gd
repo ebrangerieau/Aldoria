@@ -114,11 +114,11 @@ func _draw_line() -> void:
 			var label := str(_min + t / _sub)
 			_canvas.draw_string(font, Vector2(x - 20, y + 48), label, HORIZONTAL_ALIGNMENT_CENTER, 40, 26, line)
 	if _correct_ticks >= 0 and _correct_ticks != _ticks:
-		_draw_point(_correct_ticks, y, _wt.good, "")
+		_draw_point(_correct_ticks, y, _wt.good_ink, "")
 	if _ticks >= 0:
 		var color := _wt.accent
 		if _correct_ticks >= 0:
-			color = _wt.good if _correct_ticks == _ticks else _wt.bad
+			color = _wt.good_ink if _correct_ticks == _ticks else _wt.bad_ink
 		_draw_point(_ticks, y, color, _point_label)
 
 

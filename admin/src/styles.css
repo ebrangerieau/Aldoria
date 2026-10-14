@@ -72,7 +72,7 @@ button {
   background: var(--card);
   color: var(--text);
   padding: 8px 14px;
-  min-height: 40px;
+  min-height: 44px; /* cible tactile (téléphone d'un parent) */
 }
 button:disabled {
   cursor: default;
@@ -185,7 +185,7 @@ button.primary {
   fill: var(--border);
 }
 .chart .axis {
-  font-size: 10px;
+  font-size: 12px;
   fill: var(--muted);
 }
 .notions,
@@ -266,7 +266,7 @@ th {
 }
 .status {
   padding: 4px 10px;
-  min-height: 34px;
+  min-height: 44px;
   font-size: 0.9rem;
 }
 .status.active.en_cours {
@@ -393,7 +393,7 @@ textarea {
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 8px 10px;
-  min-height: 40px;
+  min-height: 44px;
 }
 textarea {
   width: 100%;

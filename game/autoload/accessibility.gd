@@ -114,6 +114,11 @@ func apply_parent(received: Variant) -> void:
 	if not received is Dictionary:
 		return
 	var merged := normalized(received)
+	if not OS.has_feature("web") and Quality.option("acc") != "":
+		# Développement (PC) : `--acc=big_targets,… [--text-size=2]` force des aménagements (captures).
+		for key in Quality.option("acc").split(",", false):
+			merged[key] = true
+		merged["text_size"] = int(Quality.option("text-size", "0"))
 	if merged == parent:
 		return
 	parent = merged

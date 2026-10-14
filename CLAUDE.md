@@ -109,7 +109,9 @@ Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-
   `UiKit.MARGINS`), titres en Cinzel (`UiKit.title`, remplacé par la police lisible si l'aménagement est choisi),
   icônes de game-icons.net (`UiKit.icon`, `icon_button` ; SVG importés à `svg/scale=0.25`, crédit CC BY dans les
   Options ; tout nouvel auteur va dans LICENSES.md et ce crédit). Briques : `ribbon`, `screen_title`, `divider`,
-  `card_box`, `speaker`, `info_line`, `style_bar`, `bag_row`, `HeroBadge` (ui/hud). Fond des menus : la salle de la
+  `card_box`, `speaker`, `info_line`, `style_bar`, `bag_row`, `HeroBadge` (ui/hud). Texte sur un panneau : contraste
+  ≥ 4,5:1 ; juste/faux en `good_ink` / `bad_ink` (WorldTheme), `good` / `bad` seulement pour barres, effets et textes cernés
+  sur la 3D. Aménagements forcés pour les captures (PC) : `--acc=big_targets,readable_font,spacing --text-size=2`. Fond des menus : la salle de la
   Citadelle en 3D (`UiKit.backdrop`, `CitadelHall`, rendue une fois sauf à la Citadelle et à l'écran titre). Remplacer
   un nœud : `UiKit.swap` (jamais `replace_by`, qui garde les enfants). Captures sans compteur : `--perf=0` ;
   écran des profils : `--scene=profils [--profil=N]`.

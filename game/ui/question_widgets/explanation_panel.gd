@@ -31,7 +31,7 @@ func setup(question: Dictionary, wt: WorldTheme) -> void:
 	box.add_theme_constant_override("separation", 16)
 	add_child(box)
 	box.add_child(UiKit.title(wt.wrong_title, 26, wt.accent))
-	box.add_child(UiKit.info_line(wt, "check-mark", "Réponse : %s" % QuestionPanel.expected_text(question), 30, wt.good))
+	box.add_child(UiKit.info_line(wt, "check-mark", "Réponse : %s" % QuestionPanel.expected_text(question), 30, wt.good_ink))
 	box.add_child(UiKit.label(str(question.get("explanation", "")), 24))
 	if Accessibility.can_speak():
 		box.add_child(UiKit.listen_button(wt, spoken(question), Accessibility.auto_read()))

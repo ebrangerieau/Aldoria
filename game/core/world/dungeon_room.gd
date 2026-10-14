@@ -200,8 +200,16 @@ func _register_particles(p: CPUParticles3D) -> void:
 	add_child(p)
 
 
+## Quads partagés, par couleur et taille : chaque coup ou étincelle réutilise le même maillage
+## et le même matériau au lieu d'en allouer de nouveaux (lecture seule : ne pas les modifier).
+static var _quads: Dictionary = {}
+
+
 ## Quad additif face caméra pour les particules (flammes, étincelles, poussière).
 static func particle_quad(color: Color, size: float) -> QuadMesh:
+	var key := "%s/%s" % [color.to_html(), size]
+	if _quads.has(key):
+		return _quads[key]
 	var mat := StandardMaterial3D.new()
 	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
 	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
@@ -212,4 +220,5 @@ static func particle_quad(color: Color, size: float) -> QuadMesh:
 	var quad := QuadMesh.new()
 	quad.size = Vector2(size, size)
 	quad.material = mat
+	_quads[key] = quad
 	return quad

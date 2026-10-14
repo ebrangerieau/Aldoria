@@ -89,4 +89,4 @@ func reveal(_correct: bool, answer_text := "") -> void:
 	for i in mini(expected.size(), _cells.size()):
 		var right := str(expected[i]) == _values[i]
 		_cells[i].text = "+" if str(expected[i]) == "+" else "−"
-		_cells[i].add_theme_color_override("font_color", _wt.good if right else _wt.bad)
+		_cells[i].add_theme_color_override("font_color", _wt.good_ink if right else _wt.bad_ink)

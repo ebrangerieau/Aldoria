@@ -112,7 +112,7 @@ func _show_notions() -> void:
 		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		header.add_child(name_label)
 		if STATUS_TEXT.has(chapter["status"]):
-			var status := UiKit.label(STATUS_TEXT[chapter["status"]], 20, _wt.good if chapter["status"] == "en_cours" else _wt.bad)
+			var status := UiKit.label(STATUS_TEXT[chapter["status"]], 20, _wt.good_ink if chapter["status"] == "en_cours" else _wt.bad_ink)
 			status.autowrap_mode = TextServer.AUTOWRAP_OFF
 			header.add_child(status)
 		box.add_child(header)

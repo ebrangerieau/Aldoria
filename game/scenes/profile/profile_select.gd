@@ -152,7 +152,7 @@ func _keypad(length: int, with_back: bool) -> void:
 	_dots = UiKit.label("", 56 if length == PIN_LENGTH else 48, _wt.accent)
 	_dots.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_root.add_child(_dots)
-	_message = UiKit.label("", 22, _wt.bad)
+	_message = UiKit.label("", 22, _wt.bad_ink)
 	_message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_root.add_child(_message)
 	var grid := GridContainer.new()
@@ -218,7 +218,7 @@ func _submit_pairing() -> void:
 		_build_frame()
 		_load_profiles()
 		return
-	_message.add_theme_color_override("font_color", _wt.bad)
+	_message.add_theme_color_override("font_color", _wt.bad_ink)
 	_message.text = res.error.get("message", "Erreur.")
 	Sfx.play("wrong")
 	_digits = ""
@@ -230,11 +230,11 @@ func _submit() -> void:
 	_message.text = ""
 	var res := await Session.login(int(_profile["id"]), _digits)
 	if res.ok:
-		_message.add_theme_color_override("font_color", _wt.good)
+		_message.add_theme_color_override("font_color", _wt.good_ink)
 		_message.text = "C'est parti !"
 		get_tree().change_scene_to_file(Departure.MAP_SCENE)
 		return
-	_message.add_theme_color_override("font_color", _wt.bad)
+	_message.add_theme_color_override("font_color", _wt.bad_ink)
 	match res.error.get("code", ""):
 		"wrong_pin":
 			var left := int(res.error.get("details", {}).get("remaining_attempts", 0))

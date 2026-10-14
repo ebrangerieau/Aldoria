@@ -59,7 +59,7 @@ func setup(question: Dictionary, title: String, wt: WorldTheme, with_items := tr
 	var stars := UiKit.label(_stars(int(question["difficulty"])), 22, wt.accent)
 	stars.autowrap_mode = TextServer.AUTOWRAP_OFF
 	header.add_child(stars)
-	_bonus = UiKit.label("⚡ Bonus éclair", 20, wt.good)
+	_bonus = UiKit.label("⚡ Bonus éclair", 20, wt.good_ink)
 	_bonus.autowrap_mode = TextServer.AUTOWRAP_OFF
 	# Aménagement « sans pénalité de lenteur » : aucune récompense liée à la vitesse.
 	_bonus.visible = not Accessibility.on("no_speed")

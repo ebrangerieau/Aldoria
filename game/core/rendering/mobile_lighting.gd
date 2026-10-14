@@ -48,7 +48,29 @@ static func make_fake_light(color: Color, height: float, pool_offset := Vector2(
 	return root
 
 
+## Dégradé radial blanc, le même pour toutes les fausses lumières (la couleur vient du
+## matériau) : calculé une seule fois au lieu d'une texture par torche, cristal ou sort.
+static var _glow_texture: GradientTexture2D
+
+
 static func _glow_quad(size: float, color: Color, billboard: bool) -> QuadMesh:
+	if _glow_texture == null:
+		_glow_texture = _make_glow_texture()
+	var mat := StandardMaterial3D.new()
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
+	mat.albedo_texture = _glow_texture
+	mat.albedo_color = color
+	if billboard:
+		mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
+	var quad := QuadMesh.new()
+	quad.size = Vector2(size, size)
+	quad.material = mat
+	return quad
+
+
+static func _make_glow_texture() -> GradientTexture2D:
 	var gradient := Gradient.new()
 	gradient.set_color(0, Color(1, 1, 1, 1))
 	gradient.set_color(1, Color(1, 1, 1, 0))
@@ -59,15 +81,4 @@ static func _glow_quad(size: float, color: Color, billboard: bool) -> QuadMesh:
 	texture.fill_to = Vector2(0.5, 0.0)
 	texture.width = 64
 	texture.height = 64
-	var mat := StandardMaterial3D.new()
-	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
-	mat.blend_mode = BaseMaterial3D.BLEND_MODE_ADD
-	mat.albedo_texture = texture
-	mat.albedo_color = color
-	if billboard:
-		mat.billboard_mode = BaseMaterial3D.BILLBOARD_ENABLED
-	var quad := QuadMesh.new()
-	quad.size = Vector2(size, size)
-	quad.material = mat
-	return quad
+	return texture

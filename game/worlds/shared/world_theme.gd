@@ -23,6 +23,10 @@ var text_dim := Color()
 var accent := Color()
 var good := Color()
 var bad := Color()
+## Juste / faux écrits sur un panneau (parchemin, pierre) : contraste ≥ 4,5:1. `good` et `bad`
+## restent pour les barres, les effets et les textes cernés posés sur la scène 3D.
+var good_ink := Color()
+var bad_ink := Color()
 var formula := Color()
 # Scène 3D
 var background := Color()
@@ -48,6 +52,8 @@ static func for_world(world: String) -> WorldTheme:
 		# Juste / faux distinguables sans le rouge et le vert (daltonisme le plus fréquent).
 		t.good = Color("#3d8bfd")
 		t.bad = Color("#f08c00")
+		t.good_ink = Color("#024bb8") if world != "brouillard" else Color("#79b0ff")
+		t.bad_ink = Color("#774600") if world != "brouillard" else Color("#f5a742")
 	return t
 
 
@@ -64,10 +70,12 @@ static func lumineux() -> WorldTheme:
 	t.panel = Color("#f6e7c4")  # parchemin (assets/ui, tools/make_ui_textures.py)
 	t.panel_border = Color("#e0ad4a")
 	t.text = Color("#3b2414")
-	t.text_dim = Color("#7a5a3a")
-	t.accent = Color("#b0461b")  # rouge d'enluminure
+	t.text_dim = Color("#66492f")  # contraste ≥ 4,5:1 sur le parchemin (tools/make_ui_textures.py)
+	t.accent = Color("#8a3615")  # rouge d'enluminure
 	t.good = Color("#3aa655")
 	t.bad = Color("#d9534f")
+	t.good_ink = Color("#215d2f")
+	t.bad_ink = Color("#9a2521")
 	t.formula = Color("#3b2a1a")
 	t.background = Color("#2a2140")
 	t.ambient = Color("#a294c4")
@@ -98,6 +106,8 @@ static func brouillard() -> WorldTheme:
 	t.accent = Color("#7fb2ff")
 	t.good = Color("#3fb950")
 	t.bad = Color("#f85149")
+	t.good_ink = Color("#3fb950")
+	t.bad_ink = Color("#ff6b63")
 	t.formula = Color("#e6edf3")
 	t.background = Color("#06080d")
 	t.ambient = Color("#5a6a8a")

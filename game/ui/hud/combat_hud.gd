@@ -10,6 +10,7 @@ signal quit_requested
 
 var _wt: WorldTheme
 var _hero_name: Label
+var _hero_panel: Control
 var _enemy_box: Control
 var _hero_bar: ProgressBar
 var _hero_hp: Label
@@ -55,6 +56,7 @@ func setup(wt: WorldTheme, hero_name: String) -> void:
 	_hero_bar = hero_box[1]
 	_hero_hp = hero_box[2]
 	_hero_name = hero_box[3]
+	_hero_panel = hero_box[0]
 	top.add_child(hero_box[0])
 	var center := VBoxContainer.new()
 	center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -232,6 +234,8 @@ func say(text: String) -> void:
 	if text == "":
 		return
 	_bubble_text.text = "« %s »" % text
+	# Sous le cartouche du héros : il grandit avec le texte agrandi, la bulle ne le cache jamais.
+	_bubble.position.y = _hero_panel.get_global_rect().end.y + 10.0
 	_bubble.reset_size()
 	if _bubble_tween != null:
 		_bubble_tween.kill()
@@ -272,7 +276,7 @@ func _fighter_box(name_text: String, right: bool) -> Array:
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 8)
 	box.add_child(row)
-	var badge := UiKit.icon("dragon-head" if right else "hearts", 24, _wt.bad if right else _wt.good)
+	var badge := UiKit.icon("dragon-head" if right else "hearts", 24, _wt.bad_ink if right else _wt.good_ink)
 	var bar := ProgressBar.new()
 	bar.custom_minimum_size = Vector2(0, 20)
 	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
