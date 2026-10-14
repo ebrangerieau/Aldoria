@@ -161,6 +161,17 @@ Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-
 - Un test qui enregistre des réponses réécrit ensuite la file locale (`Session._save_json`) : sinon de fausses
   réponses partent vers l'API de dev au lancement suivant du jeu.
 - Pas de `JavaScriptBridge.eval` : la CSP interdit `eval`. Utiliser `JavaScriptBridge.get_interface`.
+- Pièges GDScript déjà rencontrés :
+  - `var x := dico["clé"]` (ou un élément d'`Array`, ou le retour d'une fonction non typée) donne un Variant : erreur
+    « cannot infer the type », et dans un test GUT **tout le fichier est ignoré**. Typer explicitement
+    (`var x: String = …`, `var page: Array = …`).
+  - `Label` à retour à la ligne (`UiKit.label` l'active) dans une rangée (`HBoxContainer`) : largeur nulle, une lettre par
+    ligne. Y mettre `autowrap_mode = TextServer.AUTOWRAP_OFF`, ou lui donner une largeur.
+  - Un nombre lu dans du JSON est un `float` : `str(p["id"])` donne « 2.0 ». Comparer avec `str(int(p["id"]))`.
+  - `Button` de `UiKit` en `FOCUS_NONE` : passer `focus_mode = FOCUS_ALL` avant `grab_focus()`.
+  - Fonction contenant un `await` : l'appeler avec `await`, sinon la suite s'exécute avant elle.
+  - `godot --check-only --script` échoue sur les scripts qui utilisent les autoloads (`Session`…) : vérifier en lançant
+    les tests GUT ou le jeu, pas avec cette commande.
 - Géométrie statique d'une salle : un seul matériau partagé + `StaticBatcher.merge` (budget tablette < 100 appels de dessin).
 - Éclairage : la tablette (Android 10) ne tient 30 fps que sans vraies lumières ponctuelles ni ombres
   (voir `docs/perf-log.md`). Toute scène lit `Quality.settings()` à sa construction : `lights` (`real`/`fake`),
