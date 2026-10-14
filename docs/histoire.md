@@ -166,8 +166,10 @@ Exemple (Jules, Tour des Fractions) :
 
 > ✅ 2026-10-14 : étape 2 faite (carte du royaume, Citadelle, seuils, accueil de Maître Ysaline, brouillard).
 > ✅ 2026-10-14 : étape 3 en partie (répliques d'entrée et de défaite des Effaceurs, page rendue au coffre, Maître
-> Ysaline qui salue chaque page et annonce le chemin suivant). Reste : le prologue illustré, les pages lisibles dans la
-> Grande Chronique (Archives).
+> Ysaline qui salue chaque page et annonce le chemin suivant). Reste : les pages lisibles dans la Grande Chronique
+> (Archives).
+> ✅ 2026-10-14 : prologue en cinq tableaux 3D (la Chronique, la nuit du vol, le royaume qui oublie, Maître Ysaline, la
+> quête), un texte par monde, « Écouter » et « Passer » ; revu depuis la Citadelle.
 
 1. **Relecture de cette bible** par Eric et les enfants (noms, méchants, régions). Les enfants peuvent ajouter leurs
    idées.

@@ -548,6 +548,8 @@ export function Guide({ child, onOpen }: { child?: Profile; onOpen: (page: Guide
           <li>
             <strong>L'histoire</strong> : Malvrek, un Archiviste déchu, et ses Effaceurs ont volé les pages de la Grande Chronique, le livre qui garde
             les savoirs du royaume. {name} est un jeune Archiviste chargé de les reprendre, guidé par Maître Ysaline. Chaque boss vaincu rend une page.
+            Un <strong>prologue</strong> de cinq tableaux raconte ce début d'histoire la première fois (bouton « Passer » à tout moment) ; il se revoit
+            depuis la Citadelle avec <strong>Revoir le prologue</strong>.
           </li>
           <li>
             <strong>La carte du royaume</strong> : l'écran d'accueil après la connexion (avatar, puis code secret). Au centre, la Citadelle des

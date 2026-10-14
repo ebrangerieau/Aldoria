@@ -73,9 +73,12 @@ func _ready() -> void:
 		_message.text = "Pause : retour dans %d min" % Session.minutes_before_play()
 	if await _dev_goto():
 		return
+	if not SaveManager.story_seen(Prologue.STORY_KEY):
+		Prologue.play(get_tree(), Departure.MAP_SCENE)  # la nuit du vol, puis retour ici
+		return
 	if not SaveManager.story_seen("welcome"):
 		SaveManager.mark_story("welcome")
-		await _dialog("La Grande Chronique", WorldMapDef.WELCOME, "", "Je suis prêt !", "")
+		await _dialog("La carte du royaume", WorldMapDef.WELCOME, "", "Je suis prêt !", "")
 	await _celebrate_pages()
 
 
@@ -662,6 +665,7 @@ func _dev_goto() -> bool:
 			print("lieu %s %d %d" % [p["id"], roundi(at.x), roundi(at.y)])
 	var wanted := Quality.option("seuil")
 	if wanted != "":
+		SaveManager.mark_story(Prologue.STORY_KEY)
 		SaveManager.mark_story("welcome")
 		for p in _places:
 			if p["id"] == wanted:

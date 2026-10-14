@@ -131,6 +131,10 @@ func _build() -> void:
 	var to_map := UiKit.button("Ouvrir la carte du royaume", 72.0)
 	to_map.pressed.connect(_open_map)
 	hall_text.add_child(to_map)
+	var story := UiKit.button("Revoir le prologue", 52.0)
+	UiKit.style_secondary(story, _wt)
+	story.pressed.connect(_open_prologue)
+	hall_text.add_child(story)
 
 	# Défi du jour, puis arène, Archives et apparence en plus petit.
 	var side := VBoxContainer.new()
@@ -223,6 +227,11 @@ func _open_map() -> void:
 		get_tree().change_scene_to_file(Departure.MAP_SCENE)
 
 
+func _open_prologue() -> void:
+	if not _busy:
+		Prologue.play(get_tree(), Departure.CITADEL_SCENE)
+
+
 func _enter_daily() -> void:
 	await _launch("defi", {}, "res://scenes/daily/daily.tscn")
 
@@ -287,7 +296,7 @@ func _switch_player() -> void:
 	get_tree().change_scene_to_file("res://scenes/profile/profile_select.tscn")
 
 
-## Développement, PC uniquement : `-- --goto=donjon|village|defi|arene|archives|apparence`
+## Développement, PC uniquement : `-- --goto=donjon|village|defi|arene|archives|apparence|prologue`
 ## (`--dungeon=<code>` pour un autre donjon que le premier). Le donjon et le village partent
 ## d'ici sans passer par leur seuil sur la carte (captures d'écran).
 func _dev_goto() -> void:
@@ -315,3 +324,5 @@ func _dev_goto() -> void:
 			get_tree().change_scene_to_file("res://scenes/archives/archives.tscn")
 		"apparence":
 			_open_wardrobe()
+		"prologue":
+			_open_prologue()

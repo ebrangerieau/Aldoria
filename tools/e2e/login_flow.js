@@ -53,6 +53,8 @@ const { chromium } = require('playwright-core');
   }
   await page.waitForTimeout(5000);   // connexion + sauvegarde → carte du royaume
   await shot('2_carte');
+  await page.keyboard.press('Escape'); // « Passer » le prologue (première fois seulement)
+  await page.waitForTimeout(4000);    // retour sur la carte
   await page.keyboard.press('Enter'); // accueil de Maître Ysaline (première fois seulement)
   await page.waitForTimeout(800);
   await page.mouse.click(771, 329);  // la Tour des Fractions → son seuil

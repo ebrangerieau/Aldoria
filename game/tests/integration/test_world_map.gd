@@ -11,6 +11,7 @@ func before_each() -> void:
 	ApiClient.token = ""  # pas de réseau : la sauvegarde reste en mémoire
 	SaveManager._profile_id = 0
 	SaveManager.data = SaveManager.default_data()
+	SaveManager.mark_story(Prologue.STORY_KEY)  # sinon la carte part vers le prologue
 	SaveManager.mark_story("welcome")  # pas d'accueil de Maître Ysaline par-dessus la carte
 	Session.profile = {"name": "Test", "world": "lumineux", "level": "6e"}
 

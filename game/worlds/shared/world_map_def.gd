@@ -70,7 +70,8 @@ const SECRETS := {
 }
 
 const CITADEL_TEXT := "Voici la Citadelle des Archives, le cœur du royaume. Tu y retrouves la Grande Chronique, ta salle d'armes, la Lice pour t'entraîner et la Pierre du Jour, ton défi quotidien."
-const WELCOME := "Bienvenue, Archiviste. Cette nuit, Malvrek et ses Effaceurs ont arraché les pages de la Grande Chronique. Partout où une page manque, le royaume oublie. Choisis un chemin sur cette carte : chaque Effaceur vaincu te rendra une page."
+## Accueil sur la carte, juste après le prologue (qui raconte le vol des pages).
+const WELCOME := "Voici la carte du royaume. Touche un lieu : je te dirai ce qui t'y attend, et tu choisiras d'y aller ou non. La Citadelle, au centre, garde ta salle d'armes, la Lice et la Pierre du Jour."
 
 
 ## Centre d'une tuile, au niveau du sol (le dessus des tuiles d'herbe est à y = 0).
