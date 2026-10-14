@@ -2,7 +2,7 @@ extends Node
 ## Sauvegarde de partie (TRD §2.7) : XP, progression dans les donjons, bestiaire,
 ## défis quotidiens (jours faits, record, coffres de la semaine ouverts), quêtes du
 ## village (dernier jour où chaque habitant a été aidé), apparence (« look », facultative),
-## objets du sac (« items », Inventory).
+## objets du sac (« items », Inventory), étapes de l'histoire déjà vues (« story »).
 ##
 ## Écrite d'abord dans `user://` (IndexedDB sur le web), puis envoyée au serveur
 ## (`PUT /play/save` avec la révision sur laquelle elle s'appuie). Deux appareils
@@ -40,7 +40,7 @@ func _ready() -> void:
 
 
 static func default_data() -> Dictionary:
-	return {"schema_version": SCHEMA_VERSION, "xp": 0, "dungeons": {}, "bestiary": {}, "daily": _default_daily(), "village": {}, "items": {}}
+	return {"schema_version": SCHEMA_VERSION, "xp": 0, "dungeons": {}, "bestiary": {}, "daily": _default_daily(), "village": {}, "items": {}, "story": {}}
 
 
 static func _default_daily() -> Dictionary:
@@ -150,6 +150,22 @@ func items() -> Dictionary:
 
 func item_count(id: String) -> int:
 	return int(items().get(id, 0))
+
+
+## Étape de l'histoire déjà vue (accueil de Maître Ysaline…), pour ne pas la répéter.
+func story_seen(key: String) -> bool:
+	_ensure_loaded()
+	return (data.get("story", {}) as Dictionary).has(key)
+
+
+func mark_story(key: String) -> void:
+	_ensure_loaded()
+	if not data.get("story") is Dictionary:
+		data["story"] = {}
+	if data["story"].has(key):
+		return
+	data["story"][key] = true
+	_touch()
 
 
 # --- Modifications ---------------------------------------------------------------------

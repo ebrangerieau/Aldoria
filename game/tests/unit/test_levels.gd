@@ -65,6 +65,6 @@ func test_camp_of_a_class_without_regions_yet() -> void:
 	var buttons: Array[String] = []
 	for node in hub.find_children("*", "Button", true, false):
 		buttons.append((node as Button).text)
-	assert_has(texts, "De nouvelles régions se préparent")
+	assert_has(texts, "Les régions de ta classe (5ème) se préparent.")
 	assert_does_not_have(buttons, "Y aller", "pas de village pour cette classe")
 	assert_has(buttons, "Arène")

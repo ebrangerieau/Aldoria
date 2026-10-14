@@ -164,6 +164,8 @@ Exemple (Jules, Tour des Fractions) :
 
 ## 11. Mise en œuvre proposée
 
+> ✅ 2026-10-14 : étape 2 faite (carte du royaume, Citadelle, seuils, accueil de Maître Ysaline, brouillard).
+
 1. **Relecture de cette bible** par Eric et les enfants (noms, méchants, régions). Les enfants peuvent ajouter leurs
    idées.
 2. **La Citadelle et la carte** : carte hexagonale, régions et brouillard, chemins, seuils avec le choix d'entrer.

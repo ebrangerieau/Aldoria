@@ -46,7 +46,9 @@ func test_feather_removes_two_wrong_choices_and_keeps_full_power() -> void:
 	var panel := QuestionPanel.new()
 	add_child_autofree(panel)
 	panel.setup(item, "Test", WorldTheme.lumineux())
-	panel._use_item("plume", Button.new())
+	var used := Button.new()
+	add_child_autofree(used)
+	panel._use_item("plume", used)
 	var mcq := panel._widget as McqWidget
 	var hidden := mcq.get_children().filter(func(b: Button) -> bool: return b.disabled)
 	assert_eq(hidden.size(), 2)

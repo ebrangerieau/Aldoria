@@ -78,3 +78,10 @@ compressés (+1,75 Mo ; les maillages pèsent plus que les animations, l'élagag
 Chaque salle un étage plus haut : un escalier, un mur est et une rangée de murs sous le bord sud par salle
 (fusionnés avec la salle : pas d'appel de dessin en plus). Sur PC, profil haut : 100 à 110 appels de dessin et
 170 000 à 235 000 triangles à l'écran (escalier compris). À mesurer sur la tablette avec le profil « tablette ».
+
+## 2026-10-14 – Carte du royaume
+
+Carte en tuiles hexagonales (KayKit Medieval Hexagon, une seule texture de 15 Ko) : deux maillages fusionnés
+(herbe teintée, reste du décor), chemins en un MultiMesh par couleur. Sur PC, profil haut : 45 à 58 appels de
+dessin (noms des lieux compris), environ 177 000 triangles. Export web : 19,95 → 21,47 Mo compressés.
+À mesurer sur la tablette : chargement et fluidité de la carte.

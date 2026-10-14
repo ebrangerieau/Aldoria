@@ -48,7 +48,7 @@ func _build() -> void:
 	title.autowrap_mode = TextServer.AUTOWRAP_OFF
 	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	top.add_child(title)
-	var back := UiKit.button("Retour au camp", 56.0)
+	var back := UiKit.button("Retour à la Citadelle", 56.0)
 	back.custom_minimum_size.x = 240
 	back.pressed.connect(_leave)
 	top.add_child(back)

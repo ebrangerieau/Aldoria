@@ -376,4 +376,4 @@ func _quit() -> void:
 	_pause_exploration()
 	_hud.clear_panel()
 	await Session.end()
-	get_tree().change_scene_to_file("res://scenes/hub/hub.tscn")
+	get_tree().change_scene_to_file(Departure.MAP_SCENE)

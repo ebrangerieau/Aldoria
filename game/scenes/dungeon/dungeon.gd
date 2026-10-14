@@ -454,7 +454,7 @@ func _open_chest() -> void:
 	if not found.is_empty():
 		text += "\n" + Inventory.found_text(found)
 	if not unlocked.is_empty():
-		text += "\nNouveau dans l'apparence (au camp) : %s." % ", ".join(unlocked)
+		text += "\nNouveau dans l'apparence (à la Citadelle) : %s." % ", ".join(unlocked)
 	await _message("%s : terminé !" % _def.title, text, "Continuer")
 	var rating := RatingPanel.new()
 	rating.setup(_wt, _def.title)
@@ -578,4 +578,4 @@ func _quit(rating := 0) -> void:
 	_hud.clear_panel()
 	Engine.time_scale = 1.0
 	await Session.end(rating)
-	get_tree().change_scene_to_file("res://scenes/hub/hub.tscn")
+	get_tree().change_scene_to_file(Departure.MAP_SCENE)

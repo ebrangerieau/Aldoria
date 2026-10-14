@@ -148,7 +148,7 @@ func _run() -> void:
 		_counter.text = "%d / %d" % [i + 1, DailyChallenge.QUESTIONS]
 		var item := QuestionService.next_item("automatisme")
 		if item.is_empty():
-			var panel := UiKit.message_panel(_wt, "Défi indisponible", "Il faut une connexion pour préparer le défi du jour.", "Retour au camp")
+			var panel := UiKit.message_panel(_wt, "Défi indisponible", "Il faut une connexion pour préparer le défi du jour.", "Retour à la Citadelle")
 			_show(panel[0])
 			await (panel[1] as Button).pressed
 			return
@@ -210,6 +210,6 @@ func _results() -> void:
 		if not found.is_empty():
 			lines.append(Inventory.found_text(found))
 		title = "Coffre de la semaine"
-	var panel := UiKit.message_panel(_wt, title, "\n".join(lines), "Retour au camp")
+	var panel := UiKit.message_panel(_wt, title, "\n".join(lines), "Retour à la Citadelle")
 	_show(panel[0])
 	await (panel[1] as Button).pressed

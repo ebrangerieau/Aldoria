@@ -179,7 +179,7 @@ func _submit() -> void:
 	if res.ok:
 		_message.add_theme_color_override("font_color", _wt.good)
 		_message.text = "C'est parti !"
-		get_tree().change_scene_to_file("res://scenes/hub/hub.tscn")
+		get_tree().change_scene_to_file(Departure.MAP_SCENE)
 		return
 	_message.add_theme_color_override("font_color", _wt.bad)
 	match res.error.get("code", ""):

@@ -392,10 +392,10 @@ export function Guide({ child, onOpen }: { child?: Profile; onOpen: (page: Guide
         <ul className="bullets">
           <li>
             <strong>Durée de jeu</strong> : au-delà du temps choisi (25 minutes par défaut), le jeu félicite l'enfant, termine la partie et
-            lui demande une pause de 30 minutes : d'ici là, le camp lui indique dans combien de minutes il pourra rejouer (l'apparence et les
+            lui demande une pause de 30 minutes : d'ici là, la carte et la Citadelle lui indiquent dans combien de minutes il pourra rejouer (l'apparence et les
             Archives restent ouvertes). Le temps compte d'une activité à l'autre (donjon, arène, village, défi du jour), sur tous les appareils
             de la famille ; seul le temps où le jeu est affiché compte. Pour lui accorder du temps en plus, augmentez la durée : c'est pris en
-            compte dès son retour au camp.
+            compte dès son retour sur la carte.
           </li>
           <li>
             <strong>Code secret</strong> : tapez deux fois les 4 nouveaux chiffres, puis <strong>Changer le code</strong>. Le code sert dès la
@@ -445,7 +445,7 @@ export function Guide({ child, onOpen }: { child?: Profile; onOpen: (page: Guide
             Indiquez ensuite les chapitres en cours dans <strong>Programme</strong> : c'est ce qui oriente le plus les questions.
           </li>
           <li>
-            Pour le <strong>monde</strong>, touchez celui qui plaît à {name} : le changement se voit au prochain retour au camp.
+            Pour le <strong>monde</strong>, touchez celui qui plaît à {name} : le changement se voit au prochain retour sur la carte.
           </li>
         </ol>
         <div className="tip">
@@ -453,7 +453,7 @@ export function Guide({ child, onOpen }: { child?: Profile; onOpen: (page: Guide
           notions travaillées l'année d'avant reviennent de temps en temps en révision, pour ne pas les oublier.
         </div>
         <div className="tip">
-          <strong>Une classe sans donjons pour l'instant ?</strong> Le camp l'annonce à l'enfant ; l'arène, le défi du jour et les Archives
+          <strong>Une classe sans donjons pour l'instant ?</strong> La Citadelle l'annonce à l'enfant ; l'arène, le défi du jour et les Archives
           fonctionnent avec les questions de sa classe.
         </div>
       </Section>
@@ -477,7 +477,7 @@ export function Guide({ child, onOpen }: { child?: Profile; onOpen: (page: Guide
           </li>
           <li>Ajustez case par case si besoin : chaque case explique ce qu'elle change.</li>
           <li>
-            Cliquez sur <strong>Enregistrer</strong>. Le jeu applique les réglages au prochain retour au camp, sur tous les appareils.
+            Cliquez sur <strong>Enregistrer</strong>. Le jeu applique les réglages au prochain retour sur la carte, sur tous les appareils.
           </li>
         </ol>
         <table className="guide-table">
@@ -524,7 +524,7 @@ export function Guide({ child, onOpen }: { child?: Profile; onOpen: (page: Guide
           Indépendamment des profils : <strong>couleurs adaptées</strong> pour un enfant daltonien (juste en bleu et faux en orange au lieu du vert et du rouge).
         </p>
         <div className="tip">
-          <strong>Et l'enfant ?</strong> Au camp, son bouton <strong>Options</strong> lui permet d'agrandir encore le texte, de régler le
+          <strong>Et l'enfant ?</strong> Sur la carte, son bouton <strong>Options</strong> lui permet d'agrandir encore le texte, de régler le
           volume et d'activer ou non la lecture automatique. Il ne peut pas retirer ce que vous avez choisi.
         </div>
         <div className="tip">
@@ -540,12 +540,27 @@ export function Guide({ child, onOpen }: { child?: Profile; onOpen: (page: Guide
         <p>Savoir ce qui se passe à l'écran aide à en parler avec {name} :</p>
         <ul className="bullets">
           <li>
-            <strong>Le camp</strong> : point de départ, avec le niveau et l'expérience du héros. L'enfant se connecte en touchant son avatar puis en tapant
-            son code secret.
+            <strong>L'histoire</strong> : Malvrek, un Archiviste déchu, et ses Effaceurs ont volé les pages de la Grande Chronique, le livre qui garde
+            les savoirs du royaume. {name} est un jeune Archiviste chargé de les reprendre, guidé par Maître Ysaline. Chaque boss vaincu rend une page.
           </li>
           <li>
-            <strong>Les donjons</strong> : trois par monde, qui s'ouvrent l'un après l'autre. Salles, combats, une énigme, un boss, puis un coffre et
-            une note de 1 à 5. Une défaite ne fait rien perdre : le héros repart du début de la salle.
+            <strong>La carte du royaume</strong> : l'écran d'accueil après la connexion (avatar, puis code secret). Au centre, la Citadelle des
+            Archives ; autour, une région par matière (les Cimes Fractales pour les maths, la Bibliothèque des Langues pour l'anglais…) et le village
+            de Clairval. Les régions pas encore au programme restent dans le brouillard. En touchant un lieu, {name} lit d'abord ce qui l'attend
+            (le lieu, la page à reprendre, ce qu'il va travailler) et choisit d'y entrer ou non.
+          </li>
+          <li>
+            <strong>La Citadelle des Archives</strong> : le niveau et l'expérience du héros, les pages retrouvées, le défi du jour, l'arène, les
+            Archives et l'apparence.
+          </li>
+          <li>
+            <strong>Les donjons</strong> : dans chaque région, ils s'ouvrent l'un après l'autre. Six salles sur six étages, des monstres variés, une
+            énigme, un boss, puis un coffre et une note de 1 à 5. Le héros commente sa progression et donne des indices sur la salle suivante. Une
+            défaite ne fait rien perdre : le héros reprend des forces et l'ennemi garde ses blessures.
+          </li>
+          <li>
+            <strong>Le sac</strong> : des objets gagnés en jouant (plume qui retire deux mauvaises propositions, parchemin d'indice, bouclier,
+            potion). Aucun ne fait sauter une question ; une aide par objet compte comme un indice dans vos statistiques.
           </li>
           <li>
             <strong>Le village</strong> : chaque habitant demande de l'aide une fois par jour (3 questions). Révisions espacées, préparation du
@@ -556,7 +571,7 @@ export function Guide({ child, onOpen }: { child?: Profile; onOpen: (page: Guide
             manqué peut se rattraper le lendemain ; 5 défis dans la semaine ouvrent un coffre.
           </li>
           <li>
-            <strong>L'apparence</strong> : au camp, le bouton <strong>Apparence</strong> permet de choisir l'allure du héros (chevalier,
+            <strong>L'apparence</strong> : à la Citadelle, le bouton <strong>Apparence</strong> permet de choisir l'allure du héros (chevalier,
             rôdeur, voleur, barbare, mage), son arme, sa cape et sa couleur{tom ? '' : ', ainsi que le nom et le pelage de son renard, qui le suit partout'}.
             Certains choix se gagnent en montant de niveau ou en terminant des donjons : une étoile ★ sur le bouton signale une nouveauté.
             C'est uniquement décoratif, rien ne s'achète.

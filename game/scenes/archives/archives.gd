@@ -58,7 +58,7 @@ func _build() -> void:
 		b.pressed.connect(_show.bind(tab))
 		top.add_child(b)
 		_tabs[tab] = b
-	var back := UiKit.button("Retour au camp", 56.0)
+	var back := UiKit.button("Retour à la Citadelle", 56.0)
 	UiKit.style_secondary(back, _wt)
 	back.pressed.connect(func() -> void: get_tree().change_scene_to_file("res://scenes/hub/hub.tscn"))
 	top.add_child(back)

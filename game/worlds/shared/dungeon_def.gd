@@ -37,6 +37,12 @@ const SUBJECT_LABELS := {"maths": "Maths", "anglais": "Anglais", "francais": "Fr
 @export var outro := ""
 @export var rooms: Array[Dictionary] = []
 @export var decor: Dictionary = {}
+## Carte du royaume (docs/histoire.md) : bâtiment sur la carte (pièce du pack KayKit Medieval
+## Hexagon), page de la Grande Chronique gardée par l'Effaceur (le boss), et texte du seuil
+## (Maître Ysaline présente le lieu et la quête avant d'y entrer).
+@export var map_piece := "building_tower_A_blue"
+@export var page := ""
+@export var threshold := ""
 
 
 ## Donjons d'une classe (leurs chapitres en dépendent) ; l'ambiance vient du monde de
@@ -102,6 +108,9 @@ func enemy_count() -> int:
 static func tour_fractions() -> DungeonDef:
 	var d := DungeonDef.new()
 	d.code = "tour_fractions"
+	d.map_piece = "building_tower_A_blue"
+	d.page = "la page des Fractions"
+	d.threshold = "La Tour des Fractions se dresse au-dessus des Cimes. Ses habitants savaient partager une tarte en parts égales. Depuis que le Grand Diviseur a volé leur page, ils coupent tout de travers. Rapporte la page des Fractions, et la Tour se souviendra."
 	d.title = "La Tour des Fractions"
 	d.chapter_codes = ["6e.maths.fractions"]
 	d.chapter_title = "Fractions"
@@ -133,6 +142,9 @@ static func tour_fractions() -> DungeonDef:
 static func atelier_balances() -> DungeonDef:
 	var d := DungeonDef.new()
 	d.code = "atelier_balances"
+	d.map_piece = "building_blacksmith_blue"
+	d.page = "la page des Mesures"
+	d.threshold = "Dans l'Atelier des Balances, on pesait tout au gramme près. Le Faux Peseur a volé la page des Mesures : les poids mentent et les cartes sont fausses. Retrouve-la, et l'Atelier saura de nouveau peser juste."
 	d.title = "L'Atelier des Balances"
 	d.chapter_codes = ["6e.maths.prealgebre", "6e.maths.proportionnalite"]
 	d.chapter_title = "Pré-algèbre, proportionnalité et échelles"
@@ -179,6 +191,9 @@ static func atelier_balances() -> DungeonDef:
 static func observatoire_angles() -> DungeonDef:
 	var d := DungeonDef.new()
 	d.code = "observatoire_angles"
+	d.map_piece = "building_tower_B_blue"
+	d.page = "la page des Étoiles"
+	d.threshold = "Tout en haut des Cimes, l'Observatoire visait les étoiles. Le Dragon des Constellations a emporté la page des Étoiles. Sans elle, les lunettes visent de travers et personne ne sait plus calculer ses chances."
 	d.title = "L'Observatoire des Angles"
 	d.chapter_codes = ["6e.maths.angles", "6e.maths.probabilites"]
 	d.chapter_title = "Angles et probabilités"
@@ -225,6 +240,9 @@ static func observatoire_angles() -> DungeonDef:
 static func bibliotheque_langues() -> DungeonDef:
 	var d := DungeonDef.new()
 	d.code = "bibliotheque_langues"
+	d.map_piece = "building_church_blue"
+	d.page = "la page de l'Anglais"
+	d.threshold = "Au bord de la mer se dresse la Bibliothèque des Langues. On y parlait toutes les langues du monde. Le Bibliothécaire Muet a volé la page de l'Anglais : les livres sont devenus blancs. Reprends-lui chaque mot."
 	d.title = "La Bibliothèque des Langues"
 	d.subject = "anglais"
 	d.chapter_codes = ["6e.anglais.vocabulaire", "6e.anglais.grammaire", "6e.anglais.communication"]
@@ -275,6 +293,9 @@ static func bibliotheque_langues() -> DungeonDef:
 static func labyrinthe_vecteurs() -> DungeonDef:
 	var d := DungeonDef.new()
 	d.code = "labyrinthe_vecteurs"
+	d.map_piece = "building_tower_A_green"
+	d.page = "la page des Vecteurs"
+	d.threshold = "Au cœur des Cimes, le Labyrinthe guidait les voyageurs grâce à ses flèches de lumière. L'Architecte du Brouillard a volé la page des Vecteurs : les couloirs se sont figés. Rallume le phare du centre."
 	d.title = "Le Labyrinthe des Vecteurs"
 	d.chapter_codes = ["2nde.maths.vecteurs"]
 	d.chapter_title = "Vecteurs"
@@ -306,6 +327,9 @@ static func labyrinthe_vecteurs() -> DungeonDef:
 static func forge_algebre() -> DungeonDef:
 	var d := DungeonDef.new()
 	d.code = "forge_algebre"
+	d.map_piece = "building_blacksmith_blue"
+	d.page = "la page du Calcul"
+	d.threshold = "La Forge de l'Algèbre façonnait les formules du royaume. Le Maître de Forge, un démon de feu, a volé la page du Calcul : tout sort tordu de l'enclume. Reprends-la et redresse les formules."
 	d.title = "La Forge de l'Algèbre"
 	d.chapter_codes = ["2nde.maths.calcul_litteral", "2nde.maths.equations", "2nde.maths.valeur_absolue"]
 	d.chapter_title = "Calcul littéral, équations, valeur absolue"
@@ -351,6 +375,9 @@ static func forge_algebre() -> DungeonDef:
 static func citadelle_fonctions() -> DungeonDef:
 	var d := DungeonDef.new()
 	d.code = "citadelle_fonctions"
+	d.map_piece = "building_tower_B_blue"
+	d.page = "la page des Courbes"
+	d.threshold = "Le Veilleur de la Citadelle lisait l'avenir dans les courbes. Le Seigneur des Courbes, un dragon, a volé la page des Courbes, et le Veilleur ne voit plus rien. Rends-lui la vue."
 	d.title = "La Citadelle des Fonctions"
 	d.chapter_codes = ["2nde.maths.fonctions", "2nde.maths.geometrie_reperee"]
 	d.chapter_title = "Fonctions, droites et repères"

@@ -41,7 +41,8 @@ Jeu sur PC contre l'API locale (Docker, port 8098) — options réservées au PC
 [--room=N] [--approach=1] [--npc=<code>] [--autoaction=chapitre] [--screenshot=x.png --shot-delay=4]`.
 Galerie avec aménagements : `--acc=read_aloud,spacing,readable_font,math_tools,… [--text-size=1] [--tools=table]
 [--wrong=1]` (outils ouverts, panneau d'explication).
-`--goto` part du camp vers une destination (`apparence` : écran de personnalisation) ; `--dungeon` choisit le donjon (code d'un `DungeonDef`, même fermé) ;
+`--goto` part de la Citadelle vers une destination (`apparence` : écran de personnalisation ; `citadelle` : s'y arrêter) ;
+`--seuil=<id>` ouvre le seuil d'un lieu de la carte (`aucun` : carte seule) ; `--places=1` affiche la position des lieux à l'écran (tools/e2e) ; `--dungeon` choisit le donjon (code d'un `DungeonDef`, même fermé) ;
 `--npc` place le héros devant un habitant du village et accepte sa quête ;
 `--room` démarre le donjon dans la salle N (0 à 5) ; `--stairs=1` vide la salle et fait monter le héros par son escalier ;
 `--approach` mène le héros au premier ennemi ou piédestal de la salle (captures d'un combat, d'une énigme) ;
@@ -74,6 +75,14 @@ Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-
   Il ne transmet que ses chapitres et son générateur d'énigme à
   `session/start` ; `api/tests/test_dungeon.py` vérifie qu'ils existent côté API. Son décor (`decor`) est lu
   par `DungeonLevel`.
+- Histoire (`docs/histoire.md`, bible à relire avec les enfants) : quête commune de la Grande Chronique, Malvrek et
+  ses Effaceurs (les boss), Maître Ysaline. **Carte du royaume** (`scenes/world_map`, écran principal après la
+  connexion ; `WorldMapDef` : grille d'hexagones KayKit, une région par matière, emplacements des donjons dans
+  l'ordre, brouillard sur les régions pas encore au programme, lieux secrets) : toucher un lieu ouvre son **seuil**
+  (texte `DungeonDef.threshold`, page gardée `page`, bâtiment `map_piece`) avec le choix « J'y vais » / « Pas
+  maintenant ». Donjons et village partent de la carte et y reviennent ; la **Citadelle des Archives**
+  (`scenes/hub`, ex-camp) garde défi du jour, arène, Archives et apparence. Départ commun : `Departure.go`.
+  Étapes de l'histoire déjà vues : `SaveManager.story_seen` / `mark_story`.
 - Village (`VillageDef`) : chaque habitant confie une quête de trois questions par jour (`revision`, `veille`,
   `enquete`) ; les questions passent par `QuestionService.next_quest_item`. Une enquête porte sur un seul
   document : générateur `shared_document` côté API (même document à graine égale, quelle que soit la difficulté).

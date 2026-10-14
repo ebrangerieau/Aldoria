@@ -1,7 +1,8 @@
 // Test de bout en bout du jeu web : titre → liaison de l'appareil (code à 8 chiffres)
-// → profil → PIN → camp → donjon (marche
-// au clavier) → Quitter → camp → Archives → camp → Apparence → camp → village → Quitter → camp → défi
-// du jour (1re question) → Quitter → camp → Changer de joueur → profils.
+// → profil → PIN → carte du royaume → seuil de la Tour des Fractions → donjon (marche au clavier)
+// → Quitter → carte → Citadelle → Archives → Citadelle → Apparence → Citadelle → défi du jour
+// (1re question) → Quitter → Citadelle → carte → seuil de Clairval → village → Quitter → carte
+// → Changer de joueur → profils. Positions des lieux de la carte : `--places=1` (world_map.gd).
 // Pilote Edge (ou Chrome) en headless via playwright-core, sur le banc local
 // (tools/e2e_web.ps1) : jamais sur la production avec les vrais codes des enfants.
 //
@@ -50,14 +51,14 @@ const { chromium } = require('playwright-core');
     await page.keyboard.press(digit);
     await page.waitForTimeout(120);
   }
-  await page.waitForTimeout(4000);   // connexion + sauvegarde → camp
-  await shot('2_camp');
-  await page.mouse.click(578, 150);  // onglet « Anglais » : la Bibliothèque des Langues
-  await page.waitForTimeout(600);
-  await shot('2b_camp_anglais');
-  await page.mouse.click(205, 150);  // retour à l'onglet « Maths »
-  await page.waitForTimeout(600);
-  await page.mouse.click(642, 284);  // « Entrer » dans le premier donjon (paquet + scène 3D)
+  await page.waitForTimeout(5000);   // connexion + sauvegarde → carte du royaume
+  await shot('2_carte');
+  await page.keyboard.press('Enter'); // accueil de Maître Ysaline (première fois seulement)
+  await page.waitForTimeout(800);
+  await page.mouse.click(771, 329);  // la Tour des Fractions → son seuil
+  await page.waitForTimeout(1000);
+  await shot('2b_seuil');
+  await page.keyboard.press('Enter'); // « J'y vais » (paquet + scène 3D)
   await page.waitForTimeout(6000);
   await shot('3_donjon_intro');
   await page.mouse.click(640, 730);  // « En avant ! »
@@ -67,33 +68,42 @@ const { chromium } = require('playwright-core');
   await page.keyboard.up('d');
   await page.waitForTimeout(500);
   await shot('4_donjon_marche');
-  await page.mouse.click(1210, 63);  // « Quitter » → camp
-  await page.waitForTimeout(3000);
-  await page.mouse.click(984, 724);  // « Archives »
+  await page.mouse.click(1210, 63);  // « Quitter » → carte
+  await page.waitForTimeout(4000);
+  await page.mouse.click(659, 384);  // la Citadelle → son seuil
+  await page.waitForTimeout(1000);
+  await page.keyboard.press('Enter'); // « Entrer »
+  await page.waitForTimeout(2500);
+  await shot('4b_citadelle');
+  await page.mouse.click(1000, 724); // « Archives »
   await page.waitForTimeout(3000);
   await shot('5_archives');
-  await page.mouse.click(1170, 52);  // « Retour au camp »
+  await page.mouse.click(1170, 52);  // « Retour au camp » (la Citadelle)
   await page.waitForTimeout(2500);
-  await page.mouse.click(1145, 724); // « Apparence » (héros et renard en 3D)
+  await page.mouse.click(1159, 724); // « Apparence » (héros et renard en 3D)
   await page.waitForTimeout(3000);
   await shot('5b_apparence');
-  await page.mouse.click(1135, 52);  // « Retour au camp »
+  await page.mouse.click(1135, 52);  // « Retour au camp » (la Citadelle)
   await page.waitForTimeout(2500);
-  await page.mouse.click(1138, 252); // « Y aller » : le village
-  await page.waitForTimeout(6000);
-  await page.mouse.click(640, 730);  // « Entrer dans le village »
-  await page.waitForTimeout(1200);
-  await shot('6_village');
-  await page.mouse.click(1210, 63);  // « Quitter » → camp
-  await page.waitForTimeout(3000);
-  await page.mouse.click(1138, 528); // « Relever » le défi du jour
+  await page.mouse.click(1138, 405); // « Relever » le défi du jour
   await page.waitForTimeout(4000);
   await page.mouse.click(640, 530);  // « C'est parti ! »
   await page.waitForTimeout(1500);
   await shot('7_defi');
-  await page.mouse.click(1190, 53);  // « Quitter » → camp
+  await page.mouse.click(1190, 53);  // « Quitter » → Citadelle
   await page.waitForTimeout(3000);
-  await page.mouse.click(1137, 65);  // « Changer de joueur »
+  await page.mouse.click(377, 550);  // « Ouvrir la carte du royaume »
+  await page.waitForTimeout(4000);
+  await page.mouse.click(496, 504);  // Clairval → son seuil
+  await page.waitForTimeout(1000);
+  await page.keyboard.press('Enter'); // « J'y vais »
+  await page.waitForTimeout(6000);
+  await page.mouse.click(640, 730);  // « Entrer dans le village »
+  await page.waitForTimeout(1200);
+  await shot('6_village');
+  await page.mouse.click(1210, 63);  // « Quitter » → carte
+  await page.waitForTimeout(4000);
+  await page.mouse.click(1143, 47);  // « Changer de joueur » (carte)
   await page.waitForTimeout(2500);
   await shot('8_changer_joueur');
 

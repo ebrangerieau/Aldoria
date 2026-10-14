@@ -1,6 +1,6 @@
 extends GutTest
-## Défi du jour joué hors réseau (paquet de test), et camp : donjons ouverts l'un
-## après l'autre, état du défi.
+## Défi du jour joué hors réseau (paquet de test), Citadelle (pages retrouvées, état du
+## défi) et carte du royaume (donjons ouverts l'un après l'autre dans leur région).
 
 var _scene: Node
 var _saved_token := ""
@@ -46,7 +46,7 @@ func test_ten_automatisms_then_streak_and_record() -> void:
 			var explanation: ExplanationPanel = await _wait_for(ExplanationPanel)
 			assert_not_null(explanation)
 			explanation.closed.emit()
-	var back := await _wait_button("Retour au camp", 6.0)
+	var back := await _wait_button("Retour à la Citadelle", 6.0)
 	assert_not_null(back, "bilan du défi")
 	var today := DailyChallenge.today()
 	assert_eq(SaveManager.daily_days(), [today])
@@ -56,24 +56,16 @@ func test_ten_automatisms_then_streak_and_record() -> void:
 	assert_true(Session._queue.all(func(a: Dictionary) -> bool: return a["game_mode"] == "defi"))
 
 
-func test_hub_opens_dungeons_one_after_the_other() -> void:
+func test_citadel_counts_pages_and_daily_challenge() -> void:
 	_scene = (load("res://scenes/hub/hub.tscn") as PackedScene).instantiate()
 	add_child(_scene)
 	await wait_process_frames(3)
-	var rows: Array = _scene._dungeon_rows
-	assert_eq(rows.size(), 4, "trois donjons de maths, la Bibliothèque des Langues")
-	assert_true((rows[0]["panel"] as Control).visible and not (rows[3]["panel"] as Control).visible, "onglet Maths")
-	assert_false((rows[3]["button"] as Button).disabled, "région d'anglais ouverte d'emblée")
-	assert_string_contains((_scene._region_tabs["anglais"] as Button).text, "nouveau")
-	_scene._show_region("anglais")
-	assert_true((rows[3]["panel"] as Control).visible and not (rows[0]["panel"] as Control).visible)
-	_scene._show_region("maths")
-	assert_false((rows[0]["button"] as Button).disabled)
-	assert_true((rows[1]["button"] as Button).disabled, "Atelier fermé tant que la Tour n'est pas finie")
-	assert_string_contains((rows[1]["state"] as Label).text, "La Tour des Fractions")
+	assert_eq((_scene._pages_state as Label).text, "Pages retrouvées : 0 / 4")
 	SaveManager.complete_dungeon("tour_fractions")
-	assert_false((rows[1]["button"] as Button).disabled)
-	assert_true((rows[2]["button"] as Button).disabled)
+	assert_eq((_scene._pages_state as Label).text, "Pages retrouvées : 1 / 4")
+	var buttons := _scene.find_children("*", "Button", true, false).map(func(b: Button) -> String: return b.text)
+	assert_has(buttons, "Ouvrir la carte du royaume")
+	assert_does_not_have(buttons, "Y aller", "le village part de la carte, par son seuil")
 	assert_eq((_scene._daily_button as Button).text, "Relever")
 	SaveManager.record_daily(DailyChallenge.today(), 9, 90000, DailyChallenge.today())
 	assert_eq((_scene._daily_button as Button).text, "S'entraîner")

@@ -1,20 +1,17 @@
 extends Control
-## Camp de base : niveau et XP du héros, les donjons de la classe rangés par région (un
-## onglet par matière ; dans une région, ouverts l'un après l'autre), le village et ses quêtes, le défi du jour, l'arène d'entraînement,
-## les Archives et l'apparence du héros (★ quand un choix vient de se débloquer). Récupère la sauvegarde du serveur à l'arrivée (autre appareil, TRD §2.7).
+## La Citadelle des Archives (docs/histoire.md §5), au centre de la carte du royaume : niveau et
+## XP du héros, pages de la Grande Chronique retrouvées, le chemin vers la carte (donjons et
+## village partent de la carte, par leur seuil), le défi du jour, l'arène d'entraînement, les
+## Archives et l'apparence du héros (★ quand un choix vient de se débloquer). Récupère la
+## sauvegarde du serveur à l'arrivée (autre appareil, TRD §2.7).
 
 var _wt: WorldTheme
 var _dungeons: Array[DungeonDef] = []
+var _village: VillageDef
 var _level: Label
 var _xp_bar: ProgressBar
 var _xp_text: Label
-var _dungeon_rows: Array[Dictionary] = []  # {panel, state, button}
-var _region_tabs: Dictionary = {}  # matière → bouton d'onglet
-var _region_spacer: Control  # région de moins de trois donjons : chaque carte garde un tiers de la hauteur
-## Région affichée (matière), gardée tant que le jeu tourne.
-static var _region := ""
-var _village: VillageDef
-var _village_state: Label
+var _pages_state: Label
 var _daily_state: Label
 var _daily_button: Button
 var _look_button: Button
@@ -34,7 +31,7 @@ func _ready() -> void:
 	_refresh()
 	SaveManager.changed.connect(_refresh)
 	await SaveManager.sync()
-	# Aménagements modifiés par le parent depuis la dernière fois : le camp se reconstruit
+	# Aménagements modifiés par le parent depuis la dernière fois : la Citadelle se reconstruit
 	# (police, tailles, couleurs) ; de même quand l'enfant change ses options.
 	Accessibility.changed.connect(_rebuild, CONNECT_ONE_SHOT)
 	# Classe, monde ou prénom changés par le parent : même reconstruction.
@@ -113,62 +110,37 @@ func _build() -> void:
 	main.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	scroll.add_child(main)
 
-	# Les donjons de la région choisie, l'un sous l'autre ; un onglet par matière.
-	var dungeons := VBoxContainer.new()
-	dungeons.add_theme_constant_override("separation", 12)
-	dungeons.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	dungeons.size_flags_stretch_ratio = 1.55
-	main.add_child(dungeons)
-	var subjects := DungeonDef.subjects(_dungeons)
-	if not _region in subjects:
-		_region = subjects[0] if not subjects.is_empty() else ""
-	if subjects.size() > 1:
-		var tabs := HBoxContainer.new()
-		tabs.add_theme_constant_override("separation", 10)
-		for subject in subjects:
-			var tab := UiKit.button(DungeonDef.SUBJECT_LABELS.get(subject, subject), 52.0)
-			tab.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-			tab.pressed.connect(_show_region.bind(subject))
-			tabs.add_child(tab)
-			_region_tabs[subject] = tab
-		dungeons.add_child(tabs)
-	for i in _dungeons.size():
-		var d := _dungeons[i]
-		var row := _row(dungeons, d.title, d.chapter_title)
-		row["button"].pressed.connect(_enter_dungeon.bind(i))
-		_dungeon_rows.append(row)
-	_region_spacer = Control.new()
-	_region_spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	dungeons.add_child(_region_spacer)
-	_show_region(_region)
-	if _dungeons.is_empty():
-		# Classe dont les régions sont encore en préparation : le reste du camp fonctionne.
-		var soon := PanelContainer.new()
-		soon.size_flags_vertical = Control.SIZE_EXPAND_FILL
-		dungeons.add_child(soon)
-		var text := VBoxContainer.new()
-		text.alignment = BoxContainer.ALIGNMENT_CENTER
-		soon.add_child(text)
-		text.add_child(UiKit.label("De nouvelles régions se préparent", 27, _wt.accent))
-		text.add_child(UiKit.label(
-			"Les donjons de ta classe (%s) arrivent bientôt. En attendant, l'arène, le défi du jour et les Archives t'attendent." \
-				% Session.profile.get("level_label", Session.level()), 19, _wt.text))
+	# La Citadelle et le chemin vers la carte du royaume.
+	var left := VBoxContainer.new()
+	left.add_theme_constant_override("separation", 12)
+	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	left.size_flags_stretch_ratio = 1.4
+	main.add_child(left)
+	var hall := PanelContainer.new()
+	hall.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	left.add_child(hall)
+	var hall_text := VBoxContainer.new()
+	hall_text.add_theme_constant_override("separation", 12)
+	hall_text.alignment = BoxContainer.ALIGNMENT_CENTER
+	hall.add_child(hall_text)
+	hall_text.add_child(UiKit.label("La Citadelle des Archives", 34, _wt.accent))
+	hall_text.add_child(UiKit.label(
+		"Ici veille la Grande Chronique. Malvrek et ses Effaceurs en ont volé les pages : chacune se cache dans une région du royaume.", 21, _wt.text))
+	_pages_state = UiKit.label("", 22, _wt.accent)
+	hall_text.add_child(_pages_state)
+	var to_map := UiKit.button("Ouvrir la carte du royaume", 72.0)
+	to_map.pressed.connect(_open_map)
+	hall_text.add_child(to_map)
 
-	# Village, défi du jour, puis arène et Archives en plus petit.
+	# Défi du jour, puis arène, Archives et apparence en plus petit.
 	var side := VBoxContainer.new()
 	side.add_theme_constant_override("separation", 12)
 	side.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	main.add_child(side)
-	if _village != null:
-		var village := _row(side, _village.title, "Les habitants ont besoin de toi.")
-		_village_state = village["state"]
-		village["button"].text = "Y aller"
-		village["button"].pressed.connect(_enter_village)
 	var daily := _row(side, "Défi du jour", "Dix automatismes, à ton rythme.")
 	_daily_state = daily["state"]
 	_daily_button = daily["button"]
 	_daily_button.pressed.connect(_enter_daily)
-	# Arène et Archives : deux boutons dans un même panneau.
 	var small_panel := PanelContainer.new()
 	side.add_child(small_panel)
 	var small := HBoxContainer.new()
@@ -221,74 +193,12 @@ func _refresh() -> void:
 	_xp_bar.value = Progression.level_progress(xp)
 	_xp_text.text = "%d / %d XP" % [xp, Progression.xp_for_level(level + 1)]
 	_bag.text = Inventory.summary(SaveManager.items())
-	for i in _dungeons.size():
-		_refresh_dungeon(i)
-	_show_region(_region)
+	var found := _dungeons.filter(func(d: DungeonDef) -> bool: return int(SaveManager.dungeon(d.code)["completed"]) > 0).size()
+	_pages_state.text = "Pages retrouvées : %d / %d" % [found, _dungeons.size()] if not _dungeons.is_empty() \
+		else "Les régions de ta classe (%s) se préparent." % Session.profile.get("level_label", Session.level())
 	_refresh_daily()
 	var unlocked := Wardrobe.unlocked_count(level, SaveManager.dungeons_done(), _wt.companion)
 	_look_button.text = "Apparence ★" if unlocked > int(SaveManager.look()["seen"]) else "Apparence"
-	if _village != null:
-		var waiting := _village.pending_quests(DailyChallenge.today())
-		var plural := waiting > 1
-		_village_state.text = "Tout le monde est aidé aujourd'hui ✓" if waiting == 0 else \
-			"%d habitant%s attend%s ton aide" % [waiting, "s" if plural else "", "ent" if plural else ""]
-
-
-func _refresh_dungeon(i: int) -> void:
-	var d := _dungeons[i]
-	var row: Dictionary = _dungeon_rows[i]
-	var state_label: Label = row["state"]
-	var b: Button = row["button"]
-	var panel: PanelContainer = row["panel"]
-	if not SaveManager.dungeon_unlocked(_dungeons, i):
-		state_label.text = "Termine « %s » pour l'ouvrir." % DungeonDef.previous(_dungeons, i).title
-		state_label.add_theme_color_override("font_color", _wt.text)
-		b.text = "Fermé"
-		b.disabled = true
-		panel.modulate = Color(1, 1, 1, 0.7)
-		return
-	state_label.add_theme_color_override("font_color", _wt.accent)
-	b.disabled = false
-	panel.modulate = Color.WHITE
-	var state := SaveManager.dungeon(d.code)
-	var checkpoint := int(state["checkpoint"])
-	var completed := int(state["completed"])
-	if checkpoint > 0:
-		state_label.text = "Reprise : %s (salle %d sur %d)" % [d.rooms[checkpoint]["title"], checkpoint + 1, d.room_count()]
-		b.text = "Continuer"
-	elif completed > 0:
-		state_label.text = "Terminé %d fois ★ Les ennemis sont revenus…" % completed
-		b.text = "Y retourner"
-	else:
-		state_label.text = "%d salles, une énigme et un boss." % d.room_count()
-		b.text = "Entrer"
-
-
-## Onglet de région : ses donjons seulement. Une région jamais visitée est signalée.
-func _show_region(subject: String) -> void:
-	_region = subject
-	var shown := 0
-	for i in _dungeons.size():
-		(_dungeon_rows[i]["panel"] as Control).visible = _dungeons[i].subject == subject
-		shown += 1 if _dungeons[i].subject == subject else 0
-	if _region_spacer != null:
-		_region_spacer.visible = shown > 0 and shown < 3
-		_region_spacer.size_flags_stretch_ratio = maxf(1.0, 3.0 - shown)
-	var first: String = DungeonDef.subjects(_dungeons).front() if not _dungeons.is_empty() else ""
-	for key in _region_tabs:
-		var tab: Button = _region_tabs[key]
-		var label: String = DungeonDef.SUBJECT_LABELS.get(key, key)
-		var fresh := _dungeons.all(func(d: DungeonDef) -> bool:
-			var state := SaveManager.dungeon(d.code)
-			return d.subject != key or (int(state["completed"]) == 0 and int(state["checkpoint"]) == 0))
-		tab.text = label + (" · nouveau !" if fresh and key != subject and key != first else "")
-		if key == subject:
-			for style in ["normal", "hover", "pressed"]:
-				tab.remove_theme_stylebox_override(style)
-			for color in ["font_color", "font_hover_color", "font_pressed_color", "font_focus_color"]:
-				tab.remove_theme_color_override(color)
-		else:
-			UiKit.style_secondary(tab, _wt)
 
 
 func _refresh_daily() -> void:
@@ -308,18 +218,9 @@ func _refresh_daily() -> void:
 		_daily_button.text = "S'entraîner"
 
 
-func _enter_dungeon(i: int) -> void:
-	if not SaveManager.dungeon_unlocked(_dungeons, i):
-		return
-	var d := _dungeons[i]
-	Session.dungeon_code = d.code
-	await _launch("donjon", d.session_params(), "res://scenes/dungeon/dungeon.tscn", "donjon_" + d.code)
-
-
-func _enter_village() -> void:
-	if _village == null:
-		return
-	await _launch("village", _village.session_params(), "res://scenes/village/village.tscn")
+func _open_map() -> void:
+	if not _busy:
+		get_tree().change_scene_to_file(Departure.MAP_SCENE)
 
 
 func _enter_daily() -> void:
@@ -333,40 +234,17 @@ func _enter_arena() -> void:
 func _launch(mode: String, params: Dictionary, scene: String, cache := "") -> void:
 	if _busy:
 		return
-	if Session.time_over():
-		_show_rest()
-		return
 	_busy = true
 	_message.text = "En route !"
-	var res := await Session.start(mode, params, cache)
-	if res.ok:
-		get_tree().change_scene_to_file(scene)
+	var result := await Departure.go(get_tree(), mode, params, scene, cache)
+	if result == "":
 		return
-	if res.status == 401:
-		await Session.logout()  # jeton expiré : on redemande le code
-		get_tree().change_scene_to_file("res://scenes/profile/profile_select.tscn")
-		return
-	_message.text = "%s Réessaie dans un instant." % res.error.get("message", "")
 	_busy = false
-
-
-## Durée de jeu fixée par le parent atteinte : on explique au lieu de lancer l'activité
-## (elle s'arrêterait aussitôt). L'apparence et les Archives restent ouvertes.
-func _show_rest() -> void:
-	_message.text = "Pause : retour dans %d min" % Session.minutes_before_play()
-	var layer := CanvasLayer.new()
-	layer.layer = 20
-	var shade := ColorRect.new()
-	shade.color = Color(0, 0, 0, 0.55)
-	shade.set_anchors_preset(Control.PRESET_FULL_RECT)
-	layer.add_child(shade)
-	var center := CenterContainer.new()
-	center.set_anchors_preset(Control.PRESET_FULL_RECT)
-	layer.add_child(center)
-	var panel := UiKit.message_panel(_wt, "Temps de jeu terminé", Session.rest_text(), "D'accord")
-	center.add_child(panel[0])
-	add_child(layer)
-	(panel[1] as Button).pressed.connect(layer.queue_free)
+	if result == "pause":
+		_message.text = "Pause : retour dans %d min" % Session.minutes_before_play()
+		Departure.show_rest(self, _wt)
+	else:
+		_message.text = result
 
 
 func _open_wardrobe() -> void:
@@ -394,7 +272,7 @@ func _show_options() -> void:
 
 
 func _rebuild() -> void:
-	# Seulement si le camp est toujours affiché (l'enfant a pu partir entre-temps), et une
+	# Seulement si la Citadelle est toujours affichée (l'enfant a pu partir entre-temps), et une
 	# seule fois même si aménagements et profil changent ensemble.
 	if is_inside_tree() and get_tree().current_scene == self and not _busy:
 		_busy = true
@@ -410,7 +288,8 @@ func _switch_player() -> void:
 
 
 ## Développement, PC uniquement : `-- --goto=donjon|village|defi|arene|archives|apparence`
-## (`--dungeon=<code>` pour un autre donjon que le premier).
+## (`--dungeon=<code>` pour un autre donjon que le premier). Le donjon et le village partent
+## d'ici sans passer par leur seuil sur la carte (captures d'écran).
 func _dev_goto() -> void:
 	if OS.has_feature("web"):
 		return
@@ -426,7 +305,8 @@ func _dev_goto() -> void:
 			Session.dungeon_code = d.code
 			_launch("donjon", d.session_params(), "res://scenes/dungeon/dungeon.tscn", "donjon_" + d.code)
 		"village":
-			_enter_village()
+			if _village != null:
+				_launch("village", _village.session_params(), "res://scenes/village/village.tscn")
 		"defi":
 			_enter_daily()
 		"arene":

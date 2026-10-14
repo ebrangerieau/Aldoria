@@ -51,11 +51,16 @@ const { chromium } = require('playwright-core');
       await page.waitForTimeout(120);
     }
     await page.waitForTimeout(5000);
-    await page.mouse.click(642, 284); // « Entrer » dans le premier donjon
+    await page.keyboard.press('Enter'); // accueil de Maître Ysaline (première fois seulement)
+    await page.waitForTimeout(800);
+    await page.mouse.click(771, 329); // la Tour des Fractions → son seuil
+    await page.waitForTimeout(1000);
+    await page.keyboard.press('Enter'); // « J'y vais »
     await page.waitForTimeout(7000);
     const spoken = await page.evaluate(() => window.__spoken);
     console.log('Textes confiés à la synthèse vocale :\n  ' + spoken.join('\n  '));
-    if (!spoken.some((t) => t.includes('La Tour des Fractions'))) {
+    // Introduction du donjon (et non le seuil de la carte, qui porte aussi son nom).
+    if (!spoken.some((t) => t.includes('sens dessus dessous'))) {
       console.log("ÉCHEC : l'introduction du donjon n'a pas été lue");
       failed = true;
     } else {

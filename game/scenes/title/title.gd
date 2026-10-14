@@ -83,7 +83,7 @@ func _dev_autologin() -> void:
 			printerr("[Aldoria/dev] pair : ", paired.error)
 	var res := await Session.login(int(profile_id), Quality.option("pin"))
 	if res.ok:
-		get_tree().change_scene_to_file("res://scenes/hub/hub.tscn")
+		get_tree().change_scene_to_file(Departure.MAP_SCENE)
 	else:
 		_hint.text = "Connexion auto impossible : %s" % res.error.get("message", "")
 		printerr("[Aldoria/dev] autologin : ", res.error)
@@ -122,4 +122,4 @@ func _continue() -> void:
 		return
 	_started = true
 	_hint.text = "C'est reparti !"
-	get_tree().change_scene_to_file("res://scenes/hub/hub.tscn")
+	get_tree().change_scene_to_file(Departure.MAP_SCENE)
