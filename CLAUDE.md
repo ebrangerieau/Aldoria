@@ -82,7 +82,9 @@ Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-
   (texte `DungeonDef.threshold`, page gardée `page`, bâtiment `map_piece`) avec le choix « J'y vais » / « Pas
   maintenant ». Donjons et village partent de la carte et y reviennent ; la **Citadelle des Archives**
   (`scenes/hub`, ex-camp) garde défi du jour, arène, Archives et apparence. Départ commun : `Departure.go`.
-  Étapes de l'histoire déjà vues : `SaveManager.story_seen` / `mark_story`.
+  Étapes de l'histoire déjà vues : `SaveManager.story_seen` / `mark_story`. L'Effaceur (boss) parle à l'entrée et à sa
+  défaite (`boss_intro`, `boss_defeat`) ; la première fois, le coffre rend la page (`page_text`) et Maître Ysaline la
+  salue au retour sur la carte (`page_<code>`), en annonçant le chemin qui s'ouvre.
 - Village (`VillageDef`) : chaque habitant confie une quête de trois questions par jour (`revision`, `veille`,
   `enquete`) ; les questions passent par `QuestionService.next_quest_item`. Une enquête porte sur un seul
   document : générateur `shared_document` côté API (même document à graine égale, quelle que soit la difficulté).

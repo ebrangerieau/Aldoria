@@ -92,3 +92,21 @@ func test_map_titles_drop_their_article() -> void:
 
 func _short(title: String) -> String:
 	return (load("res://scenes/world_map/world_map.gd") as GDScript).call("short_title", title)
+
+
+func test_every_effaceur_speaks_and_every_page_tells_its_story() -> void:
+	for level in ["6e", "2nde"]:
+		for d in DungeonDef.all_for_level(level):
+			assert_gt(d.boss_intro.length(), 30, d.code)
+			assert_gt(d.boss_defeat.length(), 20, d.code)
+			assert_gt(d.page_text.length(), 40, d.code)
+
+
+func test_ysaline_greets_a_returned_page_once() -> void:
+	SaveManager.complete_dungeon("tour_fractions")
+	await _open()
+	await wait_process_frames(5)
+	assert_true(SaveManager.story_seen("page_tour_fractions"))
+	var texts: Array = _scene.find_children("*", "Label", true, false).map(func(l: Label) -> String: return l.text)
+	assert_true(texts.any(func(t: String) -> bool: return "page des Fractions" in t and "Atelier des Balances" in t), "le chemin suivant est annoncé")
+	assert_false(SaveManager.story_seen("page_atelier_balances"))

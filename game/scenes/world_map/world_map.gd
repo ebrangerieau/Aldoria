@@ -76,6 +76,27 @@ func _ready() -> void:
 	if not SaveManager.story_seen("welcome"):
 		SaveManager.mark_story("welcome")
 		await _dialog("La Grande Chronique", WorldMapDef.WELCOME, "", "Je suis prêt !", "")
+	await _celebrate_pages()
+
+
+## Maître Ysaline salue chaque page rapportée (une fois) et montre le chemin qui s'ouvre.
+func _celebrate_pages() -> void:
+	for i in _dungeons.size():
+		var d := _dungeons[i]
+		var key := "page_" + d.code
+		if int(SaveManager.dungeon(d.code)["completed"]) == 0 or SaveManager.story_seen(key):
+			continue
+		SaveManager.mark_story(key)
+		var next := ""
+		for j in range(i + 1, _dungeons.size()):
+			if _dungeons[j].subject == d.subject:
+				next = "Regarde : le chemin vers « %s » s'éclaire sur la carte." % _dungeons[j].title
+				break
+		if next == "":
+			var region := str(WorldMapDef.REGIONS.get(d.subject, {}).get("title", "cette région"))
+			next = "Toutes les pages de la région « %s » sont revenues. Malvrek doit trembler dans sa tour !" % region
+		var text := "Tu as rapporté %s ! Elle a repris sa place dans la Grande Chronique. %s" % [d.page, next]
+		await _dialog("Une page retrouvée", text, "", "Merci, Maître Ysaline", "")
 
 
 func _process(delta: float) -> void:

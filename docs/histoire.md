@@ -165,6 +165,9 @@ Exemple (Jules, Tour des Fractions) :
 ## 11. Mise en œuvre proposée
 
 > ✅ 2026-10-14 : étape 2 faite (carte du royaume, Citadelle, seuils, accueil de Maître Ysaline, brouillard).
+> ✅ 2026-10-14 : étape 3 en partie (répliques d'entrée et de défaite des Effaceurs, page rendue au coffre, Maître
+> Ysaline qui salue chaque page et annonce le chemin suivant). Reste : le prologue illustré, les pages lisibles dans la
+> Grande Chronique (Archives).
 
 1. **Relecture de cette bible** par Eric et les enfants (noms, méchants, régions). Les enfants peuvent ajouter leurs
    idées.

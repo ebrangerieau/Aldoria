@@ -43,6 +43,11 @@ const SUBJECT_LABELS := {"maths": "Maths", "anglais": "Anglais", "francais": "Fr
 @export var map_piece := "building_tower_A_blue"
 @export var page := ""
 @export var threshold := ""
+## Répliques de l'Effaceur (le boss) à l'entrée du combat et à sa défaite, et ce que la page
+## rendue rapporte au royaume (scène du coffre, première fois).
+@export var boss_intro := ""
+@export var boss_defeat := ""
+@export var page_text := ""
 
 
 ## Donjons d'une classe (leurs chapitres en dépendent) ; l'ambiance vient du monde de
@@ -108,6 +113,9 @@ func enemy_count() -> int:
 static func tour_fractions() -> DungeonDef:
 	var d := DungeonDef.new()
 	d.code = "tour_fractions"
+	d.boss_intro = "Ha ! Encore un petit Archiviste ! Moi, je coupe tout en morceaux… et je ne recolle jamais rien. Ta page des Fractions, tu ne la reverras pas !"
+	d.boss_defeat = "Non… mes morceaux se recollent tout seuls ! Malvrek va être furieux…"
+	d.page_text = "Sur la page des Fractions, les parts se remettent en ordre : moitiés, tiers, quarts. Les habitants de la Tour savent de nouveau partager."
 	d.map_piece = "building_tower_A_blue"
 	d.page = "la page des Fractions"
 	d.threshold = "La Tour des Fractions se dresse au-dessus des Cimes. Ses habitants savaient partager une tarte en parts égales. Depuis que le Grand Diviseur a volé leur page, ils coupent tout de travers. Rapporte la page des Fractions, et la Tour se souviendra."
@@ -142,6 +150,9 @@ static func tour_fractions() -> DungeonDef:
 static func atelier_balances() -> DungeonDef:
 	var d := DungeonDef.new()
 	d.code = "atelier_balances"
+	d.boss_intro = "Bienvenue dans mon atelier ! Ici, un kilo pèse ce que JE décide. Essaie donc de m'équilibrer, petit Archiviste !"
+	d.boss_defeat = "Mes plateaux… ils sont justes à nouveau. Quelle horreur, la vérité !"
+	d.page_text = "La page des Mesures retrouve ses poids et ses échelles. Dans l'Atelier, les balances disent vrai et les cartes montrent le bon chemin."
 	d.map_piece = "building_blacksmith_blue"
 	d.page = "la page des Mesures"
 	d.threshold = "Dans l'Atelier des Balances, on pesait tout au gramme près. Le Faux Peseur a volé la page des Mesures : les poids mentent et les cartes sont fausses. Retrouve-la, et l'Atelier saura de nouveau peser juste."
@@ -191,6 +202,9 @@ static func atelier_balances() -> DungeonDef:
 static func observatoire_angles() -> DungeonDef:
 	var d := DungeonDef.new()
 	d.code = "observatoire_angles"
+	d.boss_intro = "Grrr… Qui ose monter jusqu'à mes étoiles ? Ici, les angles sont tordus et le hasard m'obéit. Tu n'as aucune chance !"
+	d.boss_defeat = "Aucune chance… C'est moi qui n'en avais aucune. Reprends ta page, Archiviste."
+	d.page_text = "La page des Étoiles brille de nouveau : les angles se redressent, les chances se calculent. Les lunettes de l'Observatoire retrouvent le ciel."
 	d.map_piece = "building_tower_B_blue"
 	d.page = "la page des Étoiles"
 	d.threshold = "Tout en haut des Cimes, l'Observatoire visait les étoiles. Le Dragon des Constellations a emporté la page des Étoiles. Sans elle, les lunettes visent de travers et personne ne sait plus calculer ses chances."
@@ -240,6 +254,9 @@ static func observatoire_angles() -> DungeonDef:
 static func bibliotheque_langues() -> DungeonDef:
 	var d := DungeonDef.new()
 	d.code = "bibliotheque_langues"
+	d.boss_intro = "(Le Bibliothécaire Muet pose un doigt sur sa bouche et serre la page contre lui. Sur un parchemin, il griffonne : « SILENCE ! »)"
+	d.boss_defeat = "(Le Bibliothécaire laisse tomber la page. Pour la première fois depuis longtemps, il murmure : « … thank you. »)"
+	d.page_text = "La page de l'Anglais se remplit de mots : colours, numbers, family… Les livres de la Bibliothèque parlent de nouveau."
 	d.map_piece = "building_church_blue"
 	d.page = "la page de l'Anglais"
 	d.threshold = "Au bord de la mer se dresse la Bibliothèque des Langues. On y parlait toutes les langues du monde. Le Bibliothécaire Muet a volé la page de l'Anglais : les livres sont devenus blancs. Reprends-lui chaque mot."
@@ -293,6 +310,9 @@ static func bibliotheque_langues() -> DungeonDef:
 static func labyrinthe_vecteurs() -> DungeonDef:
 	var d := DungeonDef.new()
 	d.code = "labyrinthe_vecteurs"
+	d.boss_intro = "Tu crois sortir de mon Labyrinthe ? Chaque couloir est une flèche qui ne mène nulle part. Ton phare restera éteint."
+	d.boss_defeat = "Mes flèches… elles indiquent toutes le centre. Le phare se rallume. Malvrek ne va pas aimer ça."
+	d.page_text = "La page des Vecteurs retrouve ses flèches : direction, sens, longueur. Le phare du Labyrinthe perce le Brouillard."
 	d.map_piece = "building_tower_A_green"
 	d.page = "la page des Vecteurs"
 	d.threshold = "Au cœur des Cimes, le Labyrinthe guidait les voyageurs grâce à ses flèches de lumière. L'Architecte du Brouillard a volé la page des Vecteurs : les couloirs se sont figés. Rallume le phare du centre."
@@ -327,6 +347,9 @@ static func labyrinthe_vecteurs() -> DungeonDef:
 static func forge_algebre() -> DungeonDef:
 	var d := DungeonDef.new()
 	d.code = "forge_algebre"
+	d.boss_intro = "Approche, Archiviste. Dans ma forge, les formules sortent tordues, et j'aime ça. Voyons si tu sais redresser le métal."
+	d.boss_defeat = "L'enclume refroidit… et tes formules sont droites. Bien joué. Pour cette fois."
+	d.page_text = "La page du Calcul est reforgée : développer, factoriser, résoudre. Les formules sortent droites de l'enclume."
 	d.map_piece = "building_blacksmith_blue"
 	d.page = "la page du Calcul"
 	d.threshold = "La Forge de l'Algèbre façonnait les formules du royaume. Le Maître de Forge, un démon de feu, a volé la page du Calcul : tout sort tordu de l'enclume. Reprends-la et redresse les formules."
@@ -375,6 +398,9 @@ static func forge_algebre() -> DungeonDef:
 static func citadelle_fonctions() -> DungeonDef:
 	var d := DungeonDef.new()
 	d.code = "citadelle_fonctions"
+	d.boss_intro = "Le Veilleur ne voit plus rien, et c'est très bien ainsi. Mes courbes montent et descendent quand je veux. Lis-les donc, si tu peux."
+	d.boss_defeat = "Tu lis mes courbes mieux que moi… Le Veilleur rouvre les yeux. Je me retire."
+	d.page_text = "La page des Courbes se dessine à nouveau : images, antécédents, variations. Le Veilleur relit l'avenir dans ses courbes."
 	d.map_piece = "building_tower_B_blue"
 	d.page = "la page des Courbes"
 	d.threshold = "Le Veilleur de la Citadelle lisait l'avenir dans les courbes. Le Seigneur des Courbes, un dragon, a volé la page des Courbes, et le Veilleur ne voit plus rien. Rends-lui la vue."

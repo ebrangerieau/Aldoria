@@ -367,6 +367,11 @@ func _fight(entry: Dictionary) -> void:
 			_fx.rising_sparkles(_hero.fighter.global_position + Vector3(0, 0.8, 0), _wt.good)
 		_hud.banner(spec["name"], _wt.bad, 1.2)
 		enemy.play(["Taunt", "Idle_Combat"])
+		if _def.boss_intro != "" and not entry.get("taunted", false):
+			# L'Effaceur se présente (une fois par partie, pas après un repli).
+			entry["taunted"] = true
+			await get_tree().create_timer(0.6).timeout
+			await _message(spec["name"], _def.boss_intro, "En garde !")
 	await get_tree().create_timer(0.9).timeout
 
 	var outcome := await _encounter.fight(enemy, int(spec["tier"]), int(spec["xp"]), entry["boss"])
@@ -423,6 +428,9 @@ func _check_room_cleared(room: int) -> void:
 
 func _boss_defeated(room: int) -> void:
 	await get_tree().create_timer(0.4).timeout
+	var boss: Array = _def.rooms[room].get("enemies", [])
+	if _def.boss_defeat != "" and not boss.is_empty():
+		await _message(str(boss[0]["name"]), _def.boss_defeat, "Reprendre la page")
 	_chest = (load(DungeonLevel.DUNGEON % "chest_gold") as PackedScene).instantiate()
 	_chest.position = _level.room_origin(room) + CHEST_AT
 	_chest.rotation_degrees.y = -30.0
@@ -445,17 +453,22 @@ func _open_chest() -> void:
 	if _pet:
 		_pet.celebrate()
 	var before := Vector2i(SaveManager.level(), SaveManager.dungeons_done())
+	var first_time := int(SaveManager.dungeon(_def.code)["completed"]) == 0
 	SaveManager.add_xp(_def.chest_xp)
 	SaveManager.complete_dungeon(_def.code)
 	var found := SaveManager.give_items(2)
 	var unlocked := Wardrobe.newly_unlocked(before, Vector2i(SaveManager.level(), SaveManager.dungeons_done()), _wt.companion)
 	await get_tree().create_timer(1.2).timeout
-	var text := "%s\n%d bonnes réponses sur %d. +%d XP dans le coffre." % [_def.outro, QuestionService.correct_count, QuestionService.answered, _def.chest_xp]
+	# Première fois : la page rendue à la Grande Chronique ; ensuite, le mot de la fin du donjon.
+	var story := _def.page_text if first_time and _def.page_text != "" else _def.outro
+	var text := "%s\n%d bonnes réponses sur %d. +%d XP dans le coffre." % [story, QuestionService.correct_count, QuestionService.answered, _def.chest_xp]
 	if not found.is_empty():
 		text += "\n" + Inventory.found_text(found)
 	if not unlocked.is_empty():
 		text += "\nNouveau dans l'apparence (à la Citadelle) : %s." % ", ".join(unlocked)
-	await _message("%s : terminé !" % _def.title, text, "Continuer")
+	var title := "%s retrouvée !" % (_def.page.left(1).to_upper() + _def.page.substr(1)) if first_time and _def.page != "" \
+		else "%s : terminé !" % _def.title
+	await _message(title, text, "Continuer")
 	var rating := RatingPanel.new()
 	rating.setup(_wt, _def.title)
 	_hud.show_panel(rating)
