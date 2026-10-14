@@ -14,7 +14,9 @@ COPY api/alembic ./alembic
 COPY api/alembic.ini ./alembic.ini
 COPY content/seed ./content/seed
 
-RUN useradd --system --uid 10001 aldoria
+# /cache/voix : sons de la voix du serveur (volume nommé, qui hérite de ce propriétaire).
+RUN useradd --system --uid 10001 aldoria \
+    && mkdir -p /cache/voix && chown aldoria /cache/voix
 USER aldoria
 
 EXPOSE 8000

@@ -53,6 +53,8 @@ func setup(wt: WorldTheme) -> void:
 		auto.toggled.connect(func(on: bool) -> void: Accessibility.set_pref("auto_read", on))
 		box.add_child(auto)
 
+	# Crédits demandés par la licence des voix (CC BY 4.0).
+	box.add_child(UiKit.label("Voix du jeu : Piper, voix « siwis » (français) et « alba » (anglais), sous licence CC BY 4.0.", 15, wt.text_dim))
 	var close := UiKit.button("Fermer", 64.0)
 	close.pressed.connect(func() -> void: closed.emit())
 	box.add_child(close)

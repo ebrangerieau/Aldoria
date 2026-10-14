@@ -107,6 +107,28 @@ func _request(method: HTTPClient.Method, path: String, body: Variant, auth: bool
 	return {"ok": false, "status": status, "data": data, "error": error}
 
 
+## POST qui rend des octets (son de la voix du serveur) : {ok, status, bytes}.
+func post_for_bytes(path: String, body: Variant) -> Dictionary:
+	var http := HTTPRequest.new()
+	http.timeout = 20.0
+	http.accept_gzip = not OS.has_feature("web")
+	add_child(http)
+	var headers := PackedStringArray(["Content-Type: application/json"])
+	if token != "":
+		headers.append("Authorization: Bearer %s" % token)
+	if device_token != "":
+		headers.append("X-Aldoria-Device: %s" % device_token)
+	var err := http.request(base_url + path, headers, HTTPClient.METHOD_POST, JSON.stringify(body))
+	if err != OK:
+		http.queue_free()
+		return {"ok": false, "status": 0, "bytes": PackedByteArray()}
+	var res: Array = await http.request_completed
+	http.queue_free()
+	var status: int = res[1]
+	var ok: bool = res[0] == HTTPRequest.RESULT_SUCCESS and status == 200
+	return {"ok": ok, "status": status if res[0] == HTTPRequest.RESULT_SUCCESS else 0, "bytes": res[3] if ok else PackedByteArray()}
+
+
 func _network_error() -> Dictionary:
 	return {
 		"ok": false, "status": 0, "data": null,

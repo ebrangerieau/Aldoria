@@ -178,16 +178,28 @@ func speak(text: String) -> void:
 func speak_parts(parts: Array) -> void:
 	if not can_speak():
 		return
-	DisplayServer.tts_stop()
+	stop_speaking()
 	for part: Array in parts:
 		say(str(part[0]), str(part[1]), false)
 
 
 ## Prononce un texte dans une langue, que la lecture à voix haute soit activée ou non :
-## c'est le support d'un exercice d'écoute. Sans voix de cette langue : voix par défaut.
+## c'est le support d'un exercice d'écoute. Voix neuronale du serveur (autoload `Voice`) si
+## possible, sinon voix de l'appareil.
 func say(text: String, lang := "fr-FR", interrupt := true, rate := 0.95) -> void:
 	if text.strip_edges() == "":
 		return
+	if Voice.usable(lang):
+		if interrupt:
+			DisplayServer.tts_stop()
+		Voice.speak(text, lang, rate, interrupt)
+		return
+	device_say(text, lang, interrupt, rate)
+
+
+## Voix de l'appareil (synthèse du navigateur ou du système). Sans voix de cette langue :
+## voix par défaut.
+func device_say(text: String, lang := "fr-FR", interrupt := true, rate := 0.95) -> void:
 	if interrupt:
 		DisplayServer.tts_stop()
 	DisplayServer.tts_speak(text, voice_for(lang), roundi(volume() * 100), 1.0, rate)
@@ -195,6 +207,7 @@ func say(text: String, lang := "fr-FR", interrupt := true, rate := 0.95) -> void
 
 func stop_speaking() -> void:
 	DisplayServer.tts_stop()
+	Voice.stop()
 
 
 ## Voix d'une langue : d'abord la variante exacte (en-GB), sinon la langue (en).

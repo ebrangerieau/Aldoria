@@ -133,6 +133,11 @@ Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-
   plume et parchemin dans `QuestionPanel` (pas au défi du jour : `with_items = false`), bouclier et potion par le
   bouton « Sac » du combat (`Encounter._open_bag`, sans perdre son tour). Aucun objet ne fait sauter une question ;
   une aide par objet compte comme indice pour le suivi, sans baisse de puissance (`penalized_hint`).
+- Voix neuronale : service `voice` (Piper, `voice/app.py`, image `deploy/voice.Dockerfile`, réseau interne seulement,
+  1 cœur et 1 Go) ; l'API la relaie et garde les sons en cache (`routers/speech.py`, `POST /play/speech`,
+  `ALDORIA_VOICE_URL`, volume `voice-cache`). Côté jeu, `Accessibility.say` passe par l'autoload `Voice` (enfant
+  connecté, en ligne, français ou anglais) et se rabat sur la voix de l'appareil (`device_say`) sinon. Les tests
+  de l'API simulent le service (`speech.get_voice_client` remplacé). Changer de voix : `VOICE_VERSION`.
 - Le héros parle entre les salles (`HeroVoice`, core/world ; bulle `CombatHud.say`, lue si lecture automatique) :
   phrases par ton de monde, combinées, les dernières dites ne reviennent pas.
 - Progression du joueur : `SaveManager` (XP, donjons, bestiaire, défis quotidiens), jamais de fichier de

@@ -641,9 +641,13 @@ export function Guide({ child, onOpen }: { child?: Profile; onOpen: (page: Guide
         <details>
           <summary>La lecture à voix haute ne fonctionne pas ou la voix est en anglais</summary>
           <p>
-            Le jeu utilise la voix du navigateur. Vérifiez le volume de l'appareil. Sur une tablette Android : Paramètres, puis « Synthèse
-            vocale » (ou « Sortie de la synthèse vocale »), choisissez le moteur Google et la langue française, et téléchargez la voix
-            française pour qu'elle marche aussi sans connexion. Sur un ordinateur Windows, une voix française est normalement déjà installée.
+            Quand l'enfant est connecté, la voix est fabriquée par le serveur de la famille : une voix naturelle, la même sur la tablette et
+            l'ordinateur, en français et en anglais (rien n'est envoyé à un service extérieur). Vérifiez d'abord le volume de l'appareil.
+          </p>
+          <p>
+            Sans connexion, le jeu se sert de la voix de l'appareil. Sur une tablette Android : Paramètres, puis « Synthèse vocale » (ou
+            « Sortie de la synthèse vocale »), choisissez le moteur Google et la langue française, et téléchargez la voix française pour
+            qu'elle marche aussi hors connexion. Sur un ordinateur Windows, une voix française est normalement déjà installée.
           </p>
         </details>
         <details>

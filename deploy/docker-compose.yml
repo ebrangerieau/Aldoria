@@ -40,9 +40,12 @@ services:
       ALDORIA_AI_EFFORT: ${ALDORIA_AI_EFFORT:-medium}
       ALDORIA_AI_DAILY_LIMIT: ${ALDORIA_AI_DAILY_LIMIT:-20}
       ALDORIA_BACKUP_STATUS_DIR: /etat-sauvegardes
+      # Voix neuronale (service « voice » ci-dessous) ; les sons fabriqués restent en cache.
+      ALDORIA_VOICE_URL: http://voice:8000
     volumes:
       # État des sauvegardes seulement (pas les sauvegardes elles-mêmes), pour l'espace parent.
       - ./backups/etat:/etat-sauvegardes:ro
+      - voice-cache:/cache/voix
     depends_on:
       db:
         condition: service_healthy
@@ -94,6 +97,19 @@ services:
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-admin-login.middlewares=${COMPOSE_PROJECT_NAME}-admin-key,${COMPOSE_PROJECT_NAME}-auth-limit"
       - "traefik.http.middlewares.${COMPOSE_PROJECT_NAME}-admin-key.headers.customrequestheaders.X-Aldoria-Admin-Key=${ALDORIA_ADMIN_KEY}"
 
+  # Voix neuronale (Piper, voice/app.py) : rend un MP3 pour un texte. Réseau interne seulement,
+  # jamais exposé à Traefik : l'API vérifie l'enfant connecté et garde les sons en cache.
+  # Un cœur et 1 Go au plus : le VPS en a deux, l'API et la base doivent rester vives.
+  voice:
+    image: ghcr.io/ebrangerieau/aldoria-voice:${ALDORIA_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      VOICE_THREADS: "1"
+    cpus: 1.0
+    mem_limit: 1g
+    networks:
+      - default
+
   db:
     image: postgres:16-alpine
     restart: unless-stopped
@@ -138,6 +154,7 @@ services:
 
 volumes:
   db-data:
+  voice-cache:
 
 networks:
   web:

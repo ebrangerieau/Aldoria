@@ -31,6 +31,10 @@ class Settings(BaseSettings):
     ai_model: str = "claude-sonnet-5-5"
     ai_effort: Literal["low", "medium", "high", "xhigh", "max"] = "medium"
     ai_daily_limit: int = 20
+    # Voix neuronale (routers/speech.py) : adresse du service de voix interne (vide = voix de
+    # l'appareil seulement) et dossier où les sons fabriqués sont gardés.
+    voice_url: str = ""
+    voice_cache_dir: str = "/cache/voix"
     # Dossier où le service « backup » écrit l'état des sauvegardes (vide = non configuré).
     backup_status_dir: str = ""
 

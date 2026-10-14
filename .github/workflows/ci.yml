@@ -99,7 +99,7 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Construction et publication des images
         run: |
-          for svc in web api; do
+          for svc in web api voice; do
             docker build -f deploy/${svc}.Dockerfile \
               -t ${IMAGE_PREFIX}-${svc}:${GITHUB_SHA} \
               -t ${IMAGE_PREFIX}-${svc}:latest .
