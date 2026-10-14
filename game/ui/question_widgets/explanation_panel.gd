@@ -30,8 +30,8 @@ func setup(question: Dictionary, wt: WorldTheme) -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 16)
 	add_child(box)
-	box.add_child(UiKit.label(wt.wrong_title, 28, wt.accent))
-	box.add_child(UiKit.label("Réponse : %s" % QuestionPanel.expected_text(question), 30, wt.good))
+	box.add_child(UiKit.title(wt.wrong_title, 26, wt.accent))
+	box.add_child(UiKit.info_line(wt, "check-mark", "Réponse : %s" % QuestionPanel.expected_text(question), 30, wt.good))
 	box.add_child(UiKit.label(str(question.get("explanation", "")), 24))
 	if Accessibility.can_speak():
 		box.add_child(UiKit.listen_button(wt, spoken(question), Accessibility.auto_read()))
@@ -51,13 +51,13 @@ func setup(question: Dictionary, wt: WorldTheme) -> void:
 
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 12)
-	_report_button = UiKit.button("Signaler une erreur", 64.0)
+	_report_button = UiKit.icon_button("Signaler une erreur", "scroll-quill", 64.0)
 	UiKit.style_secondary(_report_button, wt)
 	_report_button.pressed.connect(func() -> void:
 		_report_box.visible = true
 		_report_button.visible = false)
 	row.add_child(_report_button)
-	var ok := UiKit.button("Compris !", 64.0)
+	var ok := UiKit.icon_button("Compris !", "check-mark", 64.0)
 	ok.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	ok.pressed.connect(func() -> void: closed.emit())
 	row.add_child(ok)

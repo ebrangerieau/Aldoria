@@ -18,27 +18,43 @@ func _ready() -> void:
 	if Quality.option("scene") == "questions" and not OS.has_feature("web"):
 		get_tree().change_scene_to_file.call_deferred("res://scenes/dev/question_gallery.tscn")
 		return
+	if Quality.option("scene") == "profils" and not OS.has_feature("web"):  # captures (`--profil=N` : son code)
+		get_tree().change_scene_to_file.call_deferred("res://scenes/profile/profile_select.tscn")
+		return
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	theme = UiKit.make_theme(_wt)
 	var bg := ColorRect.new()
 	bg.color = _wt.bg
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
+	# La salle de la Citadelle et la Grande Chronique qui brille.
+	UiKit.backdrop(self, _wt, true)
 
 	var center := CenterContainer.new()
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(center)
 	var box := VBoxContainer.new()
 	box.custom_minimum_size = Vector2(900, 0)  # largeur pour le retour à la ligne
-	box.add_theme_constant_override("separation", 18)
+	box.add_theme_constant_override("separation", 14)
 	center.add_child(box)
-	var title := UiKit.label("Les Chroniques d'Aldoria", 64, _wt.panel_border)
+	var crest := UiKit.icon("open-book", 64, Color("#f3c35a"))
+	crest.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
+	box.add_child(crest)
+	var title := UiKit.title("Les Chroniques d'Aldoria", 68, Color("#f3c35a"))
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.add_theme_color_override("font_outline_color", Color("#2b1405"))
+	title.add_theme_constant_override("outline_size", 14)
+	title.add_theme_color_override("font_shadow_color", Color(0, 0, 0, 0.5))
+	title.add_theme_constant_override("shadow_offset_y", 5)
 	box.add_child(title)
-	var subtitle := UiKit.label("Le royaume perd sa mémoire. Les Archives t'attendent.", 26, _wt.panel)
+	box.add_child(UiKit.divider(_wt, 520))
+	var subtitle := UiKit.on_scene(UiKit.label("Le royaume perd sa mémoire. Les Archives t'attendent.", 26))
 	subtitle.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(subtitle)
-	_hint = UiKit.label("Touche l'écran pour commencer", 28, Color.WHITE)
+	var gap := Control.new()
+	gap.custom_minimum_size.y = 40
+	box.add_child(gap)
+	_hint = UiKit.on_scene(UiKit.title("Touche l'écran pour commencer", 28))
 	_hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	box.add_child(_hint)
 	if Session.is_logged_in():
@@ -56,11 +72,11 @@ func _build_returning_player(box: VBoxContainer) -> void:
 	var buttons := HBoxContainer.new()
 	buttons.alignment = BoxContainer.ALIGNMENT_CENTER
 	buttons.add_theme_constant_override("separation", 20)
-	var resume := UiKit.button("Continuer avec %s" % player_name, 80.0)
+	var resume := UiKit.icon_button("Continuer avec %s" % player_name, "open-book", 80.0)
 	resume.custom_minimum_size.x = 360
 	resume.pressed.connect(_continue)
 	buttons.add_child(resume)
-	var switch := UiKit.button("Changer de joueur", 80.0)
+	var switch := UiKit.icon_button("Changer de joueur", "two-shadows", 80.0)
 	switch.custom_minimum_size.x = 300
 	UiKit.style_secondary(switch, _wt)
 	switch.pressed.connect(_switch_player)

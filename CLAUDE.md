@@ -104,6 +104,15 @@ Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-
   `item["speech"]` (engine/speech.py) : un nouveau symbole ou une nouvelle commande LaTeX dans un générateur
   doit y être traduit (`tests/test_accessibility.py` le vérifie sur toutes les questions générées).
   Rédaction : énoncés courts, une idée par phrase.
+- Interface « grimoire enluminé » (`UiKit`) : parchemin et cadre doré (monde lumineux), pierre et cadre argenté
+  (Brouillard). Textures 9-patch dessinées par `tools/make_ui_textures.py` (relancer après modification ;
+  `UiKit.MARGINS`), titres en Cinzel (`UiKit.title`, remplacé par la police lisible si l'aménagement est choisi),
+  icônes de game-icons.net (`UiKit.icon`, `icon_button` ; SVG importés à `svg/scale=0.25`, crédit CC BY dans les
+  Options ; tout nouvel auteur va dans LICENSES.md et ce crédit). Briques : `ribbon`, `screen_title`, `divider`,
+  `card_box`, `speaker`, `info_line`, `style_bar`, `bag_row`, `HeroBadge` (ui/hud). Fond des menus : la salle de la
+  Citadelle en 3D (`UiKit.backdrop`, `CitadelHall`, rendue une fois sauf à la Citadelle et à l'écran titre). Remplacer
+  un nœud : `UiKit.swap` (jamais `replace_by`, qui garde les enfants). Captures sans compteur : `--perf=0` ;
+  écran des profils : `--scene=profils [--profil=N]`.
 - Personnalisation (`Wardrobe`, core/progression) : apparence du héros (silhouette KayKit, une arme par main,
   couvre-chef, cape et sa couleur) et renard du monde lumineux (`Companion`, core/world : suit les traces du
   héros, jamais à travers un mur). Rangée dans la partie (`SaveManager.look()`, toujours validée : choix

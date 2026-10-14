@@ -195,11 +195,12 @@ func _open_bag() -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 14)
 	panel.add_child(box)
-	box.add_child(UiKit.label("Ton sac", 32, wt.accent))
+	box.add_child(UiKit.title("Ton sac", 30, wt.accent))
 	var chosen: Array[String] = []
 	for id in ["potion", "bouclier"]:
 		var count := SaveManager.item_count(id)
-		var b := UiKit.button("%s ×%d : %s" % [Inventory.ITEMS[id]["name"], count, Inventory.ITEMS[id]["help"]], 64.0)
+		var b := UiKit.icon_button("%s ×%d : %s" % [Inventory.ITEMS[id]["name"], count, Inventory.ITEMS[id]["help"]], Inventory.ICONS[id], 64.0)
+		b.add_theme_constant_override("icon_max_width", roundi(40 * UiKit.text_scale))
 		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		b.disabled = count <= 0 or (id == "potion" and hero.hp >= hero.max_hp) or (id == "bouclier" and _shield)
 		b.pressed.connect(func() -> void: chosen.append(id))

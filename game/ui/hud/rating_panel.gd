@@ -20,7 +20,8 @@ func setup(wt: WorldTheme, title: String) -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 16)
 	add_child(box)
-	box.add_child(UiKit.label(title, 34, wt.accent))
+	box.add_child(UiKit.title(title, 32, wt.accent))
+	box.add_child(UiKit.divider(wt, 320))
 	box.add_child(UiKit.label("Comment as-tu trouvé ce donjon ?", 24))
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_CENTER

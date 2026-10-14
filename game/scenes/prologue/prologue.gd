@@ -9,8 +9,7 @@ extends Node3D
 
 const SCENE := "res://scenes/prologue/prologue.tscn"
 const STORY_KEY := "prologue"
-const DUNGEON := "res://assets/kaykit/dungeon/%s.glb"
-const BOOK := Vector3(8, 1.4, 4.2)  # dessus du pupitre de la Chronique
+const BOOK := CitadelHall.BOOK
 const FADE := 0.45
 
 ## Scène où revenir à la fin (la carte au premier passage, la Citadelle quand on le revoit).
@@ -49,11 +48,11 @@ const SHOTS := {
 
 var page := -1
 var _wt: WorldTheme
-var _material: StandardMaterial3D
+var _hall: CitadelHall
 var _env: Environment
 var _sun: DirectionalLight3D
 var _camera: Camera3D
-var _pages_material: StandardMaterial3D  # pages du livre : brillent quand la Chronique est entière
+var _pages_material: StandardMaterial3D
 var _book_glow: Node3D
 var _paper: CPUParticles3D  # pages arrachées qui s'envolent
 var _sparkles: CPUParticles3D
@@ -177,22 +176,22 @@ func _stage(shot: String) -> void:
 		_pet.visible = _hero.visible
 	match shot:
 		"chronique":
-			_place(_ysaline, Vector3(10.2, 0, 4.6), Vector3(8, 0, 9))
+			CitadelHall.place(_ysaline, Vector3(10.2, 0, 4.6), Vector3(8, 0, 9))
 			_ysaline.loop("Idle")
 		"vol":
-			_place(_malvrek, Vector3(9.6, 0, 3.0), BOOK)
+			CitadelHall.place(_malvrek, Vector3(9.6, 0, 3.0), BOOK)
 			_malvrek.loop("Spellcasting")
 		"oubli":
-			_place(_villager, Vector3(6.0, 0, 6.5), Vector3(6.5, 0, 13))
+			CitadelHall.place(_villager, Vector3(6.0, 0, 6.5), Vector3(6.5, 0, 13))
 			_villager.loop("Idle")
 		"ysaline":
-			_place(_ysaline, Vector3(9.4, 0, 6.2), Vector3(6.6, 0, 7.6))
-			_place(_hero, Vector3(6.6, 0, 7.6), Vector3(9.4, 0, 6.2))
+			CitadelHall.place(_ysaline, Vector3(9.4, 0, 6.2), Vector3(6.6, 0, 7.6))
+			CitadelHall.place(_hero, Vector3(6.6, 0, 7.6), Vector3(9.4, 0, 6.2))
 			_ysaline.play(["Interact"])
 			_hero.loop("Idle")
 		"quete":
-			_place(_ysaline, Vector3(9.6, 0, 5.4), Vector3(7, 0, 8))
-			_place(_hero, Vector3(7, 0, 8), Vector3(7, 0, 14))
+			CitadelHall.place(_ysaline, Vector3(9.6, 0, 5.4), Vector3(7, 0, 8))
+			CitadelHall.place(_hero, Vector3(7, 0, 8), Vector3(7, 0, 14))
 			_hero.play(["Cheer"])
 			_ysaline.play(["Spellcast_Raise"])
 	if _pet != null and _hero.visible:
@@ -202,158 +201,23 @@ func _stage(shot: String) -> void:
 			_pet.celebrate()
 
 
-func _place(who: Node3D, at: Vector3, facing: Vector3) -> void:
-	who.position = at
-	var d := facing - at
-	who.rotation.y = atan2(d.x, d.z)  # les personnages KayKit regardent vers +z
-
-
 # --- Décor -------------------------------------------------------------------------------------
 
-## Salle de la Citadelle : sol, murs d'étagères, fenêtre, pupitre de la Chronique (un seul
-## maillage fusionné, comme les salles des donjons).
+## Salle de la Citadelle (CitadelHall) et caméra des tableaux.
 func _build_set() -> void:
-	var settings := Quality.settings()
-	_env = Environment.new()
-	_env.background_mode = Environment.BG_COLOR
-	_env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	_env.tonemap_mode = Environment.TONE_MAPPER_FILMIC
-	_env.fog_light_color = Color(0.56, 0.6, 0.68)  # gris bleuté : le Brouillard de l'Oubli
-	_env.fog_density = 0.05
-	var world_env := WorldEnvironment.new()
-	world_env.environment = _env
-	add_child(world_env)
-	_sun = DirectionalLight3D.new()
-	_sun.rotation_degrees = Vector3(-50, -30, 0)
-	_sun.shadow_enabled = settings.shadows
-	add_child(_sun)
+	_hall = CitadelHall.new()
+	add_child(_hall)
+	_hall.build()
+	_env = _hall.env
+	_sun = _hall.sun
+	_pages_material = _hall.pages_material
+	_book_glow = _hall.book_glow
+	_paper = _hall.paper
+	_sparkles = _hall.sparkles
 	_camera = Camera3D.new()
 	_camera.fov = 45.0
 	add_child(_camera)
 	_camera.make_current()
-
-	_material = StandardMaterial3D.new()
-	_material.albedo_texture = load("res://assets/kaykit/dungeon/dungeon_texture.png")
-	_material.roughness = 0.8
-	if settings.vertex_shading:
-		_material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
-	var room := Node3D.new()
-	room.name = "Static"
-	add_child(room)
-	for ix in 4:
-		for iz in 4:
-			_piece(room, "floor_wood_large" if (ix + iz) % 2 == 0 else "floor_tile_large", Vector3(2 + ix * 4, 0, 2 + iz * 4))
-	var back := ["wall_shelves", "wall_window_open", "wall_shelves", "wall_shelves"]
-	for ix in 4:
-		_piece(room, back[ix], Vector3(2 + ix * 4, 0, 0))
-	for iz in 3:
-		_piece(room, "wall_shelves" if iz == 1 else "wall", Vector3(0, 0, 2 + iz * 4), 90.0)
-		_piece(room, "wall_shelves" if iz == 1 else "wall", Vector3(16, 0, 2 + iz * 4), -90.0)
-	for x in [0.0, 16.0]:
-		_piece(room, "pillar_decorated", Vector3(x, 0, 0))
-	_piece(room, "banner_patternC_blue", Vector3(4, 0, 0.05))
-	_piece(room, "banner_patternA_blue", Vector3(12, 0, 0.05))
-	_piece(room, "column", Vector3(BOOK.x, 0, BOOK.z))  # pupitre
-	_piece(room, "candle_triple", Vector3(6.6, 0, 3.2))
-	_piece(room, "candle_triple", Vector3(9.6, 0, 3.0))
-	_piece(room, "table_long_decorated_A", Vector3(13.4, 0, 9.5))
-	_piece(room, "trunk_large_A", Vector3(2.2, 0, 3.0), 20.0)
-	_piece(room, "shelves", Vector3(3.0, 0, 11.0), 90.0)
-	if Quality.option("merge", "1") != "0":
-		StaticBatcher.merge(room, _material)
-	_build_book(settings)
-
-
-## La Grande Chronique, ouverte sur son pupitre : deux pages qui brillent quand elle est entière.
-func _build_book(settings: Dictionary) -> void:
-	var book := Node3D.new()
-	book.position = BOOK
-	book.rotation_degrees.x = 18.0  # incliné vers la salle
-	book.scale = Vector3.ONE * 1.7  # un livre immense
-	add_child(book)
-	var cover := StandardMaterial3D.new()
-	cover.albedo_color = Color("#6b3a2a")
-	_pages_material = StandardMaterial3D.new()
-	_pages_material.emission_enabled = true
-	_pages_material.emission = Color("#ffd88a")
-	if settings.vertex_shading:
-		cover.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
-		_pages_material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
-	for side in [-1.0, 1.0]:
-		var half := MeshInstance3D.new()
-		var cover_box := BoxMesh.new()
-		cover_box.size = Vector3(0.62, 0.05, 0.9)
-		cover_box.material = cover
-		half.mesh = cover_box
-		half.position = Vector3(side * 0.31, 0.03, 0)
-		half.rotation.z = -side * 0.12
-		book.add_child(half)
-		var leaves := MeshInstance3D.new()
-		var leaves_box := BoxMesh.new()
-		leaves_box.size = Vector3(0.56, 0.08, 0.82)
-		leaves_box.material = _pages_material
-		leaves.mesh = leaves_box
-		leaves.position = Vector3(side * 0.3, 0.09, 0)
-		leaves.rotation.z = -side * 0.12
-		book.add_child(leaves)
-	var gold := Color("#ffcf6a")
-	match settings.lights:
-		"real":
-			var light := OmniLight3D.new()
-			light.light_color = gold
-			light.light_energy = 1.6
-			light.omni_range = 6.0
-			light.position = BOOK + Vector3(0, 0.8, 0.6)
-			_book_glow = light
-		_:
-			_book_glow = MobileLighting.make_fake_light(gold, 1.8, Vector2(0, 0.8), 2.6, 7.0)
-			_book_glow.position = BOOK + Vector3(0, 0.4, 0.3)
-	add_child(_book_glow)
-
-	_paper = CPUParticles3D.new()
-	_paper.position = BOOK + Vector3(0, 0.3, 0)
-	_paper.amount = 8 if Accessibility.on("calm") else 26
-	_paper.lifetime = 3.2
-	_paper.direction = Vector3(0.4, 1, 0.3)
-	_paper.spread = 70.0
-	_paper.initial_velocity_min = 1.2
-	_paper.initial_velocity_max = 2.6
-	_paper.gravity = Vector3(0.6, -0.4, 0)
-	_paper.angular_velocity_min = -180.0
-	_paper.angular_velocity_max = 180.0
-	var paper_material := StandardMaterial3D.new()
-	paper_material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	paper_material.billboard_mode = BaseMaterial3D.BILLBOARD_PARTICLES
-	paper_material.albedo_color = Color("#f3ead2")
-	paper_material.cull_mode = BaseMaterial3D.CULL_DISABLED
-	var sheet := QuadMesh.new()
-	sheet.size = Vector2(0.28, 0.36)
-	sheet.material = paper_material
-	_paper.mesh = sheet
-	add_child(_paper)
-
-	_sparkles = CPUParticles3D.new()
-	_sparkles.position = BOOK + Vector3(0, 0.4, 0)
-	_sparkles.amount = 20
-	_sparkles.lifetime = 2.4
-	_sparkles.emission_shape = CPUParticles3D.EMISSION_SHAPE_SPHERE
-	_sparkles.emission_sphere_radius = 0.5
-	_sparkles.direction = Vector3.UP
-	_sparkles.spread = 25.0
-	_sparkles.initial_velocity_min = 0.3
-	_sparkles.initial_velocity_max = 0.7
-	_sparkles.gravity = Vector3.ZERO
-	_sparkles.mesh = DungeonRoom.particle_quad(Color(1.0, 0.85, 0.45, 0.8), 0.12)
-	add_child(_sparkles)
-
-
-func _piece(root: Node3D, piece: String, pos: Vector3, yaw := 0.0) -> void:
-	var node: Node3D = (load(DUNGEON % piece) as PackedScene).instantiate()
-	node.position = pos
-	node.rotation_degrees.y = yaw
-	for child in node.find_children("*", "MeshInstance3D", true, false):
-		(child as MeshInstance3D).material_override = _material
-	root.add_child(node)
 
 
 # --- Personnages --------------------------------------------------------------------------------
@@ -367,12 +231,11 @@ func _build_cast() -> void:
 	if _wt.companion:
 		_pet = Companion.create(SaveManager.look())
 		add_child(_pet)
-	_ysaline = _character("Mage", "Maître Ysaline",
-		{"main": "2H_Staff", "off": "", "head": true, "cape": true, "cape_color": "or"})
-	_malvrek = _character("Rogue_Hooded", "Malvrek",
+	_ysaline = CitadelHall.ysaline(self)
+	_malvrek = CitadelHall.character(self, "Rogue_Hooded", "Malvrek",
 		{"main": "", "off": "", "head": false, "cape": true, "cape_color": "violet"})
 	_tint(_malvrek, Color(0.55, 0.45, 0.72))
-	_villager = _character("Barbarian", "Le boulanger",
+	_villager = CitadelHall.character(self, "Barbarian", "Le boulanger",
 		{"main": "Mug", "off": "", "head": false, "cape": false, "cape_color": "origine"})
 	_question = Label3D.new()
 	_question.text = "?"
@@ -387,13 +250,6 @@ func _build_cast() -> void:
 	if Quality.settings().vertex_shading:
 		for who: Node3D in [_hero, _ysaline, _malvrek, _villager]:
 			MobileLighting.apply_vertex_shading(who)
-
-
-func _character(model: String, display: String, look: Dictionary) -> Fighter:
-	var f := Fighter.create(model, display, 1)
-	Wardrobe.dress(f.get_child(0) as Node3D, model, look)
-	add_child(f)
-	return f
 
 
 ## Teinte un personnage (Malvrek : plus sombre que le héros encapuchonné de Tom).
@@ -432,7 +288,7 @@ func _build_ui() -> void:
 	var top := HBoxContainer.new()
 	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	column.add_child(top)
-	var heading := UiKit.label("Prologue", 22, Color.WHITE)
+	var heading := UiKit.title("Prologue", 24, Color.WHITE)
 	heading.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.7))
 	heading.add_theme_constant_override("outline_size", 8)
 	heading.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -464,7 +320,7 @@ func _fill_panel(i: int) -> void:
 		child.queue_free()
 	var entry: Dictionary = PAGES[i]
 	var title_row := HBoxContainer.new()
-	var title := UiKit.label(entry["title"], 30, _wt.accent)
+	var title := UiKit.title(entry["title"], 28, _wt.accent)
 	title.autowrap_mode = TextServer.AUTOWRAP_OFF  # dans une rangée, un retour à la ligne la réduirait à une lettre
 	title_row.add_child(title)
 	var count := UiKit.label("%d / %d" % [i + 1, PAGES.size()], 18, _wt.text_dim)

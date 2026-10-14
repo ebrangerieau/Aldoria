@@ -22,7 +22,8 @@ func _ready() -> void:
 	layer = 100
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_build_ui()
-	visible = OS.is_debug_build() or Quality.option("perf") != ""
+	# `--perf=0` (PC) : captures d'écran sans le compteur.
+	visible = (OS.is_debug_build() or Quality.option("perf") != "") and Quality.option("perf") != "0"
 	RenderingServer.viewport_set_measure_render_time(get_viewport().get_viewport_rid(), true)
 	Quality.changed.connect(func(_p: StringName) -> void: _refresh_quality_button())
 	_refresh_quality_button()

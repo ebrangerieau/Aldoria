@@ -59,7 +59,7 @@ func test_listening_item_shows_a_listen_button_but_not_the_word() -> void:
 		texts.append((node as Label).text)
 	for node in panel.find_children("*", "Button", true, false):
 		texts.append((node as Button).text)
-	assert_true(texts.any(func(t: String) -> bool: return t.begins_with("▶  Écouter (anglais)")))
+	assert_true(texts.any(func(t: String) -> bool: return t.begins_with("Écouter (anglais)")))
 	assert_false(texts.has(str(item["listen"]["text"])), "le mot à écouter n'est pas écrit")
 	assert_not_null(panel.find_children("*", "TextAnswerWidget", true, false).front())
 

@@ -29,6 +29,7 @@ const DEFAULTS := {
 const PREFS_FILE := "user://prefs_%d.json"
 const READABLE_FONT := "res://assets/fonts/AtkinsonHyperlegible-Regular.ttf"
 const SYMBOLS_FONT := "res://assets/fonts/DejaVuSans.ttf"
+const TITLE_FONT := "res://assets/fonts/Cinzel.ttf"
 const CALM_VOLUME_DB := -8.0
 
 ## Aménagements du parent (dernière version reçue du serveur).
@@ -37,6 +38,7 @@ var parent: Dictionary = DEFAULTS.duplicate()
 var prefs: Dictionary = {}
 
 var _font: Font
+var _title_font: Font
 var _voices: Dictionary = {}  # langue (« en-GB ») → identifiant de voix
 var _next_pause_s := 0.0
 
@@ -82,6 +84,23 @@ func font() -> Font:
 			variation.spacing_space = 6
 		_font = variation
 	return _font
+
+
+## Police des titres (grimoire : Cinzel, capitales gravées) ; la police très lisible la remplace
+## quand le parent l'a choisie.
+func title_font() -> Font:
+	if on("readable_font"):
+		return font()
+	if _title_font == null:
+		var cinzel: FontFile = load(TITLE_FONT)
+		cinzel.fallbacks = [ThemeDB.fallback_font, load(SYMBOLS_FONT)]
+		var variation := FontVariation.new()
+		variation.base_font = cinzel
+		variation.variation_opentype = {TextServerManager.get_primary_interface().name_to_tag("wght"): 700}
+		if on("spacing"):
+			variation.spacing_glyph = 2
+		_title_font = variation
+	return _title_font
 
 
 func line_spacing() -> int:
@@ -154,6 +173,7 @@ func _save_prefs() -> void:
 
 func _apply() -> void:
 	_font = null
+	_title_font = null
 	UiKit.text_scale = UiKit.TEXT_SCALES[text_size()]
 	UiKit.target_scale = 1.3 if on("big_targets") else 1.0
 	var db := linear_to_db(maxf(volume(), 0.001)) - 4.0

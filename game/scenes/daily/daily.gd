@@ -45,6 +45,7 @@ func _build() -> void:
 	bg.color = _wt.bg
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
+	UiKit.backdrop(self, _wt)  # la salle de la Citadelle (la Pierre du Jour y veille)
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right", "top", "bottom"]:
@@ -56,25 +57,22 @@ func _build() -> void:
 
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", 14)
-	var title := UiKit.label("Défi du jour" if _day != DailyChallenge.shift_day(_today, -1) else "Défi de rattrapage", 36, _wt.panel_border)
-	title.autowrap_mode = TextServer.AUTOWRAP_OFF
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	top.add_child(title)
+	top.add_child(UiKit.screen_title(_wt, "Défi du jour" if _day != DailyChallenge.shift_day(_today, -1) else "Défi de rattrapage"))
 	for i in DailyChallenge.QUESTIONS:
 		var pip := Panel.new()
 		pip.custom_minimum_size = Vector2(30, 30)
 		pip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		_paint(pip, Color(_wt.text_dim, 0.35))
+		_paint(pip, Color(0, 0, 0, 0.45))
 		top.add_child(pip)
 		_pips.append(pip)
-	_counter = UiKit.label("", 26, Color.WHITE)
+	_counter = UiKit.on_scene(UiKit.label("", 26))
 	_counter.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_counter.custom_minimum_size.x = 90
 	_counter.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
 	top.add_child(_counter)
-	var quit := UiKit.button("Quitter", 56.0)
+	var quit := UiKit.icon_button("Quitter", "exit-door", 56.0)
 	UiKit.style_secondary(quit, _wt)
-	quit.custom_minimum_size.x = 130
+	quit.custom_minimum_size.x = 150
 	quit.pressed.connect(_leave)
 	top.add_child(quit)
 	column.add_child(top)
@@ -117,6 +115,8 @@ func _paint(pip: Panel, color: Color) -> void:
 	var box := StyleBoxFlat.new()
 	box.bg_color = color
 	box.set_corner_radius_all(15)
+	box.set_border_width_all(2)
+	box.border_color = _wt.panel_border  # sertie comme une pierre
 	box.anti_aliasing = true
 	pip.add_theme_stylebox_override("panel", box)
 

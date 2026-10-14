@@ -16,6 +16,8 @@ const ITEMS := {
 	"potion": {"name": "Potion d'urgence", "short": "Potion", "help": "Rend toute ta vie, sans question."},
 }
 const ORDER := ["plume", "parchemin", "bouclier", "potion"]
+## Icône de chaque objet (assets/ui/icons, UiKit.icon).
+const ICONS := {"plume": "quill", "parchemin": "scroll-unfurled", "bouclier": "checked-shield", "potion": "drink-me"}
 
 
 ## `count` objets tirés au hasard, plutôt ceux que l'on a peu ; jamais au-delà de MAX.

@@ -49,7 +49,7 @@ func setup(question: Dictionary, title: String, wt: WorldTheme, with_items := tr
 	header.add_theme_constant_override("separation", 16)
 	# Le titre se raccourcit (« … ») plutôt que d'élargir le panneau : avec un texte
 	# agrandi et aéré (aménagements), l'en-tête doit tenir dans la colonne.
-	var title_label := UiKit.label(title, 22, wt.accent)
+	var title_label := UiKit.title(title, 22, wt.accent)
 	title_label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	title_label.clip_text = true
 	title_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -154,14 +154,14 @@ func setup(question: Dictionary, title: String, wt: WorldTheme, with_items := tr
 	box.add_child(spacer)
 	var footer := HBoxContainer.new()
 	footer.add_theme_constant_override("separation", 12)
-	_hint_button = UiKit.button("Indice", 52.0)
+	_hint_button = UiKit.icon_button("Indice", "light-bulb", 52.0)
 	UiKit.style_secondary(_hint_button, wt)
 	_hint_button.pressed.connect(_show_hint)
 	footer.add_child(_hint_button)
 	if with_items:
 		_add_item_buttons(footer, question, wt)
 	if _tools:
-		var tools_button := UiKit.button("Outils", 52.0)
+		var tools_button := UiKit.icon_button("Outils", "crystal-ball", 52.0)
 		UiKit.style_secondary(tools_button, wt)
 		tools_button.pressed.connect(func() -> void: _tools_layer.visible = not _tools_layer.visible)
 		footer.add_child(tools_button)
@@ -181,7 +181,7 @@ func _listen_exercise(listen: Dictionary, wt: WorldTheme) -> Button:
 	var text := str(listen.get("text", ""))
 	var lang := str(listen.get("lang", "en-GB"))
 	var names := {"en-GB": "anglais", "en-US": "anglais", "es-ES": "espagnol", "de-DE": "allemand", "fr-FR": "français"}
-	var b := UiKit.button("▶  Écouter (%s)" % names.get(lang, lang), 64.0)
+	var b := UiKit.icon_button("Écouter (%s)" % names.get(lang, lang), "speaker", 64.0)
 	b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	b.custom_minimum_size.x = 300
 	b.pressed.connect(func() -> void: Accessibility.say(text, lang, true, 0.85))
@@ -273,7 +273,7 @@ func _add_item_buttons(footer: HBoxContainer, question: Dictionary, wt: WorldThe
 	for id in ["plume", "parchemin"]:
 		if not usable[id] or SaveManager.item_count(id) <= 0:
 			continue
-		var b := UiKit.button("%s ×%d" % [Inventory.ITEMS[id]["short"], SaveManager.item_count(id)], 52.0)
+		var b := UiKit.icon_button("%s ×%d" % [Inventory.ITEMS[id]["short"], SaveManager.item_count(id)], Inventory.ICONS[id], 52.0)
 		UiKit.style_secondary(b, wt)
 		b.tooltip_text = Inventory.ITEMS[id]["help"]
 		b.pressed.connect(_use_item.bind(id, b))

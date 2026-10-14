@@ -58,10 +58,16 @@ func setup(wt: WorldTheme, hero_name: String) -> void:
 	top.add_child(hero_box[0])
 	var center := VBoxContainer.new()
 	center.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	center.custom_minimum_size.x = 120
 	_wave = _shadowed_label("", 26)
+	_wave.add_theme_font_override("font", Accessibility.title_font())
+	_wave.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS  # nom de salle long : jamais hors de l'écran
+	_wave.custom_minimum_size.x = 100
 	_wave.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	center.add_child(_wave)
 	_xp = _shadowed_label("", 20)
+	_xp.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	_xp.custom_minimum_size.x = 100
 	_xp.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	center.add_child(_xp)
 	_sync = _shadowed_label("", 16)
@@ -75,8 +81,9 @@ func setup(wt: WorldTheme, hero_name: String) -> void:
 	_enemy_bar = enemy_box[1]
 	_enemy_hp = enemy_box[2]
 	top.add_child(enemy_box[0])
-	var quit := UiKit.button("Quitter", 52.0)
+	var quit := UiKit.icon_button("Quitter", "exit-door", 52.0)
 	UiKit.style_secondary(quit, wt)
+	quit.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	quit.pressed.connect(func() -> void: quit_requested.emit())
 	top.add_child(quit)
 	column.add_child(top)
@@ -88,6 +95,7 @@ func setup(wt: WorldTheme, hero_name: String) -> void:
 	gap.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	column.add_child(gap)
 	_banner = _shadowed_label("", 56)
+	_banner.add_theme_font_override("font", Accessibility.title_font())
 	_banner.set_anchors_preset(Control.PRESET_CENTER)
 	_banner.grow_horizontal = Control.GROW_DIRECTION_BOTH
 	_banner.grow_vertical = Control.GROW_DIRECTION_BOTH
@@ -100,6 +108,7 @@ func setup(wt: WorldTheme, hero_name: String) -> void:
 
 	# Bulle du héros (HeroVoice) : en haut à gauche, sous sa barre de vie, loin du joystick.
 	_bubble = PanelContainer.new()
+	_bubble.add_theme_stylebox_override("panel", UiKit.card_box(wt, 18))
 	_bubble.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_bubble.position = Vector2(16, 112)
 	_bubble.custom_minimum_size = Vector2(460, 0)
@@ -121,13 +130,16 @@ func setup(wt: WorldTheme, hero_name: String) -> void:
 	_actions.alignment = BoxContainer.ALIGNMENT_CENTER
 	for action in ["automatisme", "chapitre", "soin"]:
 		var subtitle: String = {"automatisme": "rapide", "chapitre": "puissant", "soin": "soigne"}[action]
-		var b := UiKit.button("%s\n%s" % [wt.action_names[action], subtitle], 92.0)
+		var icon_name: String = {"automatisme": "broadsword", "chapitre": "magic-swirl", "soin": "heart-plus"}[action]
+		var b := UiKit.icon_button("%s\n%s" % [wt.action_names[action], subtitle], icon_name, 92.0)
+		b.add_theme_constant_override("icon_max_width", roundi(44 * UiKit.text_scale))
 		b.custom_minimum_size.x = 240
 		b.pressed.connect(func() -> void: action_chosen.emit(action))
 		_actions.add_child(b)
 		_buttons[action] = b
 	# Sac (bouclier, potion d'urgence) : ne coûte pas le tour.
-	var bag := UiKit.button("Sac\nobjets", 92.0)
+	var bag := UiKit.icon_button("Sac\nobjets", "swap-bag", 92.0)
+	bag.add_theme_constant_override("icon_max_width", roundi(40 * UiKit.text_scale))
 	UiKit.style_secondary(bag, wt)
 	bag.custom_minimum_size.x = 150
 	bag.pressed.connect(func() -> void: action_chosen.emit("sac"))
@@ -169,7 +181,7 @@ func set_hero_name(text: String) -> void:
 
 ## Village : pas de combat, la barre de vie du héros est masquée.
 func set_hero_hp_visible(visible_hp: bool) -> void:
-	_hero_bar.visible = visible_hp
+	_hero_bar.get_parent().visible = visible_hp  # barre et cœur
 	_hero_hp.visible = visible_hp
 
 
@@ -242,25 +254,43 @@ func _refresh_sync() -> void:
 		_sync.text = ""
 
 
+## Cartouche d'un combattant : nom gravé, cœur (héros) ou tête de monstre, barre de vie.
 func _fighter_box(name_text: String, right: bool) -> Array:
+	var panel := PanelContainer.new()
+	panel.add_theme_stylebox_override("panel", UiKit.card_box(_wt, 14))
+	panel.custom_minimum_size = Vector2(290, 0)
+	panel.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	panel.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	var box := VBoxContainer.new()
-	box.custom_minimum_size = Vector2(300, 0)
-	var name_label := _shadowed_label(name_text, 22)
+	box.add_theme_constant_override("separation", 4)
+	panel.add_child(box)
+	var name_label := UiKit.title(name_text, 20, _wt.accent)
+	name_label.autowrap_mode = TextServer.AUTOWRAP_OFF
+	name_label.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT if right else HORIZONTAL_ALIGNMENT_LEFT
 	box.add_child(name_label)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 8)
+	box.add_child(row)
+	var badge := UiKit.icon("dragon-head" if right else "hearts", 24, _wt.bad if right else _wt.good)
 	var bar := ProgressBar.new()
-	bar.custom_minimum_size = Vector2(0, 22)
+	bar.custom_minimum_size = Vector2(0, 20)
+	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	bar.show_percentage = false
 	bar.fill_mode = ProgressBar.FILL_END_TO_BEGIN if right else ProgressBar.FILL_BEGIN_TO_END
-	var fill := StyleBoxFlat.new()
-	fill.bg_color = _wt.bad if right else _wt.good
-	fill.set_corner_radius_all(8)
-	bar.add_theme_stylebox_override("fill", fill)
-	box.add_child(bar)
-	var hp := _shadowed_label("", 18)
+	UiKit.style_bar(bar, _wt, _wt.bad if right else _wt.good)
+	if right:
+		row.add_child(bar)
+		row.add_child(badge)
+	else:
+		row.add_child(badge)
+		row.add_child(bar)
+	var hp := UiKit.label("", 17, _wt.text_dim)
+	hp.autowrap_mode = TextServer.AUTOWRAP_OFF
 	hp.horizontal_alignment = name_label.horizontal_alignment
 	box.add_child(hp)
-	return [box, bar, hp, name_label]
+	return [panel, bar, hp, name_label]
 
 
 func _set_bar(bar: ProgressBar, label: Label, hp: int, max_hp: int) -> void:

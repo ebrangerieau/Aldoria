@@ -33,6 +33,7 @@ func _build() -> void:
 	bg.color = _wt.bg
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
+	UiKit.backdrop(self, _wt)  # la salle d'armes de la Citadelle
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right", "top", "bottom"]:
@@ -44,11 +45,8 @@ func _build() -> void:
 
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", 16)
-	var title := UiKit.label("Apparence", 40, _wt.panel_border)
-	title.autowrap_mode = TextServer.AUTOWRAP_OFF
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	top.add_child(title)
-	var back := UiKit.button("Retour à la Citadelle", 56.0)
+	top.add_child(UiKit.screen_title(_wt, "Apparence"))
+	var back := UiKit.icon_button("Retour à la Citadelle", "castle", 56.0)
 	back.custom_minimum_size.x = 240
 	back.pressed.connect(_leave)
 	top.add_child(back)
@@ -196,7 +194,7 @@ func _pick(key: String, value: Variant) -> void:
 
 
 func _section(text: String) -> void:
-	var label := UiKit.label(text, 24, _wt.accent)
+	var label := UiKit.title(text, 22, _wt.accent)
 	_choices.add_child(label)
 
 

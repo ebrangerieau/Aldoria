@@ -8,15 +8,12 @@ extends Control
 var _wt: WorldTheme
 var _dungeons: Array[DungeonDef] = []
 var _village: VillageDef
-var _level: Label
-var _xp_bar: ProgressBar
-var _xp_text: Label
+var _badge: HeroBadge
 var _pages_state: Label
 var _daily_state: Label
 var _daily_button: Button
 var _look_button: Button
 var _message: Label
-var _bag: Label
 var _busy := false
 
 
@@ -47,156 +44,129 @@ func _build() -> void:
 	bg.color = _wt.bg
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
+	# La salle de la Citadelle en 3D : le héros et Maître Ysaline près de la Grande Chronique.
+	UiKit.backdrop(self, _wt, true, true, 2.8)
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right", "top", "bottom"]:
-		margin.add_theme_constant_override("margin_" + side, 24)
+		margin.add_theme_constant_override("margin_" + side, 20)
 	add_child(margin)
 	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 14)
+	column.add_theme_constant_override("separation", 10)
 	margin.add_child(column)
 
-	# Bandeau : héros, niveau, XP | changer de joueur
+	# Bandeau : le héros (niveau, XP, sac) | message | options, changer de joueur
 	var top := HBoxContainer.new()
-	top.add_theme_constant_override("separation", 20)
-	var who := VBoxContainer.new()
-	who.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	var name_label := UiKit.label(_wt.hero_name, 32, _wt.panel_border)
-	name_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	who.add_child(name_label)
-	var level_row := HBoxContainer.new()
-	level_row.add_theme_constant_override("separation", 16)
-	_level = UiKit.label("", 24, Color.WHITE)
-	_level.autowrap_mode = TextServer.AUTOWRAP_OFF
-	level_row.add_child(_level)
-	_xp_bar = ProgressBar.new()
-	_xp_bar.custom_minimum_size = Vector2(320, 20)
-	_xp_bar.show_percentage = false
-	_xp_bar.max_value = 1.0
-	_xp_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	level_row.add_child(_xp_bar)
-	_xp_text = UiKit.label("", 20, Color(1, 1, 1, 0.75))
-	_xp_text.autowrap_mode = TextServer.AUTOWRAP_OFF
-	level_row.add_child(_xp_text)
-	who.add_child(level_row)
-	_bag = UiKit.label("", 18, Color(1, 1, 1, 0.8))
-	_bag.autowrap_mode = TextServer.AUTOWRAP_OFF
-	who.add_child(_bag)
-	top.add_child(who)
-	_message = UiKit.label("", 22, _wt.panel_border)
+	top.add_theme_constant_override("separation", 14)
+	column.add_child(top)
+	_badge = HeroBadge.create(_wt)
+	_badge.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	top.add_child(_badge)
+	var spacer := Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top.add_child(spacer)
+	_message = UiKit.on_scene(UiKit.label("", 22))
 	_message.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_message.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	top.add_child(_message)
-	var options := UiKit.button("Options", 56.0)
+	var options := UiKit.icon_button("Options", "cog", 56.0)
 	UiKit.style_secondary(options, _wt)
-	options.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	options.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	options.pressed.connect(_show_options)
 	top.add_child(options)
-	var switch := UiKit.button("Changer de joueur", 56.0)
+	var switch := UiKit.icon_button("Changer de joueur", "two-shadows", 56.0)
 	UiKit.style_secondary(switch, _wt)
-	switch.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	switch.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	switch.pressed.connect(_switch_player)
 	top.add_child(switch)
-	column.add_child(top)
 
-	# Défilement au doigt si le contenu dépasse (texte agrandi, boutons plus grands).
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	# À gauche, la salle reste visible (le héros, Maître Ysaline, la Chronique) sous le bandeau ;
+	# à droite, les cartes : la carte du royaume, la Pierre du Jour, les salles de la Citadelle.
+	var body := HBoxContainer.new()
+	body.add_theme_constant_override("separation", 16)
+	body.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	column.add_child(body)
+	var stage := VBoxContainer.new()
+	stage.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	stage.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	body.add_child(stage)
+	stage.add_child(UiKit.ribbon(_wt, "La Citadelle des Archives", 28))
+	var motto := UiKit.on_scene(UiKit.label(
+		"Ici veille la Grande Chronique. Malvrek et ses Effaceurs en ont volé les pages.", 19))
+	motto.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	stage.add_child(motto)
+	var scroll := ScrollContainer.new()  # texte agrandi, cibles agrandies : défilement au doigt
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
-	column.add_child(scroll)
-	var main := HBoxContainer.new()
-	main.add_theme_constant_override("separation", 20)
-	main.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	main.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	scroll.add_child(main)
-
-	# La Citadelle et le chemin vers la carte du royaume.
-	var left := VBoxContainer.new()
-	left.add_theme_constant_override("separation", 12)
-	left.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	left.size_flags_stretch_ratio = 1.4
-	main.add_child(left)
-	var hall := PanelContainer.new()
-	hall.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	left.add_child(hall)
-	var hall_text := VBoxContainer.new()
-	hall_text.add_theme_constant_override("separation", 12)
-	hall_text.alignment = BoxContainer.ALIGNMENT_CENTER
-	hall.add_child(hall_text)
-	hall_text.add_child(UiKit.label("La Citadelle des Archives", 34, _wt.accent))
-	hall_text.add_child(UiKit.label(
-		"Ici veille la Grande Chronique. Malvrek et ses Effaceurs en ont volé les pages : chacune se cache dans une région du royaume.", 21, _wt.text))
-	_pages_state = UiKit.label("", 22, _wt.accent)
-	hall_text.add_child(_pages_state)
-	var to_map := UiKit.button("Ouvrir la carte du royaume", 72.0)
+	scroll.custom_minimum_size.x = 500
+	body.add_child(scroll)
+	var cards := VBoxContainer.new()
+	cards.add_theme_constant_override("separation", 6)
+	cards.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	scroll.add_child(cards)
+	var journey := _card(cards, "treasure-map", "La carte du royaume")
+	_pages_state = UiKit.label("", 19, _wt.text)
+	journey.add_child(_pages_state)
+	var to_map := UiKit.icon_button("Ouvrir la carte du royaume", "treasure-map", 60.0)
 	to_map.pressed.connect(_open_map)
-	hall_text.add_child(to_map)
-	var story := UiKit.button("Revoir le prologue", 52.0)
-	UiKit.style_secondary(story, _wt)
-	story.pressed.connect(_open_prologue)
-	hall_text.add_child(story)
+	journey.add_child(to_map)
 
-	# Défi du jour, puis arène, Archives et apparence en plus petit.
-	var side := VBoxContainer.new()
-	side.add_theme_constant_override("separation", 12)
-	side.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	main.add_child(side)
-	var daily := _row(side, "Défi du jour", "Dix automatismes, à ton rythme.")
-	_daily_state = daily["state"]
-	_daily_button = daily["button"]
+	var daily := _card(cards, "sun", "Défi du jour")
+	_daily_state = UiKit.label("", 19, _wt.text)
+	daily.add_child(_daily_state)
+	_daily_button = UiKit.icon_button("Relever", "sun", 60.0)
 	_daily_button.pressed.connect(_enter_daily)
-	var small_panel := PanelContainer.new()
-	side.add_child(small_panel)
-	var small := HBoxContainer.new()
-	small.add_theme_constant_override("separation", 12)
-	small_panel.add_child(small)
-	var arena := UiKit.button("Arène", 60.0)
-	arena.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	daily.add_child(_daily_button)
+
+	var halls := _card(cards, "castle", "Dans la Citadelle")
+	var grid := HBoxContainer.new()
+	grid.add_theme_constant_override("separation", 8)
+	halls.add_child(grid)
+	var arena := _small_button(grid, "Arène", "crossed-swords")
 	arena.pressed.connect(_enter_arena)
-	small.add_child(arena)
-	var archives := UiKit.button("Archives", 60.0)
-	archives.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	var archives := _small_button(grid, "Archives", "open-book")
 	archives.pressed.connect(func() -> void:
 		get_tree().change_scene_to_file("res://scenes/archives/archives.tscn"))
-	small.add_child(archives)
-	_look_button = UiKit.button("Apparence", 60.0)
-	_look_button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_look_button = _small_button(grid, "Apparence", "visored-helm")
 	_look_button.pressed.connect(_open_wardrobe)
-	small.add_child(_look_button)
+	var story := _small_button(grid, "Prologue", "scroll-unfurled")
+	story.pressed.connect(_open_prologue)
 
 
-## Carte en ligne : titre, sous-titre et état à gauche, bouton à droite.
-## Renvoie {panel, state, button}.
-func _row(parent: Container, title: String, subtitle: String) -> Dictionary:
+## Carte de la Citadelle : icône et titre gravé ; renvoie la colonne où ajouter l'état et le bouton.
+func _card(parent: Container, icon_name: String, title: String) -> VBoxContainer:
 	var panel := PanelContainer.new()
-	panel.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	panel.add_theme_stylebox_override("panel", UiKit.texture_box("panel_" + _wt.id, UiKit.MARGINS["panel"], 18))
 	parent.add_child(panel)
-	var line := HBoxContainer.new()
-	line.add_theme_constant_override("separation", 16)
-	panel.add_child(line)
-	var text := VBoxContainer.new()
-	text.add_theme_constant_override("separation", 4)
-	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	text.alignment = BoxContainer.ALIGNMENT_CENTER
-	line.add_child(text)
-	text.add_child(UiKit.label(title, 27, _wt.accent))
-	text.add_child(UiKit.label(subtitle, 19, _wt.text))
-	var state := UiKit.label("", 19, _wt.accent)
-	text.add_child(state)
-	var b := UiKit.button("Entrer", 64.0)
-	b.custom_minimum_size.x = 190
-	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	line.add_child(b)
-	return {"panel": panel, "state": state, "button": b}
+	var box := VBoxContainer.new()
+	box.add_theme_constant_override("separation", 6)
+	panel.add_child(box)
+	var head := HBoxContainer.new()
+	head.add_theme_constant_override("separation", 10)
+	box.add_child(head)
+	head.add_child(UiKit.icon(icon_name, 38, _wt.accent))
+	var t := UiKit.title(title, 22, _wt.accent)
+	t.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	t.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	head.add_child(t)
+	return box
+
+
+## Tuile : icône au-dessus de son nom.
+func _small_button(parent: Container, text: String, icon_name: String) -> Button:
+	var b := UiKit.icon_button(text, icon_name, 84.0)
+	UiKit.style_secondary(b, _wt)
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	b.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
+	b.icon_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	b.add_theme_font_size_override("font_size", UiKit.font_size(17))
+	b.add_theme_constant_override("icon_max_width", roundi(32 * UiKit.text_scale))
+	parent.add_child(b)
+	return b
 
 
 func _refresh() -> void:
-	var xp := SaveManager.xp()
-	var level := Progression.level_for_xp(xp)
-	_level.text = "Niveau %d" % level
-	_xp_bar.value = Progression.level_progress(xp)
-	_xp_text.text = "%d / %d XP" % [xp, Progression.xp_for_level(level + 1)]
-	_bag.text = Inventory.summary(SaveManager.items())
+	_badge.refresh()
+	var level := Progression.level_for_xp(SaveManager.xp())
 	var found := _dungeons.filter(func(d: DungeonDef) -> bool: return int(SaveManager.dungeon(d.code)["completed"]) > 0).size()
 	_pages_state.text = "Pages retrouvées : %d / %d" % [found, _dungeons.size()] if not _dungeons.is_empty() \
 		else "Les régions de ta classe (%s) se préparent." % Session.profile.get("level_label", Session.level())

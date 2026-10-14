@@ -44,7 +44,7 @@ const { chromium } = require('playwright-core');
       await page.waitForTimeout(120);
     }
     await page.waitForTimeout(3000);
-    await page.mouse.click(640, 403); // Jules
+    await page.mouse.click(478, 440); // carte de Jules
     await page.waitForTimeout(800);
     for (const digit of pin) {
       await page.keyboard.press(digit);

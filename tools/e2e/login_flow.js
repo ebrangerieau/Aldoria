@@ -45,7 +45,7 @@ const { chromium } = require('playwright-core');
   paired = true;
   await page.waitForTimeout(3000);
   await shot('1_profils');
-  await page.mouse.click(640, 403);  // premier profil (Jules)
+  await page.mouse.click(478, 440);  // carte du premier profil (Jules)
   await page.waitForTimeout(800);
   for (const digit of pin) {
     await page.keyboard.press(digit);
@@ -63,49 +63,49 @@ const { chromium } = require('playwright-core');
   await page.keyboard.press('Enter'); // « J'y vais » (paquet + scène 3D)
   await page.waitForTimeout(6000);
   await shot('3_donjon_intro');
-  await page.mouse.click(640, 730);  // « En avant ! »
+  await page.mouse.click(640, 722);  // « En avant ! »
   await page.waitForTimeout(800);
   await page.keyboard.down('d');     // marcher vers l'est (D, ou → )
   await page.waitForTimeout(1500);
   await page.keyboard.up('d');
   await page.waitForTimeout(500);
   await shot('4_donjon_marche');
-  await page.mouse.click(1210, 63);  // « Quitter » → carte
+  await page.mouse.click(1180, 42);  // « Quitter » → carte
   await page.waitForTimeout(4000);
   await page.mouse.click(659, 384);  // la Citadelle → son seuil
   await page.waitForTimeout(1000);
   await page.keyboard.press('Enter'); // « Entrer »
   await page.waitForTimeout(2500);
   await shot('4b_citadelle');
-  await page.mouse.click(1000, 724); // « Archives »
+  await page.mouse.click(927, 630);  // tuile « Archives »
   await page.waitForTimeout(3000);
   await shot('5_archives');
-  await page.mouse.click(1170, 52);  // « Retour au camp » (la Citadelle)
+  await page.mouse.click(1097, 53);  // « Retour à la Citadelle »
   await page.waitForTimeout(2500);
-  await page.mouse.click(1159, 724); // « Apparence » (héros et renard en 3D)
+  await page.mouse.click(1054, 630); // tuile « Apparence » (héros et renard en 3D)
   await page.waitForTimeout(3000);
   await shot('5b_apparence');
-  await page.mouse.click(1135, 52);  // « Retour au camp » (la Citadelle)
+  await page.mouse.click(1097, 53);  // « Retour à la Citadelle »
   await page.waitForTimeout(2500);
-  await page.mouse.click(1138, 405); // « Relever » le défi du jour
+  await page.mouse.click(1008, 464); // « Relever » le défi du jour
   await page.waitForTimeout(4000);
-  await page.mouse.click(640, 530);  // « C'est parti ! »
+  await page.mouse.click(640, 542);  // « C'est parti ! »
   await page.waitForTimeout(1500);
   await shot('7_defi');
-  await page.mouse.click(1190, 53);  // « Quitter » → Citadelle
+  await page.mouse.click(1172, 53);  // « Quitter » → Citadelle
   await page.waitForTimeout(3000);
-  await page.mouse.click(377, 550);  // « Ouvrir la carte du royaume »
+  await page.mouse.click(1008, 285); // « Ouvrir la carte du royaume »
   await page.waitForTimeout(4000);
   await page.mouse.click(496, 504);  // Clairval → son seuil
   await page.waitForTimeout(1000);
   await page.keyboard.press('Enter'); // « J'y vais »
   await page.waitForTimeout(6000);
-  await page.mouse.click(640, 730);  // « Entrer dans le village »
+  await page.mouse.click(640, 722);  // « Entrer dans le village »
   await page.waitForTimeout(1200);
   await shot('6_village');
-  await page.mouse.click(1210, 63);  // « Quitter » → carte
+  await page.mouse.click(1180, 42);  // « Quitter » → carte
   await page.waitForTimeout(4000);
-  await page.mouse.click(1143, 47);  // « Changer de joueur » (carte)
+  await page.mouse.click(1112, 44);  // « Changer de joueur » (carte)
   await page.waitForTimeout(2500);
   await shot('8_changer_joueur');
 

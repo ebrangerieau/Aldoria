@@ -15,7 +15,8 @@ func setup(wt: WorldTheme) -> void:
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 14)
 	add_child(box)
-	box.add_child(UiKit.label("Options", 34, wt.accent))
+	box.add_child(UiKit.title("Options", 32, wt.accent))
+	box.add_child(UiKit.divider(wt, 320))
 
 	box.add_child(UiKit.label("Taille du texte", 24))
 	var sizes := HBoxContainer.new()
@@ -55,6 +56,8 @@ func setup(wt: WorldTheme) -> void:
 
 	# Crédits demandés par la licence des voix (CC BY 4.0).
 	box.add_child(UiKit.label("Voix du jeu : Piper, voix « siwis » (français) et « alba » (anglais), sous licence CC BY 4.0.", 15, wt.text_dim))
-	var close := UiKit.button("Fermer", 64.0)
+	# Crédit demandé par la licence des icônes (CC BY 3.0).
+	box.add_child(UiKit.label("Icônes : game-icons.net (Lorc, Delapouite, Carl Olsen, Skoll, Zeromancer, Sbed), sous licence CC BY 3.0. Titres : police Cinzel (OFL).", 15, wt.text_dim))
+	var close := UiKit.icon_button("Fermer", "check-mark", 64.0)
 	close.pressed.connect(func() -> void: closed.emit())
 	box.add_child(close)

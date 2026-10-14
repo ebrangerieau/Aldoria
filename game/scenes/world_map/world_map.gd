@@ -26,11 +26,7 @@ var _places: Array[Dictionary] = []  # {kind, id, title, cell, status, index, la
 var _markers: Array[Label3D] = []  # repères qui flottent au-dessus des quêtes ouvertes
 var _time := 0.0
 var _hud: CanvasLayer
-var _level: Label
-var _xp_bar: ProgressBar
-var _xp_text: Label
-var _bag: Label
-var _pages: Label
+var _badge: HeroBadge
 var _message: Label
 var _busy := false
 var _panel_open := false
@@ -397,49 +393,24 @@ func _build_hud() -> void:
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", 18)
 	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	var who := PanelContainer.new()
-	who.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	top.add_child(who)
-	var lines := VBoxContainer.new()
-	lines.add_theme_constant_override("separation", 2)
-	who.add_child(lines)
-	var name_label := UiKit.label(_wt.hero_name, 26, _wt.accent)
-	name_label.autowrap_mode = TextServer.AUTOWRAP_OFF
-	lines.add_child(name_label)
-	var level_row := HBoxContainer.new()
-	level_row.add_theme_constant_override("separation", 12)
-	_level = UiKit.label("", 20)
-	_level.autowrap_mode = TextServer.AUTOWRAP_OFF
-	level_row.add_child(_level)
-	_xp_bar = ProgressBar.new()
-	_xp_bar.custom_minimum_size = Vector2(200, 16)
-	_xp_bar.show_percentage = false
-	_xp_bar.max_value = 1.0
-	_xp_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-	level_row.add_child(_xp_bar)
-	_xp_text = UiKit.label("", 17, _wt.text_dim)
-	_xp_text.autowrap_mode = TextServer.AUTOWRAP_OFF
-	level_row.add_child(_xp_text)
-	lines.add_child(level_row)
-	_pages = UiKit.label("", 17, _wt.text)
-	_pages.autowrap_mode = TextServer.AUTOWRAP_OFF
-	lines.add_child(_pages)
-	_bag = UiKit.label("", 17, _wt.text_dim)
-	_bag.autowrap_mode = TextServer.AUTOWRAP_OFF
-	lines.add_child(_bag)
+	_badge = HeroBadge.create(_wt, _dungeons)
+	_badge.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
+	top.add_child(_badge)
 	var spacer := Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	top.add_child(spacer)
-	_message = UiKit.label("", 20, Color.WHITE)
+	_message = UiKit.on_scene(UiKit.label("", 20))
 	_message.autowrap_mode = TextServer.AUTOWRAP_OFF
 	_message.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	top.add_child(_message)
-	var options := UiKit.button("Options", 52.0)
+	var options := UiKit.icon_button("Options", "cog", 52.0)
+	UiKit.style_secondary(options, _wt)
 	options.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	options.pressed.connect(_show_options)
 	top.add_child(options)
-	var switch := UiKit.button("Changer de joueur", 52.0)
+	var switch := UiKit.icon_button("Changer de joueur", "two-shadows", 52.0)
+	UiKit.style_secondary(switch, _wt)
 	switch.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	switch.pressed.connect(_switch_player)
 	top.add_child(switch)
@@ -449,22 +420,13 @@ func _build_hud() -> void:
 	gap.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	column.add_child(gap)
-	var hint := UiKit.label("Touche un lieu de la carte pour découvrir sa quête.", 20, Color.WHITE)
+	var hint := UiKit.on_scene(UiKit.title("Touche un lieu de la carte pour découvrir sa quête", 22))
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hint.add_theme_color_override("font_outline_color", Color(0, 0, 0, 0.7))
-	hint.add_theme_constant_override("outline_size", 8)
 	column.add_child(hint)
 
 
 func _refresh() -> void:
-	var xp := SaveManager.xp()
-	var level := Progression.level_for_xp(xp)
-	_level.text = "Niveau %d" % level
-	_xp_bar.value = Progression.level_progress(xp)
-	_xp_text.text = "%d / %d XP" % [xp, Progression.xp_for_level(level + 1)]
-	_bag.text = Inventory.summary(SaveManager.items())
-	var found := _dungeons.filter(func(d: DungeonDef) -> bool: return int(SaveManager.dungeon(d.code)["completed"]) > 0).size()
-	_pages.text = "Pages de la Chronique : %d / %d" % [found, _dungeons.size()]
+	_badge.refresh()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -559,17 +521,29 @@ func _dialog(title: String, text: String, detail: String, yes: String, no: Strin
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	center.theme = UiKit.make_theme(_wt)
 	layer.add_child(center)
+	var column := VBoxContainer.new()
+	column.add_theme_constant_override("separation", -14)  # le bandeau chevauche le haut du panneau
+	center.add_child(column)
+	var heading := UiKit.ribbon(_wt, title, 28)
+	heading.z_index = 1
+	column.add_child(heading)
 	var panel := PanelContainer.new()
-	panel.custom_minimum_size = Vector2(760, 0)
-	center.add_child(panel)
+	panel.custom_minimum_size = Vector2(780, 0)
+	column.add_child(panel)
 	var box := VBoxContainer.new()
-	box.add_theme_constant_override("separation", 14)
+	box.add_theme_constant_override("separation", 12)
 	panel.add_child(box)
-	box.add_child(UiKit.label(title, 32, _wt.accent))
-	box.add_child(UiKit.label("Maître Ysaline :", 19, _wt.text_dim))
+	var top_gap := Control.new()
+	top_gap.custom_minimum_size.y = 6
+	box.add_child(top_gap)
+	box.add_child(UiKit.speaker(_wt, "Maître Ysaline"))
 	box.add_child(UiKit.label("« %s »" % text, 23))
 	if detail != "":
-		box.add_child(UiKit.label(detail, 20, _wt.accent))
+		box.add_child(UiKit.divider(_wt, 360))
+		var icons := ["castle", "open-book", "scroll-quill"]
+		var lines := detail.split("\n")
+		for i in lines.size():
+			box.add_child(UiKit.info_line(_wt, icons[mini(i, icons.size() - 1)], lines[i], 20))
 	if Accessibility.can_speak():
 		box.add_child(UiKit.listen_button(_wt, "%s. %s %s" % [title, text, detail], Accessibility.auto_read()))
 	var buttons := HBoxContainer.new()
@@ -582,7 +556,7 @@ func _dialog(title: String, text: String, detail: String, yes: String, no: Strin
 		later.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		later.pressed.connect(func() -> void: choice.append(false))
 		buttons.add_child(later)
-	var go := UiKit.button(yes, 60.0)
+	var go := UiKit.icon_button(yes, "broadsword" if yes == "J'y vais" else "check-mark", 60.0)
 	go.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	go.pressed.connect(func() -> void: choice.append(true))
 	buttons.add_child(go)

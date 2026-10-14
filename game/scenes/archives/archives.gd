@@ -37,6 +37,7 @@ func _build() -> void:
 	bg.color = _wt.bg
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(bg)
+	UiKit.backdrop(self, _wt)
 	var margin := MarginContainer.new()
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right", "top", "bottom"]:
@@ -48,23 +49,20 @@ func _build() -> void:
 
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", 16)
-	var title := UiKit.label("Les Archives", 40, _wt.panel_border)
-	title.autowrap_mode = TextServer.AUTOWRAP_OFF
-	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	top.add_child(title)
+	top.add_child(UiKit.screen_title(_wt, "Les Archives"))
 	for tab in ["notions", "bestiaire"]:
-		var b := UiKit.button("Notions" if tab == "notions" else "Bestiaire", 56.0)
+		var b := UiKit.icon_button("Notions" if tab == "notions" else "Bestiaire", "open-book" if tab == "notions" else "dragon-head", 56.0)
 		b.custom_minimum_size.x = 180
 		b.pressed.connect(_show.bind(tab))
 		top.add_child(b)
 		_tabs[tab] = b
-	var back := UiKit.button("Retour à la Citadelle", 56.0)
+	var back := UiKit.icon_button("Retour à la Citadelle", "castle", 56.0)
 	UiKit.style_secondary(back, _wt)
 	back.pressed.connect(func() -> void: get_tree().change_scene_to_file("res://scenes/hub/hub.tscn"))
 	top.add_child(back)
 	column.add_child(top)
 
-	_summary = UiKit.label("", 22, Color(1, 1, 1, 0.85))
+	_summary = UiKit.on_scene(UiKit.label("", 22))
 	column.add_child(_summary)
 
 	var scroll := ScrollContainer.new()
@@ -110,7 +108,7 @@ func _show_notions() -> void:
 		panel.add_child(box)
 		var header := HBoxContainer.new()
 		header.add_theme_constant_override("separation", 14)
-		var name_label := UiKit.label(str(chapter["title"]), 26, _wt.accent)
+		var name_label := UiKit.title(str(chapter["title"]), 24, _wt.accent)
 		name_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		header.add_child(name_label)
 		if STATUS_TEXT.has(chapter["status"]):
@@ -152,15 +150,18 @@ func _show_bestiary() -> void:
 	_summary.text = "%d créature%s vaincue%s, %d espèce%s rencontrée%s." % [
 		total, _s(total), _s(total), beasts.size(), _s(beasts.size()), _s(beasts.size())]
 	if beasts.is_empty():
-		_list.add_child(UiKit.label("Aucune créature pour l'instant. Le donjon t'attend !", 24, Color.WHITE))
+		_list.add_child(UiKit.on_scene(UiKit.label("Aucune créature pour l'instant. Le donjon t'attend !", 24)))
 		return
 	var names: Array = beasts.keys()
 	names.sort_custom(func(a: String, b: String) -> bool: return int(beasts[a]) > int(beasts[b]))
 	for beast in names:
 		var panel := PanelContainer.new()
+		panel.add_theme_stylebox_override("panel", UiKit.card_box(_wt, 16))
 		var row := HBoxContainer.new()
+		row.add_theme_constant_override("separation", 12)
 		panel.add_child(row)
-		var label := UiKit.label(str(beast), 24, _wt.text)
+		row.add_child(UiKit.icon("dragon-head", 30, _wt.accent))
+		var label := UiKit.title(str(beast), 22, _wt.text)
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		row.add_child(label)
 		var count := UiKit.label("× %d" % int(beasts[beast]), 26, _wt.accent)
