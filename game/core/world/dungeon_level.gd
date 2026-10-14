@@ -234,6 +234,7 @@ func _build_environment() -> void:
 	sun.directional_shadow_mode = DirectionalLight3D.SHADOW_ORTHOGONAL
 	sun.directional_shadow_max_distance = 60.0
 	sun.shadow_enabled = built_settings.shadows
+	Quality.dress_sun(sun)
 	add_child(sun)
 
 

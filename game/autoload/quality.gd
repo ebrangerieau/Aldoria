@@ -13,12 +13,15 @@ extends Node
 signal changed(profile: StringName)
 
 const PROFILES := {
-	# PC familial : vraies lumières, ombres, éclairage par pixel.
+	# PC familial : vraies lumières, ombres fines et adoucies, éclairage par pixel, lissage 4×.
+	# Pas de halo (glow) : en rendu web (WebGL 2, sans HDR) il blanchit le sol clair au lieu
+	# de faire rayonner les flammes (essai du 2026-10-14).
 	&"haut": {
 		"scale_3d": 1.0,
-		"msaa": Viewport.MSAA_2X,
+		"msaa": Viewport.MSAA_4X,
 		"shadows": true,
-		"shadow_size": 2048,
+		"shadow_size": 4096,
+		"soft_shadows": true,
 		"particle_ratio": 1.0,
 		"lights": "real",
 		"vertex_shading": false,
@@ -31,6 +34,7 @@ const PROFILES := {
 		"msaa": Viewport.MSAA_DISABLED,
 		"shadows": false,
 		"shadow_size": 512,
+		"soft_shadows": false,
 		"particle_ratio": 0.6,
 		"lights": "fake",
 		"vertex_shading": true,
@@ -42,6 +46,7 @@ const PROFILES := {
 		"msaa": Viewport.MSAA_DISABLED,
 		"shadows": false,
 		"shadow_size": 512,
+		"soft_shadows": false,
 		"particle_ratio": 0.3,
 		"lights": "fake",
 		"vertex_shading": true,
@@ -50,6 +55,11 @@ const PROFILES := {
 }
 const ORDER: Array[StringName] = [&"haut", &"tablette", &"bas"]
 const STRUCTURAL_KEYS: Array[String] = ["lights", "vertex_shading"]
+## Interface sur ordinateur (souris) : elle suit la taille de l'écran à 80 % seulement, sans
+## descendre sous sa taille de conception (1280 × 720). Plus de place pour la scène, boutons
+## toujours confortables. Tablette et téléphone : agrandissement proportionnel, inchangé.
+const DESKTOP_UI_RATIO := 0.8
+const DESIGN_SIZE := Vector2(1280, 720)
 
 # Résolution dynamique : sous ce seuil (moyenne sur la fenêtre), on baisse d'un palier.
 const DYNAMIC_FPS_FLOOR := 27.0
@@ -65,6 +75,27 @@ var _options: Dictionary = {}
 
 func _ready() -> void:
 	apply(_initial_profile())
+	get_tree().root.size_changed.connect(_fit_ui)
+	_fit_ui()
+
+
+## Ordinateur : ni tablette ni téléphone (`?ui=tablette` garde l'interface de la tablette).
+func is_desktop() -> bool:
+	return not (is_mobile_web() or OS.has_feature("mobile")) and option("ui") != "tablette"
+
+
+## Échelle de l'interface pour une fenêtre de taille `window`, relative à l'agrandissement
+## proportionnel (1,0 : celui de la tablette).
+static func ui_factor(window: Vector2, desktop: bool) -> float:
+	var natural := minf(window.x / DESIGN_SIZE.x, window.y / DESIGN_SIZE.y)
+	if not desktop or natural <= 1.0:
+		return 1.0
+	return maxf(1.0, natural * DESKTOP_UI_RATIO) / natural
+
+
+func _fit_ui() -> void:
+	var root := get_tree().root
+	root.content_scale_factor = ui_factor(Vector2(root.size), is_desktop())
 
 
 func _process(delta: float) -> void:
@@ -115,7 +146,20 @@ func apply(profile: StringName) -> void:
 	vp.scaling_3d_scale = p.scale_3d
 	vp.msaa_3d = p.msaa
 	RenderingServer.directional_shadow_atlas_set_size(p.shadow_size, true)
+	RenderingServer.directional_soft_shadow_filter_set_quality(
+		RenderingServer.SHADOW_QUALITY_SOFT_LOW if p.soft_shadows else RenderingServer.SHADOW_QUALITY_HARD)
 	changed.emit(profile)
+
+
+## Soleil d'une scène selon le profil : sur PC, ombres découpées en deux zones (plus fines
+## près de la caméra) et adoucies.
+func dress_sun(sun: DirectionalLight3D) -> void:
+	var p := settings()
+	if not p.shadows:
+		return
+	if p.soft_shadows:
+		sun.directional_shadow_mode = DirectionalLight3D.SHADOW_PARALLEL_2_SPLITS
+		sun.shadow_blur = 1.5
 
 
 ## Vrai si une scène construite avec `built` doit être reconstruite pour refléter

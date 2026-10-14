@@ -85,3 +85,16 @@ Carte en tuiles hexagonales (KayKit Medieval Hexagon, une seule texture de 15 Ko
 (herbe teintée, reste du décor), chemins en un MultiMesh par couleur. Sur PC, profil haut : 45 à 58 appels de
 dessin (noms des lieux compris), environ 177 000 triangles. Export web : 19,95 → 21,47 Mo compressés.
 À mesurer sur la tablette : chargement et fluidité de la carte.
+
+## 2026-10-14 — Profil PC enrichi, tablette inchangée
+
+- Profil `haut` (ordinateurs) : carte d'ombres 4096 (au lieu de 2048), ombres en deux zones et adoucies
+  (`SHADOW_PARALLEL_2_SPLITS`, `shadow_blur` 1,5, filtre doux), lissage MSAA 4× (au lieu de 2×). Les marches d'escalier
+  des ombres sur les murs ont disparu en 1080p.
+- Halo (glow) essayé puis écarté : le renderer Compatibility (WebGL 2) n'a pas de plage HDR pour isoler les flammes ;
+  en mode lumière douce comme en additif, il blanchit le sol clair et le fond.
+- Interface sur ordinateur : 80 % de l'agrandissement proportionnel (1,2× au lieu de 1,5× en 1080p), jamais sous la
+  taille de conception : plus de scène visible, boutons confortables à la souris. Banc e2e (1280 × 800) inchangé.
+- Textures d'interface en double résolution (`ImageTexture.set_size_override`) : 92 → 173 Ko, export 21,73 → 21,79 Mo
+  compressés.
+- Profils `tablette` et `bas` : aucun réglage modifié (vérifié par capture 1280 × 800 avant/après).

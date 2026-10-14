@@ -70,6 +70,7 @@ func build() -> void:
 	sun = DirectionalLight3D.new()
 	sun.rotation_degrees = Vector3(-50, -30, 0)
 	sun.shadow_enabled = settings.shadows
+	Quality.dress_sun(sun)
 	add_child(sun)
 	_material = StandardMaterial3D.new()
 	_material.albedo_texture = load("res://assets/kaykit/dungeon/dungeon_texture.png")

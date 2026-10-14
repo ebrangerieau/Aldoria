@@ -63,6 +63,7 @@ func build() -> void:
 func apply_quality() -> void:
 	var s := Quality.settings()
 	sun.shadow_enabled = s.shadows
+	Quality.dress_sun(sun)
 	for i in _particles.size():
 		_particles[i].emitting = s.particle_ratio > 0.0
 		_particles[i].visible = s.particle_ratio > 0.0

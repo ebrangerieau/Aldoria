@@ -352,6 +352,7 @@ func _build_environment() -> void:
 	sun.light_color = Color(1.0, 0.96, 0.9) if _wt.id == "lumineux" else Color(0.8, 0.86, 1.0)
 	sun.light_energy = 0.85 if _wt.id == "lumineux" else 0.7
 	sun.shadow_enabled = Quality.settings().shadows
+	Quality.dress_sun(sun)
 	add_child(sun)
 
 

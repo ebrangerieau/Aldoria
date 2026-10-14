@@ -2,9 +2,11 @@
 cohérentes et modifiables : parchemin à cadre doré (monde lumineux, Jules), pierre sombre à cadre
 argenté (Brouillard, Tom), boutons, bandeau de titre, ornement de séparation.
 
-Chaque texture est dessinée en double taille puis réduite (bords lissés). Les panneaux et les
-boutons sont des « 9-patch » : coins fixes, bords et centre étirés (UiKit, StyleBoxTexture) ;
-leurs marges sont dans `MARGINS` côté jeu (ui_kit.gd).
+Chaque texture est dessinée en quadruple taille puis enregistrée en DOUBLE résolution (bords
+lissés) : le jeu l'affiche à sa taille logique (moitié) avec `ImageTexture.set_size_override`
+(UiKit.ui_texture), nette sur un grand écran de PC. Les panneaux et les boutons sont des
+« 9-patch » : coins fixes, bords et centre étirés (StyleBoxTexture) ; leurs marges, en pixels
+logiques, sont dans `MARGINS` côté jeu (ui_kit.gd).
 
     python tools/make_ui_textures.py
 """
@@ -17,7 +19,8 @@ from pathlib import Path
 from PIL import Image, ImageChops, ImageDraw, ImageFilter
 
 OUT = Path(__file__).resolve().parent.parent / "game" / "assets" / "ui"
-S = 2  # suréchantillonnage
+S = 4  # dessin en 4×
+SAVED = 2  # enregistré en 2× (taille logique × 2)
 
 THEMES = {
     "lumineux": {
@@ -65,7 +68,7 @@ def rounded_mask(size: tuple[int, int], radius: int) -> Image.Image:
 
 def save(img: Image.Image, name: str) -> None:
     w, h = img.size
-    img.resize((w // S, h // S), Image.LANCZOS).save(OUT / name)
+    img.resize((w * SAVED // S, h * SAVED // S), Image.LANCZOS).save(OUT / name, optimize=True)
 
 
 # --- Panneau : parchemin (ou pierre) et cadre -----------------------------------------------------

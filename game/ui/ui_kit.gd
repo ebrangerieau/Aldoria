@@ -287,7 +287,7 @@ static func screen_title(wt: WorldTheme, text: String) -> Control:
 ## Filet orné de séparation (losange au centre).
 static func divider(wt: WorldTheme, width := 420.0) -> TextureRect:
 	var t := TextureRect.new()
-	t.texture = load(UI % ("divider_" + wt.id))
+	t.texture = ui_texture("divider_" + wt.id)
 	t.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	t.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	t.custom_minimum_size = Vector2(width, 22)
@@ -301,9 +301,24 @@ static func card_box(wt: WorldTheme, margin := 18) -> StyleBoxTexture:
 	return texture_box("card_" + wt.id, MARGINS["card"], margin)
 
 
+## Texture d'interface (assets/ui, enregistrée en double résolution) à sa taille logique :
+## les marges et les tailles restent celles de la conception, l'image reste nette sur un
+## grand écran. Une seule copie par texture.
+static var _ui_textures: Dictionary = {}
+
+
+static func ui_texture(name: String) -> Texture2D:
+	if not _ui_textures.has(name):
+		var image := (load(UI % name) as Texture2D).get_image()
+		var texture := ImageTexture.create_from_image(image)
+		texture.set_size_override(image.get_size() / 2)
+		_ui_textures[name] = texture
+	return _ui_textures[name]
+
+
 static func texture_box(name: String, margin: int, content: int) -> StyleBoxTexture:
 	var box := StyleBoxTexture.new()
-	box.texture = load(UI % name)
+	box.texture = ui_texture(name)
 	box.set_texture_margin_all(margin)
 	box.set_content_margin_all(content)
 	return box

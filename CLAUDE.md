@@ -186,6 +186,13 @@ Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-
 - Personnage KayKit ajouté : l'importer sans animations (`animation/import=false` dans son `.import`) et
   l'inscrire dans `Fighter.ANIMATION_DONORS` ; toujours l'instancier par `Fighter.create` ou
   `Fighter.instantiate_model`. Chaque copie des animations pèse 1,3 à 1,8 Mo dans l'export web.
+- Tablette et PC, un seul jeu : `Quality` choisit le profil à l'ouverture (tablette ou téléphone → `tablette`,
+  ordinateur → `haut` : vraies lumières, ombres 4096 en deux zones adoucies via `Quality.dress_sun`, lissage 4×). Toute
+  scène qui crée un soleil appelle `Quality.dress_sun(sun)`. Pas de halo (glow) : en WebGL 2 sans HDR, il blanchit le sol.
+  Interface sur ordinateur : `Quality.ui_factor` (80 % de l'agrandissement proportionnel, jamais sous 1280 × 720 ;
+  `?ui=tablette` pour l'interface de la tablette) ; la tablette reste inchangée. Textures d'interface enregistrées en
+  double résolution, affichées à leur taille logique par `UiKit.ui_texture` (jamais `load` direct d'un fichier
+  `assets/ui/*.png`).
 - Options de test : `?quality=haut|tablette|bas`, `?perf`, `?scale=`, `?lights=fake|real|0`, `?vertex=0|1`,
   `?shadows=0`, `?merge=0` dans l'URL (web) ou `-- --quality=bas` (PC).
 - JSON en snake_case, dates ISO 8601 UTC, erreurs `{"error": {"code", "message"}}`.
