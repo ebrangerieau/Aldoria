@@ -272,6 +272,12 @@ export function Guide({ child, onOpen }: { child?: Profile; onOpen: (page: Guide
           mot ? », propositions en français. Le bouton reste actif même sans l'aménagement de lecture à voix haute.
         </div>
         <div className="tip">
+          <strong>Anglais lu avec l'accent anglais.</strong> Dans une question d'anglais, écrivez les mots et les phrases en anglais entre
+          guillemets droits ou anglais : <code>Complète : "She ___ a cat."</code>. Ils sont lus par la voix anglaise (le trou devient une
+          courte pause) ; le reste est lu en français. Un mot français cité s'écrit entre « » : <code>Comment dit-on « chat » ?</code>.
+          L'IA suit déjà cette règle.
+        </div>
+        <div className="tip">
           <strong>Où la question apparaît-elle ?</strong> Dans les combats et les quêtes qui portent sur sa notion, environ 4 fois sur 10 face aux
           questions automatiques, et au plus une fois par session. Une notion sans questions automatiques (comme la médiatrice en 6ème) devient
           jouable dès qu'elle a une question publiée.

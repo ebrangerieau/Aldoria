@@ -61,6 +61,8 @@ false) :
 - text : réponse écrite d'un ou quelques mots ; `accepted` = toutes les formes correctes ; \
 `accents` = true en français (orthographe), false pour une langue étrangère.
 - numeric (maths) : `value` = la réponse, « 12,5 » ou « 3/4 ».
+Langues vivantes : tout mot ou phrase dans la langue étrangère s'écrit entre guillemets anglais \
+“ ” (il est lu par une voix de cette langue) ; un mot français cité s'écrit entre « ».
 Écoute (langues vivantes) : `listen_text` = mot ou phrase prononcé par l'appareil, jamais \
 écrit dans `prompt` ; `listen_lang` = sa langue (en-GB pour l'anglais). Sinon chaînes vides.
 `difficulty` : de 1 (facile) à 5 (difficile)."""

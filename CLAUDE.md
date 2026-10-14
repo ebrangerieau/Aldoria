@@ -138,6 +138,9 @@ Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-
   `ALDORIA_VOICE_URL`, volume `voice-cache`). Côté jeu, `Accessibility.say` passe par l'autoload `Voice` (enfant
   connecté, en ligne, français ou anglais) et se rabat sur la voix de l'appareil (`device_say`) sinon. Les tests
   de l'API simulent le service (`speech.get_voice_client` remplacé). Changer de voix : `VOICE_VERSION`.
+  Langues vivantes : dans un item d'anglais, le texte entre “ ” ou " " est en anglais et lu par la voix anglaise,
+  les mots français cités entre « » (`engine/speech.py` : `prompt_parts`, `explanation_parts`) ; générateurs,
+  IA (`ai_author.SYSTEM`) et guide parent suivent cette règle.
 - Le héros parle entre les salles (`HeroVoice`, core/world ; bulle `CombatHud.say`, lue si lecture automatique) :
   phrases par ton de monde, combinées, les dernières dites ne reviennent pas.
 - Progression du joueur : `SaveManager` (XP, donjons, bestiaire, défis quotidiens), jamais de fichier de

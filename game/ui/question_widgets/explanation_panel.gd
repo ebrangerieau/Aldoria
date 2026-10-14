@@ -64,8 +64,9 @@ func setup(question: Dictionary, wt: WorldTheme) -> void:
 	box.add_child(row)
 
 
-## Texte lu : la bonne réponse, puis l'explication (versions écrites pour la voix).
-static func spoken(question: Dictionary) -> String:
+## Texte lu : la bonne réponse, puis l'explication (versions écrites pour la voix). Langue
+## vivante : en morceaux, la réponse et l'anglais de l'explication lus par la voix anglaise.
+static func spoken(question: Dictionary) -> Variant:
 	var said: Dictionary = question.get("speech", {})
 	var answer: Dictionary = question["answer"]
 	var expected := QuestionPanel.expected_text(question)
@@ -75,6 +76,16 @@ static func spoken(question: Dictionary) -> String:
 	elif answer["kind"] == "true_false" and int(answer["reason"]) < choices.size():
 		expected = "%s, car %s" % ["Vrai" if answer["value"] else "Faux", choices[int(answer["reason"])]]
 	expected = expected.replace("−", "moins ").replace("/", " sur ")
+	var foreign := str(question.get("choices_lang", "")) if question.get("choices_lang") else ""
+	if answer["kind"] == "text" and not bool(answer.get("accents", true)) and question.get("listen") is Dictionary:
+		foreign = str(question["listen"].get("lang", ""))
+	if said.get("explanation_parts") is Array or foreign != "":
+		var parts: Array = [["La bonne réponse est :", "fr-FR"], [expected, foreign if foreign != "" else "fr-FR"]]
+		if said.get("explanation_parts") is Array:
+			parts.append_array(said["explanation_parts"])
+		elif question.get("explanation"):
+			parts.append([str(said.get("explanation", question["explanation"])), "fr-FR"])
+		return parts
 	return "La bonne réponse est : %s. %s" % [expected, said.get("explanation", question.get("explanation", ""))]
 
 

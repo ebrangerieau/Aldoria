@@ -107,3 +107,31 @@ async def test_slowness_does_not_lower_mastery_with_no_speed(client, login, prof
     spared = await mastery_after_slow_answer("jules", "1234")
     assert spared > penalised
     assert spared == pytest.approx(mastery.update(0.0, True, False, 1000, 40000, 2), abs=0.5)
+
+
+def test_english_inside_a_french_sentence_is_read_in_english():
+    from app.engine import speech
+    from app.engine.generators import REGISTRY
+
+    item = REGISTRY["6e.anglais.animaux"].item(2, 7).model_dump()
+    said = speech.for_item(item)
+    english = item["meta"]["english"]
+    assert said["prompt_parts"] == [["Que veut dire", "fr-FR"], [english, "en-GB"]]
+    assert [english, "en-GB"] in said["explanation_parts"]
+    assert all(lang == "fr-FR" for text, lang in said["explanation_parts"] if "«" in text)
+
+
+def test_quoted_english_in_a_bank_question_and_blanks():
+    from app.engine import speech
+
+    item = {
+        "notions": ["6e.anglais.grammaire.be"],
+        "prompt": 'Complète : "She ___ a cat." avec « être ».',
+    }
+    assert speech.for_item(item)["prompt_parts"] == [
+        ["Complète :", "fr-FR"],
+        ["She … a cat.", "en-GB"],
+        ["avec « être ».", "fr-FR"],
+    ]
+    maths = {"notions": ["6e.maths.fractions.addition"], "prompt": 'Calcule "3/4 + 1/4".'}
+    assert "prompt_parts" not in speech.for_item(maths), "les maths restent en un seul morceau"

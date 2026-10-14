@@ -230,7 +230,9 @@ func voice_for(lang: String) -> String:
 ## leur langue (`choices_lang`) quand ce n'est pas le français.
 static func question_parts(item: Dictionary) -> Array:
 	var said: Dictionary = item.get("speech", {})
-	var parts: Array = [[str(said.get("prompt", item.get("prompt", ""))), "fr-FR"]]
+	# Langue vivante : énoncé en morceaux, l'anglais lu par la voix anglaise (engine/speech.py).
+	var parts: Array = (said["prompt_parts"] as Array).duplicate() if said.get("prompt_parts") is Array \
+		else [[str(said.get("prompt", item.get("prompt", ""))), "fr-FR"]]
 	var choices: Array = said.get("choices", item.get("choices", []) if item.get("choices") else [])
 	var lang := str(item.get("choices_lang", "")) if item.get("choices_lang") else "fr-FR"
 	if item.get("type") == "true_false":

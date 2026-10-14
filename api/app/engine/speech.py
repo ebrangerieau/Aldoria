@@ -3,6 +3,11 @@ formule, propositions, indice et explication d'un item, écrits pour la synthès
 vocale du navigateur (« 3/4 » → « 3 sur 4 », « x² » → « x au carré »…).
 
 Le client lit `item["speech"]` tel quel ; il ne connaît pas les formules LaTeX.
+
+Langues vivantes : dans un item d'anglais (ou d'une autre langue), le texte entre guillemets
+anglais “ ” ou droits " " est dans la langue étrangère et lu par sa voix ; le reste, y compris
+les mots français cités entre « », est lu en français. `prompt_parts` et `explanation_parts`
+donnent alors ces morceaux : [[texte, langue], …].
 """
 
 from __future__ import annotations
@@ -174,6 +179,48 @@ def _group(part: str) -> str:
     return clean if re.fullmatch(r"-?[\w.,]+", clean) else f"la quantité {clean}, "
 
 
+# Matière (2e segment du code de notion) → langue de sa voix.
+LANGUAGE_SUBJECTS = {
+    "anglais": "en-GB",
+    "espagnol": "es-ES",
+    "allemand": "de-DE",
+    "italien": "it-IT",
+}
+_PUNCTUATION = " .,:;?!…"
+_FOREIGN = re.compile(r"“([^”]*)”|\"([^\"]*)\"")
+
+
+def foreign_lang(item: dict[str, Any]) -> str:
+    """Langue étrangère d'un item de langue vivante, "" sinon."""
+    for notion in item.get("notions") or [item.get("notion", "")]:
+        parts = str(notion).split(".")
+        if len(parts) > 1 and parts[1] in LANGUAGE_SUBJECTS:
+            return LANGUAGE_SUBJECTS[parts[1]]
+    listen = item.get("listen")
+    if isinstance(listen, dict) and listen.get("lang"):
+        return str(listen["lang"])
+    return ""
+
+
+def parts(value: str, lang: str) -> list[list[str]]:
+    """Morceaux lus d'un texte : “ … ” dans la langue étrangère, le reste en français."""
+    out: list[list[str]] = []
+    position = 0
+    for match in _FOREIGN.finditer(value):
+        before = text(value[position : match.start()])
+        if before.strip(_PUNCTUATION):
+            out.append([before.strip(), "fr-FR"])
+        # Un trou à compléter (« She ___ a cat ») devient une courte pause.
+        quoted = " ".join(re.sub(r"_{2,}", " … ", match.group(1) or match.group(2) or "").split())
+        if quoted.strip(_PUNCTUATION):
+            out.append([quoted, lang])
+        position = match.end()
+    rest = text(value[position:])
+    if rest.strip(_PUNCTUATION):
+        out.append([rest.strip(), "fr-FR"])
+    return out
+
+
 def for_item(item: dict[str, Any]) -> dict[str, Any]:
     """Textes lus d'un item tel qu'envoyé au client."""
     prompt = text(item.get("prompt", ""))
@@ -185,4 +232,9 @@ def for_item(item: dict[str, Any]) -> dict[str, Any]:
     for key in ("hint", "explanation"):
         if item.get(key):
             speech[key] = text(item[key])
+    lang = foreign_lang(item)
+    if lang:
+        for key in ("prompt", "explanation"):
+            if item.get(key) and _FOREIGN.search(str(item[key])):
+                speech[f"{key}_parts"] = parts(str(item[key]), lang)
     return speech

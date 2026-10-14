@@ -217,7 +217,7 @@ def _make(theme: str):
     def generate(difficulty: int, rng: random.Random) -> dict[str, Any]:
         english, french, alternatives = rng.choice(words)
         hint = f"Thème : {title}."
-        explanation = f"« {french} » se dit « {english} » en anglais."
+        explanation = f"« {french} » se dit “{english}” en anglais."
         item: dict[str, Any] = {"hint": hint, "time_target_ms": TIME_MS[difficulty]}
         if difficulty == 1:
             choices, index = _choices(words, (english, french, alternatives), rng, 0)
@@ -235,13 +235,13 @@ def _make(theme: str):
                 "type": "mcq",
                 "prompt": "Écoute le mot anglais. Que veut-il dire ?"
                 if listening
-                else f"Que veut dire « {english} » ?",
+                else f"Que veut dire “{english}” ?",
                 "choices": choices,
                 "answer": {"kind": "choice", "index": index},
             }
             if listening:
                 item["listen"] = {"text": english, "lang": LISTEN_LANG}
-                explanation = f"Tu as entendu « {english} », qui veut dire « {french} »."
+                explanation = f"Tu as entendu “{english}”, qui veut dire « {french} »."
         else:
             dictation = difficulty == 5
             item |= {
@@ -251,10 +251,10 @@ def _make(theme: str):
                 else f"Écris en anglais : « {french} »",
                 "answer": {"kind": "text", "value": [english, *alternatives], "accents": False},
             }
-            item["hint"] = f"{hint} Le mot commence par « {english[0]} »."
+            item["hint"] = f"{hint} Le mot commence par “{english[0]}”."
             if dictation:
                 item["listen"] = {"text": english, "lang": LISTEN_LANG}
-                explanation = f"Le mot était « {english} » ({french})."
+                explanation = f"Le mot était “{english}” ({french})."
         item["explanation"] = explanation
         item["meta"] = {"theme": theme, "english": english, "french": french}
         return item
@@ -316,8 +316,8 @@ def _letters(difficulty: int, rng: random.Random) -> dict[str, Any]:
         "choices_lang": LISTEN_LANG,
         "listen": {"text": english, "lang": LISTEN_LANG},
         "answer": {"kind": "order", "value": [shown.index(i) for i in range(len(english))]},
-        "hint": f"Le mot commence par « {english[0]} ».",
-        "explanation": f"Le mot était « {english} » ({french}) : {'-'.join(english)}.",
+        "hint": f"Le mot commence par “{english[0]}”.",
+        "explanation": f"Le mot était “{english}” ({french}) : “{', '.join(english)}”.",
         "time_target_ms": 20000 + 4000 * difficulty,
         "meta": {"english": english, "french": french},
     }
