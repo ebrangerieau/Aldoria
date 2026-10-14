@@ -302,8 +302,10 @@ func _build_climb(i: int, root: Node3D) -> void:
 		var wall := _place(root, "wall", Vector3(ROOM_W, 0, 2 + iz * TILE), -90.0)
 		if iz == 2:
 			wall.scale.y = rise / 4.0  # sous la porte de la salle suivante
-	# La pièce monte vers l'est une fois tournée de -90° ; 4 m de haut à l'échelle 1.
-	var stairs := _place(root, "stairs", Vector3(ROOM_W - STAIR_RUN / 2.0, 0, DOOR_Z), -90.0)
+	# L'origine de la pièce est au haut des marches (son bord z = 0, pas son centre) : posée sur
+	# la ligne du mur est, tournée de -90°, elle monte vers l'est sans vide derrière elle et suit
+	# la rampe de `height_at`. 4 m de haut à l'échelle 1.
+	var stairs := _place(root, "stairs", Vector3(ROOM_W, 0, DOOR_Z), -90.0)
 	stairs.scale = Vector3(1, rise / 4.0, 1)
 
 
