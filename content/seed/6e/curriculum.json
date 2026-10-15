@@ -34,7 +34,8 @@
     {"code": "6e.maths.angles", "title": "Angles et triangles", "notions": [
       {"code": "6e.maths.angles.vocabulaire", "label": "Vocabulaire des angles"},
       {"code": "6e.maths.angles.somme_triangle", "label": "Somme des angles d'un triangle"},
-      {"code": "6e.maths.angles.bissectrice", "label": "Bissectrice d'un angle"}
+      {"code": "6e.maths.angles.bissectrice", "label": "Bissectrice d'un angle"},
+      {"code": "6e.maths.angles.mesure", "label": "Mesurer un angle avec un rapporteur"}
     ]},
     {"code": "6e.maths.mediatrice", "title": "Médiatrice et cercle", "notions": [
       {"code": "6e.maths.mediatrice.definition", "label": "Médiatrice d'un segment"},

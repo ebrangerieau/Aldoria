@@ -158,6 +158,11 @@ sauvegarde avant migration, push, suivi de la CI, contrôle en production). Les 
 - Salle-énigme 3D (`DungeonDef.enigma_mode`) : l'énigme se résout dans le décor au lieu de trois piédestaux à question.
   `"balance"` : balance géante (`BalanceRig`, core/world ; objets en MultiMesh) et manche `BalanceEnigma` (scenes/dungeon) qui lit
   `item["visual"]` ; seul le premier essai passe par `QuestionService.submit`, les suivants corrigent (le fléau penche).
+- Stand de tir de la Lice (`scenes/tir`, classe `TirScene`, tuile « Tir » de la Citadelle) : six tirs calculés, générateur
+  par classe (`TirScene.GENERATORS` : `6e.angles.tir` rapporteur géant, `ProtractorRange` ; `2nde.droites.tir` droite de
+  l'arbalète, `LineRange`), paquet `Session.start("arene", TirScene.params(level))`, panneau `TirPanel`. Seul le premier tir
+  d'une cible passe par `QuestionService.submit` (`game_mode` "tir"). Générateurs `combat=False` : jamais tirés en combat
+  (`combat_notions()` compose les paquets). Capture : `--goto=tir --tir=<valeur>|go`.
 - Combat : `Encounter` (core/combat) est partagé par l'arène et le donjon ; une scène ne réécrit pas le tour par tour.
   Boss : `BOSS_HITS` sceaux, difficulté d'un cran sous le niveau à un cran au-dessus ; forces rendues avant le boss ;
   après un repli, l'ennemi garde ses blessures (rien n'est perdu).

@@ -492,6 +492,13 @@ générateurs naturels, donc des questions à rédiger.
 > Seul le premier essai compte dans le suivi. À tester avec Jules (note de fin de donjon) avant d'étendre : miroirs et angles,
 > fioles de fractions, passerelle de Tom (fonction affine). Autres pistes notées : duel de cartes (Jules contre Tom),
 > expédition guidée (anglais : suivre des indications), forge et marché (proportions, pourcentages), tir calculé à la Lice.
+>
+> ✅ **2026-10-15 : deuxième prototype : le stand de tir de la Lice** (tuile « Tir » de la Citadelle). Six tirs calculés,
+> sans chrono. Jules : rapporteur géant au sol, il mesure l'angle entre la ligne de départ et la cible (nouvelle notion
+> `6e.maths.angles.mesure`) ; aux difficultés 4 et 5, ligne de départ à gauche et double graduation (le piège 180 − angle
+> est reconnu et expliqué). Tom : mur de tir en repère, il donne le coefficient directeur de la droite de l'arbalète
+> (entier puis fraction). Le tir raté se voit (flèche plantée avec son angle, trace du carreau) et le conseil dit dans quel
+> sens corriger ; seul le premier tir compte dans le suivi. À tester avec les enfants, avec la balance géante.
 
 **Étape D – Rentrée 2027** (prête avant juillet 2027)
 - Programmes de 5e (Jules) et de 1ère (tronc commun + spécialités de Tom, connues au printemps 2027).

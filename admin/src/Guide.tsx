@@ -571,7 +571,9 @@ export function Guide({ child, onOpen }: { child?: Profile; onOpen: (page: Guide
             énigme, un boss, puis un coffre et une note de 1 à 5. Le héros commente sa progression et donne des indices sur la salle suivante. Une
             défaite ne fait rien perdre : le héros reprend des forces et l'ennemi garde ses blessures. Certaines énigmes se jouent directement
             dans le décor : dans la Tour des Fractions, une balance géante se résout en enlevant la même chose des deux côtés puis en essayant
-            une masse ; le fléau penche du côté trop lourd. Seul le premier essai compte comme réponse dans le suivi.
+            une masse ; le fléau penche du côté trop lourd. Seul le premier essai compte comme réponse dans le suivi. À la Citadelle,
+            le <strong>stand de tir</strong> propose six tirs calculés : {tom ? 'Tom donne le coefficient directeur de la droite de son arbalète' : 'Jules mesure un angle sur un rapporteur géant'} ;
+            un tir raté montre où il est parti, et seul le premier tir de chaque cible compte dans le suivi.
           </li>
           <li>
             <strong>Le sac</strong> : des objets gagnés en jouant (plume qui retire deux mauvaises propositions, parchemin d'indice, bouclier,

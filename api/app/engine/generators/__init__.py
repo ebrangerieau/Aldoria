@@ -70,6 +70,12 @@ def playable_notions() -> set[str]:
     return {g.notion for g in REGISTRY.values()}
 
 
+def combat_notions() -> set[str]:
+    """Notions qu'un paquet de combat peut poser : au moins un générateur hors énigme (une notion
+    jouée seulement au tir ou dans une quête n'occupe pas de place vide dans le paquet)."""
+    return {g.notion for g in REGISTRY.values() if g.combat}
+
+
 # Enregistrement des générateurs (import pour effet de bord).
 from app.engine.generators import (  # noqa: E402, F401
     algebre_2nde,
@@ -90,4 +96,5 @@ from app.engine.generators import (  # noqa: E402, F401
     prealgebre_6e,
     problemes_6e,
     raisonnement,
+    tir,
 )

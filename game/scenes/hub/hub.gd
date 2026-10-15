@@ -118,11 +118,17 @@ func _build() -> void:
 	daily.add_child(_daily_button)
 
 	var halls := _card(cards, "castle", "Dans la Citadelle")
-	var grid := HBoxContainer.new()
-	grid.add_theme_constant_override("separation", 8)
+	# Une rangée de tuiles ; texte agrandi : trois par ligne, pour ne pas élargir la colonne.
+	var grid := GridContainer.new()
+	grid.columns = 3 if UiKit.text_scale > 1.1 else 5
+	grid.add_theme_constant_override("h_separation", 6)
+	grid.add_theme_constant_override("v_separation", 6)
 	halls.add_child(grid)
 	var arena := _small_button(grid, "Arène", "crossed-swords")
 	arena.pressed.connect(_enter_arena)
+	if TirScene.generator_for(Session.level()) != "":
+		var shooting := _small_button(grid, "Tir", "round-star")
+		shooting.pressed.connect(_enter_shooting)
 	var archives := _small_button(grid, "Archives", "open-book")
 	archives.pressed.connect(func() -> void:
 		get_tree().change_scene_to_file("res://scenes/archives/archives.tscn"))
@@ -210,6 +216,11 @@ func _enter_arena() -> void:
 	await _launch("arene", {}, "res://scenes/combat/combat.tscn")
 
 
+## Stand de tir de la Lice : tirs calculés (angle pour Jules, droite pour Tom).
+func _enter_shooting() -> void:
+	await _launch("arene", TirScene.params(Session.level()), TirScene.SCENE, "tir")
+
+
 func _launch(mode: String, params: Dictionary, scene: String, cache := "") -> void:
 	if _busy:
 		return
@@ -266,7 +277,7 @@ func _switch_player() -> void:
 	get_tree().change_scene_to_file("res://scenes/profile/profile_select.tscn")
 
 
-## Développement, PC uniquement : `-- --goto=donjon|village|defi|arene|archives|apparence|prologue`
+## Développement, PC uniquement : `-- --goto=donjon|village|defi|arene|tir|archives|apparence|prologue`
 ## (`--dungeon=<code>` pour un autre donjon que le premier). Le donjon et le village partent
 ## d'ici sans passer par leur seuil sur la carte (captures d'écran).
 func _dev_goto() -> void:
@@ -290,6 +301,8 @@ func _dev_goto() -> void:
 			_enter_daily()
 		"arene":
 			_enter_arena()
+		"tir":
+			_enter_shooting()
 		"archives":
 			get_tree().change_scene_to_file("res://scenes/archives/archives.tscn")
 		"apparence":

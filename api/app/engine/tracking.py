@@ -14,7 +14,7 @@ from sqlalchemy import select as sql_select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.engine import accommodations, levels, mastery, selector, session_pack
-from app.engine.generators import Generator, playable_notions
+from app.engine.generators import Generator, combat_notions, playable_notions
 from app.engine.scheduler import LeitnerScheduler, Scheduler
 from app.models import (
     Attempt,
@@ -156,7 +156,7 @@ async def _combat_pack(
     daily: bool = False,
 ) -> dict[str, Any]:
     bank = await published_bank(db, profile.level, profile.family_id)
-    playable = playable_notions() | set(bank)
+    playable = combat_notions() | set(bank)
     rows = [
         (n, c)
         for n, c in await _level_notions(db, profile.level, profile.family_id)

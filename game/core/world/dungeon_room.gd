@@ -20,6 +20,8 @@ var sun_energy := 1.1
 var torch_color := Color(1.0, 0.62, 0.28)
 ## Rangées de dalles supplémentaires côté caméra (sol visible jusqu'au bas de l'écran).
 var front_rows := 0
+## Sol uni, sans dalles à éboulis (dessins au sol lisibles : stand de tir).
+var plain_floor := false
 
 var sun: DirectionalLight3D
 var built_settings: Dictionary
@@ -107,7 +109,7 @@ func _build_structure() -> void:
 	var half := (ROOM - 1) * TILE / 2.0  # centre de la première tuile
 	for ix in ROOM:
 		for iz in ROOM + front_rows:
-			var tile := "floor_tile_large_rocks" if (ix + iz) % 3 == 0 else "floor_tile_large"
+			var tile := "floor_tile_large_rocks" if (ix + iz) % 3 == 0 and not plain_floor else "floor_tile_large"
 			_place(tile, Vector3(ix * TILE - half, 0, iz * TILE - half))
 	var back_z := -half - TILE / 2.0
 	var side_x := half + TILE / 2.0
@@ -135,7 +137,8 @@ func _build_props() -> void:
 	_place("chest_gold", Vector3(0, 0, -6.5))
 	_place("table_medium_decorated_A", Vector3(-7.0, 0, 3.0), 90.0)
 	_place("candle_triple", Vector3(4.5, 0, -7.5))
-	_place("rubble_half", Vector3(5.5, 0, 6.5), 30.0)
+	if not plain_floor:
+		_place("rubble_half", Vector3(5.5, 0, 6.5), 30.0)
 	_place("column", Vector3(-8.4, 0, 7.6))
 	_add_dust()
 
