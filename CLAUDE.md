@@ -62,6 +62,12 @@ Vérifier qu'une sauvegarde se restaure, dans un PostgreSQL jetable : `powershel
 Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-ci:4.7.2`, puis
 `python tools/postprocess_web.py build/web`.
 
+## Skills du projet (`.claude/skills/`)
+
+Procédures pas à pas, chargées à la demande : `nouvelle-matiere` (ajouter une matière à une classe),
+`nouveau-donjon` (un lieu de plus dans une région), `captures` (vérification visuelle du jeu), `livrer` (tests,
+sauvegarde avant migration, push, suivi de la CI, contrôle en production). Les tenir à jour quand une étape change.
+
 ## Conventions
 
 - GDScript typé, `class_name` pour les types partagés, signaux plutôt que couplage direct.
