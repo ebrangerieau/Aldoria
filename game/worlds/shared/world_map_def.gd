@@ -51,16 +51,16 @@ const REGIONS := {
 		"label": Vector2i(5, 9),
 		"fog": "Le Bois des Mots est perdu dans le brouillard. On raconte que les arbres y murmurent des histoires. Un jour, un Archiviste y entrera.",
 	},
+	"histoire_geo": {
+		"title": "Les Portes du Temps",
+		"slots": [Vector2i(10, 6), Vector2i(10, 8), Vector2i(11, 5)],
+		"label": Vector2i(11, 7),
+		"fog": "Dans ce cercle de pierres, chaque porte ouvre sur une autre époque ou un autre lieu du monde. Dame Sablière y a tout mélangé. Ces portes s'ouvriront quand l'histoire-géographie entrera dans ta quête.",
+	},
 }
 
 ## Lieux fermés pour l'instant, visibles pour donner envie (docs/histoire.md §6 et §8).
 const SECRETS := {
-	"portes_temps": {
-		"title": "Les Portes du Temps",
-		"cell": Vector2i(10, 6),
-		"piece": "building_stage_A",
-		"text": "Dans ce cercle de pierres, chaque porte ouvre sur une autre époque : les pharaons, les châteaux forts, le laboratoire des inventeurs… Dame Sablière y a tout mélangé. Ces portes s'ouvriront quand l'histoire et les sciences entreront dans ta quête.",
-	},
 	"tour_oubli": {
 		"title": "La Tour de l'Oubli",
 		"cell": Vector2i(5, 1),

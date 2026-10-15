@@ -500,7 +500,8 @@ func _dungeon_detail(d: DungeonDef, status: String) -> String:
 			if boss.begins_with(article):
 				boss = article.to_lower() + boss.substr(article.length())
 	var lines := ["%d étages, une énigme, et %s au sommet." % [d.room_count(), boss],
-		"Ce que tu vas travailler : %s." % d.chapter_title.to_lower()]
+		# Première lettre seulement : les noms propres gardent leur majuscule (les Grecs, les Romains).
+		"Ce que tu vas travailler : %s." % (d.chapter_title.left(1).to_lower() + d.chapter_title.substr(1))]
 	var checkpoint := int(SaveManager.dungeon(d.code)["checkpoint"])
 	if checkpoint > 0:
 		lines.append("Tu reprendras à l'étage %d." % (checkpoint + 1))

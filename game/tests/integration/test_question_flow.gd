@@ -136,7 +136,7 @@ func test_formulas_render_from_pack() -> void:
 	_load_pack("6e")
 	# Toutes les questions n'ont pas de formule (balance, problèmes rédigés).
 	var with_formula: Array = Session.items.filter(func(it: Dictionary) -> bool: return it.has("latex_hash"))
-	assert_gt(with_formula.size(), 10)
+	assert_gt(with_formula.size(), 5)  # paquet partagé avec les autres matières
 	var item: Dictionary = with_formula[0]
 	var texture := Session.formula_texture(item["latex_hash"])
 	assert_not_null(texture)

@@ -109,6 +109,9 @@ ADVICE = {
     "francais": "Varie : QCM, vrai/faux justifié, réponse écrite (accents true) pour "
     "l'orthographe ou un terme d'analyse, remise en ordre (chronologie, étapes).",
     "maths": "Varie : QCM, nombre ou fraction (numeric), vrai/faux justifié.",
+    "histoire_geo": "Varie : QCM (dates, personnages, vocabulaire), remise en ordre (frise "
+    "chronologique), vrai/faux justifié ; dates des manuels, « vers » si approximative, "
+    "« av. J.-C. » écrit ainsi.",
 }
 
 

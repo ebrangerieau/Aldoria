@@ -14,7 +14,7 @@ import random
 from typing import Any
 
 from app.engine.generators import Generator, register
-from app.engine.generators.francais_base import Fact, Notion, register_notions
+from app.engine.generators.faits import Fact, Notion, register_notions
 
 ANALOGIE = ("comparaison", "métaphore", "personnification", "allégorie")
 INSISTANCE = ("anaphore", "gradation", "accumulation", "hyperbole")

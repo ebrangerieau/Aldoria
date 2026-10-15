@@ -1,6 +1,6 @@
-"""Français : moteur commun des générateurs à base d'exemples relus.
+"""Moteur commun des générateurs à base d'exemples relus (français, histoire-géographie…).
 
-En français, une règle « calculée » se trompe vite (exceptions, usages, sens). Chaque notion
+Hors maths, une règle « calculée » se trompe vite (exceptions, usages, sens). Chaque notion
 s'appuie donc sur une liste d'exemples écrits et relus (`Fact`), dont la bonne réponse se
 vérifie à la lecture du fichier. Le moteur tire un exemple selon la difficulté, choisit les
 intrus et, pour le vocabulaire de l'analyse (figures, termes du théâtre…), demande d'écrire
@@ -14,6 +14,7 @@ Difficulté → niveau des exemples et nombre de propositions :
 from __future__ import annotations
 
 import random
+import re
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -79,13 +80,10 @@ def make(notion: Notion):
             "meta": {"notion": notion.code, "answer": fact.answer},
         }
         if difficulty == 5 and notion.writable:
-            forms = [fact.answer, *fact.accepted]
-            # « métaphore », « une métaphore », « la métaphore » : toutes justes.
-            forms += [
-                f"{article}{w}"
-                for w in forms[:2]
-                for article in ("une ", "un ", "la ", "le ", "l'")
-            ]
+            # Le terme seul ou avec un article : « transhumance », « la transhumance ».
+            bare = re.sub(r"^(?:le |la |les |l'|un |une |des )", "", fact.answer)
+            forms = [bare, fact.answer, *fact.accepted]
+            forms += [f"{article}{bare}" for article in ("une ", "un ", "la ", "le ", "l'", "des ")]
             item |= {
                 "type": "text",
                 "prompt": f"{fact.prompt}\nÉcris ta réponse.",

@@ -132,11 +132,13 @@ Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-
   `AnswerChecker.normalize_text` côté jeu, même table d'accents, vecteurs partagés) avec `TextAnswerWidget` (clavier
   de lettres à l'écran) ; `listen` (écoute dans une langue, `Accessibility.say`, toujours actif) ; `choices_lang`
   (propositions lues dans leur langue). Programmes : un fichier par matière, `content/seed/<classe>/<matière>.json`.
-  Français (et toute matière sans règle « calculable ») : générateurs à base d'exemples relus (`francais_base.py` :
+  Français (et toute matière sans règle « calculable ») : générateurs à base d'exemples relus (`generators/faits.py` :
   `Fact`, `Notion`, `register_notions` ; niveau 1 à 3 par exemple, intrus propres ou vocabulaire de la notion,
   terme à écrire à la difficulté 5 si `writable`). Un trou s'écrit « … ». Citations : auteurs du domaine public,
   exactes, avec leur source ; sinon exemple écrit pour le jeu. `tests/test_francais.py` vérifie la couverture du
-  programme et l'unicité des réponses.
+  programme et l'unicité des réponses. Histoire-géographie : dates des manuels (« vers » si approximative), écrites
+  « 52 av. J.-C. » / « 476 après J.-C. », siècles en chiffres romains (« IVe siècle av. J.-C. ») : `engine/speech.py` les
+  lit en toutes lettres (`ordinal`).
 - Questions proposées par l'IA (`engine/ai_author.py`, route `/admin/ai-questions`) : SDK `anthropic`, modèle
   `claude-sonnet-5-5` et effort `medium` par défaut (`ALDORIA_AI_MODEL`, `ALDORIA_AI_EFFORT` ; prix par modèle
   dans `PRICES_PER_MTOK`), sortie structurée, `fallbacks="default"` ; chaque proposition repasse par `bank.validate` et

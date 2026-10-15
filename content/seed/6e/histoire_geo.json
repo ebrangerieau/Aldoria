@@ -1,0 +1,42 @@
+{
+  "level": "6e",
+  "subject": {"code": "histoire_geo", "label": "Histoire-géographie"},
+  "source": "Programme d'histoire-géographie du cycle 3 (arrêté du 9 novembre 2015 modifié, BO n° 31 du 30 juillet 2020), en vigueur en 6e en 2026-2027 (le programme du BO n° 22 du 28 mai 2026 s'appliquera en 6e à la rentrée 2027). Questions : générateurs (api/app/engine/generators/histoire_geo_6e.py), complétés par la banque.",
+  "chapters": [
+    {"code": "6e.histoire_geo.reperes", "title": "Se repérer dans le temps", "notions": [
+      {"code": "6e.histoire_geo.reperes.siecles", "label": "Situer une date dans son siècle (avant et après J.-C.)"},
+      {"code": "6e.histoire_geo.reperes.frise", "label": "Ordonner des événements sur une frise chronologique"}
+    ]},
+    {"code": "6e.histoire_geo.humanite", "title": "La longue histoire de l'humanité et des migrations", "notions": [
+      {"code": "6e.histoire_geo.humanite.premiers_humains", "label": "Les débuts de l'humanité"},
+      {"code": "6e.histoire_geo.humanite.neolithique", "label": "La « révolution » néolithique"},
+      {"code": "6e.histoire_geo.humanite.etats_ecriture", "label": "Premiers États, premières écritures"}
+    ]},
+    {"code": "6e.histoire_geo.antiquite", "title": "Récits fondateurs, croyances et citoyenneté dans la Méditerranée antique", "notions": [
+      {"code": "6e.histoire_geo.antiquite.cites_grecques", "label": "Le monde des cités grecques"},
+      {"code": "6e.histoire_geo.antiquite.rome_origines", "label": "Rome du mythe à l'histoire"},
+      {"code": "6e.histoire_geo.antiquite.monotheisme", "label": "La naissance du monothéisme juif dans un monde polythéiste"}
+    ]},
+    {"code": "6e.histoire_geo.empire_romain", "title": "L'empire romain dans le monde antique", "notions": [
+      {"code": "6e.histoire_geo.empire_romain.conquetes", "label": "Conquêtes, paix romaine et romanisation"},
+      {"code": "6e.histoire_geo.empire_romain.chretiens", "label": "Des chrétiens dans l'empire"},
+      {"code": "6e.histoire_geo.empire_romain.route_soie", "label": "Les relations avec la Chine des Han (route de la soie)"}
+    ]},
+    {"code": "6e.histoire_geo.metropoles", "title": "Habiter une métropole", "notions": [
+      {"code": "6e.histoire_geo.metropoles.habitants", "label": "Les métropoles et leurs habitants"},
+      {"code": "6e.histoire_geo.metropoles.ville_demain", "label": "La ville de demain"}
+    ]},
+    {"code": "6e.histoire_geo.faible_densite", "title": "Habiter un espace de faible densité", "notions": [
+      {"code": "6e.histoire_geo.faible_densite.contraintes", "label": "Espaces à fortes contraintes naturelles ou de grande biodiversité"},
+      {"code": "6e.histoire_geo.faible_densite.agricole", "label": "Espaces de faible densité à vocation agricole"}
+    ]},
+    {"code": "6e.histoire_geo.littoraux", "title": "Habiter les littoraux", "notions": [
+      {"code": "6e.histoire_geo.littoraux.industrialo_portuaire", "label": "Littoral industrialo-portuaire"},
+      {"code": "6e.histoire_geo.littoraux.touristique", "label": "Littoral touristique"}
+    ]},
+    {"code": "6e.histoire_geo.monde_habite", "title": "Le monde habité", "notions": [
+      {"code": "6e.histoire_geo.monde_habite.repartition", "label": "La répartition de la population mondiale et ses dynamiques"},
+      {"code": "6e.histoire_geo.monde_habite.occupation", "label": "La variété des formes d'occupation de l'espace"}
+    ]}
+  ]
+}

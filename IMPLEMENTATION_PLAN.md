@@ -461,12 +461,20 @@ générateurs naturels, donc des questions à rédiger.
 > les Archives regroupées par matière, puis les deux semaines d'observation.
 >
 > ✅ **2026-10-15 : français de Tom.** Générateurs à base d'exemples relus pour les 25 notions du programme de
-> seconde (`francais_2nde_langue.py`, `francais_2nde_litterature.py`, moteur `francais_base.py`) : étude de la
+> seconde (`francais_2nde_langue.py`, `francais_2nde_litterature.py`, moteur `faits.py`) : étude de la
 > langue, figures de style, versification (dont la disposition des rimes, calculée), repères littéraires, littérature
 > d'idées, récit, théâtre ; à la difficulté 5, le terme d'analyse est à écrire. **Le Théâtre de Verdure** (Bois des
 > Mots) : 6 salles, questions de français seulement, énigme « Les Vers défaits » (vers célèbres du domaine public à
 > remettre dans l'ordre), boss « le Ratureur ». Un donjon peut viser jusqu'à 8 chapitres. Reste : deux autres lieux
 > possibles dans la région (fontaines, forêt), relecture des exemples avec Tom.
+>
+> ✅ **2026-10-15 : histoire-géographie de Jules.** Programme de 2020 (en vigueur en 6e en 2026-2027 ; celui du BO
+> n° 22 du 28 mai 2026 s'appliquera en 6e à la rentrée 2027) : `content/seed/6e/histoire_geo.json`, 18 notions.
+> Générateurs `histoire_geo_6e.py` : exemples relus (moteur commun `faits.py`), siècle d'une date avant ou après
+> J.-C., frise chronologique, classement des pays par population (Nations unies 2024). Lecture à voix haute des
+> siècles en chiffres romains et de « av. J.-C. ». **Les Portes du Temps** deviennent une région : la Porte des
+> Origines (histoire, énigme « La Frise du Temps », boss Dame Sablière) puis la Porte des Horizons (géographie,
+> énigme « L'Atlas mélangé », boss le Brouille-Cartes). À prévoir avant la rentrée 2027 : le nouveau programme.
 
 **Étape D – Rentrée 2027** (prête avant juillet 2027)
 - Programmes de 5e (Jules) et de 1ère (tronc commun + spécialités de Tom, connues au printemps 2027).

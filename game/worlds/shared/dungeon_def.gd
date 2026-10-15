@@ -56,7 +56,7 @@ const SUBJECT_LABELS := {"maths": "Maths", "anglais": "Anglais", "francais": "Fr
 static func all_for_level(level: String) -> Array[DungeonDef]:
 	match level:
 		"6e":
-			return [tour_fractions(), atelier_balances(), observatoire_angles(), bibliotheque_langues()]
+			return [tour_fractions(), atelier_balances(), observatoire_angles(), bibliotheque_langues(), porte_origines(), porte_horizons()]
 		"2nde":
 			return [labyrinthe_vecteurs(), forge_algebre(), citadelle_fonctions(), theatre_verdure()]
 	return []
@@ -301,6 +301,113 @@ static func bibliotheque_langues() -> DungeonDef:
 			["shelf_small_candles", Vector3(14.4, 0, 1.0), 0.0, 0.6],
 		],
 		"torch_color": Color(1.0, 0.86, 0.62),
+	}
+	return d
+
+
+# --- Portes du Temps (histoire-géographie de Jules) ----------------------------------------------
+
+static func porte_origines() -> DungeonDef:
+	var d := DungeonDef.new()
+	d.code = "porte_origines"
+	d.boss_intro = "Ha ha ! Je suis Dame Sablière ! J'ai envoyé les pharaons chez les Romains et Jules César à l'âge de pierre ! Ta page de l'Histoire ? Perdue au fond de mon sablier !"
+	d.boss_defeat = "Mon sablier… le sable retombe dans le bon sens ! Chaque époque retrouve sa place. Malvrek ne va pas être content…"
+	d.page_text = "Sur la page de l'Histoire, les époques se remettent en ordre : les premiers humains, l'écriture, les cités grecques, Rome. La frise du temps est réparée."
+	d.map_piece = "building_destroyed"
+	d.page = "la page de l'Histoire"
+	d.threshold = "Au bord du royaume, un cercle de pierres garde les Portes du Temps. La première s'ouvre sur les origines : les premiers humains, les pharaons, les Grecs et les Romains. Dame Sablière y a tout mélangé, les pyramides côtoient les gladiateurs ! Rapporte la page de l'Histoire et remets les époques dans l'ordre."
+	d.title = "La Porte des Origines"
+	d.subject = "histoire_geo"
+	d.chapter_codes = ["6e.histoire_geo.reperes", "6e.histoire_geo.humanite", "6e.histoire_geo.antiquite", "6e.histoire_geo.empire_romain"]
+	d.chapter_title = "Les débuts de l'humanité, les Grecs et les Romains"
+	d.intro = "Le sable du temps coule de travers ! Traverse les époques et retrouve Dame Sablière."
+	d.enigma_generator = "6e.histoire_geo.frise"
+	d.enigma_title = "La Frise du Temps"
+	d.enigma_intro = "Trois frises ont perdu leur ordre : les événements s'y bousculent. Remets-les du plus ancien au plus récent."
+	d.enigma_xp = 45
+	d.chest_xp = 120
+	d.outro = "Les Portes du Temps se referment doucement : chaque époque est de nouveau à sa place."
+	d.rooms = [
+		{"kind": "entree", "title": "Le Cercle de Pierres"},
+		{"kind": "combat", "title": "La Grotte des Premiers Humains", "enemies": [
+			_enemy("Mushnub", "Champignon des cavernes", 60, 1, 30, Vector2(11, 7)),
+		]},
+		{"kind": "combat", "title": "Les Rives du Nil", "enemies": [
+			_enemy("Skeleton_Warrior", "Garde du pharaon", 75, 2, 35, Vector2(8, 5)),
+			_enemy("Cactoro", "Cactus du désert", 75, 2, 35, Vector2(10.5, 14)),
+		]},
+		{"kind": "enigme", "title": "La Salle de la Frise"},
+		{"kind": "combat", "title": "Le Forum de Rome", "enemies": [
+			_enemy("Skeleton_Rogue", "Gladiateur d'os", 110, 3, 50, Vector2(11, 7)),
+		]},
+		{"kind": "boss", "title": "Le Grand Sablier", "enemies": [
+			_enemy("Ghost", "Dame Sablière", 210, 4, 155, Vector2(11, 6), 1.4),
+		]},
+	]
+	d.decor = {
+		"floor": "floor_tile_large",
+		"floor_accent": "floor_dirt_large",
+		"banners": ["banner_triple_yellow", "banner_patternB_yellow"],
+		"props": [
+			["column", Vector3(1.4, 0, 4.0), 0.0, 0.6],
+			["rubble_half", Vector3(2.6, 0, 1.4), 0.0, 0.8],
+			["chest_gold", Vector3(13.4, 0, 1.4), 0.0, 0.8],
+			["trunk_large_A", Vector3(14.6, 0, 4.6), -90.0, 0.8],
+		],
+		"torch_color": Color(1.0, 0.8, 0.45),
+	}
+	return d
+
+
+static func porte_horizons() -> DungeonDef:
+	var d := DungeonDef.new()
+	d.code = "porte_horizons"
+	d.boss_intro = "Nord, sud, est, ouest… je mélange tout ! J'ai posé le Sahara au milieu de Paris et la mer dans le désert. Tu ne retrouveras jamais ton chemin !"
+	d.boss_defeat = "Ma boussole… elle montre le nord à nouveau ! Les cartes se remettent en place. Zut, zut et zut !"
+	d.page_text = "La page de la Géographie se déplie : métropoles, déserts, littoraux, foyers de peuplement. Chaque lieu retrouve sa place sur la carte du monde."
+	d.map_piece = "building_bridge_A"
+	d.page = "la page de la Géographie"
+	d.threshold = "La deuxième Porte du Temps ne s'ouvre pas sur une époque, mais sur le monde entier : des villes géantes, des déserts, des côtes. Le Brouille-Cartes, complice de Dame Sablière, a mélangé tous les atlas. Rapporte la page de la Géographie et remets chaque lieu à sa place."
+	d.title = "La Porte des Horizons"
+	d.subject = "histoire_geo"
+	d.chapter_codes = ["6e.histoire_geo.metropoles", "6e.histoire_geo.faible_densite", "6e.histoire_geo.littoraux", "6e.histoire_geo.monde_habite"]
+	d.chapter_title = "Habiter le monde : villes, déserts, littoraux"
+	d.intro = "Les cartes du monde sont toutes mélangées ! Traverse les paysages et retrouve le Brouille-Cartes."
+	d.enigma_generator = "6e.histoire_geo.population"
+	d.enigma_title = "L'Atlas mélangé"
+	d.enigma_intro = "Trois pages de l'atlas sont en désordre. Classe les pays du plus peuplé au moins peuplé pour les remettre en place."
+	d.enigma_xp = 45
+	d.chest_xp = 120
+	d.outro = "Les atlas sont rangés, les cartes disent vrai. Le monde retrouve ses horizons !"
+	d.rooms = [
+		{"kind": "entree", "title": "Le Seuil des Horizons"},
+		{"kind": "combat", "title": "La Métropole", "enemies": [
+			_enemy("GreenBlob", "Gelée des embouteillages", 60, 1, 30, Vector2(11, 7)),
+		]},
+		{"kind": "combat", "title": "Le Grand Désert", "enemies": [
+			_enemy("Cactoro", "Cactus des sables", 75, 2, 35, Vector2(8, 5)),
+			_enemy("Armabee", "Guêpe des oasis", 75, 2, 35, Vector2(10.5, 14)),
+		]},
+		{"kind": "enigme", "title": "La Salle de l'Atlas"},
+		{"kind": "combat", "title": "Le Port aux Conteneurs", "enemies": [
+			_enemy("Goleling", "Golem des conteneurs", 110, 3, 50, Vector2(11, 7)),
+		]},
+		{"kind": "boss", "title": "La Rose des Vents", "enemies": [
+			_enemy("GolelingEvolved", "Le Brouille-Cartes", 210, 4, 155, Vector2(11, 6), 1.25),
+		]},
+	]
+	d.decor = {
+		"floor": "floor_wood_large",
+		"floor_accent": "floor_tile_large_rocks",
+		"walls": ["wall_shelves", "wall_window_open"],
+		"banners": ["banner_patternC_blue", "banner_patternB_green"],
+		"props": [
+			["table_long_decorated_A", Vector3(2.4, 0, 1.4), 0.0, 1.0],
+			["shelf_large", Vector3(1.4, 0, 4.4), 90.0, 0.9],
+			["barrel_large", Vector3(13.6, 0, 1.4), 0.0, 0.8],
+			["crates_stacked", Vector3(14.6, 0, 4.4), -20.0, 0.9],
+		],
+		"torch_color": Color(0.95, 0.9, 0.7),
 	}
 	return d
 

@@ -93,7 +93,7 @@ func test_dungeons_open_one_after_the_other() -> void:
 
 func test_each_region_opens_its_first_dungeon() -> void:
 	var dungeons := DungeonDef.all_for_level("6e")
-	assert_eq(DungeonDef.subjects(dungeons), ["maths", "anglais"] as Array[String])
+	assert_eq(DungeonDef.subjects(dungeons), ["maths", "anglais", "histoire_geo"] as Array[String])
 	var english := -1
 	for i in dungeons.size():
 		if dungeons[i].code == "bibliotheque_langues":

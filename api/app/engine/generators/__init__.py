@@ -82,6 +82,7 @@ from app.engine.generators import (  # noqa: E402, F401
     francais_2nde_langue,
     francais_2nde_litterature,
     geometrie_2nde,
+    histoire_geo_6e,
     interactifs,
     nombres_2nde,
     nombres_6e,

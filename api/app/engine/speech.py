@@ -77,6 +77,48 @@ _UNITS = {
     "km²": "kilomètres carrés",
 }
 _SUPERSCRIPTS = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹⁻", "0123456789-")
+_ROMAN_VALUES = {"I": 1, "V": 5, "X": 10, "L": 50}
+_UNITS_WORDS = ["", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "dix",
+                "onze", "douze", "treize", "quatorze", "quinze", "seize"]  # fmt: skip
+_TENS_WORDS = {2: "vingt", 3: "trente", 4: "quarante"}
+
+
+def _roman_value(roman: str) -> int:
+    total = 0
+    for i, letter in enumerate(roman):
+        value = _ROMAN_VALUES[letter]
+        nxt = _ROMAN_VALUES[roman[i + 1]] if i + 1 < len(roman) else 0
+        total += -value if value < nxt else value
+    return total
+
+
+def _cardinal(n: int) -> str:
+    if n <= 16:
+        return _UNITS_WORDS[n]
+    if n < 20:
+        return "dix-" + _UNITS_WORDS[n - 10]
+    tens, unit = divmod(n, 10)
+    if unit == 0:
+        return _TENS_WORDS[tens]
+    return f"{_TENS_WORDS[tens]}{' et ' if unit == 1 else '-'}{_UNITS_WORDS[unit]}"
+
+
+def ordinal(n: int) -> str:
+    """Nombre ordinal en toutes lettres : 1 → premier, 4 → quatrième, 21 → vingt et unième."""
+    if n == 1:
+        return "premier"
+    word = _cardinal(n)
+    if word.endswith("cinq"):
+        return word + "uième"
+    if word.endswith("neuf"):
+        return word[:-1] + "vième"
+    if word.endswith("e"):
+        word = word[:-1]
+    return word + "ième"
+
+
+def _century(m: re.Match) -> str:
+    return f"{ordinal(_roman_value(m.group(1)))} {m.group(3)}"
 
 
 def text(value: str) -> str:
@@ -117,6 +159,11 @@ def text(value: str) -> str:
     out = re.sub(r"\|([^|]+)\|", r"la valeur absolue de \1,", out)
     # Intervalles : « ]2 ; 5] » → « de 2 exclu à 5 inclus ».
     out = re.sub(r"([\[\]])\s*([^;\[\]]+?)\s*;\s*([^;\[\]]+?)\s*([\[\]])", _interval, out)
+    # Siècles en chiffres romains : « IVe siècle av. J.-C. » → « quatrième siècle avant J.-C. »,
+    # lu ensuite « avant Jésus-Christ ».
+    out = re.sub(r"\b([IVXL]+)(er|e) (siècles?|millénaires?)\b", _century, out)
+    out = re.sub(r"\bav\. J\.-C\.", "avant Jésus-Christ", out)
+    out = re.sub(r"\b(?:apr\.|après) J\.-C\.", "après Jésus-Christ", out)
     for symbol, word in _WORDS:
         out = out.replace(symbol, word)
     out = re.sub(r"(?<=\d)-(?=\d)", " moins ", out)  # 7-3

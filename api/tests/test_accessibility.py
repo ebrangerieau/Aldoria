@@ -35,6 +35,11 @@ def test_formulas_are_read_in_words(formula, spoken):
         ("Convertis : 9,46 cL = ... L", "Convertis : 9,46 centilitres égale ... litres"),
         ("Compare 3/4 et 0,75.", "Compare 3 sur 4 et 0,75."),
         ("arrive-t-il ?\navancer de 1", "arrive-t-il ? avancer de 1"),
+        ("le IVe siècle av. J.-C.", "le quatrième siècle avant Jésus-Christ"),
+        ("le Ier siècle", "le premier siècle"),
+        ("le XXIe siècle", "le vingt et unième siècle"),
+        ("le XXXVe siècle av. J.-C.", "le trente-cinquième siècle avant Jésus-Christ"),
+        ("en 476 après J.-C.", "en 476 après Jésus-Christ"),
     ],
 )
 def test_symbols_are_read_in_words(shown, spoken):

@@ -5,7 +5,7 @@ Phrases écrites pour le jeu. Un trou à compléter s'écrit « … » (lu comme
 
 from __future__ import annotations
 
-from app.engine.generators.francais_base import Fact, Notion, register_notions
+from app.engine.generators.faits import Fact, Notion, register_notions
 
 CLASSES = (
     "nom",
