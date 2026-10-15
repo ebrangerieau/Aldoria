@@ -240,7 +240,7 @@ def test_game_dungeons_match_curriculum_and_generators():
         source,
         re.S,
     )
-    assert len(dungeons) == 7
+    assert len(dungeons) == 8
     for code, chapter_list, enigma in dungeons:
         codes = re.findall(r'"([\w.]+)"', chapter_list)
         levels = {chapters[c] for c in codes}  # KeyError : chapitre absent du programme
@@ -292,3 +292,28 @@ async def test_maths_dungeon_has_no_english(client, login, curriculum):
         )
     ).json()["items"]
     assert all(i["notions"][0].startswith("6e.maths.") for i in items)
+
+
+async def test_french_dungeon_stays_in_french(client, login, curriculum):
+    """Théâtre de Verdure (Bois des Mots) : questions de français seulement, énigme des vers."""
+    headers = await login("tom", "9876")
+    names = ("langue", "figures", "poesie", "idees", "recit", "theatre")
+    chapters = [f"2nde.francais.{c}" for c in names]
+    body = (
+        await client.post(
+            f"{API}/session/start",
+            json={
+                "mode": "donjon",
+                "focus_chapters": chapters,
+                "enigma": {"generator": "2nde.francais.vers", "count": 6},
+            },
+            headers=headers,
+        )
+    ).json()
+    items = body["items"]
+    assert len(items) > 20
+    assert all(i["notions"][0].startswith("2nde.francais.") for i in items)
+    enigma = [i for i in items if i["role"] == "enigme"]
+    assert len(enigma) == 6 and all(i["type"] == "order" for i in enigma)
+    # Plusieurs chapitres représentés, pas seulement l'étude de la langue.
+    assert len({i["notions"][0].split(".")[2] for i in items}) >= 4

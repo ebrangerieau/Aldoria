@@ -459,6 +459,14 @@ générateurs naturels, donc des questions à rédiger.
 > notion « épeler et écrire »), boss « le Bibliothécaire Muet ». Les donjons de maths ne reçoivent plus de
 > questions d'anglais. Reste : le donjon de français de Tom (après une première série de questions publiées),
 > les Archives regroupées par matière, puis les deux semaines d'observation.
+>
+> ✅ **2026-10-15 : français de Tom.** Générateurs à base d'exemples relus pour les 25 notions du programme de
+> seconde (`francais_2nde_langue.py`, `francais_2nde_litterature.py`, moteur `francais_base.py`) : étude de la
+> langue, figures de style, versification (dont la disposition des rimes, calculée), repères littéraires, littérature
+> d'idées, récit, théâtre ; à la difficulté 5, le terme d'analyse est à écrire. **Le Théâtre de Verdure** (Bois des
+> Mots) : 6 salles, questions de français seulement, énigme « Les Vers défaits » (vers célèbres du domaine public à
+> remettre dans l'ordre), boss « le Ratureur ». Un donjon peut viser jusqu'à 8 chapitres. Reste : deux autres lieux
+> possibles dans la région (fontaines, forêt), relecture des exemples avec Tom.
 
 **Étape D – Rentrée 2027** (prête avant juillet 2027)
 - Programmes de 5e (Jules) et de 1ère (tronc commun + spécialités de Tom, connues au printemps 2027).

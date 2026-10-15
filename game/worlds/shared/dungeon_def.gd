@@ -58,7 +58,7 @@ static func all_for_level(level: String) -> Array[DungeonDef]:
 		"6e":
 			return [tour_fractions(), atelier_balances(), observatoire_angles(), bibliotheque_langues()]
 		"2nde":
-			return [labyrinthe_vecteurs(), forge_algebre(), citadelle_fonctions()]
+			return [labyrinthe_vecteurs(), forge_algebre(), citadelle_fonctions(), theatre_verdure()]
 	return []
 
 
@@ -442,6 +442,61 @@ static func citadelle_fonctions() -> DungeonDef:
 			["sword_shield", Vector3(14.8, 0, 5.0), -90.0, 0.6],
 		],
 		"torch_color": Color(0.6, 0.78, 1.0),
+	}
+	return d
+
+
+## Bois des Mots (français de Tom) : premier lieu de la région, sur une scène de théâtre.
+static func theatre_verdure() -> DungeonDef:
+	var d := DungeonDef.new()
+	d.code = "theatre_verdure"
+	d.boss_intro = "Un mot de trop, Archiviste, et je te rature. Ici, j'efface tout ce qui a du sens : les vers, les figures, les règles."
+	d.boss_defeat = "Mon encre… pâlit. Les mots reviennent sous les ratures. Malvrek saura que tu lis entre les lignes."
+	d.page_text = "La page du Français se relit sans rature : règles d'accord, figures de style, vers et répliques. Les arbres du Bois murmurent de nouveau."
+	d.map_piece = "building_stage_A"
+	d.page = "la page du Français"
+	d.threshold = "Au cœur du Bois des Mots, le Théâtre de Verdure donnait la parole aux arbres : chaque feuille portait un vers. Le Ratureur a volé la page du Français. Il barre chaque mot d'un trait d'encre, et le théâtre s'est tu. Reprends-lui la page, scène après scène."
+	d.title = "Le Théâtre de Verdure"
+	d.subject = "francais"
+	d.chapter_codes = ["2nde.francais.langue", "2nde.francais.figures", "2nde.francais.poesie", "2nde.francais.idees", "2nde.francais.recit", "2nde.francais.theatre"]
+	d.chapter_title = "Langue, figures de style, poésie, récit et théâtre"
+	d.intro = "Les feuilles du Bois sont couvertes de ratures. Traverse le Théâtre et rends ses mots au royaume."
+	d.enigma_generator = "2nde.francais.vers"
+	d.enigma_title = "Les Vers défaits"
+	d.enigma_intro = "Trois vers célèbres gisent en morceaux sur la scène. Remets leurs mots dans l'ordre pour rendre la voix aux acteurs."
+	d.enigma_xp = 50
+	d.chest_xp = 130
+	d.outro = "Le rideau de feuilles se lève. Le Théâtre de Verdure parle de nouveau."
+	d.rooms = [
+		{"kind": "entree", "title": "L'Allée des Chênes"},
+		{"kind": "combat", "title": "La Clairière des Accords", "enemies": [
+			_enemy("GhostSkull", "Spectre des ratures", 80, 2, 40, Vector2(11, 7)),
+		]},
+		{"kind": "combat", "title": "Le Sentier des Figures", "enemies": [
+			_enemy("Goleling", "Golem de grimoire", 90, 3, 45, Vector2(8, 5)),
+			_enemy("Armabee", "Guêpe d'encre", 85, 2, 45, Vector2(10.5, 14)),
+		]},
+		{"kind": "enigme", "title": "La Scène des Vers défaits"},
+		{"kind": "combat", "title": "Les Coulisses", "enemies": [
+			_enemy("MushnubEvolved", "Souffleur d'ombre", 130, 4, 60, Vector2(11, 7)),
+		]},
+		{"kind": "boss", "title": "La Grande Scène", "enemies": [
+			_enemy("BlueDemon", "Le Ratureur", 240, 5, 170, Vector2(11, 6), 1.2),
+		]},
+	]
+	d.decor = {
+		"floor": "floor_dirt_large",
+		"floor_accent": "floor_wood_large_dark",
+		"walls": ["wall_arched", "wall"],
+		"banners": ["banner_patternB_green", "banner_patternC_white"],
+		"props": [
+			["column", Vector3(1.4, 0, 4.0), 0.0, 0.6],
+			["rubble_half", Vector3(2.6, 0, 1.4), 0.0, 0.8],
+			["candle_triple", Vector3(13.2, 0, 1.0), 0.0, 0.3],
+			["trunk_large_A", Vector3(14.6, 0, 4.6), -90.0, 0.8],
+			["table_medium_decorated_A", Vector3(12.0, 0, 1.6), 0.0, 0.9],
+		],
+		"torch_color": Color(0.62, 0.95, 0.72),
 	}
 	return d
 

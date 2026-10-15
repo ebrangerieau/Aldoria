@@ -77,7 +77,7 @@ class SessionStartIn(BaseModel):
 
     mode: Literal["arene", "donjon", "defi", "village"] = "arene"
     focus_chapters: list[Annotated[str, Field(max_length=80)]] = Field(
-        default_factory=list, max_length=4
+        default_factory=list, max_length=8
     )
     # Ancien client (un seul chapitre) : encore accepté le temps des mises à jour.
     focus_chapter: str | None = Field(default=None, max_length=80)

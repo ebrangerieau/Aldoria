@@ -1,7 +1,7 @@
 {
   "level": "2nde",
   "subject": {"code": "francais", "label": "Français"},
-  "source": "Programme de français de seconde générale et technologique (BO spécial n° 1 du 22 janvier 2019) : objets d'étude et étude de la langue ; vocabulaire de l'analyse utile aux épreuves anticipées de français de fin de première. Questions : banque (rédigées ou proposées par l'IA).",
+  "source": "Programme de français de seconde générale et technologique (BO spécial n° 1 du 22 janvier 2019) : objets d'étude et étude de la langue ; vocabulaire de l'analyse utile aux épreuves anticipées de français de fin de première. Questions : générateurs à base d'exemples relus (api/app/engine/generators/francais_2nde_*.py), complétés par la banque (rédigées ou proposées par l'IA).",
   "chapters": [
     {"code": "2nde.francais.langue", "title": "Étude de la langue", "notions": [
       {"code": "2nde.francais.langue.classes_mots", "label": "Classes grammaticales des mots"},

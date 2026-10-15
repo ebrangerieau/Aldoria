@@ -54,6 +54,7 @@ une manie et une réplique d'entrée et de défaite. Les boss actuels deviennent
 | Cimes Fractales (maths) | Le Grand Diviseur | coupe tout en morceaux et ne sait plus les recoller |
 | Cimes Fractales (maths) | Le Faux Peseur | triche à la balance |
 | Bibliothèque des Langues (anglais) | Le Bibliothécaire Muet | a volé les mots ; ne parle plus que par gestes |
+| *Bois des Mots* (français) | *Le Ratureur* | barre chaque mot d'un trait d'encre ; défait les vers |
 | Portes du Temps (histoire, sciences) | *Dame Sablière* | fige ou dérègle le temps (voir §6) |
 
 ## 4. Les gentils
@@ -90,7 +91,7 @@ le brouillard ; il recule à chaque donjon terminé, et un chemin s'éclaire ver
 | --- | --- | --- | --- |
 | Les Cimes Fractales | maths | montagnes, tours, ateliers | existe (3 donjons par classe) |
 | La Bibliothèque des Langues | anglais (puis autres langues) | côte, port, grande bibliothèque | existe (1 donjon en 6e) |
-| *Le Bois des Mots* | français | forêt, théâtre en plein air, fontaines | à faire (donjon de Tom) |
+| *Le Bois des Mots* | français | forêt, théâtre en plein air, fontaines | existe (1 donjon en seconde : le Théâtre de Verdure) |
 | **Les Portes du Temps** | histoire, sciences | cercle de pierres avec des portes ouvertes sur une autre époque | plus tard |
 | Clairval | révision (toutes matières) | village | existe |
 

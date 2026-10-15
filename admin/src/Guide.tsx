@@ -553,7 +553,8 @@ export function Guide({ child, onOpen }: { child?: Profile; onOpen: (page: Guide
           </li>
           <li>
             <strong>La carte du royaume</strong> : l'écran d'accueil après la connexion (avatar, puis code secret). Au centre, la Citadelle des
-            Archives ; autour, une région par matière (les Cimes Fractales pour les maths, la Bibliothèque des Langues pour l'anglais…) et le village
+            Archives ; autour, une région par matière (les Cimes Fractales pour les maths, la Bibliothèque des Langues pour l'anglais, le Bois des
+            Mots pour le français…) et le village
             de Clairval. Les régions pas encore au programme restent dans le brouillard. En touchant un lieu, {name} lit d'abord ce qui l'attend
             (le lieu, la page à reprendre, ce qu'il va travailler) et choisit d'y entrer ou non.
           </li>
