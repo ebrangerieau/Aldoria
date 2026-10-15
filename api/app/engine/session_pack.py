@@ -99,7 +99,8 @@ def enigma_items(
 
 def build(level: str, rng: random.Random) -> dict[str, Any]:
     """Paquet pour un joueur sans historique (tests du client, repli)."""
-    notions = sorted({g.notion for g in for_level(level)})
+    # Notions qu'un combat peut poser (pas celles des seuls jeux dédiés : stand de tir, enquêtes).
+    notions = sorted({g.notion for g in for_level(level) if g.combat})
     if not notions:
         raise ValueError(f"aucun générateur pour le niveau {level}")
     infos = [
