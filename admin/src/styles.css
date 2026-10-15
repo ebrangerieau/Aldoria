@@ -785,3 +785,60 @@ button.link {
   margin: 12px 0 0;
   font-size: 1.3rem;
 }
+.subject-title .muted {
+  font-size: 0.9rem;
+  font-weight: 400;
+}
+.subjects {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.now h2 {
+  margin-bottom: 4px;
+}
+.now p {
+  margin: 0;
+}
+.now-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.now-list li {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 4px 12px;
+  border-top: 1px solid var(--border);
+}
+.now-list li:first-child {
+  border-top: none;
+}
+.now-list button.link {
+  text-align: left;
+  padding: 0;
+}
+.badge.en_cours,
+.badge.controle_bientot {
+  background: none;
+  border: 2px solid var(--info);
+  font-size: 0.85rem;
+}
+.badge.controle_bientot {
+  border-color: var(--warn);
+  font-weight: 600;
+}
+.chapter-head h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+.notions-fold summary {
+  cursor: pointer;
+  padding: 10px 0;
+  font-weight: 500;
+}
+.notions-fold[open] summary {
+  border-bottom: 1px solid var(--border);
+}

@@ -41,14 +41,27 @@ const { chromium } = require('playwright-core');
   await page.getByText('Objectifs du projet').waitFor();
   await shot('1_tableau_de_bord');
 
+  // Programme : une matière à la fois (onglets), le chapitre du moment repris en tête.
   await page.getByRole('button', { name: 'Programme' }).click();
+  await page.locator('nav.subjects').getByRole('button', { name: /^Mathématiques/ }).click();
   const fractions = page.locator('section.chapter', { hasText: 'Fractions' }).first();
   await fractions.getByRole('radio', { name: 'En cours en classe' }).click();
   await page.waitForResponse((r) => r.url().includes('/chapters/') && r.request().method() === 'PUT');
   await page.waitForTimeout(500);
   const checked = await fractions.getByRole('radio', { name: 'En cours en classe' }).getAttribute('aria-checked');
   if (checked !== 'true') problems.push('statut « En cours » non appliqué');
+  if ((await page.locator('section.now li', { hasText: 'Fractions' }).count()) === 0) {
+    problems.push('« En ce moment » ne reprend pas le chapitre en cours');
+  }
   await shot('2_programme');
+  await page.locator('nav.subjects').getByRole('button', { name: /^Histoire-géographie/ }).click();
+  await page.locator('section.chapter', { hasText: 'Habiter une métropole' }).first().waitFor();
+  if ((await page.locator('section.chapter', { hasText: 'Fractions' }).count()) !== 0) {
+    problems.push('onglet Histoire-géographie : les chapitres de maths restent affichés');
+  }
+  await page.locator('section.now li', { hasText: 'Fractions' }).getByRole('button').click();
+  await page.locator('section.chapter', { hasText: 'Fractions' }).first().waitFor();
+  await shot('2b_programme_matiere');
 
   // Questions : aperçu d'un générateur (formules en SVG rendues par l'API).
   await page.getByRole('button', { name: 'Questions', exact: true }).click();

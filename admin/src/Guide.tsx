@@ -146,8 +146,12 @@ export function Guide({ child, onOpen }: { child?: Profile; onOpen: (page: Guide
 
       <Section id="programme" title="Dire au jeu ce qui se passe en classe" open={() => onOpen('program')} openLabel="Ouvrir le programme">
         <p>
-          L'onglet Programme liste les chapitres de {tom ? 'seconde' : '6ème'} avec, pour chacun, les étoiles de ses notions. Chaque chapitre a un
-          statut, que vous choisissez d'un clic :
+          L'onglet Programme liste les chapitres de {tom ? 'seconde' : '6ème'}, <strong>une matière à la fois</strong> : choisissez la matière
+          dans la rangée de boutons (chaque bouton indique combien de chapitres y sont en cours, ou combien sont terminés). L'encadré{' '}
+          <strong>En ce moment</strong>, tout en haut, rassemble les chapitres en cours et les contrôles annoncés de toutes les matières ;
+          touchez-en un pour ouvrir sa matière. Les notions d'un chapitre et leurs étoiles se déplient sous son titre (dépliées d'office pour
+          les chapitres du moment). La page se souvient de la dernière matière ouverte pour chaque enfant. Chaque chapitre a un statut, que
+          vous choisissez d'un clic :
         </p>
         <dl className="statuses-guide">
           <dt>
@@ -173,7 +177,7 @@ export function Guide({ child, onOpen }: { child?: Profile; onOpen: (page: Guide
           <dd>Vu en classe. Ses notions reviennent par la révision espacée, au bon moment pour ne pas les oublier.</dd>
         </dl>
         <ol className="steps">
-          <li>Ouvrez Programme et repérez le chapitre étudié en ce moment.</li>
+          <li>Ouvrez Programme, choisissez la matière, puis repérez le chapitre étudié en ce moment.</li>
           <li>Cliquez sur « En cours en classe ». L'enregistrement est immédiat, il n'y a pas de bouton à valider.</li>
           <li>Quand un contrôle est annoncé, cliquez sur « Contrôle bientôt » et choisissez la date.</li>
           <li>Après le contrôle, passez le chapitre en « Terminé ».</li>
