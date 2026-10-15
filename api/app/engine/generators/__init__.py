@@ -73,6 +73,7 @@ def playable_notions() -> set[str]:
 # Enregistrement des générateurs (import pour effet de bord).
 from app.engine.generators import (  # noqa: E402, F401
     algebre_2nde,
+    anglais_2nde,
     anglais_6e,
     developper_2nde,
     enquetes,

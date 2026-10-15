@@ -58,7 +58,7 @@ static func all_for_level(level: String) -> Array[DungeonDef]:
 		"6e":
 			return [tour_fractions(), atelier_balances(), observatoire_angles(), bibliotheque_langues(), porte_origines(), porte_horizons()]
 		"2nde":
-			return [labyrinthe_vecteurs(), forge_algebre(), citadelle_fonctions(), theatre_verdure()]
+			return [labyrinthe_vecteurs(), forge_algebre(), citadelle_fonctions(), theatre_verdure(), bibliotheque_engloutie(), port_couronnes()]
 	return []
 
 
@@ -604,6 +604,116 @@ static func theatre_verdure() -> DungeonDef:
 			["table_medium_decorated_A", Vector3(12.0, 0, 1.6), 0.0, 0.9],
 		],
 		"torch_color": Color(0.62, 0.95, 0.72),
+	}
+	return d
+
+
+# --- Bibliothèque des Langues (anglais de Tom) ---------------------------------------------------
+
+static func bibliotheque_engloutie() -> DungeonDef:
+	var d := DungeonDef.new()
+	d.code = "bibliotheque_engloutie"
+	d.boss_intro = "Passé, présent, futur… je les mélange tous ! Ici, hier sera demain et demain était hier. Ta page de Grammaire ? Elle dort au fond de l'eau, Archiviste. Tu vas l'y rejoindre."
+	d.boss_defeat = "Non… les temps se remettent en ligne : “I was, I am, I will be.” Malvrek m'avait promis un monde sans règles…"
+	d.page_text = "La page de la Grammaire anglaise sèche à la lumière : prétérit, present perfect, modaux et relatives retrouvent leur place. La Bibliothèque respire de nouveau."
+	d.map_piece = "building_church_blue"
+	d.page = "la page de la Grammaire anglaise"
+	d.threshold = "Sous la Bibliothèque des Langues, la marée a envahi les salles d'archives. Les grammaires y flottent page contre page, et les temps se mélangent : hier devient demain. Sir Tense, un Effaceur qui ne supporte aucune règle, a volé la page de la Grammaire anglaise. Descends la reprendre."
+	d.title = "La Bibliothèque engloutie"
+	d.subject = "anglais"
+	d.chapter_codes = ["2nde.anglais.verbe", "2nde.anglais.modalite", "2nde.anglais.phrase", "2nde.anglais.nom"]
+	d.chapter_title = "Temps, modaux, construction de la phrase et groupe nominal en anglais"
+	d.intro = "L'eau monte dans les archives : les verbes y ont perdu leurs temps. Trouve Sir Tense avant que tout soit noyé."
+	d.enigma_generator = "2nde.anglais.phrases"
+	d.enigma_title = "Les Phrases en miettes"
+	d.enigma_intro = "Trois phrases flottent en morceaux à la surface. Lis leur traduction, puis remets les mots anglais dans l'ordre."
+	d.enigma_xp = 50
+	d.chest_xp = 130
+	d.outro = "L'eau se retire des archives. Les grammaires anglaises reprennent leur place sur les étagères."
+	d.rooms = [
+		{"kind": "entree", "title": "Le Quai des Archives"},
+		{"kind": "combat", "title": "La Salle du Prétérit", "enemies": [
+			_enemy("Ghost", "Écho du passé", 80, 2, 40, Vector2(11, 7)),
+		]},
+		{"kind": "combat", "title": "La Galerie des Modaux", "enemies": [
+			_enemy("Skeleton_Rogue", "Pilleur de modaux", 90, 3, 45, Vector2(8, 5)),
+			_enemy("GreenBlob", "Flaque d'encre", 85, 2, 45, Vector2(10.5, 14)),
+		]},
+		{"kind": "enigme", "title": "La Salle des Miettes"},
+		{"kind": "combat", "title": "Le Couloir des Relatives", "enemies": [
+			_enemy("Yeti", "Gardien des relatives", 130, 4, 60, Vector2(11, 7)),
+		]},
+		{"kind": "boss", "title": "La Salle du Temps noyé", "enemies": [
+			_enemy("Skeleton_Warrior", "Sir Tense", 240, 5, 170, Vector2(11, 6), 1.5),
+		]},
+	]
+	d.decor = {
+		"floor": "floor_wood_large_dark",
+		"floor_accent": "floor_tile_large_rocks",
+		"walls": ["wall_shelves", "wall_arched"],
+		"banners": ["banner_patternC_blue", "banner_patternA_blue"],
+		"props": [
+			["shelf_large", Vector3(1.4, 0, 4.0), 90.0, 0.9],
+			["table_long_decorated_A", Vector3(2.4, 0, 1.4), 0.0, 1.0],
+			["candle_triple", Vector3(13.2, 0, 1.0), 0.0, 0.3],
+			["barrel_small_stack", Vector3(14.6, 0, 4.6), -90.0, 0.8],
+			["shelf_small_candles", Vector3(14.4, 0, 1.0), 0.0, 0.6],
+		],
+		"torch_color": Color(0.6, 0.82, 1.0),
+	}
+	return d
+
+
+static func port_couronnes() -> DungeonDef:
+	var d := DungeonDef.new()
+	d.code = "port_couronnes"
+	d.boss_intro = "Indépendances, couronnes, empires… À quoi bon s'en souvenir ? J'efface les dates, Archiviste, et les peuples oublient d'où ils viennent. Ta page sera la prochaine."
+	d.boss_defeat = "Les dates… reviennent. 1947, 1957, 1994… Je ne peux pas effacer ce que tant de gens racontent encore."
+	d.page_text = "La page des Mondes anglophones se déplie comme une carte : Commonwealth, indépendances, mots de la famille et de la mémoire. Les navires reprennent la mer."
+	d.map_piece = "building_castle_red"
+	d.page = "la page des Mondes anglophones"
+	d.threshold = "Au pied de la Bibliothèque, le Port des Couronnes accueillait les navires de tout le Commonwealth : Inde, Canada, Ghana, Australie, Jamaïque… Chaque bateau apportait ses récits. Lady Oblivion, l'Effaceuse aux voiles grises, a déchiré la chronique du port. Rends aux mondes anglophones leur mémoire."
+	d.title = "Le Port des Couronnes"
+	d.subject = "anglais"
+	d.chapter_codes = ["2nde.anglais.lexique", "2nde.anglais.culture"]
+	d.chapter_title = "Le lexique des axes culturels et le Commonwealth"
+	d.intro = "Une brume grise couvre les quais : les noms, les dates et les mots s'effacent. Suis la piste de Lady Oblivion."
+	d.enigma_generator = "2nde.anglais.frise"
+	d.enigma_title = "La Chronique déchirée"
+	d.enigma_intro = "La chronique du port est en lambeaux. Remets les événements dans l'ordre, du plus ancien au plus récent, pour la recoudre."
+	d.enigma_xp = 50
+	d.chest_xp = 130
+	d.outro = "La brume se lève sur le port. Les navires du Commonwealth repartent, chargés de leurs histoires."
+	d.rooms = [
+		{"kind": "entree", "title": "Le Quai des Navires"},
+		{"kind": "combat", "title": "L'Entrepôt des Mots", "enemies": [
+			_enemy("GhostSkull", "Spectre des quais", 90, 3, 45, Vector2(11, 7)),
+		]},
+		{"kind": "combat", "title": "Le Marché aux Épices", "enemies": [
+			_enemy("Cactoro", "Cactus des tropiques", 95, 3, 45, Vector2(8, 5)),
+			_enemy("Armabee", "Guêpe des docks", 95, 3, 45, Vector2(10.5, 14)),
+		]},
+		{"kind": "enigme", "title": "La Capitainerie"},
+		{"kind": "combat", "title": "La Salle du Trône vide", "enemies": [
+			_enemy("Orc", "Garde de la Couronne", 140, 4, 65, Vector2(11, 7)),
+		]},
+		{"kind": "boss", "title": "Le Phare d'Oblivion", "enemies": [
+			_enemy("Ghost", "Lady Oblivion", 250, 5, 180, Vector2(11, 6), 1.5),
+		]},
+	]
+	d.decor = {
+		"floor": "floor_wood_large",
+		"floor_accent": "floor_tile_large_rocks",
+		"walls": ["wall_window_open", "wall"],
+		"banners": ["banner_patternA_red", "banner_shield_red"],
+		"props": [
+			["barrel_large", Vector3(1.4, 0, 4.4), 0.0, 0.8],
+			["crates_stacked", Vector3(2.6, 0, 1.4), 20.0, 0.9],
+			["keg_decorated", Vector3(13.4, 0, 1.4), 0.0, 0.8],
+			["barrel_large_decorated", Vector3(14.6, 0, 4.6), -90.0, 0.8],
+			["chest_gold", Vector3(12.0, 0, 1.2), 0.0, 0.8],
+		],
+		"torch_color": Color(1.0, 0.72, 0.5),
 	}
 	return d
 

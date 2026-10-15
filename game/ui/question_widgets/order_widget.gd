@@ -3,13 +3,21 @@ extends VBoxContainer
 ## Remettre dans l'ordre : on touche les éléments l'un après l'autre (plus sûr qu'un
 ## glisser-déposer sur tablette). Chaque élément touché rejoint la rangée du haut, à sa
 ## place ; « Recommencer » vide la rangée. Émet la liste des indices dans l'ordre choisi.
+## Éléments longs (événements d'une frise) : liste numérotée, de haut en bas, et l'élément
+## choisi quitte la réserve (la hauteur du panneau ne grandit pas).
 
 signal submitted(value: Variant)
+
+## Au-delà de cette longueur, les éléments ne tiennent plus sur une rangée.
+const LONG_CHOICE := 18
+## Largeur d'un élément long : celle du panneau de question, marges comprises.
+const LONG_WIDTH := 1000.0
 
 var _choices: Array = []
 var _sequence: Array[int] = []
 var _wt: WorldTheme
-var _row: HBoxContainer
+var _row: BoxContainer
+var _long := false
 var _pool: HFlowContainer
 var _buttons: Array[Button] = []
 var _ok: Button
@@ -19,6 +27,7 @@ var _locked := false
 func setup(choices: Array, wt: WorldTheme) -> void:
 	_choices = choices
 	_wt = wt
+	_long = choices.any(func(c: Variant) -> bool: return str(c).length() > LONG_CHOICE)
 	add_theme_constant_override("separation", 12)
 
 	var frame := PanelContainer.new()
@@ -30,9 +39,9 @@ func setup(choices: Array, wt: WorldTheme) -> void:
 	box.set_content_margin_all(8)
 	frame.add_theme_stylebox_override("panel", box)
 	frame.custom_minimum_size = Vector2(0, 76)
-	_row = HBoxContainer.new()
+	_row = VBoxContainer.new() if _long else HBoxContainer.new()
 	_row.alignment = BoxContainer.ALIGNMENT_CENTER
-	_row.add_theme_constant_override("separation", 10)
+	_row.add_theme_constant_override("separation", 4 if _long else 10)
 	frame.add_child(_row)
 	add_child(frame)
 
@@ -41,9 +50,12 @@ func setup(choices: Array, wt: WorldTheme) -> void:
 	_pool.add_theme_constant_override("h_separation", 12)
 	_pool.add_theme_constant_override("v_separation", 12)
 	for i in choices.size():
-		var b := UiKit.button(UiKit.pretty_math(str(choices[i])), 64.0)
+		var b := UiKit.button(_shown(choices[i]), 56.0 if _long else 64.0)
 		b.custom_minimum_size.x = 130
-		b.add_theme_font_size_override("font_size", UiKit.font_size(30))
+		b.add_theme_font_size_override("font_size", UiKit.font_size(26 if _long else 30))
+		if _long:  # toute la largeur, sur deux lignes si besoin (texte agrandi)
+			b.custom_minimum_size.x = LONG_WIDTH
+			b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		b.pressed.connect(_pick.bind(i))
 		_pool.add_child(b)
 		_buttons.append(b)
@@ -90,12 +102,23 @@ func _refresh() -> void:
 	if _sequence.is_empty():
 		_row.add_child(_inline("Touche le premier…", 24, _wt.text_dim))
 	for n in _sequence.size():
+		var text := _shown(_choices[_sequence[n]])
+		if _long:
+			_row.add_child(UiKit.label("%d. %s" % [n + 1, text], 24, _wt.accent))
+			continue
 		if n > 0:
 			_row.add_child(_inline("→", 28, _wt.text_dim))  # neutre : croissant ou décroissant
-		_row.add_child(_inline(UiKit.pretty_math(str(_choices[_sequence[n]])), 30, _wt.accent))
+		_row.add_child(_inline(text, 30, _wt.accent))
 	for i in _buttons.size():
 		_buttons[i].disabled = i in _sequence
+		_buttons[i].visible = not (_long and i in _sequence)
 	_ok.disabled = _sequence.size() != _choices.size()
+
+
+## Texte d'un élément : les signes mathématiques embellis, sauf dans une phrase (le trait d'union
+## de « self-governing » n'est pas un signe moins).
+func _shown(choice: Variant) -> String:
+	return str(choice) if _long else UiKit.pretty_math(str(choice))
 
 
 ## Texte d'une rangée : jamais de retour à la ligne (sinon une lettre par ligne).

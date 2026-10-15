@@ -37,6 +37,7 @@ class Fact:
     explanation: str
     wrong: tuple[str, ...] = ()
     accepted: tuple[str, ...] = ()
+    choices_lang: str | None = None  # langue des propositions, si autre que celle de la notion
 
 
 @dataclass(frozen=True)
@@ -47,6 +48,7 @@ class Notion:
     facts: list[Fact]
     pool: tuple[str, ...] = ()  # réponses possibles de la notion (intrus par défaut)
     writable: bool = False  # difficulté 5 : réponse à écrire
+    lang: str = ""  # langue des propositions et de la réponse écrite (« en-GB »), "" : français
     extra: dict[str, Any] = field(default_factory=dict)
 
 
@@ -79,11 +81,17 @@ def make(notion: Notion):
             "time_target_ms": TIME_MS[difficulty],
             "meta": {"notion": notion.code, "answer": fact.answer},
         }
+        lang = notion.lang if fact.choices_lang is None else fact.choices_lang
         if difficulty == 5 and notion.writable:
-            # Le terme seul ou avec un article : « transhumance », « la transhumance ».
-            bare = re.sub(r"^(?:le |la |les |l'|un |une |des )", "", fact.answer)
-            forms = [bare, fact.answer, *fact.accepted]
-            forms += [f"{article}{bare}" for article in ("une ", "un ", "la ", "le ", "l'", "des ")]
+            if lang:  # langue vivante : la forme écrite telle quelle
+                forms = [fact.answer, *fact.accepted]
+            else:
+                # Le terme seul ou avec un article : « transhumance », « la transhumance ».
+                bare = re.sub(r"^(?:le |la |les |l'|un |une |des )", "", fact.answer)
+                forms = [bare, fact.answer, *fact.accepted]
+                forms += [
+                    f"{article}{bare}" for article in ("une ", "un ", "la ", "le ", "l'", "des ")
+                ]
             item |= {
                 "type": "text",
                 "prompt": f"{fact.prompt}\nÉcris ta réponse.",
@@ -101,6 +109,8 @@ def make(notion: Notion):
                 "choices": choices,
                 "answer": {"kind": "choice", "index": index},
             }
+            if lang:
+                item["choices_lang"] = lang
         return item
 
     return generate

@@ -105,7 +105,8 @@ SCHEMA: dict[str, Any] = {
 # Formats conseillés selon la matière (le parent peut demander autre chose dans la consigne).
 ADVICE = {
     "anglais": "Varie : QCM dans les deux sens, écoute (listen_lang en-GB), réponse écrite "
-    "(accents false), vrai/faux justifié sur une règle de grammaire.",
+    "(accents false), vrai/faux justifié sur une règle de grammaire, remise en ordre des "
+    "mots d'une phrase (avec sa traduction).",
     "francais": "Varie : QCM, vrai/faux justifié, réponse écrite (accents true) pour "
     "l'orthographe ou un terme d'analyse, remise en ordre (chronologie, étapes).",
     "maths": "Varie : QCM, nombre ou fraction (numeric), vrai/faux justifié.",

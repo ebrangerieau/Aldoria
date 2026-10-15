@@ -475,6 +475,16 @@ générateurs naturels, donc des questions à rédiger.
 > siècles en chiffres romains et de « av. J.-C. ». **Les Portes du Temps** deviennent une région : la Porte des
 > Origines (histoire, énigme « La Frise du Temps », boss Dame Sablière) puis la Porte des Horizons (géographie,
 > énigme « L'Atlas mélangé », boss le Brouille-Cartes). À prévoir avant la rentrée 2027 : le nouveau programme.
+>
+> ✅ **2026-10-15 : anglais de Tom.** Programme d'anglais du lycée (BO n° 22 du 29 mai 2025, en seconde depuis 2025) :
+> `content/seed/2nde/anglais.json`, 6 chapitres, 31 notions (temps, modaux, phrase, groupe nominal, lexique des six axes
+> culturels, Commonwealth). Repères de grammaire d'après le projet de programme de novembre 2024 (texte définitif de
+> l'annexe non consulté : à vérifier dans le manuel de Tom). Générateurs `anglais_2nde.py` : exemples relus
+> (`faits.py`, propositions lues en anglais : `Notion.lang`), lexique par axe (générateur de vocabulaire de 6e),
+> verbes irréguliers, phrases à remettre dans l'ordre, chronologie du Commonwealth. Deux lieux dans la Bibliothèque des
+> Langues : la Bibliothèque engloutie (grammaire, énigme « Les Phrases en miettes », boss Sir Tense) puis le Port des
+> Couronnes (lexique et Commonwealth, énigme « La Chronique déchirée », boss Lady Oblivion). Au passage : la bulle du
+> héros s'efface quand une question s'ouvre, un panneau trop haut défile, les éléments longs à ordonner passent en liste.
 
 **Étape D – Rentrée 2027** (prête avant juillet 2027)
 - Programmes de 5e (Jules) et de 1ère (tronc commun + spécialités de Tom, connues au printemps 2027).

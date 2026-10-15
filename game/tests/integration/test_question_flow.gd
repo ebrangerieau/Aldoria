@@ -222,6 +222,28 @@ func test_order_widget_collects_taps_in_order() -> void:
 	assert_true(AnswerChecker.check({"kind": "order", "value": [1, 0, 2]}, [1.0, 0.0, 2.0]))
 
 
+func test_long_order_items_stack_and_leave_the_pool() -> void:
+	var events := ["The Statute of Westminster is passed", "India and Pakistan become independent",
+		"South Africa rejoins the Commonwealth", "Charles III becomes king and Head of the Commonwealth",
+		"Australians vote to count Aboriginal people in the census"]
+	var panel := QuestionPanel.new()
+	panel.setup({"id": "t", "type": "order", "difficulty": 3, "prompt": "Remets ces événements dans l'ordre.", "choices": events,
+		"answer": {"kind": "order", "value": [0, 1, 2, 3, 4]}}, "Frise", WorldTheme.brouillard())
+	add_child_autofree(panel)
+	await wait_process_frames(2)
+	var order: OrderWidget = panel.find_children("*", "OrderWidget", true, false)[0]
+	var height := panel.get_combined_minimum_size().y
+	for i in [4, 0, 2]:
+		order._pick(i)
+	await wait_process_frames(2)
+	assert_true(order._row is VBoxContainer, "éléments longs : liste de haut en bas")
+	assert_eq(order._row.get_child_count(), 3)
+	assert_false(order._buttons[4].visible, "l'élément choisi quitte la réserve")
+	assert_true(order._buttons[1].visible)
+	assert_lt(panel.get_combined_minimum_size().x, 1281.0, "rien ne déborde sur le côté")
+	assert_lt(panel.get_combined_minimum_size().y, height + 40.0, "la hauteur ne grandit presque pas")
+
+
 func test_true_false_needs_verdict_then_reason() -> void:
 	var widget := TrueFalseWidget.new()
 	widget.setup(["raison A", "raison B", "raison C"], WorldTheme.brouillard())

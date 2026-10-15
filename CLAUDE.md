@@ -115,7 +115,8 @@ sauvegarde avant migration, push, suivi de la CI, contrôle en production). Les 
   `UiKit.MARGINS`), titres en Cinzel (`UiKit.title`, remplacé par la police lisible si l'aménagement est choisi),
   icônes de game-icons.net (`UiKit.icon`, `icon_button` ; SVG importés à `svg/scale=0.25`, crédit CC BY dans les
   Options ; tout nouvel auteur va dans LICENSES.md et ce crédit). Briques : `ribbon`, `screen_title`, `divider`,
-  `card_box`, `speaker`, `info_line`, `style_bar`, `bag_row`, `HeroBadge` (ui/hud). Texte sur un panneau : contraste
+  `card_box`, `speaker`, `info_line`, `style_bar`, `bag_row`, `HeroBadge` (ui/hud). Panneau de question trop haut (texte
+  agrandi) : il défile (`CombatHud.show_panel`) ; `OrderWidget` met les éléments longs en liste, sur toute la largeur. Texte sur un panneau : contraste
   ≥ 4,5:1 ; juste/faux en `good_ink` / `bad_ink` (WorldTheme), `good` / `bad` seulement pour barres, effets et textes cernés
   sur la 3D. Aménagements forcés pour les captures (PC) : `--acc=big_targets,readable_font,spacing --text-size=2`. Fond des menus : la salle de la
   Citadelle en 3D (`UiKit.backdrop`, `CitadelHall`, rendue une fois sauf à la Citadelle et à l'écran titre). Remplacer
@@ -140,7 +141,8 @@ sauvegarde avant migration, push, suivi de la CI, contrôle en production). Les 
   (propositions lues dans leur langue). Programmes : un fichier par matière, `content/seed/<classe>/<matière>.json`.
   Français (et toute matière sans règle « calculable ») : générateurs à base d'exemples relus (`generators/faits.py` :
   `Fact`, `Notion`, `register_notions` ; niveau 1 à 3 par exemple, intrus propres ou vocabulaire de la notion,
-  terme à écrire à la difficulté 5 si `writable`). Un trou s'écrit « … ». Citations : auteurs du domaine public,
+  terme à écrire à la difficulté 5 si `writable` ; langue vivante : `Notion.lang = "en-GB"`, propositions lues en anglais,
+  `Fact.choices_lang = ""` pour un exemple aux propositions en français). Un trou s'écrit « … ». Citations : auteurs du domaine public,
   exactes, avec leur source ; sinon exemple écrit pour le jeu. `tests/test_francais.py` vérifie la couverture du
   programme et l'unicité des réponses. Histoire-géographie : dates des manuels (« vers » si approximative), écrites
   « 52 av. J.-C. » / « 476 après J.-C. », siècles en chiffres romains (« IVe siècle av. J.-C. ») : `engine/speech.py` les

@@ -56,7 +56,10 @@ def test_every_generated_item_can_be_read_aloud():
                 assert said["prompt"].strip(), code
                 texts = [said["prompt"], said.get("explanation", ""), *said.get("choices", [])]
                 for text in texts:
-                    assert not leftovers.search(text), (code, text)
+                    found = leftovers.search(text)
+                    # « left », « right » : des mots anglais dans un item de langue vivante.
+                    english = speech.foreign_lang(data) and found and found[0] in ("left", "right")
+                    assert not found or english, (code, text)
                 if data.get("choices"):
                     assert len(said["choices"]) == len(data["choices"])
 

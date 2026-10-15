@@ -200,15 +200,29 @@ func show_actions(visible_actions: bool, heal_enabled := true) -> void:
 
 func show_panel(panel: Control) -> void:
 	clear_panel()
+	_hush()  # la bulle du héros ne cache jamais l'énoncé
+	# Panneau plus haut que l'écran (texte agrandi, frise longue) : il défile au lieu de déborder.
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.add_child(panel)
 	var center := CenterContainer.new()
-	center.add_child(panel)
+	center.add_child(scroll)
 	_overlay.add_child(center)
+	panel.minimum_size_changed.connect(_fit_panel.bind(scroll, panel))
+	_fit_panel(scroll, panel)
 	panel.scale = Vector2(0.92, 0.92)
 	panel.modulate.a = 0.0
 	panel.pivot_offset = panel.size / 2.0
 	var tween := create_tween().set_parallel()
 	tween.tween_property(panel, "scale", Vector2.ONE, 0.15).set_trans(Tween.TRANS_BACK).set_ease(Tween.EASE_OUT)
 	tween.tween_property(panel, "modulate:a", 1.0, 0.12)
+
+
+func _fit_panel(scroll: ScrollContainer, panel: Control) -> void:
+	var need := panel.get_combined_minimum_size()
+	# Sous la barre du héros (en haut), avec une marge en bas de l'écran.
+	var room := get_viewport().get_visible_rect().size.y - _hero_panel.get_global_rect().end.y - 28.0
+	scroll.custom_minimum_size = Vector2(need.x, minf(need.y, room))
 
 
 func clear_panel() -> void:
@@ -246,6 +260,14 @@ func say(text: String) -> void:
 	_bubble_tween.tween_property(_bubble, "modulate:a", 0.0, 0.4)
 	if Accessibility.auto_read():
 		Accessibility.say(text)
+
+
+## Efface la bulle du héros tout de suite (une question s'ouvre).
+func _hush() -> void:
+	if _bubble_tween != null:
+		_bubble_tween.kill()
+	_bubble_tween = create_tween()
+	_bubble_tween.tween_property(_bubble, "modulate:a", 0.0, 0.15)
 
 
 func _refresh_sync() -> void:

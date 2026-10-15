@@ -212,7 +212,11 @@ def _choices(words: list, target: tuple, rng: random.Random, index: int) -> tupl
 
 
 def _make(theme: str):
-    title, words = THEMES[theme]
+    return vocabulary(theme, *THEMES[theme])
+
+
+def vocabulary(theme: str, title: str, words: list[tuple[str, str, tuple[str, ...]]]):
+    """Générateur de vocabulaire d'un thème (aussi utilisé par l'anglais de seconde)."""
 
     def generate(difficulty: int, rng: random.Random) -> dict[str, Any]:
         english, french, alternatives = rng.choice(words)

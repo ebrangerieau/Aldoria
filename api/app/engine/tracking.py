@@ -49,7 +49,9 @@ async def seed_curriculum(db: AsyncSession, directory: Path | None = None) -> di
     """Charge content/seed/<classe>/<matière>.json (idempotent : mise à jour par code)."""
     directory = directory or seed_dir()
     counts = {"chapters": 0, "notions": 0}
-    for path in sorted(directory.glob("*/*.json")):
+    # Les maths (curriculum.json) d'abord : les matières sont rangées par ordre de création.
+    paths = sorted(directory.glob("*/*.json"), key=lambda p: (p.name != "curriculum.json", p))
+    for path in paths:
         data = json.loads(path.read_text(encoding="utf-8"))
         subject = await db.scalar(
             sql_select(Subject).where(Subject.code == data["subject"]["code"])
