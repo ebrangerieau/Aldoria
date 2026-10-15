@@ -485,6 +485,13 @@ générateurs naturels, donc des questions à rédiger.
 > Langues : la Bibliothèque engloutie (grammaire, énigme « Les Phrases en miettes », boss Sir Tense) puis le Port des
 > Couronnes (lexique et Commonwealth, énigme « La Chronique déchirée », boss Lady Oblivion). Au passage : la bulle du
 > héros s'efface quand une question s'ouvre, un panneau trop haut défile, les éléments longs à ordonner passent en liste.
+>
+> ✅ **2026-10-15 : premier prototype « autre type de jeu » : la salle-énigme 3D.** Les jeux se ressemblaient (une question dans
+> un panneau). Dans la Tour des Fractions, l'énigme devient une balance géante (`DungeonDef.enigma_mode = "balance"`) : trois
+> manches, on enlève la même chose des deux côtés (la balance reste en équilibre), on essaie une masse, le fléau penche.
+> Seul le premier essai compte dans le suivi. À tester avec Jules (note de fin de donjon) avant d'étendre : miroirs et angles,
+> fioles de fractions, passerelle de Tom (fonction affine). Autres pistes notées : duel de cartes (Jules contre Tom),
+> expédition guidée (anglais : suivre des indications), forge et marché (proportions, pourcentages), tir calculé à la Lice.
 
 **Étape D – Rentrée 2027** (prête avant juillet 2027)
 - Programmes de 5e (Jules) et de 1ère (tronc commun + spécialités de Tom, connues au printemps 2027).

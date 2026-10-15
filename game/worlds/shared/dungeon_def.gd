@@ -30,6 +30,9 @@ const SUBJECT_LABELS := {"maths": "Maths", "anglais": "Anglais", "francais": "Fr
 @export var chapter_title := ""
 @export var intro := ""
 @export var enigma_generator := ""
+## Forme de l'énigme : "" (trois piédestaux, une question chacun) ou "balance" (balance géante
+## en 3D, trois manches résolues sur la balance elle-même : `BalanceEnigma`).
+@export var enigma_mode := ""
 @export var enigma_title := ""
 @export var enigma_intro := ""
 @export var enigma_xp := 40
@@ -124,8 +127,9 @@ static func tour_fractions() -> DungeonDef:
 	d.chapter_title = "Fractions"
 	d.intro = "Les squelettes ont mis la Tour sens dessus dessous. Monte jusqu'au sommet et rends ses fractions au royaume !"
 	d.enigma_generator = "6e.prealgebre.balance"
+	d.enigma_mode = "balance"
 	d.enigma_title = "Les Balances du Gardien"
-	d.enigma_intro = "Trois balances bloquent la porte. Trouve ce que pèse chaque boîte pour les remettre en marche."
+	d.enigma_intro = "Une balance géante bloque la porte. Trois fois de suite, trouve ce que pèse une boîte : essaie une masse, regarde de quel côté penche la balance, et remets-la en équilibre."
 	d.outro = "La Tour des Fractions brille à nouveau. Les Archives se souviennent de toi, Archiviste !"
 	d.rooms = [
 		{"kind": "entree", "title": "Le Hall d'entrée"},

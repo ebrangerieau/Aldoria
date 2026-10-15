@@ -57,7 +57,8 @@ func test_builds_rooms_and_starts_at_the_entrance() -> void:
 	assert_false(level.is_door_open(1), "porte de la 1re salle de combat fermée")
 	assert_eq(level.room_at(_scene._hero.position.x), 0)
 	assert_eq(_scene._enemies.size(), 5)
-	assert_eq(_scene._pedestals.size(), 3)
+	assert_eq(_scene._pedestals.size(), 0, "Tour des Fractions : l'énigme est la balance géante")
+	assert_false(_scene._balance.is_empty())
 
 
 func test_walking_into_an_enemy_starts_a_fight_and_victory_opens_the_door() -> void:
@@ -93,22 +94,26 @@ func test_retreat_brings_back_to_room_entrance_without_loss() -> void:
 	assert_false(entry["defeated"], "l'ennemi attend toujours")
 
 
-func test_balance_enigma_lights_a_pedestal() -> void:
+func test_balance_room_is_solved_on_the_giant_balance() -> void:
 	await _open("jules", 3)
 	assert_true(_scene._level.is_door_open(2), "salles précédentes déjà franchies")
 	var intro := await _wait_button()  # présentation de l'énigme à l'arrivée dans la salle
 	if intro:
 		intro.pressed.emit()
 	await wait_until(func() -> bool: return not _scene._busy, 5.0)
-	var pedestal: Dictionary = _scene._pedestals[0]
-	_scene._hero.position = pedestal["node"].position + Vector3(0, 0, 1.2)
-	var panel: QuestionPanel = await _wait_for(QuestionPanel)
-	assert_not_null(panel, "question de l'énigme")
-	assert_eq(panel.item["role"], "enigme")
-	assert_eq(panel.find_children("*", "BalanceView", true, false).size(), 1, "balance dessinée")
-	panel.answered.emit(str(panel.item["answer"]["value"]), 4000, false)
-	await wait_until(func() -> bool: return pedestal["solved"], 5.0)
-	assert_true(pedestal["solved"])
+	var rig: BalanceRig = _scene._balance["node"]
+	_scene._hero.position = rig.position + Vector3(0, 0, 3.0)
+	for round in 3:
+		var enigma: BalanceEnigma = await _wait_for(BalanceEnigma)
+		assert_not_null(enigma, "manche %d sur la balance" % (round + 1))
+		assert_eq(enigma.item["role"], "enigme")
+		assert_eq(_scene._hud._overlay.find_children("*", "QuestionPanel", true, false).size(), 0, "pas de panneau de question")
+		enigma._guess = int(enigma.item["answer"]["value"])
+		enigma._attempt()
+		await wait_until(func() -> bool: return int(_scene._balance["rounds"]) == round + 1, 6.0)
+	await wait_until(func() -> bool: return not _scene._busy, 6.0)
+	assert_true(_scene._level.is_door_open(3), "trois manches : la porte s'ouvre")
+	assert_eq(Session._queue.filter(func(a: Dictionary) -> bool: return a["correct"]).size(), 3, "trois réponses justes enregistrées")
 
 
 func test_mirror_enigma_takes_vector_coordinates() -> void:
@@ -163,7 +168,8 @@ func test_every_dungeon_builds_with_its_own_decor_and_enemies() -> void:
 			assert_eq(_scene._def.code, def.code)
 			assert_eq(_scene._level.room_count, def.room_count())
 			assert_eq(_scene._enemies.size(), def.enemy_count(), def.code)
-			assert_eq(_scene._pedestals.size(), 3, def.code)
+			assert_eq(_scene._pedestals.size(), 0 if def.enigma_mode == "balance" else 3, def.code)
+			assert_eq(_scene._balance.is_empty(), def.enigma_mode != "balance", def.code)
 			var pieces: Array = def.decor.get("walls", []) + def.decor.get("banners", [])
 			for key in ["floor", "floor_accent"]:
 				if def.decor.has(key):

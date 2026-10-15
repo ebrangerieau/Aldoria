@@ -569,7 +569,9 @@ export function Guide({ child, onOpen }: { child?: Profile; onOpen: (page: Guide
           <li>
             <strong>Les donjons</strong> : dans chaque région, ils s'ouvrent l'un après l'autre. Six salles sur six étages, des monstres variés, une
             énigme, un boss, puis un coffre et une note de 1 à 5. Le héros commente sa progression et donne des indices sur la salle suivante. Une
-            défaite ne fait rien perdre : le héros reprend des forces et l'ennemi garde ses blessures.
+            défaite ne fait rien perdre : le héros reprend des forces et l'ennemi garde ses blessures. Certaines énigmes se jouent directement
+            dans le décor : dans la Tour des Fractions, une balance géante se résout en enlevant la même chose des deux côtés puis en essayant
+            une masse ; le fléau penche du côté trop lourd. Seul le premier essai compte comme réponse dans le suivi.
           </li>
           <li>
             <strong>Le sac</strong> : des objets gagnés en jouant (plume qui retire deux mauvaises propositions, parchemin d'indice, bouclier,

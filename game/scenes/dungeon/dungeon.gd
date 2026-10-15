@@ -21,6 +21,12 @@ const PEDESTAL_REARM := 2.6
 const CHEST_DISTANCE := 1.9
 const PEDESTALS := [Vector3(4, 0, 6), Vector3(8, 0, 5), Vector3(12, 0, 6)]
 const CHEST_AT := Vector3(12.5, 0, 10)
+const BALANCE_AT := Vector3(7, 0, 5)  # balance géante : au fond de la salle, loin de l'escalier
+const BALANCE_DISTANCE := 3.4  # depuis le centre de la balance
+const BALANCE_ROUNDS := 3
+const BALANCE_VIEW := {"fov": 30.0, "distance": 15.0, "pitch": -20.0}
+## Place du héros pendant l'énigme : de côté, pour ne pas cacher la balance.
+const BALANCE_SPOT := Vector3(-4.4, 0, 0.4)
 
 var _def: DungeonDef
 var _wt: WorldTheme
@@ -34,6 +40,7 @@ var _stick: TouchStick
 var _encounter: Encounter
 var _enemies: Array[Dictionary] = []  # {node, room, spec, boss, defeated}
 var _pedestals: Array[Dictionary] = []  # {node, crystal, room, solved, armed}
+var _balance: Dictionary = {}  # salle-énigme 3D : {node: BalanceRig, room, rounds, armed}
 var _chest: Node3D
 var _busy := true
 var _room := -1
@@ -143,6 +150,8 @@ func _dev_approach() -> void:
 		if p["room"] == room:
 			_hero.go_to(_level.path(_hero.position, p["node"].position + Vector3(0, 0, 1.2)))
 			return
+	if not _balance.is_empty() and _balance["room"] == room:
+		_hero.go_to(_level.path(_hero.position, (_balance["node"] as Node3D).position + Vector3(0, 0, BALANCE_DISTANCE - 0.4)))
 
 
 # --- Mise en place --------------------------------------------------------------------
@@ -175,8 +184,11 @@ func _populate() -> void:
 		for spec in room.get("enemies", []):
 			_spawn_enemy(i, spec, room["kind"] == "boss")
 		if room["kind"] == "enigme":
-			for local in PEDESTALS:
-				_spawn_pedestal(i, local)
+			if _def.enigma_mode == "balance":
+				_spawn_balance(i)
+			else:
+				for local in PEDESTALS:
+					_spawn_pedestal(i, local)
 	_hero.position = _level.entry_point(checkpoint) if checkpoint > 0 else _level.room_origin(0) + Vector3(3, 0, 10)
 	_hero.fighter.rotation_degrees.y = 90.0
 
@@ -232,6 +244,19 @@ func _spawn_pedestal(room: int, local: Vector3) -> void:
 	_pedestals.append({"node": node, "crystal": crystal, "room": room, "solved": false, "armed": true})
 
 
+func _spawn_balance(room: int) -> void:
+	var rig := BalanceRig.create(_wt, _level.built_settings.vertex_shading)
+	rig.position = _level.room_origin(room) + BALANCE_AT
+	add_child(rig)
+	for dx in [-BalanceRig.ARM, 0.0, BalanceRig.ARM]:
+		_level.add_obstacle(room, BALANCE_AT + Vector3(dx, 0, 0), BalanceRig.PLATE_R if dx != 0.0 else 0.9)
+	_balance = {"node": rig, "room": room, "rounds": 0, "armed": true}
+
+
+func _balance_done() -> bool:
+	return _balance.is_empty() or int(_balance["rounds"]) >= BALANCE_ROUNDS
+
+
 # --- Exploration ------------------------------------------------------------------------
 
 func _explore() -> void:
@@ -276,7 +301,7 @@ func _update_room() -> void:
 	var spec: Dictionary = _def.rooms[room]
 	match spec["kind"]:
 		"enigme":
-			if _pedestals.any(func(p: Dictionary) -> bool: return p["room"] == room and not p["solved"]):
+			if _pedestals.any(func(p: Dictionary) -> bool: return p["room"] == room and not p["solved"]) 					or not _balance_done() and _balance["room"] == room:
 				_pause_exploration()
 				await _message(_def.enigma_title, _def.enigma_intro, "C'est parti")
 				_explore()
@@ -301,6 +326,13 @@ func _check_triggers() -> void:
 			p["armed"] = d > PEDESTAL_REARM  # s'éloigner pour réessayer
 		elif d < PEDESTAL_DISTANCE:
 			_solve_pedestal(p)
+			return
+	if not _balance_done() and _balance["room"] == _room:
+		var d := _flat_distance(at, (_balance["node"] as Node3D).position)
+		if not _balance["armed"]:
+			_balance["armed"] = d > BALANCE_DISTANCE + 1.0  # s'éloigner pour revenir plus tard
+		elif d < BALANCE_DISTANCE:
+			_solve_balance()
 			return
 	if _chest != null and _flat_distance(at, _chest.position) < CHEST_DISTANCE:
 		_open_chest()
@@ -411,7 +443,7 @@ func _check_room_cleared(room: int) -> void:
 		"combat":
 			cleared = _enemies.all(func(e: Dictionary) -> bool: return e["room"] != room or e["defeated"])
 		"enigme":
-			cleared = _pedestals.all(func(p: Dictionary) -> bool: return p["room"] != room or p["solved"])
+			cleared = _pedestals.all(func(p: Dictionary) -> bool: return p["room"] != room or p["solved"]) and _balance_done()
 	if not cleared:
 		return
 	_level.open_door(room)
@@ -517,6 +549,53 @@ func _solve_pedestal(p: Dictionary) -> void:
 		_hud.clear_panel()
 		p["armed"] = false
 	_explore()
+
+
+## Balance géante : le héros se place devant, la caméra cadre la balance, et les manches
+## s'enchaînent sur la balance elle-même (pas de panneau de question) jusqu'à la troisième.
+func _solve_balance() -> void:
+	_pause_exploration()
+	var rig: BalanceRig = _balance["node"]
+	var spot := rig.position + BALANCE_SPOT
+	_hero.fighter.loop("Running_A")
+	var tween := create_tween()
+	tween.tween_property(_hero, "position", spot, 0.35)
+	_set_camera_goal(BALANCE_VIEW, rig.position + Vector3(-0.3, 0.1, 0.9))
+	await tween.finished
+	_hero.fighter.idle()
+	_hero.fighter.rotation_degrees.y = 90.0  # tourné vers la balance
+	while not _balance_done():
+		var item := QuestionService.next_item("enigme")
+		if item.is_empty() or not item.has("visual"):
+			_hud.banner("Énigme indisponible hors connexion", _wt.bad)
+			_balance["armed"] = false
+			_explore()
+			return
+		var round_title := "%s · %d / %d" % [_def.enigma_title, int(_balance["rounds"]) + 1, BALANCE_ROUNDS]
+		var enigma := BalanceEnigma.new().setup(item, rig, _wt, round_title)
+		enigma.changed.connect(_on_balance_changed.bind(rig))
+		_hud.show_panel(enigma)
+		var first_try: bool = await enigma.solved
+		_hud.clear_panel()
+		_balance["rounds"] = int(_balance["rounds"]) + 1
+		_fx.rising_sparkles(rig.global_position + Vector3(0, BalanceRig.PIVOT_H, 0), _wt.good)
+		Sfx.play("crit")
+		_hud.banner(_wt.encouragements.pick_random(), _wt.good, 0.8)
+		# Trouvé du premier coup : toute l'expérience de l'énigme ; après correction, la moitié.
+		var xp := _def.enigma_xp + Progression.answer_xp(int(item["difficulty"]))
+		SaveManager.add_xp(xp if first_try else ceili(xp / 2.0))
+		await get_tree().create_timer(0.8).timeout
+	_check_room_cleared(_balance["room"])
+	_explore()
+
+
+func _on_balance_changed(kind: String, rig: BalanceRig) -> void:
+	if kind == "essai":
+		Sfx.play("spell", 0.7)
+		return
+	Sfx.play("heal", 0.8)
+	for left in [true, false]:
+		_fx.burst(rig.plate_position(left) + Vector3(0, 0.3, 0), _wt.accent, 14, 1.6)
 
 
 # --- Caméra ------------------------------------------------------------------------------

@@ -155,6 +155,9 @@ sauvegarde avant migration, push, suivi de la CI, contrôle en production). Les 
 - Durée de jeu (limite du parent) : comptée par séance, remise à zéro après 30 minutes sans jouer ; le serveur fait
   foi (`api/app/play_time.py`, renvoyé par `login`, `/play/me` et `session/start`), le jeu le relit
   (`Session.sync_play_time`, `time_over`, `rest_text`). Le camp refuse de lancer une activité tant que la pause n'est pas finie.
+- Salle-énigme 3D (`DungeonDef.enigma_mode`) : l'énigme se résout dans le décor au lieu de trois piédestaux à question.
+  `"balance"` : balance géante (`BalanceRig`, core/world ; objets en MultiMesh) et manche `BalanceEnigma` (scenes/dungeon) qui lit
+  `item["visual"]` ; seul le premier essai passe par `QuestionService.submit`, les suivants corrigent (le fléau penche).
 - Combat : `Encounter` (core/combat) est partagé par l'arène et le donjon ; une scène ne réécrit pas le tour par tour.
   Boss : `BOSS_HITS` sceaux, difficulté d'un cran sous le niveau à un cran au-dessus ; forces rendues avant le boss ;
   après un repli, l'ennemi garde ses blessures (rien n'est perdu).
