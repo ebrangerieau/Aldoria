@@ -22,3 +22,42 @@ Chaque phase se termine par une session observée avec chaque enfant (IMPLEMENTA
 6. Des monstres variés, pas seulement des squelettes. → fait le 2026-10-13 : 14 monstres Quaternius (champignons,
    gelée, golems, cactus, abeille, fantômes, dragon, démons, orc, yéti), propres à chaque donjon et à l'arène ;
    les squelettes restent pour moitié environ.
+
+## Grille de la prochaine séance (nouveautés du 15 octobre)
+
+À imprimer ou à garder ouverte. Environ 30 minutes par enfant. **Pendant les deux premières minutes de chaque
+nouveauté, ne rien expliquer** : on regarde si l'enfant comprend seul.
+
+**Avant de commencer**
+- [ ] Sur la tablette, ouvrir le jeu avec `?perf` à la fin de l'adresse : le compteur d'images s'affiche en haut.
+- [ ] Vérifier la durée de jeu réglée dans l'espace parent (assez pour la séance).
+
+**Jules (6e)**
+
+| Quoi | Où | Ce qu'on regarde | Noté |
+| --- | --- | --- | --- |
+| Balance géante | Tour des Fractions, salle 4 (énigme) | Comprend-il « enlever la même chose des deux côtés » ? Utilise-t-il le fléau qui penche pour corriger ? | |
+| Stand de tir | Citadelle → « Tir » | Lit-il l'angle sur le rapporteur ou tire-t-il au hasard ? Six cibles : trop, pas assez ? | |
+| Portes du Temps | Carte → Porte des Origines | Les questions d'histoire ressemblent-elles à la classe ? La frise est-elle trop dure ? | |
+| Tablette | Pendant la balance et le tir | Images par seconde (compteur) : au-dessus de 30 ? Ralentissements ? | |
+
+**Tom (2nde)**
+
+| Quoi | Où | Ce qu'on regarde | Noté |
+| --- | --- | --- | --- |
+| Stand de tir | Citadelle → « Tir » | Calcule-t-il le coefficient directeur ou essaie-t-il au hasard ? Les fractions passent-elles bien avec − et + ? | |
+| Anglais | Carte → Bibliothèque engloutie | La grammaire correspond-elle au cours ? (La voix passive manque pour l'instant.) Les phrases en miettes : faciles, dures ? | |
+| Français | Carte → Théâtre de Verdure | Les exemples et les vers défaits lui parlent-ils ? | |
+| Tablette | Pendant le tir | Images par seconde : au-dessus de 30 ? | |
+
+**À la fin, cinq questions (à chacun)**
+1. Qu'est-ce que tu as préféré aujourd'hui ? Et le moins aimé ?
+2. Balance ou tir : plutôt ça, ou les questions habituelles dans les combats ?
+3. Les noms des méchants te plaisent-ils ? (Jules : Dame Sablière, le Brouille-Cartes. Tom : Sir Tense, Lady
+   Oblivion, le Ratureur.) Tu en inventerais d'autres ?
+4. Est-ce que ça ressemble à ce que tu fais en classe en ce moment ? (Chapitre en cours : le noter dans
+   l'espace parent, onglet Programme.)
+5. Tu voudrais quoi, la prochaine fois ? (Duel de cartes contre ton frère, expédition en anglais, autre chose…)
+
+**Après la séance** : une ligne par enfant dans le tableau du haut (ce qui a plu, ce qui a bloqué, a demandé à
+rejouer ?), et les souhaits dans la liste. Claude s'en sert pour choisir la suite.
