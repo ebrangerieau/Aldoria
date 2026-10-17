@@ -354,6 +354,24 @@ static func button(text: String, min_height := 64.0) -> Button:
 
 
 ## Panneau de message (victoire, repli, fin de session) : [panneau, bouton principal].
+## Panneau centré qui tient dans l'écran : plus haut que la place disponible (téléphone, texte
+## agrandi), il défile au lieu d'être coupé. `above` : élément au-dessus de la place (barre du haut).
+static func fitted(panel: Control, above: Control = null) -> ScrollContainer:
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.add_child(panel)
+	var fit := func() -> void:
+		if not scroll.is_inside_tree():
+			return
+		var top := above.get_global_rect().end.y if above != null and above.is_inside_tree() else 0.0
+		var room := scroll.get_viewport().get_visible_rect().size.y - top - 24.0
+		var need := panel.get_combined_minimum_size()
+		scroll.custom_minimum_size = Vector2(need.x, minf(need.y, room))
+	panel.minimum_size_changed.connect(fit)
+	scroll.tree_entered.connect(fit.call_deferred)
+	return scroll
+
+
 static func message_panel(wt: WorldTheme, heading: String, body: String, button_text: String) -> Array:
 	var panel := PanelContainer.new()
 	panel.theme = make_theme(wt)

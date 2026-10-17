@@ -35,6 +35,6 @@ static func show_rest(host: Node, wt: WorldTheme) -> void:
 	center.set_anchors_preset(Control.PRESET_FULL_RECT)
 	layer.add_child(center)
 	var panel := UiKit.message_panel(wt, "Temps de jeu terminé", Session.rest_text(), "D'accord")
-	center.add_child(panel[0])
+	center.add_child(UiKit.fitted(panel[0]))
 	host.add_child(layer)
 	(panel[1] as Button).pressed.connect(layer.queue_free)

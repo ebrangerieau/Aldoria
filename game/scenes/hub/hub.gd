@@ -256,7 +256,7 @@ func _show_options() -> void:
 	layer.add_child(center)
 	var panel := OptionsPanel.new()
 	panel.setup(_wt)
-	center.add_child(panel)
+	center.add_child(UiKit.fitted(panel))
 	add_child(layer)
 	panel.closed.connect(layer.queue_free)
 

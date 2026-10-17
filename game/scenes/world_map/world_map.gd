@@ -662,7 +662,7 @@ func _dialog(title: String, text: String, detail: String, yes: String, no: Strin
 	layer.add_child(center)
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", -14)  # le bandeau chevauche le haut du panneau
-	center.add_child(column)
+	center.add_child(UiKit.fitted(column))
 	var heading := UiKit.ribbon(_wt, title, 28)
 	heading.z_index = 1
 	column.add_child(heading)
@@ -739,7 +739,7 @@ func _show_options() -> void:
 	layer.add_child(center)
 	var panel := OptionsPanel.new()
 	panel.setup(_wt)
-	center.add_child(panel)
+	center.add_child(UiKit.fitted(panel))
 	add_child(layer)
 	_panel_open = true
 	panel.closed.connect(func() -> void:

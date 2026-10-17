@@ -121,7 +121,7 @@ sauvegarde avant migration, push, suivi de la CI, contrôle en production). Les 
   icônes de game-icons.net (`UiKit.icon`, `icon_button` ; SVG importés à `svg/scale=0.25`, crédit CC BY dans les
   Options ; tout nouvel auteur va dans LICENSES.md et ce crédit). Briques : `ribbon`, `screen_title`, `divider`,
   `card_box`, `speaker`, `info_line`, `style_bar`, `bag_row`, `HeroBadge` (ui/hud). Panneau de question trop haut (texte
-  agrandi) : il défile (`CombatHud.show_panel`) ; `OrderWidget` met les éléments longs en liste, sur toute la largeur. Texte sur un panneau : contraste
+  agrandi, téléphone) : il défile (`CombatHud.show_panel` ; ailleurs, tout panneau centré passe par `UiKit.fitted`) ; `OrderWidget` met les éléments longs en liste, sur toute la largeur. Texte sur un panneau : contraste
   ≥ 4,5:1 ; juste/faux en `good_ink` / `bad_ink` (WorldTheme), `good` / `bad` seulement pour barres, effets et textes cernés
   sur la 3D. Aménagements forcés pour les captures (PC) : `--acc=big_targets,readable_font,spacing --text-size=2`. Fond des menus : la salle de la
   Citadelle en 3D (`UiKit.backdrop`, `CitadelHall`, rendue une fois sauf à la Citadelle et à l'écran titre). Remplacer

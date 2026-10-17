@@ -124,7 +124,7 @@ func _paint(pip: Panel, color: Color) -> void:
 func _show(panel: Control) -> void:
 	for child in _stage.get_children():
 		child.queue_free()
-	_stage.add_child(panel)
+	_stage.add_child(UiKit.fitted(panel, _stage.get_parent().get_child(0) as Control))
 
 
 func _intro() -> void:
