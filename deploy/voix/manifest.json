@@ -1,0 +1,72 @@
+{
+  "0ff298e9a1a74f9168ed04f1e567aaa3bc3c045746aa0e28f0bed4f5d340d47c": {
+    "id": "prologue-chronique-brouillard",
+    "voix": "narrateur",
+    "fichier": "prologue-chronique-brouillard-0ff298e9.mp3",
+    "voix_id": "aQROLel5sQbj1vuIVi6B",
+    "modele": "eleven_multilingual_v2"
+  },
+  "1ffc418379fba5532d94b30bf2b419f66853b84bb2fb0565310b332184e4578f": {
+    "id": "prologue-chronique-lumineux",
+    "voix": "narrateur",
+    "fichier": "prologue-chronique-lumineux-1ffc4183.mp3",
+    "voix_id": "aQROLel5sQbj1vuIVi6B",
+    "modele": "eleven_multilingual_v2"
+  },
+  "878f76aacec0798c77a0c76183a75979fb0240caa4f34d5c8a0d3c1eb31d1b47": {
+    "id": "prologue-oubli-brouillard",
+    "voix": "narrateur",
+    "fichier": "prologue-oubli-brouillard-878f76aa.mp3",
+    "voix_id": "aQROLel5sQbj1vuIVi6B",
+    "modele": "eleven_multilingual_v2"
+  },
+  "0bd9605ed4033b830e4b705096870d495acf7cc2626c841fc3e416a0c786ee64": {
+    "id": "prologue-oubli-lumineux",
+    "voix": "narrateur",
+    "fichier": "prologue-oubli-lumineux-0bd9605e.mp3",
+    "voix_id": "aQROLel5sQbj1vuIVi6B",
+    "modele": "eleven_multilingual_v2"
+  },
+  "d4d8209d4125a2d418b0ee11bdd1b7a5929a3e1c84e8a9b321e77441aba40a77": {
+    "id": "prologue-quete-brouillard",
+    "voix": "ysaline",
+    "fichier": "prologue-quete-brouillard-d4d8209d.mp3",
+    "voix_id": "oQZyHVc6FnIvc9bYS5yl",
+    "modele": "eleven_multilingual_v2"
+  },
+  "3926287f79035ece856f083cef49dd9aa2fd0f3ad14e6365687f83fb6599e0a2": {
+    "id": "prologue-quete-lumineux",
+    "voix": "ysaline",
+    "fichier": "prologue-quete-lumineux-3926287f.mp3",
+    "voix_id": "oQZyHVc6FnIvc9bYS5yl",
+    "modele": "eleven_multilingual_v2"
+  },
+  "cdc47881f8b55372c0cae092e8b39d12b0991dd5018c385e6adadf556584ce53": {
+    "id": "prologue-vol-brouillard",
+    "voix": "narrateur",
+    "fichier": "prologue-vol-brouillard-cdc47881.mp3",
+    "voix_id": "aQROLel5sQbj1vuIVi6B",
+    "modele": "eleven_multilingual_v2"
+  },
+  "1c4ee26532cc24cdef5e146806fcbca09e06abab61f7b8b809a33eb00bde4d77": {
+    "id": "prologue-vol-lumineux",
+    "voix": "narrateur",
+    "fichier": "prologue-vol-lumineux-1c4ee265.mp3",
+    "voix_id": "aQROLel5sQbj1vuIVi6B",
+    "modele": "eleven_multilingual_v2"
+  },
+  "095c24b4f6f5700e23bb4806f6dbe136919984fb7dd21e668ffa75e5d44f389d": {
+    "id": "prologue-ysaline-brouillard",
+    "voix": "ysaline",
+    "fichier": "prologue-ysaline-brouillard-095c24b4.mp3",
+    "voix_id": "oQZyHVc6FnIvc9bYS5yl",
+    "modele": "eleven_multilingual_v2"
+  },
+  "bb90228dd45f12372f858647ce23865bf849c3b21e8968b537d9ecd2ee13db66": {
+    "id": "prologue-ysaline-lumineux",
+    "voix": "ysaline",
+    "fichier": "prologue-ysaline-lumineux-bb90228d.mp3",
+    "voix_id": "oQZyHVc6FnIvc9bYS5yl",
+    "modele": "eleven_multilingual_v2"
+  }
+}
