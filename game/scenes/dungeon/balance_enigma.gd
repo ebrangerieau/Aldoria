@@ -206,6 +206,7 @@ func _attempt() -> void:
 	_rig.show_guess(_guess)
 	_rig.tilt_to(direction, Accessibility.on("calm"))
 	changed.emit("essai")
+	_peek()
 	if direction == 0:
 		_done = true
 		_feedback.add_theme_color_override("font_color", _wt.good_ink)
@@ -225,6 +226,15 @@ func _attempt() -> void:
 		"moins" if too_heavy else "plus"]
 	if _tries >= 3 and not _hint_used:
 		_feedback.text += " " + str(item.get("hint", ""))
+
+
+## Le panneau s'efface un instant pour laisser voir le fléau pencher (sur téléphone, il couvre la
+## balance), puis revient avec le message.
+func _peek() -> void:
+	var tween := create_tween()
+	tween.tween_property(self, "modulate:a", 0.0, 0.15)
+	tween.tween_interval(1.3)
+	tween.tween_property(self, "modulate:a", 1.0, 0.2)
 
 
 func _unhandled_key_input(event: InputEvent) -> void:

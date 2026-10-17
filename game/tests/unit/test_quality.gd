@@ -43,3 +43,29 @@ func test_desktop_interface_grows_less_than_the_tablet_one() -> void:
 	# PC petit écran (ou banc e2e en 1280 × 800) : jamais sous la taille de conception.
 	assert_eq(Quality.ui_factor(Vector2(1280, 800), true), 1.0)
 	assert_almost_eq(Quality.ui_factor(Vector2(1600, 900), true) * 1.25, 1.0, 0.001)
+
+
+func test_phone_interface_is_larger_than_proportional() -> void:
+	# Téléphone (petit écran tactile) : 1,3 × l'agrandissement proportionnel, quelle que soit la fenêtre.
+	assert_eq(Quality.ui_factor(Vector2(2400, 1080), false, true), Quality.PHONE_UI_RATIO)
+	assert_gt(Quality.PHONE_UI_RATIO, 1.0)
+	# Tablette et ordinateur inchangés.
+	assert_eq(Quality.ui_factor(Vector2(2000, 1200), false, false), 1.0)
+
+
+func test_rotate_screen_appears_only_in_portrait_on_touch_devices() -> void:
+	var saved_kind := Quality._kind
+	var root := get_tree().root
+	Quality._kind = "telephone"
+	var layer := Quality._rotate_screen()
+	add_child_autofree(layer)
+	var texts: Array = layer.find_children("*", "Label", true, false).map(func(l: Label) -> String: return l.text)
+	assert_has(texts, "Tourne ton téléphone")
+	assert_eq(Quality.device_kind(), "telephone")
+	assert_true(Quality.is_phone())
+	assert_false(Quality.is_desktop())
+	Quality._kind = "ordinateur"
+	assert_false(Quality.is_phone())
+	Quality._kind = saved_kind
+	Quality._fit_ui()
+	assert_true(Quality._rotate == null or not Quality._rotate.visible or root.size.x < root.size.y)

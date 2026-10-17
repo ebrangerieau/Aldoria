@@ -147,7 +147,11 @@ func _play_round(item: Dictionary, round: int) -> void:
 		panel.lock(true)
 		if tries == 1:
 			QuestionService.submit(item, value, Time.get_ticks_msec() - started, panel.hint_used, "tir")
+		# Le panneau s'efface le temps du tir : on voit partir la flèche (téléphone : il couvre la scène).
+		create_tween().tween_property(panel, "modulate:a", 0.0, 0.15)
 		var hit := await _shoot(value)
+		await get_tree().create_timer(0.6).timeout
+		create_tween().tween_property(panel, "modulate:a", 1.0, 0.2)
 		if hit:
 			if tries == 1:
 				_first_try += 1

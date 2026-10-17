@@ -5,6 +5,7 @@ Chaque phase se termine par une session observée avec chaque enfant (IMPLEMENTA
 | Date | Phase | Enfant | Durée | Ce qui a plu | Ce qui a bloqué | A demandé à rejouer ? | Décision |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 2026-10-13 | MVP + étape C | Jules et Tom | — | — | Boss de fin trop dur | — | Boss : 8 sceaux au lieu de 10, difficulté jusqu'à un cran au-dessus (au lieu de deux), forces rendues avant le boss, blessures de l'ennemi gardées après un repli |
+| 2026-10-17 | Nouveautés du 15 octobre | Tom | — | — | — | — | Souhaite jouer sur son téléphone (Android) : écran « Tourne ton téléphone » en portrait, interface 1,3 fois plus grande sur téléphone, panneaux de la balance et du tir effacés le temps de voir le résultat. À vérifier sur son vrai téléphone |
 
 **Souhaits remontés par les enfants (2026-10-13)**
 

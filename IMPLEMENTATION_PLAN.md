@@ -499,6 +499,11 @@ générateurs naturels, donc des questions à rédiger.
 > est reconnu et expliqué). Tom : mur de tir en repère, il donne le coefficient directeur de la droite de l'arbalète
 > (entier puis fraction). Le tir raté se voit (flèche plantée avec son angle, trace du carreau) et le conseil dit dans quel
 > sens corriger ; seul le premier tir compte dans le suivi. À tester avec les enfants, avec la balance géante.
+>
+> ✅ **2026-10-17 : jouer sur téléphone** (souhait de Tom, Android). Le jeu web marchait déjà en paysage, mais deux fois
+> trop petit. `Quality.device_kind()` reconnaît un téléphone (petit écran tactile) : interface 1,3 fois plus grande,
+> panneaux qui défilent ; en portrait, écran « Tourne ton téléphone ». La balance et le tir effacent leur panneau le temps
+> de voir le résultat. Reste possible : installation sur l'écran d'accueil (manifeste web, orientation bloquée).
 
 **Étape D – Rentrée 2027** (prête avant juillet 2027)
 - Programmes de 5e (Jules) et de 1ère (tronc commun + spécialités de Tom, connues au printemps 2027).

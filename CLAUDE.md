@@ -213,7 +213,10 @@ sauvegarde avant migration, push, suivi de la CI, contrôle en production). Les 
   ordinateur → `haut` : vraies lumières, ombres 4096 en deux zones adoucies via `Quality.dress_sun`, lissage 4×). Toute
   scène qui crée un soleil appelle `Quality.dress_sun(sun)`. Pas de halo (glow) : en WebGL 2 sans HDR, il blanchit le sol.
   Interface sur ordinateur : `Quality.ui_factor` (80 % de l'agrandissement proportionnel, jamais sous 1280 × 720 ;
-  `?ui=tablette` pour l'interface de la tablette) ; la tablette reste inchangée. Textures d'interface enregistrées en
+  `?ui=tablette` pour l'interface de la tablette) ; la tablette reste inchangée. Téléphone (`Quality.device_kind()` :
+  appareil tactile dont le petit côté fait moins de 520 points ; `?ui=telephone` / `-- --ui=telephone` pour essayer) :
+  interface 1,3 fois plus grande (`PHONE_UI_RATIO`), panneaux qui défilent ; tenu en portrait, un appareil tactile
+  affiche « Tourne ton téléphone ». Essai sur PC aux proportions d'un téléphone : `--resolution 1688x780 -- --ui=telephone`. Textures d'interface enregistrées en
   double résolution, affichées à leur taille logique par `UiKit.ui_texture` (jamais `load` direct d'un fichier
   `assets/ui/*.png`).
 - Options de test : `?quality=haut|tablette|bas`, `?perf`, `?scale=`, `?lights=fake|real|0`, `?vertex=0|1`,
