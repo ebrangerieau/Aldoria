@@ -84,7 +84,8 @@ sauvegarde avant migration, push, suivi de la CI, contrôle en production). Les 
 - Histoire (`docs/histoire.md`, bible à relire avec les enfants) : quête commune de la Grande Chronique, Malvrek et
   ses Effaceurs (les boss), Maître Ysaline. **Carte du royaume** (`scenes/world_map`, écran principal après la
   connexion ; `WorldMapDef` : grille d'hexagones KayKit, une région par matière, emplacements des donjons dans
-  l'ordre, brouillard sur les régions pas encore au programme, lieux secrets) : toucher un lieu ouvre son **seuil**
+  l'ordre, brouillard sur les régions pas encore au programme, lieux secrets ; zoom à deux doigts, molette ou boutons + / −,
+  déplacement d'un doigt une fois zoomée : `zoom_by`, `pan_by`) : toucher un lieu (au lever du doigt, sans glisser) ouvre son **seuil**
   (texte `DungeonDef.threshold`, page gardée `page`, bâtiment `map_piece`) avec le choix « J'y vais » / « Pas
   maintenant ». Donjons et village partent de la carte et y reviennent ; la **Citadelle des Archives**
   (`scenes/hub`, ex-camp) garde défi du jour, arène, Archives et apparence. Départ commun : `Departure.go`.

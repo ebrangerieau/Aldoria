@@ -13,6 +13,11 @@ const VILLAGE_SCENE := "res://scenes/village/village.tscn"
 const PICK_RADIUS := 90.0  # pixels autour d'un lieu touché
 const CAMERA_PITCH := -58.0
 const CAMERA_FOV := 38.0
+## Zoom : distance de la caméra, de la carte entière (FAR) au plus près (NEAR).
+const CAMERA_FAR := 31.0
+const CAMERA_NEAR := 12.0
+const ZOOM_STEP := 1.25  # boutons + / − et molette
+const DRAG_THRESHOLD := 14.0  # pixels : au-delà, un doigt qui bouge déplace la carte au lieu de toucher un lieu
 
 var _wt: WorldTheme
 var _dungeons: Array[DungeonDef] = []
@@ -30,6 +35,14 @@ var _badge: HeroBadge
 var _message: Label
 var _busy := false
 var _panel_open := false
+var _home := Vector3.ZERO  # centre de la carte entière
+var _focus := Vector3.ZERO  # point visé par la caméra
+var _distance := CAMERA_FAR
+var _touches := {}  # doigt → position à l'écran
+var _pinch := 0.0  # écart entre deux doigts au dernier mouvement
+var _press_at := Vector2(-1, -1)  # où le doigt (ou la souris) s'est posé
+var _dragged := false
+var _zoom_buttons: Array[Button] = []
 
 
 func _ready() -> void:
@@ -362,12 +375,52 @@ func _build_camera() -> void:
 	_camera.far = 200.0
 	add_child(_camera)
 	var size := WorldMapDef.size()
-	var center := Vector3(size.x / 2.0 - WorldMapDef.TILE_W / 2.0, 0, size.y / 2.0 - 1.0)
-	var distance := 31.0
-	var pitch := deg_to_rad(CAMERA_PITCH)
-	_camera.position = center + Vector3(0, -sin(pitch) * distance, cos(pitch) * distance)
-	_camera.rotation = Vector3(pitch, 0, 0)
+	_home = Vector3(size.x / 2.0 - WorldMapDef.TILE_W / 2.0, 0, size.y / 2.0 - 1.0)
+	_focus = _home
+	_camera.rotation = Vector3(deg_to_rad(CAMERA_PITCH), 0, 0)
+	_place_camera()
 	_camera.make_current()
+
+
+## Caméra au-dessus du point visé ; zoomée, elle peut se déplacer, jamais hors de la carte.
+func _place_camera() -> void:
+	_distance = clampf(_distance, CAMERA_NEAR, CAMERA_FAR)
+	var freedom := 1.0 - (_distance - CAMERA_NEAR) / (CAMERA_FAR - CAMERA_NEAR)  # 0 : carte entière
+	var half := WorldMapDef.size() / 2.0 * freedom
+	_focus.x = clampf(_focus.x, _home.x - half.x, _home.x + half.x)
+	_focus.z = clampf(_focus.z, _home.z - half.y, _home.z + half.y)
+	_focus.y = 0.0
+	var pitch := deg_to_rad(CAMERA_PITCH)
+	_camera.position = _focus + Vector3(0, -sin(pitch) * _distance, cos(pitch) * _distance)
+	for b in _zoom_buttons:
+		b.disabled = (b.text == "+" and _distance <= CAMERA_NEAR + 0.01) or (b.text == "−" and _distance >= CAMERA_FAR - 0.01)
+
+
+## Zoom d'un facteur (> 1 : rapproche), en gardant sous le doigt le point `at` de l'écran.
+func zoom_by(factor: float, at := Vector2(-1, -1)) -> void:
+	var before := _ground_point(at) if at.x >= 0 else _focus
+	_distance /= factor
+	_place_camera()
+	if at.x >= 0:
+		_focus += before - _ground_point(at)
+		_place_camera()
+
+
+## Déplace la carte comme si on la faisait glisser du doigt de `delta` pixels.
+func pan_by(delta: Vector2) -> void:
+	var a := _ground_point(get_viewport().get_visible_rect().size / 2.0)
+	var b := _ground_point(get_viewport().get_visible_rect().size / 2.0 + delta)
+	_focus -= b - a
+	_place_camera()
+
+
+## Point du sol (y = 0) sous un point de l'écran.
+func _ground_point(at: Vector2) -> Vector3:
+	var origin := _camera.project_ray_origin(at)
+	var direction := _camera.project_ray_normal(at)
+	if absf(direction.y) < 0.001:
+		return _focus
+	return origin + direction * (-origin.y / direction.y)
 
 
 # --- Interface -------------------------------------------------------------------------------
@@ -421,24 +474,108 @@ func _build_hud() -> void:
 	gap.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	gap.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	column.add_child(gap)
-	var hint := UiKit.on_scene(UiKit.title("Touche un lieu de la carte pour découvrir sa quête", 22))
+	var bottom := HBoxContainer.new()
+	bottom.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	bottom.add_theme_constant_override("separation", 10)
+	var hint_text := "Touche un lieu de la carte pour découvrir sa quête"
+	if not Quality.is_desktop():
+		hint_text = "Touche un lieu pour découvrir sa quête · deux doigts pour zoomer"
+	var hint := UiKit.on_scene(UiKit.title(hint_text, 22))
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	column.add_child(hint)
+	hint.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	hint.size_flags_vertical = Control.SIZE_SHRINK_END
+	bottom.add_child(hint)
+	# Zoom aux boutons (toujours là : pincer à deux doigts n'est pas facile pour tout le monde).
+	for sign in ["−", "+"]:
+		var b := UiKit.button(sign, 56.0)
+		UiKit.style_secondary(b, _wt)
+		b.custom_minimum_size.x = 64
+		b.add_theme_font_size_override("font_size", UiKit.font_size(30))
+		b.pressed.connect(zoom_by.bind(ZOOM_STEP if sign == "+" else 1.0 / ZOOM_STEP))
+		bottom.add_child(b)
+		_zoom_buttons.append(b)
+	column.add_child(bottom)
+	_place_camera()
 
 
 func _refresh() -> void:
 	_badge.refresh()
 
 
+## Toucher un lieu ouvre son seuil (au lever du doigt, s'il n'a pas glissé). Deux doigts : zoom ;
+## un doigt qui glisse : déplacement. Souris : molette et glisser.
 func _unhandled_input(event: InputEvent) -> void:
 	if _busy or _panel_open:
 		return
-	var at := Vector2(-1, -1)
-	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-		at = event.position
-	elif event is InputEventScreenTouch and event.pressed:
-		at = event.position
-	if at.x < 0:
+	if event.device == InputEvent.DEVICE_ID_EMULATION:
+		return  # souris imitée à partir du toucher : déjà traité par les événements tactiles
+	if event is InputEventScreenTouch:
+		_on_touch(event as InputEventScreenTouch)
+	elif event is InputEventScreenDrag:
+		_on_finger_drag(event as InputEventScreenDrag)
+	elif event is InputEventMagnifyGesture:
+		zoom_by((event as InputEventMagnifyGesture).factor, event.position)
+	elif event is InputEventMouseButton:
+		var mb := event as InputEventMouseButton
+		if mb.pressed and mb.button_index in [MOUSE_BUTTON_WHEEL_UP, MOUSE_BUTTON_WHEEL_DOWN]:
+			zoom_by(ZOOM_STEP if mb.button_index == MOUSE_BUTTON_WHEEL_UP else 1.0 / ZOOM_STEP, mb.position)
+		elif mb.button_index == MOUSE_BUTTON_LEFT:
+			_press(mb.position) if mb.pressed else _release(mb.position)
+	elif event is InputEventMouseMotion and (event as InputEventMouseMotion).button_mask & MOUSE_BUTTON_MASK_LEFT:
+		_move((event as InputEventMouseMotion).position, (event as InputEventMouseMotion).relative)
+
+
+func _on_touch(touch: InputEventScreenTouch) -> void:
+	if touch.pressed:
+		_touches[touch.index] = touch.position
+		if _touches.size() == 1:
+			_press(touch.position)
+		else:
+			_dragged = true  # deux doigts : un zoom, jamais un toucher de lieu
+			_pinch = _finger_gap()
+		return
+	_touches.erase(touch.index)
+	if _touches.is_empty():
+		_release(touch.position)
+
+
+func _on_finger_drag(drag: InputEventScreenDrag) -> void:
+	if not _touches.has(drag.index):
+		return
+	_touches[drag.index] = drag.position
+	if _touches.size() >= 2:
+		var gap := _finger_gap()
+		if _pinch > 0.0 and gap > 0.0:
+			var fingers: Array = _touches.values()
+			zoom_by(gap / _pinch, ((fingers[0] as Vector2) + (fingers[1] as Vector2)) / 2.0)
+		_pinch = gap
+	else:
+		_move(drag.position, drag.relative)
+
+
+func _finger_gap() -> float:
+	var fingers: Array = _touches.values()
+	return (fingers[0] as Vector2).distance_to(fingers[1]) if fingers.size() >= 2 else 0.0
+
+
+func _press(at: Vector2) -> void:
+	_press_at = at
+	_dragged = false
+
+
+func _move(at: Vector2, relative: Vector2) -> void:
+	if _press_at.x < 0:
+		return
+	if not _dragged and at.distance_to(_press_at) < DRAG_THRESHOLD:
+		return
+	_dragged = true
+	pan_by(relative)
+
+
+func _release(at: Vector2) -> void:
+	var tapped := _press_at.x >= 0 and not _dragged
+	_press_at = Vector2(-1, -1)
+	if not tapped:
 		return
 	var place := pick(at)
 	if not place.is_empty():
