@@ -230,6 +230,11 @@ func device_say(text: String, lang := "fr-FR", interrupt := true, rate := 0.95) 
 	DisplayServer.tts_speak(text, voice_for(lang), roundi(volume() * 100), 1.0, rate)
 
 
+## Vrai tant qu'une voix lit : celle du serveur (préparation du son comprise) ou celle de l'appareil.
+func is_speaking() -> bool:
+	return Voice.is_speaking() or DisplayServer.tts_is_speaking()
+
+
 func stop_speaking() -> void:
 	DisplayServer.tts_stop()
 	Voice.stop()

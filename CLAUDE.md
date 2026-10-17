@@ -94,9 +94,12 @@ sauvegarde avant migration, push, suivi de la CI, contrôle en production). Les 
   maintenant ». Donjons et village partent de la carte et y reviennent ; la **Citadelle des Archives**
   (`scenes/hub`, ex-camp) garde défi du jour, arène, Archives et apparence. Départ commun : `Departure.go`.
   Étapes de l'histoire déjà vues : `SaveManager.story_seen` / `mark_story`. **Prologue** (`scenes/prologue`, classe
-  `Prologue`) : cinq tableaux 3D (salle de la Citadelle, héros et renard, Maître Ysaline, Malvrek), un texte par monde ;
+  `Prologue`) : cinq tableaux 3D joués comme une cinématique (salle de la Citadelle, héros et renard, Maître Ysaline, Malvrek ;
+  action de chaque tableau dans un Tween, `_play_action`, caméra qui glisse entre deux cadrages `SHOTS`), un texte par monde
+  lu par la voix (`Accessibility.say`) et caché par défaut (bouton « Texte », affiché d'office sans voix possible) ; texte
+  caché, le tableau suivant vient seul après la voix (`Accessibility.is_speaking`) ;
   la carte le lance tant qu'il n'est pas vu (`Prologue.STORY_KEY`), la Citadelle le fait revoir ; `Prologue.play(tree,
-  retour)`. Échap ou « Passer » le termine (tools/e2e). Capture : `--goto=prologue --tableau=N`. L'Effaceur (boss) parle à l'entrée et à sa
+  retour)`. Échap ou « Passer » le termine (tools/e2e). Capture : `--goto=prologue --tableau=N [--moment=secondes] [--texte=1]`. L'Effaceur (boss) parle à l'entrée et à sa
   défaite (`boss_intro`, `boss_defeat`) ; la première fois, le coffre rend la page (`page_text`) et Maître Ysaline la
   salue au retour sur la carte (`page_<code>`), en annonçant le chemin qui s'ouvre.
 - Village (`VillageDef`) : chaque habitant confie une quête de trois questions par jour (`revision`, `veille`,

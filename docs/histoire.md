@@ -174,6 +174,11 @@ Exemple (Jules, Tour des Fractions) :
 > (Archives).
 > ✅ 2026-10-14 : prologue en cinq tableaux 3D (la Chronique, la nuit du vol, le royaume qui oublie, Maître Ysaline, la
 > quête), un texte par monde, « Écouter » et « Passer » ; revu depuis la Citadelle.
+> ✅ 2026-10-17 (retour de Tom : le texte cachait les tableaux, trop statique) : prologue joué comme une cinématique.
+> Une voix raconte, le texte reste caché (bouton « Texte »), la caméra glisse ; Maître Ysaline traverse la salle,
+> Malvrek entre à pas de loup, arrache les pages (le livre s'éteint) et s'enfuit, le Brouillard monte autour du
+> boulanger, le héros arrive avec son renard, Maître Ysaline ranime un peu la Chronique. Sans texte affiché, le
+> tableau suivant vient seul quand la voix a fini.
 
 1. **Relecture de cette bible** par Eric et les enfants (noms, méchants, régions). Les enfants peuvent ajouter leurs
    idées.

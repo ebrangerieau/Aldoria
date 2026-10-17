@@ -38,6 +38,12 @@ func speak(text: String, lang: String, rate: float, interrupt: bool) -> void:
 		_run(_generation)
 
 
+## Prépare à l'avance le son d'un texte, sans le jouer (prologue : le tableau suivant).
+func prefetch(text: String, lang := "fr-FR", rate := 0.95) -> void:
+	if usable(lang):
+		await _fetch(text, lang, rate)
+
+
 func stop() -> void:
 	_generation += 1
 	_queue.clear()

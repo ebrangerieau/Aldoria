@@ -228,6 +228,14 @@ func loop(anim_name: String, speed := 1.0) -> void:
 		_anim.play(anim_name, 0.15, speed)
 
 
+## Boucle sur la première animation disponible de la liste (allures de marche selon le modèle).
+func loop_any(candidates: Array, speed := 1.0) -> void:
+	for anim_name: String in candidates:
+		if _anim != null and _anim.has_animation(anim_name):
+			loop(anim_name, speed)
+			return
+
+
 func is_playing(anim_name: String) -> bool:
 	return _anim != null and _anim.current_animation == anim_name
 
