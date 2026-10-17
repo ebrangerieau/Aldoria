@@ -69,3 +69,16 @@ func test_rotate_screen_appears_only_in_portrait_on_touch_devices() -> void:
 	Quality._kind = saved_kind
 	Quality._fit_ui()
 	assert_true(Quality._rotate == null or not Quality._rotate.visible or root.size.x < root.size.y)
+
+
+func test_phones_never_use_vertex_shading() -> void:
+	# Galaxy A52s : l'éclairage par sommet y rendait la carte invisible.
+	var saved_kind := Quality._kind
+	var saved_profile := Quality.current
+	Quality.current = &"tablette"
+	Quality._kind = "telephone"
+	assert_false(Quality.settings().vertex_shading)
+	Quality._kind = "tablette"
+	assert_true(Quality.settings().vertex_shading, "la tablette garde l'éclairage par sommet")
+	Quality._kind = saved_kind
+	Quality.current = saved_profile

@@ -215,7 +215,8 @@ sauvegarde avant migration, push, suivi de la CI, contrôle en production). Les 
   Interface sur ordinateur : `Quality.ui_factor` (80 % de l'agrandissement proportionnel, jamais sous 1280 × 720 ;
   `?ui=tablette` pour l'interface de la tablette) ; la tablette reste inchangée. Téléphone (`Quality.device_kind()` :
   appareil tactile dont le petit côté fait moins de 520 points ; `?ui=telephone` / `-- --ui=telephone` pour essayer) :
-  interface 1,3 fois plus grande (`PHONE_UI_RATIO`), panneaux qui défilent ; tenu en portrait, un appareil tactile
+  interface 1,3 fois plus grande (`PHONE_UI_RATIO`), panneaux qui défilent, jamais d'éclairage par sommet (il rendait
+  la carte invisible sur un Galaxy A52s) ; tenu en portrait, un appareil tactile
   affiche « Tourne ton téléphone ». Essai sur PC aux proportions d'un téléphone : `--resolution 1688x780 -- --ui=telephone`. Textures d'interface enregistrées en
   double résolution, affichées à leur taille logique par `UiKit.ui_texture` (jamais `load` direct d'un fichier
   `assets/ui/*.png`).

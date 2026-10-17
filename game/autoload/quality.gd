@@ -222,6 +222,10 @@ func settings() -> Dictionary:
 	var lights := option("lights")
 	if lights in ["real", "fake", "0"]:
 		p.lights = lights
+	if is_phone():
+		# Téléphones (Galaxy A52s de Tom, 2026-10-17) : l'éclairage par sommet y rend invisibles les
+		# décors fusionnés (carte vide). Bien plus puissants que la tablette, ils éclairent par pixel.
+		p.vertex_shading = false
 	var vertex := option("vertex")
 	if vertex in ["0", "1"]:
 		p.vertex_shading = vertex == "1"
