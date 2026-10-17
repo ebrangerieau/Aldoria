@@ -74,6 +74,20 @@ const CITADEL_TEXT := "Voici la Citadelle des Archives, le cœur du royaume. Tu 
 const WELCOME := "Voici la carte du royaume. Touche un lieu : je te dirai ce qui t'y attend, et tu choisiras d'y aller ou non. La Citadelle, au centre, garde ta salle d'armes, la Lice et la Pierre du Jour."
 
 
+## Salut de Maître Ysaline quand la page du donjon `i` revient, avec le chemin qui s'ouvre.
+static func page_greeting(dungeons: Array[DungeonDef], i: int) -> String:
+	var d := dungeons[i]
+	var next := ""
+	for j in range(i + 1, dungeons.size()):
+		if dungeons[j].subject == d.subject:
+			next = "Regarde : le chemin vers « %s » s'éclaire sur la carte." % dungeons[j].title
+			break
+	if next == "":
+		var region := str(REGIONS.get(d.subject, {}).get("title", "cette région"))
+		next = "Toutes les pages de la région « %s » sont revenues. Malvrek doit trembler dans sa tour !" % region
+	return "Tu as rapporté %s ! Elle a repris sa place dans la Grande Chronique. %s" % [d.page, next]
+
+
 ## Centre d'une tuile, au niveau du sol (le dessus des tuiles d'herbe est à y = 0).
 static func cell_position(cell: Vector2i) -> Vector3:
 	return Vector3(cell.x * TILE_W + (TILE_W / 2.0 if cell.y % 2 == 1 else 0.0), 0.0, cell.y * ROW_H)

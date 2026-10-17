@@ -99,16 +99,7 @@ func _celebrate_pages() -> void:
 		if int(SaveManager.dungeon(d.code)["completed"]) == 0 or SaveManager.story_seen(key):
 			continue
 		SaveManager.mark_story(key)
-		var next := ""
-		for j in range(i + 1, _dungeons.size()):
-			if _dungeons[j].subject == d.subject:
-				next = "Regarde : le chemin vers « %s » s'éclaire sur la carte." % _dungeons[j].title
-				break
-		if next == "":
-			var region := str(WorldMapDef.REGIONS.get(d.subject, {}).get("title", "cette région"))
-			next = "Toutes les pages de la région « %s » sont revenues. Malvrek doit trembler dans sa tour !" % region
-		var text := "Tu as rapporté %s ! Elle a repris sa place dans la Grande Chronique. %s" % [d.page, next]
-		await _dialog("Une page retrouvée", text, "", "Merci, Maître Ysaline", "")
+		await _dialog("Une page retrouvée", WorldMapDef.page_greeting(_dungeons, i), "", "Merci, Maître Ysaline", "")
 
 
 func _process(delta: float) -> void:
@@ -684,7 +675,9 @@ func _dialog(title: String, text: String, detail: String, yes: String, no: Strin
 		for i in lines.size():
 			box.add_child(UiKit.info_line(_wt, icons[mini(i, icons.size() - 1)], lines[i], 20))
 	if Accessibility.can_speak():
-		box.add_child(UiKit.listen_button(_wt, "%s. %s %s" % [title, text, detail], Accessibility.auto_read()))
+		# Réplique lue à part : elle a peut-être sa voix enregistrée (Voice, deploy/voix).
+		var parts := [[title + ".", "fr-FR"], [text, "fr-FR"], [detail, "fr-FR"]]
+		box.add_child(UiKit.listen_button(_wt, parts, Accessibility.auto_read()))
 	var buttons := HBoxContainer.new()
 	buttons.add_theme_constant_override("separation", 14)
 	box.add_child(buttons)

@@ -187,6 +187,14 @@ sauvegarde avant migration, push, suivi de la CI, contrôle en production). Les 
   Langues vivantes : dans un item d'anglais, le texte entre “ ” ou " " est en anglais et lu par la voix anglaise,
   les mots français cités entre « » (`engine/speech.py` : `prompt_parts`, `explanation_parts`) ; générateurs,
   IA (`ai_author.SYSTEM`) et guide parent suivent cette règle.
+- Voix enregistrées (ElevenLabs) du narrateur du prologue et de Maître Ysaline : `tools/export_voice_lines.gd` écrit
+  `content/voix/lignes.json` (texte exact lu par le jeu), `tools/voix_elevenlabs.py` génère `deploy/voix/*.mp3` et
+  `manifest.json` (empreinte SHA-256 du texte → fichier ; seulement ce qui manque ou a changé ; clé et voix dans des
+  variables d'environnement, jamais dans le dépôt), `tools/postprocess_web.py` les copie dans `voix/` de l'export.
+  `Voice` charge le manifeste et joue le son d'un texte français qui en a un, sinon Piper (texte modifié : Piper
+  jusqu'à la génération suivante). Sur PC : `-- --voix=<adresse du site>`. Une réplique de Maître Ysaline lue à
+  part (`listen_button` avec des morceaux) garde sa voix enregistrée. Après la modification d'un de ces textes :
+  relancer les deux scripts.
 - Le héros parle entre les salles (`HeroVoice`, core/world ; bulle `CombatHud.say`, lue si lecture automatique) :
   phrases par ton de monde, combinées, les dernières dites ne reviennent pas.
 - Progression du joueur : `SaveManager` (XP, donjons, bestiaire, défis quotidiens), jamais de fichier de

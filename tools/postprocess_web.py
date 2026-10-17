@@ -4,9 +4,11 @@
    du TRD §8 (`script-src 'self'`) interdit les scripts inline.
 2. Ajoute l'application installable (deploy/pwa : manifeste, icônes ; lien dans index.html) :
    « Installer l'application » dans le menu de Chrome, plein écran, à l'horizontale.
-3. Précompresse en gzip les fichiers lourds (.wasm, .pck, .js, .html) pour
+3. Copie les voix enregistrées (deploy/voix : manifeste et MP3, tools/voix_elevenlabs.py) dans
+   voix/ ; sans voix générées, un manifeste vide (le jeu garde la voix du serveur).
+4. Précompresse en gzip les fichiers lourds (.wasm, .pck, .js, .html) pour
    `gzip_static` de nginx (le .wasm est environ 4 fois plus léger).
-4. Affiche le poids brut et compressé (budget TRD §2.2 : < 25 Mo compressés).
+5. Affiche le poids brut et compressé (budget TRD §2.2 : < 25 Mo compressés).
 
 Usage : python tools/postprocess_web.py build/web
 Bibliothèque standard uniquement.
@@ -25,6 +27,7 @@ INLINE_SCRIPT = re.compile(r"<script>(.*?)</script>", re.DOTALL)
 COMPRESSIBLE = {".wasm", ".pck", ".js", ".html", ".json", ".svg"}
 BUDGET_MB = 25.0
 PWA = Path(__file__).resolve().parent.parent / "deploy" / "pwa"
+VOICES = Path(__file__).resolve().parent.parent / "deploy" / "voix"
 PWA_HEAD = (
     '<link rel="manifest" href="manifest.webmanifest">'
     '<meta name="theme-color" content="#14121c">'
@@ -43,6 +46,21 @@ def add_installable_app(directory: Path, index: Path) -> int:
         html = html.replace("</head>", PWA_HEAD + "</head>", 1)
         index.write_text(html, encoding="utf-8")
     return len(list(PWA.iterdir()))
+
+
+def add_recorded_voices(directory: Path) -> int:
+    """Copie deploy/voix dans voix/ (sons chargés à la demande, hors du .pck)."""
+    target = directory / "voix"
+    target.mkdir(exist_ok=True)
+    count = 0
+    if VOICES.is_dir():
+        for source in VOICES.iterdir():
+            if source.suffix in {".mp3", ".json"}:
+                shutil.copy(source, target / source.name)
+                count += source.suffix == ".mp3"
+    if not (target / "manifest.json").exists():
+        (target / "manifest.json").write_text("{}\n", encoding="utf-8")
+    return count
 
 
 def externalize_inline_scripts(index: Path) -> int:
@@ -93,6 +111,7 @@ def main() -> int:
     scripts = externalize_inline_scripts(index)
     print(f"Scripts inline externalisés : {scripts}")
     print(f"Application installable : {add_installable_app(directory, index)} fichiers")
+    print(f"Voix enregistrées : {add_recorded_voices(directory)} sons")
     raw, compressed = precompress(directory)
     print(f"Total : {raw / 1e6:.2f} Mo bruts, {compressed / 1e6:.2f} Mo compressés")
     if compressed / 1e6 > BUDGET_MB:

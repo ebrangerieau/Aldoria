@@ -56,6 +56,8 @@ func setup(wt: WorldTheme) -> void:
 
 	# Crédits demandés par la licence des voix (CC BY 4.0).
 	box.add_child(UiKit.label("Voix du jeu : Piper, voix « siwis » (français) et « alba » (anglais), sous licence CC BY 4.0.", 15, wt.text_dim))
+	if Voice.recorded_count() > 0:  # voix enregistrées (tools/voix_elevenlabs.py)
+		box.add_child(UiKit.label("Voix du narrateur et de Maître Ysaline : ElevenLabs.", 15, wt.text_dim))
 	# Crédit demandé par la licence des icônes (CC BY 3.0).
 	box.add_child(UiKit.label("Icônes : game-icons.net (Lorc, Delapouite, Carl Olsen, Skoll, Zeromancer, Sbed), sous licence CC BY 3.0. Titres : police Cinzel (OFL).", 15, wt.text_dim))
 	var close := UiKit.icon_button("Fermer", "check-mark", 64.0)
