@@ -99,6 +99,7 @@ func _build() -> void:
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.custom_minimum_size.x = 500
 	body.add_child(scroll)
+	TouchScroll.attach(scroll)
 	var cards := VBoxContainer.new()
 	cards.add_theme_constant_override("separation", 6)
 	cards.size_flags_horizontal = Control.SIZE_EXPAND_FILL

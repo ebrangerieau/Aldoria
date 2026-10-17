@@ -205,6 +205,7 @@ func show_panel(panel: Control) -> void:
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.add_child(panel)
+	TouchScroll.attach(scroll)
 	var center := CenterContainer.new()
 	center.add_child(scroll)
 	_overlay.add_child(center)

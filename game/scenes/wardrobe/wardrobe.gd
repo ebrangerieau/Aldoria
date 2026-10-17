@@ -65,6 +65,7 @@ func _build() -> void:
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	panel.add_child(scroll)
+	TouchScroll.attach(scroll)
 	_choices = VBoxContainer.new()
 	_choices.add_theme_constant_override("separation", 10)
 	_choices.size_flags_horizontal = Control.SIZE_EXPAND_FILL

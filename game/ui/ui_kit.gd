@@ -360,6 +360,7 @@ static func fitted(panel: Control, above: Control = null) -> ScrollContainer:
 	var scroll := ScrollContainer.new()
 	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
 	scroll.add_child(panel)
+	TouchScroll.attach(scroll)
 	var fit := func() -> void:
 		if not scroll.is_inside_tree():
 			return
