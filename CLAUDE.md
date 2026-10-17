@@ -195,6 +195,11 @@ sauvegarde avant migration, push, suivi de la CI, contrôle en production). Les 
   jusqu'à la génération suivante). Sur PC : `-- --voix=<adresse du site>`. Une réplique de Maître Ysaline lue à
   part (`listen_button` avec des morceaux) garde sa voix enregistrée. Après la modification d'un de ces textes :
   relancer les deux scripts.
+- Musique (autoload `Music`, `deploy/musique/theme.mp3` : réencodée depuis `music/`, hors du dépôt ; copiée dans
+  `musique/` de l'export par `tools/postprocess_web.py`, téléchargée après le démarrage ; sur PC, lue dans deploy/) :
+  en boucle partout, sauf dans les scènes de quête (`Music.FOCUS_SCENES` : donjon, village, défi du jour, arène, tir ;
+  une nouvelle scène de quête y est ajoutée), fondu à l'entrée et reprise au retour, plus discrète quand une voix parle.
+  Volume à part dans les Options (`Accessibility.music_volume`, préférence `music`). Captures sur PC : `-- --musique=0`.
 - Le héros parle entre les salles (`HeroVoice`, core/world ; bulle `CombatHud.say`, lue si lecture automatique) :
   phrases par ton de monde, combinées, les dernières dites ne reviennent pas.
 - Progression du joueur : `SaveManager` (XP, donjons, bestiaire, défis quotidiens), jamais de fichier de

@@ -24,6 +24,8 @@ deploy/.env
 *.key
 
 # Divers
+# Fichiers source de la musique (déposés par Eric ; la version du jeu est dans deploy/musique)
+/music/
 .DS_Store
 Thumbs.db
 *.log

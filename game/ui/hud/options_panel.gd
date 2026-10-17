@@ -1,6 +1,6 @@
 class_name OptionsPanel
 extends PanelContainer
-## Options de l'enfant sur cet appareil : taille du texte, volume des sons, lecture
+## Options de l'enfant sur cet appareil : taille du texte, volume des sons et de la musique, lecture
 ## automatique. Il ne peut pas descendre sous les aménagements choisis par le parent
 ## (taille minimale, lecture à voix haute).
 
@@ -45,6 +45,16 @@ func setup(wt: WorldTheme) -> void:
 		Sfx.play("correct"))
 	box.add_child(volume)
 
+	box.add_child(UiKit.label("Musique", 24))
+	var music := HSlider.new()
+	music.min_value = 0.0
+	music.max_value = 1.0
+	music.step = 0.1
+	music.value = Accessibility.music_volume()
+	music.custom_minimum_size = Vector2(0, 48)
+	music.value_changed.connect(func(value: float) -> void: Accessibility.set_pref("music", value, false))
+	box.add_child(music)
+
 	if Accessibility.can_speak():
 		var auto := CheckButton.new()
 		auto.text = "Lire chaque question à voix haute"
@@ -58,6 +68,8 @@ func setup(wt: WorldTheme) -> void:
 	box.add_child(UiKit.label("Voix du jeu : Piper, voix « siwis » (français) et « alba » (anglais), sous licence CC BY 4.0.", 15, wt.text_dim))
 	if Voice.recorded_count() > 0:  # voix enregistrées (tools/voix_elevenlabs.py)
 		box.add_child(UiKit.label("Voix du narrateur et de Maître Ysaline : ElevenLabs.", 15, wt.text_dim))
+	if Music.is_loaded():
+		box.add_child(UiKit.label("Musique : « Ritual of the Cursed », créée avec Suno.", 15, wt.text_dim))
 	# Crédit demandé par la licence des icônes (CC BY 3.0).
 	box.add_child(UiKit.label("Icônes : game-icons.net (Lorc, Delapouite, Carl Olsen, Skoll, Zeromancer, Sbed), sous licence CC BY 3.0. Titres : police Cinzel (OFL).", 15, wt.text_dim))
 	var close := UiKit.icon_button("Fermer", "check-mark", 64.0)

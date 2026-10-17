@@ -24,6 +24,7 @@ QuestionService="*res://autoload/question_service.gd"
 Sfx="*res://autoload/sfx.gd"
 Voice="*res://autoload/voice.gd"
 Accessibility="*res://autoload/accessibility.gd"
+Music="*res://autoload/music.gd"
 
 [audio]
 

@@ -34,7 +34,7 @@ const CALM_VOLUME_DB := -8.0
 
 ## Aménagements du parent (dernière version reçue du serveur).
 var parent: Dictionary = DEFAULTS.duplicate()
-## Préférences de l'enfant sur cet appareil : {text_size, volume (0 à 1), auto_read}.
+## Préférences de l'enfant sur cet appareil : {text_size, volume et music (0 à 1), auto_read}.
 var prefs: Dictionary = {}
 
 var _font: Font
@@ -66,6 +66,11 @@ func auto_read() -> bool:
 
 func volume() -> float:
 	return clampf(float(prefs.get("volume", 1.0)), 0.0, 1.0)
+
+
+## Volume de la musique (Options, autoload `Music`), indépendant de celui des sons et des voix.
+func music_volume() -> float:
+	return clampf(float(prefs.get("music", 0.7)), 0.0, 1.0)
 
 
 ## Police des interfaces : très lisible ou par défaut, espacée si demandé, avec les
@@ -149,11 +154,13 @@ func refresh() -> void:
 		Session.sync_play_time(res.data.get("play_time", {}))
 
 
-func set_pref(key: String, value: Variant) -> void:
+## `notify` faux : réglage lu en continu (volume de la musique), sans reconstruire les écrans.
+func set_pref(key: String, value: Variant, notify := true) -> void:
 	prefs[key] = value
 	_save_prefs()
 	_apply()
-	changed.emit()
+	if notify:
+		changed.emit()
 
 
 ## Préférences de l'enfant connecté (changement de joueur).

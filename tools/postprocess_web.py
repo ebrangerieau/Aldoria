@@ -6,6 +6,7 @@
    « Installer l'application » dans le menu de Chrome, plein écran, à l'horizontale.
 3. Copie les voix enregistrées (deploy/voix : manifeste et MP3, tools/voix_elevenlabs.py) dans
    voix/ ; sans voix générées, un manifeste vide (le jeu garde la voix du serveur).
+   La musique (deploy/musique) va de même dans musique/.
 4. Précompresse en gzip les fichiers lourds (.wasm, .pck, .js, .html) pour
    `gzip_static` de nginx (le .wasm est environ 4 fois plus léger).
 5. Affiche le poids brut et compressé (budget TRD §2.2 : < 25 Mo compressés).
@@ -28,6 +29,7 @@ COMPRESSIBLE = {".wasm", ".pck", ".js", ".html", ".json", ".svg"}
 BUDGET_MB = 25.0
 PWA = Path(__file__).resolve().parent.parent / "deploy" / "pwa"
 VOICES = Path(__file__).resolve().parent.parent / "deploy" / "voix"
+MUSIC = Path(__file__).resolve().parent.parent / "deploy" / "musique"
 PWA_HEAD = (
     '<link rel="manifest" href="manifest.webmanifest">'
     '<meta name="theme-color" content="#14121c">'
@@ -60,6 +62,17 @@ def add_recorded_voices(directory: Path) -> int:
                 count += source.suffix == ".mp3"
     if not (target / "manifest.json").exists():
         (target / "manifest.json").write_text("{}\n", encoding="utf-8")
+    return count
+
+
+def add_music(directory: Path) -> int:
+    """Copie deploy/musique dans musique/ (téléchargée après le démarrage, hors du .pck)."""
+    target = directory / "musique"
+    target.mkdir(exist_ok=True)
+    count = 0
+    for source in MUSIC.glob("*.mp3") if MUSIC.is_dir() else []:
+        shutil.copy(source, target / source.name)
+        count += 1
     return count
 
 
@@ -112,6 +125,7 @@ def main() -> int:
     print(f"Scripts inline externalisés : {scripts}")
     print(f"Application installable : {add_installable_app(directory, index)} fichiers")
     print(f"Voix enregistrées : {add_recorded_voices(directory)} sons")
+    print(f"Musique : {add_music(directory)} fichier(s)")
     raw, compressed = precompress(directory)
     print(f"Total : {raw / 1e6:.2f} Mo bruts, {compressed / 1e6:.2f} Mo compressés")
     if compressed / 1e6 > BUDGET_MB:
