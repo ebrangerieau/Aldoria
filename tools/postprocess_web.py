@@ -2,9 +2,11 @@
 
 1. Sort les blocs <script> inline de index.html dans des fichiers externes : la CSP
    du TRD §8 (`script-src 'self'`) interdit les scripts inline.
-2. Précompresse en gzip les fichiers lourds (.wasm, .pck, .js, .html) pour
+2. Ajoute l'application installable (deploy/pwa : manifeste, icônes ; lien dans index.html) :
+   « Installer l'application » dans le menu de Chrome, plein écran, à l'horizontale.
+3. Précompresse en gzip les fichiers lourds (.wasm, .pck, .js, .html) pour
    `gzip_static` de nginx (le .wasm est environ 4 fois plus léger).
-3. Affiche le poids brut et compressé (budget TRD §2.2 : < 25 Mo compressés).
+4. Affiche le poids brut et compressé (budget TRD §2.2 : < 25 Mo compressés).
 
 Usage : python tools/postprocess_web.py build/web
 Bibliothèque standard uniquement.
@@ -15,12 +17,32 @@ from __future__ import annotations
 import gzip
 import hashlib
 import re
+import shutil
 import sys
 from pathlib import Path
 
 INLINE_SCRIPT = re.compile(r"<script>(.*?)</script>", re.DOTALL)
 COMPRESSIBLE = {".wasm", ".pck", ".js", ".html", ".json", ".svg"}
 BUDGET_MB = 25.0
+PWA = Path(__file__).resolve().parent.parent / "deploy" / "pwa"
+PWA_HEAD = (
+    '<link rel="manifest" href="manifest.webmanifest">'
+    '<meta name="theme-color" content="#14121c">'
+    '<meta name="mobile-web-app-capable" content="yes">'
+)
+
+
+def add_installable_app(directory: Path, index: Path) -> int:
+    """Copie manifeste et icônes, remplace l'icône par défaut de Godot, relie le manifeste."""
+    for source in PWA.iterdir():
+        shutil.copy(source, directory / source.name)
+    shutil.copy(PWA / "icon-192.png", directory / "index.icon.png")
+    shutil.copy(PWA / "icon-192.png", directory / "index.apple-touch-icon.png")
+    html = index.read_text(encoding="utf-8")
+    if 'rel="manifest"' not in html:
+        html = html.replace("</head>", PWA_HEAD + "</head>", 1)
+        index.write_text(html, encoding="utf-8")
+    return len(list(PWA.iterdir()))
 
 
 def externalize_inline_scripts(index: Path) -> int:
@@ -70,6 +92,7 @@ def main() -> int:
         return 1
     scripts = externalize_inline_scripts(index)
     print(f"Scripts inline externalisés : {scripts}")
+    print(f"Application installable : {add_installable_app(directory, index)} fichiers")
     raw, compressed = precompress(directory)
     print(f"Total : {raw / 1e6:.2f} Mo bruts, {compressed / 1e6:.2f} Mo compressés")
     if compressed / 1e6 > BUDGET_MB:

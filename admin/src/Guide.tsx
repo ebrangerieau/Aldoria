@@ -81,6 +81,12 @@ export function Guide({ child, onOpen }: { child?: Profile; onOpen: (page: Guide
             n'affiche les enfants que sur un appareil relié : un inconnu qui ouvre l'adresse du jeu ne voit personne.
           </li>
           <li>
+            <strong>Installer le jeu comme une application</strong> (téléphone ou tablette Android, avec Chrome) : ouvrez l'adresse du jeu,
+            touchez le menu <strong>⋮</strong> en haut à droite, puis <strong>Installer l'application</strong> (ou{' '}
+            <strong>Ajouter à l'écran d'accueil</strong>). Une icône Aldoria apparaît : le jeu s'ouvre alors en plein écran, sans la barre du
+            navigateur, et reste à l'horizontale. Les mises à jour arrivent toutes seules. L'appareil reste relié : pas de nouveau code à taper.
+          </li>
+          <li>
             <strong>Inviter un adulte</strong> (l'autre parent, un grand-parent…) : <strong>Créer un lien d'invitation</strong>, puis envoyez
             ce lien comme vous voulez (SMS, messagerie). La personne y choisit son e-mail et son mot de passe. Le lien ne sert qu'une fois et
             expire au bout de 7 jours.

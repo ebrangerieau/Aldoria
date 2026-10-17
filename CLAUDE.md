@@ -59,6 +59,10 @@ Le web diffère du PC : décompression gzip faite par le navigateur, pas de poli
 Sauvegardes de la base (service `backup`, copie à la maison, restauration) : `docs/exploitation.md`.
 Vérifier qu'une sauvegarde se restaure, dans un PostgreSQL jetable : `powershell -File tools/test_restauration.ps1 <fichier.sql.gz>`.
 
+Application installable (téléphone, tablette) : manifeste et icônes dans `deploy/pwa/` (icônes : `godot --headless --path game
+--script ../tools/make_app_icons.gd`), copiés et reliés à `index.html` par `tools/postprocess_web.py` ; pas de service worker
+(Chrome n'en exige plus pour « Installer l'application » depuis la version 108).
+
 Export web local (mêmes conditions que la CI) : image Docker `barichello/godot-ci:4.7.2`, puis
 `python tools/postprocess_web.py build/web`.
 
