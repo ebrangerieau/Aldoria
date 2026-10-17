@@ -65,7 +65,8 @@ def load_manifest() -> dict:
 def save_manifest(manifest: dict) -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     ordered = dict(sorted(manifest.items(), key=lambda kv: kv[1]["id"]))
-    MANIFEST.write_text(json.dumps(ordered, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    text = json.dumps(ordered, ensure_ascii=False, indent=2) + "\n"
+    MANIFEST.write_text(text, encoding="utf-8", newline="\n")  # fins de ligne Unix
 
 
 def request(path: str, key: str, body: dict | None = None) -> bytes:
