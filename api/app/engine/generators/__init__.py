@@ -100,5 +100,6 @@ from app.engine.generators import (  # noqa: E402, F401
     prealgebre_6e,
     problemes_6e,
     raisonnement,
+    sciences_6e,
     tir,
 )

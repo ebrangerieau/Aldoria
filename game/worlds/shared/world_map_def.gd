@@ -51,6 +51,12 @@ const REGIONS := {
 		"label": Vector2i(5, 9),
 		"fog": "Le Bois des Mots est perdu dans le brouillard. On raconte que les arbres y murmurent des histoires. Un jour, un Archiviste y entrera.",
 	},
+	"sciences": {
+		"title": "Le Laboratoire des Inventeurs",
+		"slots": [Vector2i(5, 3), Vector2i(4, 4), Vector2i(6, 2)],
+		"label": Vector2i(4, 2),
+		"fog": "Derrière ses vitres embuées, le Laboratoire des Inventeurs garde ses expériences et ses spécimens. Il s'ouvrira quand les sciences entreront dans ta quête.",
+	},
 	"histoire_geo": {
 		"title": "Les Portes du Temps",
 		"slots": [Vector2i(10, 6), Vector2i(10, 8), Vector2i(11, 5)],

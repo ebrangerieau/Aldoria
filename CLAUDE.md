@@ -155,7 +155,8 @@ sauvegarde avant migration, push, suivi de la CI, contrôle en production). Les 
   exactes, avec leur source ; sinon exemple écrit pour le jeu. `tests/test_francais.py` vérifie la couverture du
   programme et l'unicité des réponses. Histoire-géographie : dates des manuels (« vers » si approximative), écrites
   « 52 av. J.-C. » / « 476 après J.-C. », siècles en chiffres romains (« IVe siècle av. J.-C. ») : `engine/speech.py` les
-  lit en toutes lettres (`ordinal`).
+  lit en toutes lettres (`ordinal`). Sciences : températures écrites en toutes lettres (« 100 degrés »), vitesses en km/h, m/s
+  ou m/min (lues par `engine/speech.py`), unité visée d'une conversion en toutes lettres.
 - Questions proposées par l'IA (`engine/ai_author.py`, route `/admin/ai-questions`) : SDK `anthropic`, modèle
   `claude-sonnet-5-5` et effort `medium` par défaut (`ALDORIA_AI_MODEL`, `ALDORIA_AI_EFFORT` ; prix par modèle
   dans `PRICES_PER_MTOK`), sortie structurée, `fallbacks="default"` ; chaque proposition repasse par `bank.validate` et

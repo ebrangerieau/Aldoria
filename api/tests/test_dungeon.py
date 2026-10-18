@@ -242,7 +242,7 @@ def test_game_dungeons_match_curriculum_and_generators():
         source,
         re.S,
     )
-    assert len(dungeons) == 16
+    assert len(dungeons) == 18
     for code, chapter_list, enigma in dungeons:
         codes = re.findall(r'"([\w.]+)"', chapter_list)
         levels = {chapters[c] for c in codes}  # KeyError : chapitre absent du programme
@@ -381,5 +381,33 @@ async def test_tom_history_geography_dungeons(client, login, curriculum, chapter
     items = body["items"]
     assert len(items) > 20
     assert all(i["notions"][0].startswith("2nde.histoire_geo.") for i in items)
+    enigma = [i for i in items if i["role"] == "enigme"]
+    assert len(enigma) == 6 and all(i["type"] == "order" for i in enigma)
+
+
+@pytest.mark.parametrize(
+    ("chapters", "enigma_code"),
+    [
+        (["matiere", "mouvement_energie"], "6e.sciences.course"),
+        (["vivant", "nutrition", "terre"], "6e.sciences.frise_vivant"),
+    ],
+)
+async def test_jules_science_dungeons(client, login, curriculum, chapters, enigma_code):
+    """Tour des Expériences et Maison du Naturaliste : sciences de 6e seulement."""
+    headers = await login("jules", "1234")
+    body = (
+        await client.post(
+            f"{API}/session/start",
+            json={
+                "mode": "donjon",
+                "focus_chapters": [f"6e.sciences.{c}" for c in chapters],
+                "enigma": {"generator": enigma_code, "count": 6},
+            },
+            headers=headers,
+        )
+    ).json()
+    items = body["items"]
+    assert len(items) > 20
+    assert all(i["notions"][0].startswith("6e.sciences.") for i in items)
     enigma = [i for i in items if i["role"] == "enigme"]
     assert len(enigma) == 6 and all(i["type"] == "order" for i in enigma)

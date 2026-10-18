@@ -91,6 +91,12 @@
   },
   {
     "groupe": "carte",
+    "id": "brouillard-sciences",
+    "texte": "Derrière ses vitres embuées, le Laboratoire des Inventeurs garde ses expériences et ses spécimens. Il s'ouvrira quand les sciences entreront dans ta quête.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
     "id": "brouillard-histoire_geo",
     "texte": "Dans ce cercle de pierres, chaque porte ouvre sur une autre époque ou un autre lieu du monde. Dame Sablière y a tout mélangé. Ces portes s'ouvriront quand l'histoire-géographie entrera dans ta quête.",
     "voix": "ysaline"
@@ -303,6 +309,30 @@
     "groupe": "carte",
     "id": "page-puits_contes",
     "texte": "Tu as rapporté la page des Contes ! Elle a repris sa place dans la Grande Chronique. Toutes les pages de la région « Le Bois des Mots » sont revenues. Malvrek doit trembler dans sa tour !",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-tour_experiences",
+    "texte": "Au Laboratoire des Inventeurs, la Tour des Expériences crépite d'étincelles. On y faisait fondre, bouillir, briller et rouler toutes sortes de choses. Mais le Professeur Court-Circuit a tout déréglé : les glaçons bouillent et les lampes refusent de s'allumer. Rapporte la page des Sciences et remets les expériences en ordre.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-tour_experiences",
+    "texte": "Tu as rapporté la page des Sciences ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « La Maison du Naturaliste » s'éclaire sur la carte.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-maison_naturaliste",
+    "texte": "Un peu plus loin, la Maison du Naturaliste déborde de plantes, de bocaux et de fossiles. Le Pétrificateur y est entré : il change en pierre tout ce qui vit et mélange les époques. Rapporte la page du Vivant pour que la maison reverdisse.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-maison_naturaliste",
+    "texte": "Tu as rapporté la page du Vivant ! Elle a repris sa place dans la Grande Chronique. Toutes les pages de la région « Le Laboratoire des Inventeurs » sont revenues. Malvrek doit trembler dans sa tour !",
     "voix": "ysaline"
   }
 ]

@@ -59,7 +59,7 @@ const SUBJECT_LABELS := {"maths": "Maths", "anglais": "Anglais", "francais": "Fr
 static func all_for_level(level: String) -> Array[DungeonDef]:
 	match level:
 		"6e":
-			return [tour_fractions(), atelier_balances(), observatoire_angles(), bibliotheque_langues(), porte_origines(), porte_horizons(), moulin_phrases(), puits_contes()]
+			return [tour_fractions(), atelier_balances(), observatoire_angles(), bibliotheque_langues(), porte_origines(), porte_horizons(), moulin_phrases(), puits_contes(), tour_experiences(), maison_naturaliste()]
 		"2nde":
 			return [labyrinthe_vecteurs(), forge_algebre(), citadelle_fonctions(), theatre_verdure(), bibliotheque_engloutie(), port_couronnes(), porte_empires(), porte_transitions()]
 	return []
@@ -520,6 +520,114 @@ static func puits_contes() -> DungeonDef:
 			["chest_gold", Vector3(14.6, 0, 4.6), -90.0, 0.8],
 		],
 		"torch_color": Color(0.75, 0.95, 0.7),
+	}
+	return d
+
+
+# --- Laboratoire des Inventeurs (sciences de Jules) ---------------------------------------------
+
+static func tour_experiences() -> DungeonDef:
+	var d := DungeonDef.new()
+	d.code = "tour_experiences"
+	d.boss_intro = "Bzzzt ! Je suis le Professeur Court-Circuit ! J'ai fait fondre la glace à l'envers, inversé les fils et volé l'énergie de toutes les piles. Ta page des Sciences ? Elle a grillé avec mes fusibles !"
+	d.boss_defeat = "Pfffiou… mes circuits fument. Tiens, reprends ta page : tes expériences marchent bien mieux que les miennes."
+	d.page_text = "Sur la page des Sciences, tout se remet à fonctionner : l'eau gèle et bout au bon moment, les lampes s'allument, les vitesses se calculent et la Terre tourne de nouveau autour du Soleil."
+	d.map_piece = "building_tower_A_green"
+	d.page = "la page des Sciences"
+	d.threshold = "Au Laboratoire des Inventeurs, la Tour des Expériences crépite d'étincelles. On y faisait fondre, bouillir, briller et rouler toutes sortes de choses. Mais le Professeur Court-Circuit a tout déréglé : les glaçons bouillent et les lampes refusent de s'allumer. Rapporte la page des Sciences et remets les expériences en ordre."
+	d.title = "La Tour des Expériences"
+	d.subject = "sciences"
+	d.chapter_codes = ["6e.sciences.matiere", "6e.sciences.mouvement_energie"]
+	d.chapter_title = "La matière, le mouvement, l'énergie, l'électricité et la lumière"
+	d.intro = "Des étincelles jaillissent de partout ! Grimpe jusqu'au Professeur Court-Circuit."
+	d.enigma_generator = "6e.sciences.course"
+	d.enigma_title = "La Course des Inventions"
+	d.enigma_intro = "Le Professeur a truqué trois courses d'engins. Calcule leurs vitesses et range-les du plus lent au plus rapide."
+	d.enigma_xp = 45
+	d.chest_xp = 120
+	d.outro = "Les étincelles s'éteignent doucement : chaque expérience a retrouvé ses règles."
+	d.rooms = [
+		{"kind": "entree", "title": "Le Hall des Éprouvettes"},
+		{"kind": "combat", "title": "La Salle des Glaçons", "enemies": [
+			_enemy("GreenBlob", "Gelée qui ne fond pas", 60, 1, 30, Vector2(11, 7)),
+		]},
+		{"kind": "combat", "title": "L'Atelier des Circuits", "enemies": [
+			_enemy("Goleling", "Golem à piles", 75, 2, 35, Vector2(8, 5)),
+			_enemy("Armabee", "Guêpe électrique", 75, 2, 35, Vector2(10.5, 14)),
+		]},
+		{"kind": "enigme", "title": "La Piste d'Essai"},
+		{"kind": "combat", "title": "L'Observatoire du Soleil", "enemies": [
+			_enemy("GolelingEvolved", "Golem des engrenages", 110, 3, 50, Vector2(11, 7)),
+		]},
+		{"kind": "boss", "title": "Le Grenier à Fusibles", "enemies": [
+			_enemy("BlueDemon", "Le Professeur Court-Circuit", 210, 4, 155, Vector2(11, 6), 1.1),
+		]},
+	]
+	d.decor = {
+		"floor": "floor_tile_large",
+		"floor_accent": "floor_wood_large",
+		"walls": ["wall_shelves", "wall_window_open"],
+		"banners": ["banner_patternC_white", "banner_patternB_green"],
+		"props": [
+			["table_long_decorated_A", Vector3(2.4, 0, 1.4), 0.0, 1.0],
+			["shelf_small_candles", Vector3(1.4, 0, 4.0), 90.0, 0.6],
+			["barrel_large", Vector3(13.6, 0, 1.4), 0.0, 0.8],
+			["crates_stacked", Vector3(14.6, 0, 4.4), -20.0, 0.9],
+		],
+		"torch_color": Color(0.7, 0.95, 1.0),
+	}
+	return d
+
+
+static func maison_naturaliste() -> DungeonDef:
+	var d := DungeonDef.new()
+	d.code = "maison_naturaliste"
+	d.boss_intro = "Halte ! Je suis le Pétrificateur ! Tout ce qui vit, je le change en caillou : les fleurs, les abeilles, les grenouilles… Et j'ai mélangé tous les fossiles du monde. Bientôt, plus rien ne poussera !"
+	d.boss_defeat = "Non… mes cailloux se remettent à respirer ! Les graines germent, les abeilles bourdonnent. Je déteste quand ça repousse."
+	d.page_text = "La page du Vivant reprend des couleurs : les cellules, les familles d'êtres vivants, les fossiles bien rangés dans le temps, les fleurs pollinisées et les chaînes alimentaires de la forêt."
+	d.map_piece = "building_home_B_yellow"
+	d.page = "la page du Vivant"
+	d.threshold = "Un peu plus loin, la Maison du Naturaliste déborde de plantes, de bocaux et de fossiles. Le Pétrificateur y est entré : il change en pierre tout ce qui vit et mélange les époques. Rapporte la page du Vivant pour que la maison reverdisse."
+	d.title = "La Maison du Naturaliste"
+	d.subject = "sciences"
+	d.chapter_codes = ["6e.sciences.vivant", "6e.sciences.nutrition", "6e.sciences.terre"]
+	d.chapter_title = "Le vivant, l'alimentation, la Terre et les écosystèmes"
+	d.intro = "Les plantes deviennent des cailloux ! Traverse la maison jusqu'au Pétrificateur."
+	d.enigma_generator = "6e.sciences.frise_vivant"
+	d.enigma_title = "La Frise du Vivant"
+	d.enigma_intro = "Le Pétrificateur a mélangé les fossiles de trois vitrines. Remets l'histoire de la vie dans l'ordre, du plus ancien au plus récent."
+	d.enigma_xp = 45
+	d.chest_xp = 120
+	d.outro = "La Maison du Naturaliste reverdit : les bocaux bourdonnent et les fossiles sont rangés."
+	d.rooms = [
+		{"kind": "entree", "title": "Le Vestibule aux Bocaux"},
+		{"kind": "combat", "title": "La Serre", "enemies": [
+			_enemy("Mushnub", "Champignon trop poli", 60, 1, 30, Vector2(11, 7)),
+		]},
+		{"kind": "combat", "title": "La Mare", "enemies": [
+			_enemy("Cactoro", "Cactus pétrifié", 75, 2, 35, Vector2(8, 5)),
+			_enemy("Armabee", "Abeille de pierre", 75, 2, 35, Vector2(10.5, 14)),
+		]},
+		{"kind": "enigme", "title": "La Galerie des Fossiles"},
+		{"kind": "combat", "title": "Le Cabinet des Squelettes", "enemies": [
+			_enemy("Dragon", "Dragon fossile", 110, 3, 50, Vector2(11, 7)),
+		]},
+		{"kind": "boss", "title": "Le Grenier aux Herbiers", "enemies": [
+			_enemy("Yeti", "Le Pétrificateur", 210, 4, 155, Vector2(11, 6), 1.3),
+		]},
+	]
+	d.decor = {
+		"floor": "floor_wood_large",
+		"floor_accent": "floor_dirt_large",
+		"walls": ["wall_shelves", "wall_arched"],
+		"banners": ["banner_patternB_green", "banner_patternB_yellow"],
+		"props": [
+			["shelf_large", Vector3(1.4, 0, 4.0), 90.0, 0.9],
+			["trunk_large_A", Vector3(2.6, 0, 1.4), 0.0, 0.8],
+			["candle_triple", Vector3(13.2, 0, 1.0), 0.0, 0.3],
+			["table_medium_decorated_A", Vector3(12.0, 0, 1.6), 0.0, 0.9],
+		],
+		"torch_color": Color(0.75, 1.0, 0.7),
 	}
 	return d
 

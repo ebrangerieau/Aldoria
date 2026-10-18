@@ -49,6 +49,9 @@ _WORDS = [
     ("%", " pour cent"),
 ]
 _UNITS = {
+    "km/h": "kilomètres par heure",
+    "m/s": "mètres par seconde",
+    "m/min": "mètres par minute",
     "km": "kilomètres",
     "hm": "hectomètres",
     "dam": "décamètres",
@@ -164,6 +167,8 @@ def text(value: str) -> str:
     out = re.sub(r"\b([IVXL]+)(er|e) (siècles?|millénaires?)\b", _century, out)
     out = re.sub(r"\bav\. J\.-C\.", "avant Jésus-Christ", out)
     out = re.sub(r"\b(?:apr\.|après) J\.-C\.", "après Jésus-Christ", out)
+    # Vitesse sans nombre devant : « en km/h ? » → « en kilomètres par heure ? ».
+    out = re.sub(r"(?<![\w/])(km/h|m/s|m/min)(?![\w/])", lambda m: _UNITS[m.group(1)], out)
     for symbol, word in _WORDS:
         out = out.replace(symbol, word)
     out = re.sub(r"(?<=\d)-(?=\d)", " moins ", out)  # 7-3

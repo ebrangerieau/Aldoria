@@ -1,0 +1,34 @@
+{
+  "level": "6e",
+  "subject": {"code": "sciences", "label": "Sciences et technologie"},
+  "source": "Programme de sciences et technologie du cycle 3 (arrêté du 15 juin 2023, BO n° 25 du 22 juin 2023), en vigueur en 6e en 2026-2027 (le programme du BO n° 24 du 11 juin 2026 s'appliquera en 6e à la rentrée 2027). Connaissances et compétences attendues en fin de sixième ; depuis 2023, la technologie n'est plus enseignée en 6e (seulement reliée aux autres thèmes) ; la reproduction humaine n'est pas posée en questions dans le jeu. Questions : générateurs (api/app/engine/generators/sciences_6e.py), complétés par la banque.",
+  "chapters": [
+    {"code": "6e.sciences.matiere", "title": "La matière : états, masse, volume, mélanges", "notions": [
+      {"code": "6e.sciences.matiere.etats", "label": "États de la matière et changements d'état"},
+      {"code": "6e.sciences.matiere.materiaux", "label": "Propriétés et tri des matériaux"},
+      {"code": "6e.sciences.matiere.masse_volume", "label": "Masse, volume et conversions d'unités"},
+      {"code": "6e.sciences.matiere.melanges", "label": "Mélanges, dissolution, séparation, transformations chimiques"}
+    ]},
+    {"code": "6e.sciences.mouvement_energie", "title": "Mouvement, énergie, électricité et signaux", "notions": [
+      {"code": "6e.sciences.mouvement_energie.vitesse", "label": "Mouvement uniforme et calcul de la vitesse"},
+      {"code": "6e.sciences.mouvement_energie.terre_soleil", "label": "Rotation et révolution de la Terre, jour, nuit et saisons"},
+      {"code": "6e.sciences.mouvement_energie.energie", "label": "Formes, conversions et ressources d'énergie"},
+      {"code": "6e.sciences.mouvement_energie.electricite", "label": "Circuits électriques à une boucle et sécurité"},
+      {"code": "6e.sciences.mouvement_energie.signaux", "label": "Lumière, ombres et signaux qui transmettent l'information"}
+    ]},
+    {"code": "6e.sciences.vivant", "title": "Le vivant : cellules, classification, biodiversité", "notions": [
+      {"code": "6e.sciences.vivant.cellule", "label": "La cellule, unité du vivant"},
+      {"code": "6e.sciences.vivant.classification", "label": "Classer les êtres vivants et établir des parentés"},
+      {"code": "6e.sciences.vivant.biodiversite", "label": "Biodiversité actuelle et passée, fossiles, échelle des temps"}
+    ]},
+    {"code": "6e.sciences.nutrition", "title": "Alimentation et cycle de vie des plantes", "notions": [
+      {"code": "6e.sciences.nutrition.aliments", "label": "Alimentation, micro-organismes, production et conservation des aliments"},
+      {"code": "6e.sciences.nutrition.pollinisation", "label": "Cycle de vie des plantes à fleurs et pollinisation"}
+    ]},
+    {"code": "6e.sciences.terre", "title": "La Terre, une planète peuplée par des êtres vivants", "notions": [
+      {"code": "6e.sciences.terre.planete", "label": "La Terre dans le système solaire et les conditions de la vie"},
+      {"code": "6e.sciences.terre.climat", "label": "Météorologie, climat et réchauffement climatique"},
+      {"code": "6e.sciences.terre.ecosystemes", "label": "Écosystèmes, chaînes alimentaires, actions humaines"}
+    ]}
+  ]
+}

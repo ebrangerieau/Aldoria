@@ -460,6 +460,16 @@ générateurs naturels, donc des questions à rédiger.
 > questions d'anglais. Reste : le donjon de français de Tom (après une première série de questions publiées),
 > les Archives regroupées par matière, puis les deux semaines d'observation.
 >
+> ✅ **2026-10-18 : sciences et technologie de Jules.** Programme du cycle 3 de 2023 (BO n° 25 du 22 juin 2023), en
+> vigueur en 6e en 2026-2027 (celui du BO n° 24 du 11 juin 2026 s'appliquera en 6e à la rentrée 2027) : depuis 2023, la
+> technologie n'est plus enseignée en 6e ; la reproduction humaine n'est pas posée en questions. `content/seed/6e/sciences.json`,
+> 5 chapitres, 17 notions. Générateurs `sciences_6e.py` : exemples relus, conversions de masse et de volume,
+> proportionnalité masse-volume, vitesse d'un mouvement uniforme, course à classer (vitesses à calculer), frise du vivant,
+> chaînes alimentaires. Lecture à voix haute de km/h, m/s, m/min. Nouvelle région **le Laboratoire des Inventeurs** : la Tour
+> des Expériences (matière, mouvement, énergie ; énigme « La Course des Inventions », boss le Professeur Court-Circuit) puis
+> la Maison du Naturaliste (vivant, alimentation, Terre ; énigme « La Frise du Vivant », boss le Pétrificateur). Noms
+> provisoires ; cinq répliques de Maître Ysaline à faire enregistrer. À prévoir avant la rentrée 2027 : le nouveau programme.
+>
 > ✅ **2026-10-18 : histoire-géographie de Tom.** Programme de seconde de 2019 (BO spécial n° 1 du 22 janvier 2019),
 > toujours en vigueur en 2026-2027 (le texte du BO n° 22 du 28 mai 2026 ne concerne que les cycles 2 et 3) :
 > `content/seed/2nde/histoire_geo.json`, 9 chapitres, 21 notions. Générateurs `histoire_geo_2nde.py` : exemples relus pour
