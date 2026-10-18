@@ -61,7 +61,7 @@ static func all_for_level(level: String) -> Array[DungeonDef]:
 		"6e":
 			return [tour_fractions(), atelier_balances(), observatoire_angles(), bibliotheque_langues(), porte_origines(), porte_horizons(), moulin_phrases(), puits_contes()]
 		"2nde":
-			return [labyrinthe_vecteurs(), forge_algebre(), citadelle_fonctions(), theatre_verdure(), bibliotheque_engloutie(), port_couronnes()]
+			return [labyrinthe_vecteurs(), forge_algebre(), citadelle_fonctions(), theatre_verdure(), bibliotheque_engloutie(), port_couronnes(), porte_empires(), porte_transitions()]
 	return []
 
 
@@ -826,6 +826,114 @@ static func port_couronnes() -> DungeonDef:
 			["chest_gold", Vector3(12.0, 0, 1.2), 0.0, 0.8],
 		],
 		"torch_color": Color(1.0, 0.72, 0.5),
+	}
+	return d
+
+
+# --- Portes du Temps (histoire-géographie de Tom) ------------------------------------------------
+
+static func porte_empires() -> DungeonDef:
+	var d := DungeonDef.new()
+	d.code = "porte_empires"
+	d.boss_intro = "Je suis le Grand Censeur. Ce qui n'est pas autorisé n'a jamais existé : ni Luther, ni Galilée, ni le Bill of Rights. J'ai rayé leurs noms des registres. Tu ne liras rien que je n'aie approuvé."
+	d.boss_defeat = "Mes registres… les noms reviennent, un à un. On n'efface pas une idée imprimée à mille exemplaires. Malvrek l'apprendra à ses dépens."
+	d.page_text = "La page de l'Histoire moderne se remet en ordre : Athènes et Rome, Venise et les croisades, 1492, la Renaissance et les réformes, l'État royal, les Lumières. Chaque siècle retrouve sa place."
+	d.map_piece = "building_castle_blue"
+	d.page = "la page de l'Histoire moderne"
+	d.threshold = "Une porte de pierre, plus haute que les autres, ouvre sur vingt siècles d'histoire : la Méditerranée antique, l'Atlantique de 1492, les cours royales, les salons des Lumières. Le Grand Censeur y raye les noms et brûle les registres. Rapporte la page de l'Histoire moderne avant que tout soit effacé."
+	d.title = "La Porte des Empires"
+	d.subject = "histoire_geo"
+	d.chapter_codes = ["2nde.histoire_geo.reperes", "2nde.histoire_geo.mediterranee", "2nde.histoire_geo.monde_xvie", "2nde.histoire_geo.etat_moderne", "2nde.histoire_geo.societes"]
+	d.chapter_title = "De la Méditerranée antique aux Lumières"
+	d.intro = "Les registres brûlent au fond des couloirs. Traverse les siècles jusqu'au Grand Censeur."
+	d.enigma_generator = "2nde.histoire_geo.frise"
+	d.enigma_title = "La Frise des Siècles"
+	d.enigma_intro = "Trois frises ont été brouillées par le Censeur. Rends à chaque événement sa place, du plus ancien au plus récent."
+	d.enigma_xp = 50
+	d.chest_xp = 130
+	d.outro = "Les registres se referment, intacts. Les siècles se suivent de nouveau dans le bon ordre."
+	d.rooms = [
+		{"kind": "entree", "title": "Le Portique"},
+		{"kind": "combat", "title": "L'Agora", "enemies": [
+			_enemy("Skeleton_Warrior", "Hoplite d'os", 85, 2, 40, Vector2(11, 7)),
+		]},
+		{"kind": "combat", "title": "Le Quai de Séville", "enemies": [
+			_enemy("Skeleton_Rogue", "Conquistador d'os", 90, 3, 45, Vector2(8, 5)),
+			_enemy("GhostSkull", "Spectre des galions", 85, 2, 45, Vector2(10.5, 14)),
+		]},
+		{"kind": "enigme", "title": "La Salle des Registres"},
+		{"kind": "combat", "title": "La Galerie des Glaces", "enemies": [
+			_enemy("GolelingEvolved", "Golem de cour", 130, 4, 60, Vector2(11, 7)),
+		]},
+		{"kind": "boss", "title": "Le Cabinet du Censeur", "enemies": [
+			_enemy("Demon", "Le Grand Censeur", 240, 5, 170, Vector2(11, 6), 1.2),
+		]},
+	]
+	d.decor = {
+		"floor": "floor_tile_large",
+		"floor_accent": "floor_wood_large_dark",
+		"walls": ["wall_shelves", "wall_arched"],
+		"banners": ["banner_patternC_blue", "banner_patternA_blue"],
+		"props": [
+			["column", Vector3(1.4, 0, 4.0), 0.0, 0.6],
+			["shelf_large", Vector3(2.4, 0, 1.4), 0.0, 0.9],
+			["candle_triple", Vector3(13.2, 0, 1.0), 0.0, 0.3],
+			["table_long_decorated_A", Vector3(14.4, 0, 4.4), 90.0, 0.9],
+		],
+		"torch_color": Color(0.7, 0.8, 1.0),
+	}
+	return d
+
+
+static func porte_transitions() -> DungeonDef:
+	var d := DungeonDef.new()
+	d.code = "porte_transitions"
+	d.boss_intro = "Je suis l'Arpenteur Aveugle. Je mesure le monde sans le voir : un désert vaut une métropole, un pays riche un pays pauvre. Tes cartes, je les ai effacées. Dis-moi donc où tu vas."
+	d.boss_defeat = "Mes instruments… se règlent à nouveau. Les écarts, les flux, les risques réapparaissent sur la carte. Elle n'était pas si simple, finalement."
+	d.page_text = "La page de la Géographie du monde se redessine : risques et ressources, populations et inégalités, migrations et tourisme, l'Afrique australe en mutation. Le monde en transition retrouve ses contrastes."
+	d.map_piece = "building_market_yellow"
+	d.page = "la page de la Géographie du monde"
+	d.threshold = "La porte suivante ne s'ouvre pas sur le passé, mais sur le monde d'aujourd'hui : des littoraux menacés, des villes qui grandissent, des routes de migrants, des parcs de safari. L'Arpenteur Aveugle a effacé les écarts et les flux de toutes les cartes. Rapporte la page de la Géographie du monde."
+	d.title = "La Porte des Transitions"
+	d.subject = "histoire_geo"
+	d.chapter_codes = ["2nde.histoire_geo.environnements", "2nde.histoire_geo.developpement", "2nde.histoire_geo.mobilites", "2nde.histoire_geo.afrique_australe"]
+	d.chapter_title = "Environnements, développement, mobilités, Afrique australe"
+	d.intro = "Les cartes sont vierges, les boussoles affolées. Traverse ce monde en transition jusqu'à l'Arpenteur."
+	d.enigma_generator = "2nde.histoire_geo.idh"
+	d.enigma_title = "L'Échelle du développement"
+	d.enigma_intro = "Trois échelles ont été renversées. Classe chaque groupe de pays de l'IDH le plus élevé au plus faible."
+	d.enigma_xp = 50
+	d.chest_xp = 130
+	d.outro = "Sur chaque carte, les contrastes du monde réapparaissent. La porte se referme sans bruit."
+	d.rooms = [
+		{"kind": "entree", "title": "Le Seuil du Monde"},
+		{"kind": "combat", "title": "Le Delta inondé", "enemies": [
+			_enemy("GreenBlob", "Gelée des crues", 85, 2, 40, Vector2(11, 7)),
+		]},
+		{"kind": "combat", "title": "La Mégapole", "enemies": [
+			_enemy("Goleling", "Golem de béton", 95, 3, 45, Vector2(8, 5)),
+			_enemy("Armabee", "Guêpe des embouteillages", 90, 3, 45, Vector2(10.5, 14)),
+		]},
+		{"kind": "enigme", "title": "La Salle des Échelles"},
+		{"kind": "combat", "title": "La Savane du Kalahari", "enemies": [
+			_enemy("Cactoro", "Cactus du Kalahari", 130, 4, 60, Vector2(11, 7)),
+		]},
+		{"kind": "boss", "title": "L'Observatoire", "enemies": [
+			_enemy("Yeti", "L'Arpenteur Aveugle", 240, 5, 170, Vector2(11, 6), 1.3),
+		]},
+	]
+	d.decor = {
+		"floor": "floor_dirt_large",
+		"floor_accent": "floor_tile_large_rocks",
+		"walls": ["wall_window_open", "wall"],
+		"banners": ["banner_patternB_yellow", "banner_patternB_green"],
+		"props": [
+			["barrel_large", Vector3(1.6, 0, 4.0), 0.0, 0.8],
+			["crates_stacked", Vector3(2.6, 0, 1.4), -15.0, 0.9],
+			["table_medium_decorated_A", Vector3(12.0, 0, 1.6), 0.0, 0.9],
+			["trunk_large_A", Vector3(14.6, 0, 4.6), -90.0, 0.8],
+		],
+		"torch_color": Color(1.0, 0.85, 0.55),
 	}
 	return d
 

@@ -460,6 +460,15 @@ générateurs naturels, donc des questions à rédiger.
 > questions d'anglais. Reste : le donjon de français de Tom (après une première série de questions publiées),
 > les Archives regroupées par matière, puis les deux semaines d'observation.
 >
+> ✅ **2026-10-18 : histoire-géographie de Tom.** Programme de seconde de 2019 (BO spécial n° 1 du 22 janvier 2019),
+> toujours en vigueur en 2026-2027 (le texte du BO n° 22 du 28 mai 2026 ne concerne que les cycles 2 et 3) :
+> `content/seed/2nde/histoire_geo.json`, 9 chapitres, 21 notions. Générateurs `histoire_geo_2nde.py` : exemples relus pour
+> les huit chapitres d'histoire (tous les points de passage et d'ouverture ont leurs questions) et les quatre thèmes de
+> géographie (questions France comprises), siècle d'une date, frise des repères du programme, classement de pays par IDH
+> (ordre du PNUD, sans valeur chiffrée). Deux lieux dans les Portes du Temps : **la Porte des Empires** (histoire, énigme
+> « La Frise des Siècles », boss le Grand Censeur) puis **la Porte des Transitions** (géographie, énigme « L'Échelle du
+> développement », boss l'Arpenteur Aveugle). Noms provisoires ; quatre répliques de Maître Ysaline à faire enregistrer.
+>
 > ✅ **2026-10-18 : français de Jules.** Programme de français du cycle 3 (BO n° 16 du 17 avril 2025, en 6e depuis la
 > rentrée 2025) : `content/seed/6e/francais.json`, 5 chapitres, 23 notions (grammaire, conjugaison, orthographe
 > grammaticale, vocabulaire, les cinq entrées littéraires de 6e). Générateurs : conjugaison calculée

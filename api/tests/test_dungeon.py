@@ -242,7 +242,7 @@ def test_game_dungeons_match_curriculum_and_generators():
         source,
         re.S,
     )
-    assert len(dungeons) == 14
+    assert len(dungeons) == 16
     for code, chapter_list, enigma in dungeons:
         codes = re.findall(r'"([\w.]+)"', chapter_list)
         levels = {chapters[c] for c in codes}  # KeyError : chapitre absent du programme
@@ -347,5 +347,39 @@ async def test_jules_french_dungeons_stay_in_french(
     items = body["items"]
     assert len(items) > 20
     assert all(i["notions"][0].startswith("6e.francais.") for i in items)
+    enigma = [i for i in items if i["role"] == "enigme"]
+    assert len(enigma) == 6 and all(i["type"] == "order" for i in enigma)
+
+
+@pytest.mark.parametrize(
+    ("chapters", "enigma_code"),
+    [
+        (
+            ["reperes", "mediterranee", "monde_xvie", "etat_moderne", "societes"],
+            "2nde.histoire_geo.frise",
+        ),
+        (
+            ["environnements", "developpement", "mobilites", "afrique_australe"],
+            "2nde.histoire_geo.idh",
+        ),
+    ],
+)
+async def test_tom_history_geography_dungeons(client, login, curriculum, chapters, enigma_code):
+    """Porte des Empires et Porte des Transitions : histoire-géographie de seconde seulement."""
+    headers = await login("tom", "9876")
+    body = (
+        await client.post(
+            f"{API}/session/start",
+            json={
+                "mode": "donjon",
+                "focus_chapters": [f"2nde.histoire_geo.{c}" for c in chapters],
+                "enigma": {"generator": enigma_code, "count": 6},
+            },
+            headers=headers,
+        )
+    ).json()
+    items = body["items"]
+    assert len(items) > 20
+    assert all(i["notions"][0].startswith("2nde.histoire_geo.") for i in items)
     enigma = [i for i in items if i["role"] == "enigme"]
     assert len(enigma) == 6 and all(i["type"] == "order" for i in enigma)

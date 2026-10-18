@@ -181,6 +181,30 @@
   },
   {
     "groupe": "carte",
+    "id": "seuil-porte_empires",
+    "texte": "Une porte de pierre, plus haute que les autres, ouvre sur vingt siècles d'histoire : la Méditerranée antique, l'Atlantique de 1492, les cours royales, les salons des Lumières. Le Grand Censeur y raye les noms et brûle les registres. Rapporte la page de l'Histoire moderne avant que tout soit effacé.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-porte_empires",
+    "texte": "Tu as rapporté la page de l'Histoire moderne ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « La Porte des Transitions » s'éclaire sur la carte.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-porte_transitions",
+    "texte": "La porte suivante ne s'ouvre pas sur le passé, mais sur le monde d'aujourd'hui : des littoraux menacés, des villes qui grandissent, des routes de migrants, des parcs de safari. L'Arpenteur Aveugle a effacé les écarts et les flux de toutes les cartes. Rapporte la page de la Géographie du monde.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-porte_transitions",
+    "texte": "Tu as rapporté la page de la Géographie du monde ! Elle a repris sa place dans la Grande Chronique. Toutes les pages de la région « Les Portes du Temps » sont revenues. Malvrek doit trembler dans sa tour !",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
     "id": "village-6e",
     "texte": "Les habitants de Clairval sentent le Brouillard leur grignoter la mémoire. Parle-leur : chacun a besoin d'un coup de main aujourd'hui.",
     "voix": "ysaline"
