@@ -17,7 +17,7 @@ const FOCUS_SCENES := [
 	"res://scenes/combat/combat.tscn",
 	"res://scenes/tir/tir.tscn",
 ]
-const BASE_DB := -9.0  # musique de fond : sous les voix et les effets
+const BASE_DB := -6.0  # musique de fond : sous les voix et les effets
 const DUCK_DB := -9.0  # en plus, pendant qu'une voix parle
 const FADE_SECONDS := 1.5
 const VOICE_CHECK := 0.25  # secondes entre deux regards sur la voix (pont JavaScript sur le web)
