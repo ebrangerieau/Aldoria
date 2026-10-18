@@ -118,6 +118,20 @@ func test_every_place_has_its_own_land_cell() -> void:
 	assert_eq(snt.map(func(d: DungeonDef) -> String: return d.code), ["pont_paquets", "atelier_automates"])
 
 
+func test_tom_spanish_lives_with_his_english() -> void:
+	assert_eq(WorldMapDef.region_of("espagnol"), "anglais")
+	var languages: Array[DungeonDef] = []
+	for d in DungeonDef.all_for_level("2nde"):
+		if WorldMapDef.region_of(d.subject) == "anglais":
+			languages.append(d)
+	assert_eq(languages.map(func(d: DungeonDef) -> String: return d.code),
+		["bibliotheque_engloutie", "port_couronnes", "moulin_mancha"])
+	assert_lte(languages.size(), (WorldMapDef.REGIONS["anglais"]["slots"] as Array).size(), "une case par lieu")
+	assert_true(SaveManager.dungeon_unlocked(languages, 2), "le premier lieu d'espagnol est ouvert")
+	assert_string_contains(WorldMapDef.page_greeting(languages, 1), "toutes les pages de cette matière")
+	assert_string_contains(WorldMapDef.page_greeting(languages, 2), "toutes les pages de cette matière")
+
+
 func test_map_titles_drop_their_article() -> void:
 	assert_eq(_short("La Tour des Fractions"), "Tour des Fractions")
 	assert_eq(_short("L'Atelier des Balances"), "Atelier des Balances")

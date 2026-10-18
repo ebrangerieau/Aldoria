@@ -72,7 +72,7 @@ async def test_english_listening_and_unknown_language(client, login, voice):
     assert english.status_code == 200
     assert voice.calls[0]["lang"] == "en-GB"
     spanish = await client.post(
-        f"{API}/speech", json={"text": "caballo", "lang": "es-ES"}, headers=headers
+        f"{API}/speech", json={"text": "Pferd", "lang": "de-DE"}, headers=headers
     )
     assert spanish.status_code == 404
     assert spanish.json()["error"]["code"] == "voice_lang"

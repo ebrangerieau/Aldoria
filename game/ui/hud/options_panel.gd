@@ -68,7 +68,7 @@ func setup(wt: WorldTheme) -> void:
 		box.add_child(auto)
 
 	# Crédits demandés par la licence des voix (CC BY 4.0).
-	box.add_child(UiKit.label("Voix du jeu : Piper, voix « siwis » (français) et « alba » (anglais), sous licence CC BY 4.0.", 15, wt.text_dim))
+	box.add_child(UiKit.label("Voix du jeu : Piper, voix « siwis » (français) et « alba » (anglais), sous licence CC BY 4.0 ; « davefx » (espagnol), CC0.", 15, wt.text_dim))
 	if Voice.recorded_count() > 0:  # voix enregistrées (tools/voix_elevenlabs.py)
 		box.add_child(UiKit.label("Voix du narrateur et de Maître Ysaline : ElevenLabs.", 15, wt.text_dim))
 	if Music.is_loaded():

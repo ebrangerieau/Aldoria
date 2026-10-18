@@ -26,7 +26,8 @@ func test_server_voice_only_when_it_can_answer() -> void:
 	ApiClient.online = true
 	assert_true(Voice.usable("fr-FR"))
 	assert_true(Voice.usable("en-GB"), "écoute en anglais")
-	assert_false(Voice.usable("es-ES"), "pas de voix espagnole sur le serveur")
+	assert_true(Voice.usable("es-ES"), "voix espagnole du serveur (espagnol de seconde)")
+	assert_false(Voice.usable("de-DE"), "pas de voix allemande sur le serveur")
 	ApiClient.online = false
 	assert_false(Voice.usable("fr-FR"), "hors connexion")
 	ApiClient.online = true

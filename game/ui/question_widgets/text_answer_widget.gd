@@ -14,6 +14,8 @@ const ROWS := [
 	["w", "x", "c", "v", "b", "n", "'", "-", "⌫"],
 ]
 const ACCENT_ROW := ["é", "è", "ê", "à", "â", "ç", "ù", "û", "ô", "î", "ï", "œ"]
+## Espagnol : accents, ñ et ponctuation d'ouverture (à la place de la rangée française).
+const SPANISH_ROW := ["á", "é", "í", "ó", "ú", "ñ", "ü", "¿", "¡"]
 const MAX_LENGTH := 60
 
 var _text := ""
@@ -21,7 +23,7 @@ var _display: Label
 var _locked := false
 
 
-func setup(wt: WorldTheme, accents := true) -> void:
+func setup(wt: WorldTheme, accents := true, spanish := false) -> void:
 	add_theme_constant_override("separation", 8)
 	_display = UiKit.label("", 34, wt.text)
 	_display.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -39,7 +41,9 @@ func setup(wt: WorldTheme, accents := true) -> void:
 	add_child(frame)
 
 	var rows: Array = ROWS.duplicate()
-	if accents:
+	if spanish:
+		rows.append(SPANISH_ROW)  # même sans accents exigés : ñ et ¿ s'écrivent
+	elif accents:
 		rows.append(ACCENT_ROW)
 	for row: Array in rows:
 		var line := HBoxContainer.new()

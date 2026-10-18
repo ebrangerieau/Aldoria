@@ -27,7 +27,7 @@ from app.errors import ApiError
 
 router = APIRouter(prefix="/play", tags=["voix"])
 
-LANGS = {"fr", "en"}
+LANGS = {"fr", "en", "es"}
 # À changer quand les voix changent : les sons déjà fabriqués ne servent plus.
 VOICE_VERSION = "piper-1"
 TIMEOUT_S = 20.0

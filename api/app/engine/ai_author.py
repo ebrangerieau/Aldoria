@@ -113,6 +113,9 @@ ADVICE = {
     "sciences": "Varie : QCM (vocabulaire, expériences, phénomènes), nombre (conversions, "
     "vitesse = distance ÷ durée), remise en ordre (chaîne alimentaire, cycle de vie, frise du "
     "vivant), vrai/faux justifié ; températures écrites en toutes lettres (« 100 degrés »).",
+    "espagnol": "Varie : QCM (conjugaison, ser/estar, gustar, prépositions, vocabulaire des axes), "
+    "réponse écrite (forme d'un verbe), remise en ordre (phrase) ; niveau A2+ (LVB) : pas de faits "
+    "de langue B1+. Le texte espagnol entre “ ”, les mots français cités entre « ».",
     "snt": "Varie : QCM (vocabulaire du réseau, du Web, des données, de la photo, des objets "
     "connectés), nombre (débit et durée de transfert, distance dans un graphe, poids d'une image, "
     "valeur d'une variable après un court programme Python), remise en ordre (étapes d'un "

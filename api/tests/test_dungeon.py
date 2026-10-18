@@ -242,7 +242,7 @@ def test_game_dungeons_match_curriculum_and_generators():
         source,
         re.S,
     )
-    assert len(dungeons) == 22
+    assert len(dungeons) == 23
     for code, chapter_list, enigma in dungeons:
         codes = re.findall(r'"([\w.]+)"', chapter_list)
         levels = {chapters[c] for c in codes}  # KeyError : chapitre absent du programme
@@ -465,5 +465,27 @@ async def test_tom_snt_dungeons(client, login, curriculum, chapters, enigma_code
     items = body["items"]
     assert len(items) > 20
     assert all(i["notions"][0].startswith("2nde.snt.") for i in items)
+    enigma = [i for i in items if i["role"] == "enigme"]
+    assert len(enigma) == 6 and all(i["type"] == "order" for i in enigma)
+
+
+async def test_tom_spanish_dungeon(client, login, curriculum):
+    """Moulin de la Mancha : espagnol de seconde seulement, énigme des phrases emmêlées."""
+    headers = await login("tom", "9876")
+    chapters = ["verbe", "phrase", "nom", "lexique", "culture"]
+    body = (
+        await client.post(
+            f"{API}/session/start",
+            json={
+                "mode": "donjon",
+                "focus_chapters": [f"2nde.espagnol.{c}" for c in chapters],
+                "enigma": {"generator": "2nde.espagnol.frase", "count": 6},
+            },
+            headers=headers,
+        )
+    ).json()
+    items = body["items"]
+    assert len(items) > 20
+    assert all(i["notions"][0].startswith("2nde.espagnol.") for i in items)
     enigma = [i for i in items if i["role"] == "enigme"]
     assert len(enigma) == 6 and all(i["type"] == "order" for i in enigma)

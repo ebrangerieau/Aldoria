@@ -140,7 +140,9 @@ func setup(question: Dictionary, title: String, wt: WorldTheme, with_items := tr
 		columns.add_child(widget)
 	elif question["type"] == "text":
 		var typing := TextAnswerWidget.new()
-		typing.setup(wt, bool(question["answer"].get("accents", true)))
+		var notions: Array = question.get("notions", [])
+		var spanish := not notions.is_empty() and str(notions[0]).contains(".espagnol.")
+		typing.setup(wt, bool(question["answer"].get("accents", true)), spanish)
 		typing.custom_minimum_size = Vector2(600, 0)
 		widget = typing
 		columns.add_child(widget)

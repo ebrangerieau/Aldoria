@@ -188,7 +188,7 @@
   {
     "groupe": "carte",
     "id": "page-port_couronnes",
-    "texte": "Tu as rapporté la page des Mondes anglophones ! Elle a repris sa place dans la Grande Chronique. Toutes les pages de la région « La Bibliothèque des Langues » sont revenues. Malvrek doit trembler dans sa tour !",
+    "texte": "Tu as rapporté la page des Mondes anglophones ! Elle a repris sa place dans la Grande Chronique. Tu as rapporté toutes les pages de cette matière dans la région « La Bibliothèque des Langues ». Malvrek doit trembler dans sa tour !",
     "voix": "ysaline"
   },
   {
@@ -261,6 +261,18 @@
     "groupe": "carte",
     "id": "page-atelier_automates",
     "texte": "Tu as rapporté la page des Automates ! Elle a repris sa place dans la Grande Chronique. Toutes les pages de la région « Le Carrefour des Messagers » sont revenues. Malvrek doit trembler dans sa tour !",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-moulin_mancha",
+    "texte": "Au bord de la Bibliothèque des Langues tourne un moulin venu de la Mancha, comme ceux que Don Quichotte prenait pour des géants. On y apprenait l'espagnol en écoutant chanter les ailes. L'Enredador y a emmêlé tous les mots. Rapporte la page d'espagnol.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-moulin_mancha",
+    "texte": "Tu as rapporté la page d'espagnol ! Elle a repris sa place dans la Grande Chronique. Tu as rapporté toutes les pages de cette matière dans la région « La Bibliothèque des Langues ». Malvrek doit trembler dans sa tour !",
     "voix": "ysaline"
   },
   {

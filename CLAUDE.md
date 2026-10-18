@@ -167,7 +167,10 @@ sauvegarde avant migration, push, suivi de la CI, contrôle en production). Les 
   ou m/min (lues par `engine/speech.py`), unité visée d'une conversion en toutes lettres. Physique-chimie : formules avec
   indices et charges (H₂O, Ca²⁺), équations avec ⟶, configurations « 1s² 2s² 2p⁶ » ; `speech._chemistry` les lit (lettres
   épelées, « donnent ») ; une unité après un nombre est lue par `speech._UNITS`, l'unité demandée s'écrit en toutes
-  lettres. Une matière peut loger dans la région d'une autre (`WorldMapDef.REGION_OF` : physique-chimie → Laboratoire).
+  lettres. Une matière peut loger dans la région d'une autre (`WorldMapDef.REGION_OF` : physique-chimie → Laboratoire,
+  espagnol → Bibliothèque des Langues ; `page_greeting` le dit quand la région garde des pages d'une autre matière).
+  Espagnol : voix du serveur `es_ES-davefx-medium`, clavier des réponses écrites avec á, ñ, ¿ (`TextAnswerWidget`,
+  notion `*.espagnol.*`) ; conjugaisons écrites avec accents exigés.
   SNT : tailles et débits abrégés après un nombre (« 5 Mo », « 20 Mbit/s »), balises HTML lues « balise h1 », code
   Python sur des lignes séparées (`speech._code` lit « - », « * », « == » sur une ligne de code seulement).
 - Questions proposées par l'IA (`engine/ai_author.py`, route `/admin/ai-questions`) : SDK `anthropic`, modèle

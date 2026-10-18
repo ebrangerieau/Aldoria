@@ -6,7 +6,8 @@ fichiers en cache (api/app/routers/speech.py).
 
 Voix (téléchargées à la construction de l'image, deploy/voice.Dockerfile) :
 - français : fr_FR-siwis-medium (jeu de données SIWIS, CC BY 4.0) ;
-- anglais : en_GB-alba-medium (jeu de données Alba, CC BY 4.0).
+- anglais : en_GB-alba-medium (jeu de données Alba, CC BY 4.0) ;
+- espagnol : es_ES-davefx-medium (jeu de données davefx, CC0).
 Moteur : piper-tts (GPL-3.0), utilisé tel quel dans ce conteneur.
 """
 
@@ -25,7 +26,7 @@ from piper import PiperVoice, SynthesisConfig
 from pydantic import BaseModel, Field
 
 VOICES_DIR = Path("/voix")
-VOICES = {"fr": "fr_FR-siwis-medium", "en": "en_GB-alba-medium"}
+VOICES = {"fr": "fr_FR-siwis-medium", "en": "en_GB-alba-medium", "es": "es_ES-davefx-medium"}
 MP3_KBPS = 48
 # Fils de calcul : par défaut, onnxruntime en lance un par cœur de la machine hôte, ce qui
 # s'étrangle sous la limite de processeur du conteneur (docker-compose : cpus).

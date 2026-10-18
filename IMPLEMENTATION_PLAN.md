@@ -460,6 +460,15 @@ générateurs naturels, donc des questions à rédiger.
 > questions d'anglais. Reste : le donjon de français de Tom (après une première série de questions publiées),
 > les Archives regroupées par matière, puis les deux semaines d'observation.
 >
+> ✅ **2026-10-18 : espagnol de Tom (LVB).** Programme d'espagnol du lycée (arrêté du 5 mai 2025, BO n° 22 du 29 mai
+> 2025), en vigueur en seconde depuis la rentrée 2025, niveau visé A2+ en LVB (faits de langue B1+ non posés) : 5
+> chapitres, 28 notions (verbe, phrase, groupe nominal, lexique des six axes, repères culturels). 20 notions à exemples
+> relus ; calculés : conjugaison (présent, passés, futur ; tables écrites pour les irréguliers, vérifiées forme par forme),
+> vocabulaire des axes (choisir, écouter, écrire), nombres et années (écoute), frise du monde hispanique, phrases
+> emmêlées. Voix espagnole du serveur : Piper `es_ES-davefx-medium` (CC0). Clavier des réponses écrites avec á, é, í,
+> ó, ú, ñ, ü, ¿, ¡ pour l'espagnol. Lieu : le Moulin de la Mancha, dans la Bibliothèque des Langues (`REGION_OF`), boss
+> l'Enredador, énigme « Les Phrases emmêlées ». Noms provisoires. Reste : 3 répliques à enregistrer (ElevenLabs).
+>
 > ✅ **2026-10-18 : SNT de Tom.** Programme de seconde de 2019 (arrêté du 17 janvier 2019, BO spécial n° 1 du
 > 22 janvier 2019), toujours en vigueur en 2026-2027 (rénovation avec de l'IA annoncée pour 2027, pas encore publiée) :
 > 8 chapitres (les 7 thèmes et la programmation Python), 17 notions. 16 notions à exemples relus ; calculés : durée de

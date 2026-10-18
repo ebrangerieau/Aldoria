@@ -1,0 +1,65 @@
+{
+  "level": "2nde",
+  "subject": {"code": "espagnol", "label": "Espagnol"},
+  "source": "Programme d'espagnol du lycée général et technologique (arrêté du 5 mai 2025, BO n° 22 du 29 mai 2025), en vigueur en seconde depuis la rentrée 2025 : niveau visé A2+ en LVB, six axes culturels (dont l'axe 6, « L'Espagne au-delà des clichés », obligatoire), repères linguistiques et outils de la langue (faits de langue A2+ ; ceux marqués B1+ ne sont pas posés).",
+  "chapters": [
+    {
+      "code": "2nde.espagnol.verbe",
+      "title": "Le verbe : temps et modes",
+      "notions": [
+        {"code": "2nde.espagnol.verbe.present", "label": "Le présent de l'indicatif"},
+        {"code": "2nde.espagnol.verbe.ser_estar", "label": "Ser et estar"},
+        {"code": "2nde.espagnol.verbe.passes", "label": "Passé composé, imparfait et passé simple"},
+        {"code": "2nde.espagnol.verbe.futur", "label": "Le futur : ir a et futur simple"},
+        {"code": "2nde.espagnol.verbe.imperatif", "label": "L'impératif et la défense"},
+        {"code": "2nde.espagnol.verbe.subjonctif", "label": "Le présent du subjonctif"},
+        {"code": "2nde.espagnol.verbe.periphrases", "label": "Périphrases : estar + gérondif, tener que, hay que, soler"}
+      ]
+    },
+    {
+      "code": "2nde.espagnol.phrase",
+      "title": "Construire la phrase",
+      "notions": [
+        {"code": "2nde.espagnol.phrase.gustar", "label": "Gustar et les pronoms compléments"},
+        {"code": "2nde.espagnol.phrase.comparaison", "label": "Comparatifs et superlatifs"},
+        {"code": "2nde.espagnol.phrase.prepositions", "label": "Prépositions : a, en, al + infinitif"},
+        {"code": "2nde.espagnol.phrase.questions", "label": "Poser une question"},
+        {"code": "2nde.espagnol.phrase.connecteurs", "label": "Connecteurs et marqueurs de temps"},
+        {"code": "2nde.espagnol.phrase.ordre", "label": "L'ordre des mots dans la phrase"}
+      ]
+    },
+    {
+      "code": "2nde.espagnol.nom",
+      "title": "Le groupe nominal",
+      "notions": [
+        {"code": "2nde.espagnol.nom.articles_genre", "label": "Articles, genre et pluriel"},
+        {"code": "2nde.espagnol.nom.possessifs_demonstratifs", "label": "Possessifs et démonstratifs"},
+        {"code": "2nde.espagnol.nom.quantite", "label": "Mucho, muy, apocope, diminutifs et superlatif absolu"},
+        {"code": "2nde.espagnol.nom.pronoms", "label": "Pronoms personnels, usted et enclise"}
+      ]
+    },
+    {
+      "code": "2nde.espagnol.lexique",
+      "title": "Lexique des axes culturels",
+      "notions": [
+        {"code": "2nde.espagnol.lexique.soi_autrui", "label": "Représentation de soi et rapport à autrui"},
+        {"code": "2nde.espagnol.lexique.generations", "label": "Vivre entre générations"},
+        {"code": "2nde.espagnol.lexique.passe_present", "label": "Le passé dans le présent"},
+        {"code": "2nde.espagnol.lexique.defis", "label": "Défis et transitions"},
+        {"code": "2nde.espagnol.lexique.creer", "label": "Créer et recréer"},
+        {"code": "2nde.espagnol.lexique.espagne", "label": "L'Espagne au-delà des clichés"},
+        {"code": "2nde.espagnol.lexique.nombres", "label": "Nombres et dates"},
+        {"code": "2nde.espagnol.lexique.prononciation", "label": "Prononciation et accent tonique"}
+      ]
+    },
+    {
+      "code": "2nde.espagnol.culture",
+      "title": "Repères culturels du monde hispanique",
+      "notions": [
+        {"code": "2nde.espagnol.culture.espagne", "label": "L'Espagne : territoire, régions et villes"},
+        {"code": "2nde.espagnol.culture.hispanique", "label": "Le monde hispanique"},
+        {"code": "2nde.espagnol.culture.reperes", "label": "Repères historiques et artistiques"}
+      ]
+    }
+  ]
+}

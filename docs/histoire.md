@@ -67,6 +67,7 @@ une manie et une réplique d'entrée et de défaite. Les boss actuels deviennent
 | *Laboratoire des Inventeurs* (physique-chimie, Tom) | *Le Brouilleur* | met du bruit dans les signaux, du flou dans les lentilles, du désordre dans les forces |
 | *Carrefour des Messagers* (SNT, Tom) | *Le Crieur Menteur* | égare les paquets, casse les liens, répand des rumeurs plus vite que la vérité |
 | *Carrefour des Messagers* (SNT, Tom) | *Le Détraqueur* | embrouille les cartes, fausse les capteurs, glisse des erreurs dans les programmes |
+| *Bibliothèque des Langues* (espagnol, Tom) | *L'Enredador* | « celui qui emmêle » : noue les verbes, retourne les points d'interrogation, brouille les accents |
 | Portes du Temps (histoire, Tom) | *Le Grand Censeur* | raye les noms des registres : ce qui n'est pas autorisé n'a jamais existé |
 | Portes du Temps (géographie, Tom) | *L'Arpenteur Aveugle* | mesure le monde sans le voir, efface les écarts et les flux |
 

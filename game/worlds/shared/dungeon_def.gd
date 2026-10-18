@@ -61,7 +61,7 @@ static func all_for_level(level: String) -> Array[DungeonDef]:
 		"6e":
 			return [tour_fractions(), atelier_balances(), observatoire_angles(), bibliotheque_langues(), porte_origines(), porte_horizons(), moulin_phrases(), puits_contes(), tour_experiences(), maison_naturaliste()]
 		"2nde":
-			return [labyrinthe_vecteurs(), forge_algebre(), citadelle_fonctions(), theatre_verdure(), bibliotheque_engloutie(), port_couronnes(), porte_empires(), porte_transitions(), alambic_elements(), laboratoire_foudroye(), pont_paquets(), atelier_automates()]
+			return [labyrinthe_vecteurs(), forge_algebre(), citadelle_fonctions(), theatre_verdure(), bibliotheque_engloutie(), port_couronnes(), porte_empires(), porte_transitions(), alambic_elements(), laboratoire_foudroye(), pont_paquets(), atelier_automates(), moulin_mancha()]
 	return []
 
 
@@ -1258,6 +1258,61 @@ static func atelier_automates() -> DungeonDef:
 			["crates_stacked", Vector3(14.6, 0, 4.4), -20.0, 0.9],
 		],
 		"torch_color": Color(1.0, 0.9, 0.7),
+	}
+	return d
+
+
+# --- Bibliothèque des Langues : l'espagnol de Tom ---------------------------------------------------
+
+static func moulin_mancha() -> DungeonDef:
+	var d := DungeonDef.new()
+	d.code = "moulin_mancha"
+	d.boss_intro = "¡Hola, Archivista! Je suis l'Enredador, celui qui emmêle. J'ai noué les verbes, retourné les points d'interrogation et brouillé les accents. Ta page d'espagnol ? Un nœud de mots que personne ne défera."
+	d.boss_defeat = "¡Ay, ay, ay! Mes nœuds se défont… Les verbes retrouvent leurs terminaisons, les phrases leur ordre. Hasta luego, Archivista : tu parles mieux que moi."
+	d.page_text = "La page d'espagnol se démêle : verbes au présent, au passé et au futur, ser et estar, gustar, les mots des voyages et des fêtes, l'Espagne et le monde hispanique. Chaque mot retrouve sa place."
+	d.map_piece = "building_windmill_yellow"
+	d.page = "la page d'espagnol"
+	d.threshold = "Au bord de la Bibliothèque des Langues tourne un moulin venu de la Mancha, comme ceux que Don Quichotte prenait pour des géants. On y apprenait l'espagnol en écoutant chanter les ailes. L'Enredador y a emmêlé tous les mots. Rapporte la page d'espagnol."
+	d.title = "Le Moulin de la Mancha"
+	d.subject = "espagnol"
+	d.chapter_codes = ["2nde.espagnol.verbe", "2nde.espagnol.phrase", "2nde.espagnol.nom", "2nde.espagnol.lexique", "2nde.espagnol.culture"]
+	d.chapter_title = "Verbes, phrases, vocabulaire et monde hispanique"
+	d.intro = "Les ailes du moulin grincent, les mots s'emmêlent. Monte jusqu'à l'Enredador."
+	d.enigma_generator = "2nde.espagnol.frase"
+	d.enigma_title = "Les Phrases emmêlées"
+	d.enigma_intro = "L'Enredador a emmêlé trois phrases espagnoles. Remets chaque mot à sa place."
+	d.enigma_xp = 50
+	d.chest_xp = 130
+	d.outro = "Les ailes du moulin tournent de nouveau en rythme. ¡Muy bien!"
+	d.rooms = [
+		{"kind": "entree", "title": "La Cour du moulin"},
+		{"kind": "combat", "title": "La Salle des Verbes", "enemies": [
+			_enemy("Mushnub", "Champignon conjugueur", 85, 2, 40, Vector2(11, 7)),
+		]},
+		{"kind": "combat", "title": "Le Grenier à farine", "enemies": [
+			_enemy("Armabee", "Abeille de la Mancha", 90, 3, 45, Vector2(8, 5)),
+			_enemy("Cactoro", "Cactus du désert d'Almería", 90, 3, 45, Vector2(10.5, 14)),
+		]},
+		{"kind": "enigme", "title": "La Salle des Phrases"},
+		{"kind": "combat", "title": "La Meule", "enemies": [
+			_enemy("GolelingEvolved", "Géant à ailes de moulin", 130, 4, 60, Vector2(11, 7)),
+		]},
+		{"kind": "boss", "title": "Le Sommet des Ailes", "enemies": [
+			_enemy("Dragon", "L'Enredador", 240, 5, 170, Vector2(11, 6), 1.3),
+		]},
+	]
+	d.decor = {
+		"floor": "floor_wood_large",
+		"floor_accent": "floor_tile_large",
+		"walls": ["wall_window_open", "wall"],
+		"banners": ["banner_patternB_yellow", "banner_patternA_red"],
+		"props": [
+			["barrel_large", Vector3(1.6, 0, 4.0), 0.0, 0.8],
+			["crates_stacked", Vector3(2.6, 0, 1.4), -15.0, 0.9],
+			["table_medium_decorated_A", Vector3(13.2, 0, 1.6), 0.0, 0.9],
+			["trunk_large_A", Vector3(14.6, 0, 4.6), -90.0, 0.8],
+		],
+		"torch_color": Color(1.0, 0.8, 0.5),
 	}
 	return d
 

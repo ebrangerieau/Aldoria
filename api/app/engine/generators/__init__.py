@@ -83,6 +83,8 @@ from app.engine.generators import (  # noqa: E402, F401
     anglais_6e,
     developper_2nde,
     enquetes,
+    espagnol_2nde,
+    espagnol_2nde_calculs,
     evolutions_2nde,
     fonctions_2nde,
     fractions_6e,

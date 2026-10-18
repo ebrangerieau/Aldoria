@@ -41,7 +41,7 @@ const REGIONS := {
 	},
 	"anglais": {
 		"title": "La Bibliothèque des Langues",
-		"slots": [Vector2i(2, 5), Vector2i(2, 3), Vector2i(3, 2)],
+		"slots": [Vector2i(2, 5), Vector2i(2, 3), Vector2i(2, 7)],
 		"label": Vector2i(3, 4),
 		"fog": "Au bord de la mer, la Bibliothèque des Langues est encore noyée de brume. Ses portes s'ouvriront quand l'anglais entrera dans ta quête.",
 	},
@@ -72,7 +72,7 @@ const REGIONS := {
 }
 
 ## Matières rangées dans la région d'une autre (une seule classe les a : jamais deux fois le même lieu).
-const REGION_OF := {"physique_chimie": "sciences"}
+const REGION_OF := {"physique_chimie": "sciences", "espagnol": "anglais"}
 
 
 ## Région (clé de `REGIONS`) d'une matière.
@@ -105,7 +105,12 @@ static func page_greeting(dungeons: Array[DungeonDef], i: int) -> String:
 			break
 	if next == "":
 		var region := str(REGIONS.get(region_of(d.subject), {}).get("title", "cette région"))
-		next = "Toutes les pages de la région « %s » sont revenues. Malvrek doit trembler dans sa tour !" % region
+		var shared := dungeons.any(func(other: DungeonDef) -> bool:
+			return other.subject != d.subject and region_of(other.subject) == region_of(d.subject))
+		if shared:  # une autre matière garde ses pages dans la même région
+			next = "Tu as rapporté toutes les pages de cette matière dans la région « %s ». Malvrek doit trembler dans sa tour !" % region
+		else:
+			next = "Toutes les pages de la région « %s » sont revenues. Malvrek doit trembler dans sa tour !" % region
 	return "Tu as rapporté %s ! Elle a repris sa place dans la Grande Chronique. %s" % [d.page, next]
 
 

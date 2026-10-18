@@ -11,7 +11,7 @@ extends Node
 ## avec le jeu dans voix/ ; `voix/manifest.json` associe l'empreinte SHA-256 d'un texte à son son.
 ## Un texte qui a un son enregistré est joué tel quel, les autres passent par Piper.
 
-const LANGS := ["fr", "en"]
+const LANGS := ["fr", "en", "es"]
 const RETRY_AFTER_MS := 60000  # service de voix en panne : la voix de l'appareil pendant 1 min
 const MAX_CACHED := 200
 
