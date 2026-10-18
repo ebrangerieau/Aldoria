@@ -9,11 +9,14 @@ prochaine génération. tools/postprocess_web.py copie deploy/voix/ dans l'expor
 Ne génère que ce qui manque ou a changé (texte, voix, modèle) ; retire les sons des textes
 disparus. Seul le texte de l'histoire part chez ElevenLabs : aucune donnée d'enfant.
 
-Variables d'environnement (jamais dans le dépôt) :
-  ELEVENLABS_API_KEY          clé de l'API
-  ELEVENLABS_VOIX_NARRATEUR   identifiant de la voix du narrateur (prologue, tableaux 1 à 3)
-  ELEVENLABS_VOIX_YSALINE     identifiant de la voix de Maître Ysaline
+Variables d'environnement (jamais dans le dépôt ; avec PowerShell, `$env:…` ne dure que le temps
+de la fenêtre) :
+  ELEVENLABS_API_KEY          clé de l'API (toujours nécessaire pour générer)
+  ELEVENLABS_VOIX_NARRATEUR   voix du narrateur (prologue, tableaux 1 à 3)
+  ELEVENLABS_VOIX_YSALINE     voix de Maître Ysaline
   ELEVENLABS_MODELE           modèle (par défaut eleven_multilingual_v2)
+Sans variable de voix, le script reprend la voix déjà utilisée dans deploy/voix/manifest.json :
+il ne faut les poser qu'une fois, ou pour changer de voix (tout est alors régénéré).
 
 Usage :
   python tools/voix_elevenlabs.py --essai             ce qui serait généré, sans appel ni clé
@@ -103,6 +106,18 @@ def list_voices(key: str) -> None:
         print(f"{v.get('voice_id')}  {v.get('name')}  ({labels})")
 
 
+def voice_ids(manifest: dict) -> dict[str, str]:
+    """Voix de chaque rôle : la variable d'environnement si elle est posée, sinon celle déjà
+    utilisée dans le manifeste."""
+    found: dict[str, str] = {}
+    for entry in manifest.values():
+        found.setdefault(entry["voix"], entry["voix_id"])
+    for role, var in VOICE_ENV.items():
+        if os.environ.get(var, "").strip():
+            found[role] = os.environ[var].strip()
+    return found
+
+
 def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")  # accents lisibles dans la console Windows
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
@@ -123,12 +138,13 @@ def main() -> None:
         key = env("ELEVENLABS_API_KEY")
         line = next(x for x in lines if x["voix"] == args.exemple)
         target = Path(tempfile.gettempdir()) / f"aldoria-exemple-{args.exemple}.mp3"
-        target.write_bytes(speak(line["texte"], env(VOICE_ENV[args.exemple]), model, key))
+        voice = voice_ids(manifest).get(args.exemple) or env(VOICE_ENV[args.exemple])
+        target.write_bytes(speak(line["texte"], voice, model, key))
         print(f"{target} ({len(line['texte'])} caractères)")
         return
 
     wanted = [x for x in lines if args.groupe == "tout" or x["groupe"] == args.groupe]
-    voices = {} if args.essai else {name: env(var) for name, var in VOICE_ENV.items()}
+    voices = voice_ids(manifest)
     todo = []
     for line in wanted:
         entry = manifest.get(digest(line["texte"]))
@@ -143,6 +159,13 @@ def main() -> None:
             print(f"  {line['voix']:<10} {line['id']:<32} {len(line['texte']):>4} car.")
         return
 
+    missing = sorted({x["voix"] for x in todo if x["voix"] not in voices})
+    if missing:
+        sys.exit(
+            "Aucune voix connue pour : " + ", ".join(missing) + ". Poser "
+            + ", ".join(VOICE_ENV[m] for m in missing)
+            + " (docs/exploitation.md, voix enregistrées)."
+        )
     key = env("ELEVENLABS_API_KEY")
     OUT.mkdir(parents=True, exist_ok=True)
     for line in todo:
