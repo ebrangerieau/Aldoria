@@ -109,6 +109,12 @@
   },
   {
     "groupe": "carte",
+    "id": "brouillard-svt",
+    "texte": "Au sud-ouest, la Vallée du Vivant cache ses bocaux, ses fossiles et ses champs sous la brume. Elle s'ouvrira quand les sciences de la vie et de la Terre entreront dans ta quête.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
     "id": "brouillard-snt",
     "texte": "Au Carrefour des Messagers, les nouvelles voyagent de relais en relais, et les automates dessinent les cartes. Il s'ouvrira quand les sciences numériques entreront dans ta quête.",
     "voix": "ysaline"
@@ -279,6 +285,30 @@
     "groupe": "carte",
     "id": "page-moulin_mancha",
     "texte": "Tu as rapporté la page d'espagnol ! Elle a repris sa place dans la Grande Chronique. Tu as rapporté toutes les pages de cette matière dans la région « La Bibliothèque des Langues ». Malvrek doit trembler dans sa tour !",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-conservatoire_vivant",
+    "texte": "Au fond de la Vallée du Vivant, le Conservatoire garde des milliers de bocaux, de graines et de lames de microscope. Le Brouille-Gènes y a tout mélangé : l'ADN, les espèces, et jusqu'aux hormones et aux microbes du corps humain. Rapporte la page du Vivant.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-conservatoire_vivant",
+    "texte": "Tu as rapporté la page du Vivant ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « Le Puits de la Vallée » s'éclaire sur la carte.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-puits_vallee",
+    "texte": "Plus loin dans la Vallée du Vivant, le Puits de la Vallée descend jusqu'aux couches de roches les plus anciennes. Autour, les champs nourrissaient tout le royaume. Le Rongeur y ronge les sols et emporte la terre vers la mer. Rapporte la page de la Terre.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-puits_vallee",
+    "texte": "Tu as rapporté la page de la Terre ! Elle a repris sa place dans la Grande Chronique. Toutes les pages de la région « La Vallée du Vivant » sont revenues. Malvrek doit trembler dans sa tour !",
     "voix": "ysaline"
   },
   {

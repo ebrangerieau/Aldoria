@@ -108,5 +108,7 @@ from app.engine.generators import (  # noqa: E402, F401
     sciences_6e,
     snt_2nde,
     snt_2nde_calculs,
+    svt_2nde,
+    svt_2nde_calculs,
     tir,
 )

@@ -460,6 +460,16 @@ générateurs naturels, donc des questions à rédiger.
 > questions d'anglais. Reste : le donjon de français de Tom (après une première série de questions publiées),
 > les Archives regroupées par matière, puis les deux semaines d'observation.
 >
+> ✅ **2026-10-18 : SVT de Tom.** Programme de seconde de 2019 (arrêté du 17 janvier 2019, BO spécial n° 1 du
+> 22 janvier 2019), toujours en vigueur : 6 chapitres, 19 notions (organisation du vivant, biodiversité et évolution,
+> géosciences et paysages, agrosystèmes, procréation et sexualité, micro-organismes et santé). Exemples relus (procréation :
+> connaissances du programme, sans détail intime) ; calculés : microscope (grossissement, taille réelle), brin d'ADN
+> complémentaire (réponse écrite en majuscules à la difficulté 4), capture-marquage-recapture, fréquence d'un allèle,
+> rendement de l'élevage, tailles et niveaux d'organisation, voyage des sédiments. Nouvelle région au sud-ouest, la
+> Vallée du Vivant : le Conservatoire du Vivant (boss le Brouille-Gènes) puis le Puits de la Vallée (boss le Rongeur).
+> Lecture : µm, séquences d'ADN épelées, allèles « grand B / petit b », gène SRY. Noms provisoires. Reste : répliques à
+> enregistrer (ElevenLabs).
+>
 > ✅ **2026-10-18 : EMC de Jules.** Nouveau programme d'EMC (arrêté du 29 mai 2024, BO n° 24 du 13 juin 2024), en
 > vigueur en 6e à la rentrée 2026 : 3 chapitres (thèmes annuels), 12 notions (intérêt général, vote, représentants,
 > services publics ; règles, liberté de conscience, loi de 1905, laïcité à l'école ; droits de l'enfant, droit à l'image,

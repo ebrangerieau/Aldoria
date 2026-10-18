@@ -61,7 +61,7 @@ static func all_for_level(level: String) -> Array[DungeonDef]:
 		"6e":
 			return [tour_fractions(), atelier_balances(), observatoire_angles(), bibliotheque_langues(), porte_origines(), porte_horizons(), moulin_phrases(), puits_contes(), tour_experiences(), maison_naturaliste(), tribune_conseil(), palais_libertes()]
 		"2nde":
-			return [labyrinthe_vecteurs(), forge_algebre(), citadelle_fonctions(), theatre_verdure(), bibliotheque_engloutie(), port_couronnes(), porte_empires(), porte_transitions(), alambic_elements(), laboratoire_foudroye(), pont_paquets(), atelier_automates(), moulin_mancha()]
+			return [labyrinthe_vecteurs(), forge_algebre(), citadelle_fonctions(), theatre_verdure(), bibliotheque_engloutie(), port_couronnes(), porte_empires(), porte_transitions(), alambic_elements(), laboratoire_foudroye(), pont_paquets(), atelier_automates(), moulin_mancha(), conservatoire_vivant(), puits_vallee()]
 	return []
 
 
@@ -1421,6 +1421,114 @@ static func moulin_mancha() -> DungeonDef:
 			["trunk_large_A", Vector3(14.6, 0, 4.6), -90.0, 0.8],
 		],
 		"torch_color": Color(1.0, 0.8, 0.5),
+	}
+	return d
+
+
+# --- Vallée du Vivant : la SVT de Tom ------------------------------------------------------------
+
+static func conservatoire_vivant() -> DungeonDef:
+	var d := DungeonDef.new()
+	d.code = "conservatoire_vivant"
+	d.boss_intro = "Bienvenue dans ma collection, Archiviste. Je suis le Brouille-Gènes. J'ai mélangé l'ADN de chaque bocal, déréglé les hormones et lâché les microbes. Ta page du Vivant ? Une séquence illisible, et je suis le seul à l'avoir écrite."
+	d.boss_defeat = "Mes séquences… se recollent, A en face de T, C en face de G. Les cellules se remettent au travail, les microbes retournent à leur place. Tu lis le vivant mieux que moi."
+	d.page_text = "La page du Vivant se déroule comme une double hélice : cellules et organites, ADN et allèles, biodiversité et forces de l'évolution, hormones, microbes et microbiote. Tout ce qui vit y retrouve son ordre."
+	d.map_piece = "building_tower_A_green"
+	d.page = "la page du Vivant"
+	d.threshold = "Au fond de la Vallée du Vivant, le Conservatoire garde des milliers de bocaux, de graines et de lames de microscope. Le Brouille-Gènes y a tout mélangé : l'ADN, les espèces, et jusqu'aux hormones et aux microbes du corps humain. Rapporte la page du Vivant."
+	d.title = "Le Conservatoire du Vivant"
+	d.subject = "svt"
+	d.chapter_codes = ["2nde.svt.organisation", "2nde.svt.biodiversite", "2nde.svt.procreation", "2nde.svt.microorganismes"]
+	d.chapter_title = "Cellules, ADN, biodiversité, évolution, corps humain et santé"
+	d.intro = "Les bocaux bouillonnent et les étiquettes ont glissé. Monte jusqu'au Brouille-Gènes."
+	d.enigma_generator = "2nde.svt.tailles"
+	d.enigma_title = "Les Lames du Microscope"
+	d.enigma_intro = "Le Brouille-Gènes a mélangé les lames et les étagères. Range le vivant, du plus petit au plus grand."
+	d.enigma_xp = 50
+	d.chest_xp = 130
+	d.outro = "Le Conservatoire respire de nouveau : chaque bocal a retrouvé son étiquette."
+	d.rooms = [
+		{"kind": "entree", "title": "La Salle des Bocaux"},
+		{"kind": "combat", "title": "Le Laboratoire des Cellules", "enemies": [
+			_enemy("GreenBlob", "Cellule sans membrane", 85, 2, 40, Vector2(11, 7)),
+		]},
+		{"kind": "combat", "title": "La Galerie des Espèces", "enemies": [
+			_enemy("Armabee", "Abeille mutante", 90, 3, 45, Vector2(8, 5)),
+			_enemy("Mushnub", "Champignon pathogène", 90, 3, 45, Vector2(10.5, 14)),
+		]},
+		{"kind": "enigme", "title": "La Salle des Microscopes"},
+		{"kind": "combat", "title": "La Serre aux Microbes", "enemies": [
+			_enemy("MushnubEvolved", "Moisissure géante", 130, 4, 60, Vector2(11, 7)),
+		]},
+		{"kind": "boss", "title": "Le Grenier des Collections", "enemies": [
+			_enemy("BlueDemon", "Le Brouille-Gènes", 240, 5, 170, Vector2(11, 6), 1.1),
+		]},
+	]
+	d.decor = {
+		"floor": "floor_tile_large",
+		"floor_accent": "floor_wood_large",
+		"walls": ["wall_shelves", "wall_window_open"],
+		"banners": ["banner_patternB_green", "banner_patternC_white"],
+		"props": [
+			["shelf_large", Vector3(1.4, 0, 4.0), 90.0, 0.9],
+			["table_long_decorated_A", Vector3(2.4, 0, 1.4), 0.0, 1.0],
+			["shelf_small_candles", Vector3(13.6, 0, 1.2), 0.0, 0.6],
+			["trunk_large_A", Vector3(14.6, 0, 4.6), -90.0, 0.8],
+		],
+		"torch_color": Color(0.7, 1.0, 0.75),
+	}
+	return d
+
+
+static func puits_vallee() -> DungeonDef:
+	var d := DungeonDef.new()
+	d.code = "puits_vallee"
+	d.boss_intro = "Crrr… crrr… Je suis le Rongeur. Je ronge les roches, j'emporte les sols, j'épuise les champs. Bientôt, la Vallée ne sera plus qu'une boue stérile, et ta page de la Terre finira au fond de mon puits."
+	d.boss_defeat = "Mes dents s'émoussent… Les haies retiennent la terre, les champs reprennent des forces, la rivière dépose ses sables en ordre. Garde ta page : je n'ai plus rien à ronger."
+	d.page_text = "La page de la Terre se dépose couche après couche : l'érosion et ses débris, la sédimentation et les roches qu'elle forme, les sols vivants, les champs et ce qu'il faut pour les cultiver sans les épuiser."
+	d.map_piece = "building_well_yellow"
+	d.page = "la page de la Terre"
+	d.threshold = "Plus loin dans la Vallée du Vivant, le Puits de la Vallée descend jusqu'aux couches de roches les plus anciennes. Autour, les champs nourrissaient tout le royaume. Le Rongeur y ronge les sols et emporte la terre vers la mer. Rapporte la page de la Terre."
+	d.title = "Le Puits de la Vallée"
+	d.subject = "svt"
+	d.chapter_codes = ["2nde.svt.geosciences", "2nde.svt.agrosystemes"]
+	d.chapter_title = "Érosion, sédiments, sols et agrosystèmes"
+	d.intro = "La terre glisse sous tes pas. Descends jusqu'au Rongeur."
+	d.enigma_generator = "2nde.svt.sediments"
+	d.enigma_title = "Le Voyage des Sédiments"
+	d.enigma_intro = "Le Rongeur a brouillé l'histoire des roches et des rivières. Remets chaque voyage dans l'ordre."
+	d.enigma_xp = 50
+	d.chest_xp = 130
+	d.outro = "La terre ne glisse plus : les champs reverdissent autour du puits."
+	d.rooms = [
+		{"kind": "entree", "title": "La Margelle"},
+		{"kind": "combat", "title": "La Galerie des Galets", "enemies": [
+			_enemy("Goleling", "Golem d'argile", 85, 2, 40, Vector2(11, 7)),
+		]},
+		{"kind": "combat", "title": "Le Champ Épuisé", "enemies": [
+			_enemy("Cactoro", "Cactus de la sécheresse", 90, 3, 45, Vector2(8, 5)),
+			_enemy("Armabee", "Ravageur des cultures", 90, 3, 45, Vector2(10.5, 14)),
+		]},
+		{"kind": "enigme", "title": "La Salle des Strates"},
+		{"kind": "combat", "title": "La Rivière Souterraine", "enemies": [
+			_enemy("GolelingEvolved", "Golem de boue", 130, 4, 60, Vector2(11, 7)),
+		]},
+		{"kind": "boss", "title": "Le Fond du Puits", "enemies": [
+			_enemy("Yeti", "Le Rongeur", 240, 5, 170, Vector2(11, 6), 1.2),
+		]},
+	]
+	d.decor = {
+		"floor": "floor_dirt_large",
+		"floor_accent": "floor_tile_large_rocks",
+		"walls": ["wall_arched", "wall"],
+		"banners": ["banner_patternB_yellow", "banner_patternB_green"],
+		"props": [
+			["barrel_large", Vector3(1.6, 0, 4.0), 0.0, 0.8],
+			["crates_stacked", Vector3(2.6, 0, 1.4), -15.0, 0.9],
+			["table_medium_decorated_A", Vector3(13.2, 0, 1.6), 0.0, 0.9],
+			["chest_gold", Vector3(14.6, 0, 4.6), -90.0, 0.8],
+		],
+		"torch_color": Color(0.9, 0.85, 0.6),
 	}
 	return d
 

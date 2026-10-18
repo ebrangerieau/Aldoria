@@ -133,6 +133,12 @@ ADVICE = {
     "ordre (échelons de la représentation, frise des droits), vrai/faux justifié ; une "
     "situation concrète plutôt qu'une définition ; citations exactes (Déclaration des droits "
     "de l'homme, loi de 1905), jamais d'opinion politique ni religieuse.",
+    "svt": "Varie : QCM (cellule, ADN, métabolisme, biodiversité, évolution, sols, "
+    "agrosystèmes, hormones, micro-organismes), nombre (taille réelle au microscope, "
+    "capture-recapture, fréquence d'un allèle, rendement de l'élevage), réponse écrite (brin "
+    "d'ADN complémentaire en majuscules), remise en ordre (niveaux d'organisation, étapes "
+    "des sédiments) ; unités abrégées après un nombre (µm, mm), unité demandée en toutes "
+    "lettres ; procréation : connaissances du programme, sans détail intime.",
     "histoire_geo": "Varie : QCM (dates, personnages, vocabulaire), remise en ordre (frise "
     "chronologique), vrai/faux justifié ; dates des manuels, « vers » si approximative, "
     "« av. J.-C. » écrit ainsi.",

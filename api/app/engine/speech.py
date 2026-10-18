@@ -98,6 +98,7 @@ _UNITS = {
     "ms": "millisecondes",
     "s": "secondes",
     "nm": "nanomètres",
+    "µm": "micromètres",
     "dB": "décibels",
     "mA": "milliampères",
     "A": "ampères",
@@ -162,6 +163,13 @@ def ordinal(n: int) -> str:
 
 def _century(m: re.Match) -> str:
     return f"{ordinal(_roman_value(m.group(1)))} {m.group(3)}"
+
+
+def _allele(m: re.Match) -> str:
+    letters = [c for c in m.groups()[1:] if c]
+    return m.group(1) + " " + ", ".join(
+        f"grand {c}" if c.isupper() else f"petit {c}" for c in letters
+    )
 
 
 def _spell(m: re.Match, equation: bool) -> str:
@@ -272,6 +280,11 @@ def text(value: str) -> str:
     # Siècles en chiffres romains : « IVe siècle av. J.-C. » → « quatrième siècle avant J.-C. »,
     # lu ensuite « avant Jésus-Christ ».
     out = re.sub(r"\b([IVXL]+)(er|e) (siècles?|millénaires?|République)\b", _century, out)
+    # SVT : séquences d'ADN épelées (« ATGC » → « A T G C »), gène SRY, allèles et génotypes
+    # (« l'allèle b », « génotype Bb ») dits « grand B », « petit b ».
+    out = re.sub(r"\b[ACGT]{4,}\b", lambda m: " ".join(m.group(0)), out)
+    out = re.sub(r"\bSRY\b", "S R Y", out)
+    out = re.sub(r"\b([Aa]llèles?|[Gg]énotypes?) ([A-Za-z])([A-Za-z])?\b", _allele, out)
     # Numéro contre le cyberharcèlement (EMC), dit « trente dix-huit ».
     out = re.sub(r"\b3018\b", "trente dix-huit", out)
     out = re.sub(r"\bav\. J\.-C\.", "avant Jésus-Christ", out)

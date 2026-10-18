@@ -134,6 +134,18 @@ func test_tom_spanish_lives_with_his_english() -> void:
 	assert_string_contains(WorldMapDef.page_greeting(languages, 2), "toutes les pages de cette matière")
 
 
+func test_tom_life_sciences_open_the_valley() -> void:
+	var valley: Array[DungeonDef] = []
+	for d in DungeonDef.all_for_level("2nde"):
+		if WorldMapDef.region_of(d.subject) == "svt":
+			valley.append(d)
+	assert_eq(valley.map(func(d: DungeonDef) -> String: return d.code), ["conservatoire_vivant", "puits_vallee"])
+	assert_string_contains(WorldMapDef.page_greeting(valley, 0), "Puits de la Vallée")
+	assert_string_contains(WorldMapDef.page_greeting(valley, 1), "Vallée du Vivant")
+	assert_true(DungeonDef.all_for_level("6e").all(func(d: DungeonDef) -> bool: return d.subject != "svt"),
+		"Jules : la Vallée reste dans le brouillard")
+
+
 func test_map_titles_drop_their_article() -> void:
 	assert_eq(_short("La Tour des Fractions"), "Tour des Fractions")
 	assert_eq(_short("L'Atelier des Balances"), "Atelier des Balances")

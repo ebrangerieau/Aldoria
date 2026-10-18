@@ -69,6 +69,12 @@ const REGIONS := {
 		"label": Vector2i(8, 7),
 		"fog": "Près de la Citadelle, le Forum des Citoyens attend ses débats. On y vote, on y défend ses droits et ceux des autres. Il s'ouvrira quand l'enseignement moral et civique entrera dans ta quête.",
 	},
+	"svt": {
+		"title": "La Vallée du Vivant",
+		"slots": [Vector2i(3, 9), Vector2i(2, 8)],
+		"label": Vector2i(3, 8),
+		"fog": "Au sud-ouest, la Vallée du Vivant cache ses bocaux, ses fossiles et ses champs sous la brume. Elle s'ouvrira quand les sciences de la vie et de la Terre entreront dans ta quête.",
+	},
 	"snt": {
 		"title": "Le Carrefour des Messagers",
 		"slots": [Vector2i(6, 9), Vector2i(9, 9)],

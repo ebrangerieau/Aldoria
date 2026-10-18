@@ -171,6 +171,8 @@ sauvegarde avant migration, push, suivi de la CI, contrôle en production). Les 
   espagnol → Bibliothèque des Langues ; `page_greeting` le dit quand la région garde des pages d'une autre matière).
   Espagnol : voix du serveur `es_ES-davefx-medium`, clavier des réponses écrites avec á, ñ, ¿ (`TextAnswerWidget`,
   notion `*.espagnol.*`) ; conjugaisons écrites avec accents exigés.
+  SVT : séquences d'ADN en majuscules (« ATGC », épelées), allèles et génotypes notés « B », « Bb » après « allèle » ou
+  « génotype » (lus « grand B, petit b »), tailles en µm, nm, mm après un nombre.
   SNT : tailles et débits abrégés après un nombre (« 5 Mo », « 20 Mbit/s »), balises HTML lues « balise h1 », code
   Python sur des lignes séparées (`speech._code` lit « - », « * », « == » sur une ligne de code seulement).
 - Questions proposées par l'IA (`engine/ai_author.py`, route `/admin/ai-questions`) : SDK `anthropic`, modèle
