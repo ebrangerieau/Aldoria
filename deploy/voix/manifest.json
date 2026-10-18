@@ -48,6 +48,13 @@
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
     "modele": "eleven_multilingual_v2"
   },
+  "1177961b391a2e0a61d99010b22029c0310f232f626c62697e79e6c0fd3782ef": {
+    "id": "page-alambic_elements",
+    "voix": "ysaline",
+    "fichier": "page-alambic_elements-1177961b.mp3",
+    "voix_id": "oQZyHVc6FnIvc9bYS5yl",
+    "modele": "eleven_multilingual_v2"
+  },
   "28bf6ef9680c1420e63bea05e96e365d10aeb79bbddf388a0762a3a824377bc3": {
     "id": "page-atelier_balances",
     "voix": "ysaline",
@@ -80,6 +87,13 @@
     "id": "page-forge_algebre",
     "voix": "ysaline",
     "fichier": "page-forge_algebre-0ed3bd49.mp3",
+    "voix_id": "oQZyHVc6FnIvc9bYS5yl",
+    "modele": "eleven_multilingual_v2"
+  },
+  "a6f06b127a23178ec45682b5b70c1aa40c757de8eed69f5d06649c1c3f4a6c74": {
+    "id": "page-laboratoire_foudroye",
+    "voix": "ysaline",
+    "fichier": "page-laboratoire_foudroye-a6f06b12.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
     "modele": "eleven_multilingual_v2"
   },
@@ -251,6 +265,13 @@
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
     "modele": "eleven_multilingual_v2"
   },
+  "d13c5e97ba3ab18db7bd0c96ed1a39f80e2ebe29ef2559e2a3ff579cd05cd17d": {
+    "id": "seuil-alambic_elements",
+    "voix": "ysaline",
+    "fichier": "seuil-alambic_elements-d13c5e97.mp3",
+    "voix_id": "oQZyHVc6FnIvc9bYS5yl",
+    "modele": "eleven_multilingual_v2"
+  },
   "cc235586f7986fb847e6f59703b6b6ba9cb5c7528653459b055c33edf53a2780": {
     "id": "seuil-atelier_balances",
     "voix": "ysaline",
@@ -283,6 +304,13 @@
     "id": "seuil-forge_algebre",
     "voix": "ysaline",
     "fichier": "seuil-forge_algebre-16fcbf18.mp3",
+    "voix_id": "oQZyHVc6FnIvc9bYS5yl",
+    "modele": "eleven_multilingual_v2"
+  },
+  "975b3013fdaaa190c0ae59189574a15a599c5d4a7c547de270d83cdd2f18d285": {
+    "id": "seuil-laboratoire_foudroye",
+    "voix": "ysaline",
+    "fichier": "seuil-laboratoire_foudroye-975b3013.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
     "modele": "eleven_multilingual_v2"
   },
