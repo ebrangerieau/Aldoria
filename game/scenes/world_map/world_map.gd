@@ -122,16 +122,17 @@ func _collect_places() -> void:
 	var used := {}
 	for i in _dungeons.size():
 		var d := _dungeons[i]
-		var region: Dictionary = WorldMapDef.REGIONS.get(d.subject, {})
-		var slot := int(used.get(d.subject, 0))
-		used[d.subject] = slot + 1
+		var region_code := WorldMapDef.region_of(d.subject)
+		var region: Dictionary = WorldMapDef.REGIONS.get(region_code, {})
+		var slot := int(used.get(region_code, 0))
+		used[region_code] = slot + 1
 		if region.is_empty() or slot >= (region["slots"] as Array).size():
 			continue
 		var status := "locked"
 		if SaveManager.dungeon_unlocked(_dungeons, i):
 			status = "done" if int(SaveManager.dungeon(d.code)["completed"]) > 0 else "open"
 		_places.append({"kind": "dungeon", "id": d.code, "title": d.title, "cell": region["slots"][slot],
-			"status": status, "index": i, "region": d.subject})
+			"status": status, "index": i, "region": region_code})
 	for subject in WorldMapDef.REGIONS:
 		if not used.has(subject):
 			var region: Dictionary = WorldMapDef.REGIONS[subject]

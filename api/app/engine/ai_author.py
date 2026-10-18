@@ -113,6 +113,12 @@ ADVICE = {
     "sciences": "Varie : QCM (vocabulaire, expériences, phénomènes), nombre (conversions, "
     "vitesse = distance ÷ durée), remise en ordre (chaîne alimentaire, cycle de vie, frise du "
     "vivant), vrai/faux justifié ; températures écrites en toutes lettres (« 100 degrés »).",
+    "physique_chimie": "Varie : QCM (vocabulaire, phénomènes, expériences), nombre (masse "
+    "volumique, concentration, vitesse, P = m × g, loi d'Ohm, f = 1 ÷ T, avec une tolérance si "
+    "arrondi), remise en ordre (échelles, sons du grave à l'aigu) ; formules chimiques avec "
+    "indices "
+    "(H₂O) et charges (Ca²⁺), équations avec ⟶ ; unité demandée en toutes lettres, températures "
+    "en toutes lettres.",
     "histoire_geo": "Varie : QCM (dates, personnages, vocabulaire), remise en ordre (frise "
     "chronologique), vrai/faux justifié ; dates des manuels, « vers » si approximative, "
     "« av. J.-C. » écrit ainsi.",

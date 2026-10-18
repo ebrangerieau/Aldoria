@@ -78,8 +78,40 @@ _UNITS = {
     "cm²": "centimètres carrés",
     "m²": "mètres carrés",
     "km²": "kilomètres carrés",
+    # Physique-chimie (après un nombre seulement).
+    "km/s": "kilomètres par seconde",
+    "cm³": "centimètres cubes",
+    "dm³": "décimètres cubes",
+    "m³": "mètres cubes",
+    "g/cm³": "grammes par centimètre cube",
+    "kg/m³": "kilogrammes par mètre cube",
+    "g/mL": "grammes par millilitre",
+    "g/L": "grammes par litre",
+    "kg/L": "kilogrammes par litre",
+    "kJ/kg": "kilojoules par kilogramme",
+    "kJ": "kilojoules",
+    "mol": "moles",
+    "N/kg": "newtons par kilogramme",
+    "N": "newtons",
+    "Hz": "hertz",
+    "kHz": "kilohertz",
+    "ms": "millisecondes",
+    "s": "secondes",
+    "nm": "nanomètres",
+    "dB": "décibels",
+    "mA": "milliampères",
+    "A": "ampères",
+    "V": "volts",
+    "kΩ": "kilo-ohms",
+    "Ω": "ohms",
 }
 _SUPERSCRIPTS = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹⁻", "0123456789-")
+_SUBSCRIPTS = str.maketrans("₀₁₂₃₄₅₆₇₈₉", "0123456789")
+# Éléments écrits dans les formules des générateurs (physique-chimie) : une formule n'est lue
+# lettre par lettre que si tous ses morceaux en sont (« On », « Le » restent des mots).
+_ELEMENTS = {"H", "He", "Li", "Be", "B", "C", "N", "O", "F", "Ne", "Na", "Mg", "Al", "Si", "P",
+             "S", "Cl", "Ar", "K", "Ca", "Fe", "Cu", "Zn", "Ag", "Au", "U"}  # fmt: skip
+_STATES = {"s": "solide", "l": "liquide", "g": "gazeux", "aq": "aqueux"}
 _ROMAN_VALUES = {"I": 1, "V": 5, "X": 10, "L": 50}
 _UNITS_WORDS = ["", "un", "deux", "trois", "quatre", "cinq", "six", "sept", "huit", "neuf", "dix",
                 "onze", "douze", "treize", "quatorze", "quinze", "seize"]  # fmt: skip
@@ -124,16 +156,65 @@ def _century(m: re.Match) -> str:
     return f"{ordinal(_roman_value(m.group(1)))} {m.group(3)}"
 
 
+def _spell(m: re.Match, equation: bool) -> str:
+    """« Fe₂O₃ » → « F E 2 O 3 », « Ca²⁺ » → « C A 2 plus » ; sinon le mot tel quel."""
+    formula, charge = m.group(1), m.group(2) or ""
+    chunks = re.findall(r"([A-Z][a-z]?)([₀-₉]*)", formula)
+    if not all(symbol in _ELEMENTS for symbol, _d in chunks):
+        return m.group(0)
+    if not (equation or charge or any(digits for _s, digits in chunks)):
+        return m.group(0)
+    words = []
+    for symbol, digits in chunks:
+        words.append(" ".join(symbol.upper()))
+        if digits:
+            words.append(digits.translate(_SUBSCRIPTS))
+    if charge:
+        size = charge[:-1].translate(_SUPERSCRIPTS)
+        words.append(f"{size} plus".strip() if charge.endswith("⁺") else f"{size} moins".strip())
+    return " ".join(words)
+
+
+def _chemistry(line: str) -> str:
+    """Physique-chimie : configurations (« 2p⁶ »), ions, formules, équations (⟶), indices (i₁),
+    états physiques, sinus."""
+    # Configuration électronique : « 1s² 2s² 2p⁶ » → « 1 s 2, 2 s 2, 2 p 6 ».
+    line = re.sub(
+        r"\b([1-7])([spdf])([⁰¹²³⁴⁵⁶⁷⁸⁹]+)",
+        lambda m: f"{m.group(1)} {m.group(2)} {m.group(3).translate(_SUPERSCRIPTS)},",
+        line,
+    )
+    line = re.sub(r",(\s*[.?!:;)]|\s*$)", r"\1", line)
+    equation = "⟶" in line
+    line = re.sub(
+        r"(?<![\w'’])((?:[A-Z][a-z]?[₀-₉]*)+)([¹²³]?[⁺⁻])?(?![\w])",
+        lambda m: _spell(m, equation),
+        line,
+    )
+    line = re.sub(r"\((s|l|g|aq)\)", lambda m: _STATES[m.group(1)], line)
+    line = line.replace("⟶", " donnent ")
+    # Indices restants (n₁, i₂) : « n 1 ».
+    line = re.sub(
+        r"([A-Za-z])([₀-₉]+)", lambda m: f"{m.group(1)} {m.group(2).translate(_SUBSCRIPTS)}", line
+    )
+    return re.sub(r"\bsin\(", "sinus de (", line)
+
+
 def text(value: str) -> str:
     """Texte affiché → texte lu."""
-    # Retours à la ligne (programme du robot…) : une pause à chaque ligne.
-    out = re.sub(r"([.?!:;])?\s*\n+\s*", lambda m: (m.group(1) or ".") + " ", str(value))
     # Unités après un nombre ou des points de suspension : « 9,46 cL » → « 9,46 centilitres ».
+    # Avant les formules chimiques (« 4 Al » n'est pas « 4 ampères »).
     out = re.sub(
-        r"(\d|\.\.\.|…)\s*(" + "|".join(sorted(_UNITS, key=len, reverse=True)) + r")\b",
+        r"(\d|\.\.\.|…)[  ]*("
+        + "|".join(map(re.escape, sorted(_UNITS, key=len, reverse=True)))
+        + r")(?!\w)",
         lambda m: f"{m.group(1)} {_UNITS[m.group(2)]}",
-        out,
+        str(value),
     )
+    # Formules et équations chimiques, ligne par ligne (une équation est sur sa propre ligne).
+    out = "\n".join(_chemistry(line) for line in out.split("\n"))
+    # Retours à la ligne (programme du robot…) : une pause à chaque ligne.
+    out = re.sub(r"([.?!:;])?\s*\n+\s*", lambda m: (m.group(1) or ".") + " ", out)
     # Ensembles de solutions : « S = { −7 ; −1 } » → « l'ensemble formé de −7 et −1 ».
     out = re.sub(
         r"\{\s*([^{}]*?)\s*\}",
@@ -168,7 +249,11 @@ def text(value: str) -> str:
     out = re.sub(r"\bav\. J\.-C\.", "avant Jésus-Christ", out)
     out = re.sub(r"\b(?:apr\.|après) J\.-C\.", "après Jésus-Christ", out)
     # Vitesse sans nombre devant : « en km/h ? » → « en kilomètres par heure ? ».
-    out = re.sub(r"(?<![\w/])(km/h|m/s|m/min)(?![\w/])", lambda m: _UNITS[m.group(1)], out)
+    out = re.sub(
+        r"(?<![\w/])(km/h|km/s|m/s|m/min|g/cm³|kg/m³|g/mL|g/L|kg/L|N/kg|kJ/kg)(?![\w/])",
+        lambda m: _UNITS[m.group(1)],
+        out,
+    )
     for symbol, word in _WORDS:
         out = out.replace(symbol, word)
     out = re.sub(r"(?<=\d)-(?=\d)", " moins ", out)  # 7-3

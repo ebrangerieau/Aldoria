@@ -61,7 +61,7 @@ static func all_for_level(level: String) -> Array[DungeonDef]:
 		"6e":
 			return [tour_fractions(), atelier_balances(), observatoire_angles(), bibliotheque_langues(), porte_origines(), porte_horizons(), moulin_phrases(), puits_contes(), tour_experiences(), maison_naturaliste()]
 		"2nde":
-			return [labyrinthe_vecteurs(), forge_algebre(), citadelle_fonctions(), theatre_verdure(), bibliotheque_engloutie(), port_couronnes(), porte_empires(), porte_transitions()]
+			return [labyrinthe_vecteurs(), forge_algebre(), citadelle_fonctions(), theatre_verdure(), bibliotheque_engloutie(), port_couronnes(), porte_empires(), porte_transitions(), alambic_elements(), laboratoire_foudroye()]
 	return []
 
 
@@ -1042,6 +1042,114 @@ static func porte_transitions() -> DungeonDef:
 			["trunk_large_A", Vector3(14.6, 0, 4.6), -90.0, 0.8],
 		],
 		"torch_color": Color(1.0, 0.85, 0.55),
+	}
+	return d
+
+
+# --- Laboratoire des Inventeurs (physique-chimie de Tom) ---------------------------------------
+
+static func alambic_elements() -> DungeonDef:
+	var d := DungeonDef.new()
+	d.code = "alambic_elements"
+	d.boss_intro = "Je suis le Dissolveur. Tout se dissout dans mon creuset : les atomes perdent leurs électrons, les équations leurs coefficients, les noyaux leurs neutrons. Ta page de la Matière ? Une flaque, rien de plus."
+	d.boss_defeat = "Mon creuset… refroidit. Les éléments se reforment, chacun à sa place dans le tableau. Rien ne se perd, rien ne se crée : même pas ma défaite."
+	d.page_text = "La page de la Matière se recompose : corps purs et solutions, atomes et noyaux, ions et molécules, équations bien ajustées. Chaque élément a retrouvé sa case."
+	d.map_piece = "building_tower_A_blue"
+	d.page = "la page de la Matière"
+	d.threshold = "Au Laboratoire des Inventeurs, une tour de verre bleu bouillonne jour et nuit : l'Alambic des Éléments. On y pesait, dissolvait et transformait la matière avec soin. Le Dissolveur a tout fait fondre dans son creuset. Rapporte la page de la Matière avant qu'il ne reste plus qu'une flaque."
+	d.title = "L'Alambic des Éléments"
+	d.subject = "physique_chimie"
+	d.chapter_codes = ["2nde.physique_chimie.matiere", "2nde.physique_chimie.atome", "2nde.physique_chimie.transformations"]
+	d.chapter_title = "La matière, l'atome et les transformations"
+	d.intro = "Des vapeurs colorées montent des fioles. Grimpe jusqu'au creuset du Dissolveur."
+	d.enigma_generator = "2nde.physique_chimie.echelles"
+	d.enigma_title = "Les Échelles du monde"
+	d.enigma_intro = "Le Dissolveur a brouillé trois étagères de spécimens. Range chaque série du plus petit au plus grand, du noyau d'atome aux galaxies."
+	d.enigma_xp = 50
+	d.chest_xp = 130
+	d.outro = "Les fioles se referment, étiquetées. La matière a retrouvé ses règles."
+	d.rooms = [
+		{"kind": "entree", "title": "Le Vestibule des Fioles"},
+		{"kind": "combat", "title": "La Salle des Mélanges", "enemies": [
+			_enemy("GreenBlob", "Gelée de soluté", 85, 2, 40, Vector2(11, 7)),
+		]},
+		{"kind": "combat", "title": "Le Cabinet des Atomes", "enemies": [
+			_enemy("Ghost", "Électron égaré", 85, 2, 45, Vector2(8, 5)),
+			_enemy("Mushnub", "Spore isotope", 90, 3, 45, Vector2(10.5, 14)),
+		]},
+		{"kind": "enigme", "title": "La Salle des Échelles"},
+		{"kind": "combat", "title": "La Distillerie", "enemies": [
+			_enemy("GolelingEvolved", "Golem de cristal", 130, 4, 60, Vector2(11, 7)),
+		]},
+		{"kind": "boss", "title": "Le Creuset", "enemies": [
+			_enemy("GreenBlob", "Le Dissolveur", 240, 5, 170, Vector2(11, 6), 1.8),
+		]},
+	]
+	d.decor = {
+		"floor": "floor_tile_large",
+		"floor_accent": "floor_wood_large_dark",
+		"walls": ["wall_shelves", "wall_arched"],
+		"banners": ["banner_patternA_blue", "banner_patternC_white"],
+		"props": [
+			["table_long_decorated_A", Vector3(2.4, 0, 1.4), 0.0, 1.0],
+			["shelf_small_candles", Vector3(1.4, 0, 4.0), 90.0, 0.6],
+			["candle_triple", Vector3(13.2, 0, 1.0), 0.0, 0.3],
+			["barrel_large", Vector3(14.4, 0, 4.4), 0.0, 0.8],
+		],
+		"torch_color": Color(0.6, 0.85, 1.0),
+	}
+	return d
+
+
+static func laboratoire_foudroye() -> DungeonDef:
+	var d := DungeonDef.new()
+	d.code = "laboratoire_foudroye"
+	d.boss_intro = "Je suis le Brouilleur. J'ai mis du bruit dans tes signaux, du flou dans tes lentilles et du désordre dans tes forces. Ici, plus rien n'avance droit, plus rien ne sonne juste. Écoute bien… si tu peux."
+	d.boss_defeat = "Le silence… puis un son pur. Mes parasites s'éteignent un à un. Tes ondes et tes forces obéissent de nouveau aux lois. Je n'aurais jamais dû défier un Archiviste qui calcule."
+	d.page_text = "La page des Ondes et des Forces se rallume : mouvements et vitesses, forces et inertie, sons et lumière, circuits et capteurs. Le laboratoire bourdonne de nouveau, juste et précis."
+	d.map_piece = "building_destroyed"
+	d.page = "la page des Ondes et des Forces"
+	d.threshold = "Plus loin, le Laboratoire foudroyé fume encore. Ici, on étudiait les mouvements, les forces, le son, la lumière et l'électricité. Le Brouilleur l'a frappé d'un éclair : les instruments mentent, les diapasons sonnent faux. Rapporte la page des Ondes et des Forces."
+	d.title = "Le Laboratoire foudroyé"
+	d.subject = "physique_chimie"
+	d.chapter_codes = ["2nde.physique_chimie.mouvement", "2nde.physique_chimie.interactions", "2nde.physique_chimie.son", "2nde.physique_chimie.lumiere", "2nde.physique_chimie.circuits"]
+	d.chapter_title = "Mouvements, forces, son, lumière et circuits"
+	d.intro = "Des étincelles courent sur les murs, un bourdonnement emplit l'air. Monte jusqu'au tableau électrique du Brouilleur."
+	d.enigma_generator = "2nde.physique_chimie.sons"
+	d.enigma_title = "La Salle des Diapasons"
+	d.enigma_intro = "Le Brouilleur a mélangé trois séries de diapasons. Calcule leurs fréquences et range chaque série du plus grave au plus aigu."
+	d.enigma_xp = 50
+	d.chest_xp = 130
+	d.outro = "Le bourdonnement s'apaise. Chaque instrument du laboratoire mesure de nouveau juste."
+	d.rooms = [
+		{"kind": "entree", "title": "Le Hall foudroyé"},
+		{"kind": "combat", "title": "La Piste des Chronophotographies", "enemies": [
+			_enemy("Armabee", "Guêpe-chrono", 85, 2, 40, Vector2(11, 7)),
+		]},
+		{"kind": "combat", "title": "La Salle des Forces", "enemies": [
+			_enemy("Goleling", "Golem d'inertie", 95, 3, 45, Vector2(8, 5)),
+			_enemy("Cactoro", "Cactus à ressort", 90, 3, 45, Vector2(10.5, 14)),
+		]},
+		{"kind": "enigme", "title": "La Salle des Diapasons"},
+		{"kind": "combat", "title": "La Chambre noire", "enemies": [
+			_enemy("GhostSkull", "Spectre des rayons", 130, 4, 60, Vector2(11, 7)),
+		]},
+		{"kind": "boss", "title": "Le Tableau électrique", "enemies": [
+			_enemy("Skeleton_Mage", "Le Brouilleur", 240, 5, 170, Vector2(11, 6), 1.45),
+		]},
+	]
+	d.decor = {
+		"floor": "floor_dirt_large",
+		"floor_accent": "floor_tile_large_rocks",
+		"walls": ["wall_window_open", "wall"],
+		"banners": ["banner_patternB_yellow", "banner_patternA_blue"],
+		"props": [
+			["crates_stacked", Vector3(2.6, 0, 1.4), -15.0, 0.9],
+			["table_medium_decorated_A", Vector3(1.6, 0, 4.0), 90.0, 0.9],
+			["trunk_large_A", Vector3(13.6, 0, 1.4), 0.0, 0.8],
+			["barrel_large", Vector3(14.6, 0, 4.6), 0.0, 0.8],
+		],
+		"torch_color": Color(0.85, 0.9, 1.0),
 	}
 	return d
 

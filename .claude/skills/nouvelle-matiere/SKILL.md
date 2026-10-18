@@ -55,6 +55,10 @@ Modèles à relire avant d'écrire : le français de seconde (commit `662dadf`) 
 - `game/worlds/shared/world_map_def.gd` : entrée `REGIONS["<matiere>"]` (`title`, `slots` dans l'ordre des
   donjons, `label`, `fog`) ; retirer le lieu de `SECRETS` s'il y était. Cases libres : vérifier sur une capture
   `--places=1` (skill `captures`).
+- Matière proche d'une région existante qu'une autre classe occupe (physique-chimie de seconde → Laboratoire des
+  Inventeurs des sciences de 6e) : `WorldMapDef.REGION_OF` plutôt qu'une nouvelle région (mêmes cases, jamais deux
+  classes à la fois).
+- Formules, symboles ou unités nouveaux : `speech._UNITS` (après un nombre), `speech._chemistry` (formules, équations).
 - Donjons : suivre le skill `nouveau-donjon` (au moins un par région ; deux s'il y a deux grands blocs).
 - `docs/histoire.md` : région, Effaceur(s), ton ; noms **provisoires** à relire avec les enfants.
 

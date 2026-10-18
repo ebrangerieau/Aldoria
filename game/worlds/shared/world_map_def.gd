@@ -65,6 +65,15 @@ const REGIONS := {
 	},
 }
 
+## Matières rangées dans la région d'une autre (une seule classe les a : jamais deux fois le même lieu).
+const REGION_OF := {"physique_chimie": "sciences"}
+
+
+## Région (clé de `REGIONS`) d'une matière.
+static func region_of(subject: String) -> String:
+	return str(REGION_OF.get(subject, subject))
+
+
 ## Lieux fermés pour l'instant, visibles pour donner envie (docs/histoire.md §6 et §8).
 const SECRETS := {
 	"tour_oubli": {
@@ -89,7 +98,7 @@ static func page_greeting(dungeons: Array[DungeonDef], i: int) -> String:
 			next = "Regarde : le chemin vers « %s » s'éclaire sur la carte." % dungeons[j].title
 			break
 	if next == "":
-		var region := str(REGIONS.get(d.subject, {}).get("title", "cette région"))
+		var region := str(REGIONS.get(region_of(d.subject), {}).get("title", "cette région"))
 		next = "Toutes les pages de la région « %s » sont revenues. Malvrek doit trembler dans sa tour !" % region
 	return "Tu as rapporté %s ! Elle a repris sa place dans la Grande Chronique. %s" % [d.page, next]
 

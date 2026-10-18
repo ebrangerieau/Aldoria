@@ -242,7 +242,7 @@ def test_game_dungeons_match_curriculum_and_generators():
         source,
         re.S,
     )
-    assert len(dungeons) == 18
+    assert len(dungeons) == 20
     for code, chapter_list, enigma in dungeons:
         codes = re.findall(r'"([\w.]+)"', chapter_list)
         levels = {chapters[c] for c in codes}  # KeyError : chapitre absent du programme
@@ -409,5 +409,33 @@ async def test_jules_science_dungeons(client, login, curriculum, chapters, enigm
     items = body["items"]
     assert len(items) > 20
     assert all(i["notions"][0].startswith("6e.sciences.") for i in items)
+    enigma = [i for i in items if i["role"] == "enigme"]
+    assert len(enigma) == 6 and all(i["type"] == "order" for i in enigma)
+
+
+@pytest.mark.parametrize(
+    ("chapters", "enigma_code"),
+    [
+        (["matiere", "atome", "transformations"], "2nde.physique_chimie.echelles"),
+        (["mouvement", "interactions", "son", "lumiere", "circuits"], "2nde.physique_chimie.sons"),
+    ],
+)
+async def test_tom_physics_chemistry_dungeons(client, login, curriculum, chapters, enigma_code):
+    """Alambic des Éléments et Laboratoire foudroyé : physique-chimie de seconde seulement."""
+    headers = await login("tom", "9876")
+    body = (
+        await client.post(
+            f"{API}/session/start",
+            json={
+                "mode": "donjon",
+                "focus_chapters": [f"2nde.physique_chimie.{c}" for c in chapters],
+                "enigma": {"generator": enigma_code, "count": 6},
+            },
+            headers=headers,
+        )
+    ).json()
+    items = body["items"]
+    assert len(items) > 20
+    assert all(i["notions"][0].startswith("2nde.physique_chimie.") for i in items)
     enigma = [i for i in items if i["role"] == "enigme"]
     assert len(enigma) == 6 and all(i["type"] == "order" for i in enigma)

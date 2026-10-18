@@ -97,6 +97,8 @@ from app.engine.generators import (  # noqa: E402, F401
     interactifs,
     nombres_2nde,
     nombres_6e,
+    physique_chimie_2nde,
+    physique_chimie_2nde_calculs,
     prealgebre_6e,
     problemes_6e,
     raisonnement,

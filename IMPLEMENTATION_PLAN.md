@@ -460,6 +460,17 @@ générateurs naturels, donc des questions à rédiger.
 > questions d'anglais. Reste : le donjon de français de Tom (après une première série de questions publiées),
 > les Archives regroupées par matière, puis les deux semaines d'observation.
 >
+> ✅ **2026-10-18 : physique-chimie de Tom.** Programme de seconde de 2019 (arrêté du 17 janvier 2019, BO spécial
+> n° 1 du 22 janvier 2019), toujours en vigueur : 8 chapitres, 26 notions (« Constitution et transformations de la
+> matière », « Mouvement et interactions », « Ondes et signaux »). 18 notions à exemples relus ; calculés : masse
+> volumique, concentration et dilution, composition d'un noyau, configuration électronique (Z ≤ 18), quantité de
+> matière, énergie de changement d'état, équations à ajuster (éléments et charges vérifiés), réactif limitant,
+> vitesse, poids et gravitation, son (orage, écho, sonar), période et fréquence, Snell-Descartes, taille d'une image,
+> nœuds et mailles, loi d'Ohm. Lecture à voix haute des formules (H₂O → « H 2 O »), charges, équations (⟶ « donnent »),
+> configurations et unités. Région : le Laboratoire des Inventeurs (`WorldMapDef.REGION_OF`), l'Alambic des Éléments
+> (énigme « Les Échelles du monde », boss le Dissolveur) puis le Laboratoire foudroyé (énigme « La Salle des
+> Diapasons », boss le Brouilleur). Noms provisoires. Reste : voix enregistrées des 4 nouvelles répliques.
+>
 > ✅ **2026-10-18 : fiabilité du développement.** Erreurs du jeu remontées par les appareils (autoload `ErrorReport`,
 > table `client_error`, migration 0012 ; Exploitation → Erreurs du jeu ; jamais de donnée d'enfant), endroit dans le
 > script même dans l'export publié (`always_track_call_stacks`, coût à surveiller sur la tablette). Version en service :

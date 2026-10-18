@@ -164,7 +164,10 @@ sauvegarde avant migration, push, suivi de la CI, contrôle en production). Les 
   programme et l'unicité des réponses. Histoire-géographie : dates des manuels (« vers » si approximative), écrites
   « 52 av. J.-C. » / « 476 après J.-C. », siècles en chiffres romains (« IVe siècle av. J.-C. ») : `engine/speech.py` les
   lit en toutes lettres (`ordinal`). Sciences : températures écrites en toutes lettres (« 100 degrés »), vitesses en km/h, m/s
-  ou m/min (lues par `engine/speech.py`), unité visée d'une conversion en toutes lettres.
+  ou m/min (lues par `engine/speech.py`), unité visée d'une conversion en toutes lettres. Physique-chimie : formules avec
+  indices et charges (H₂O, Ca²⁺), équations avec ⟶, configurations « 1s² 2s² 2p⁶ » ; `speech._chemistry` les lit (lettres
+  épelées, « donnent ») ; une unité après un nombre est lue par `speech._UNITS`, l'unité demandée s'écrit en toutes
+  lettres. Une matière peut loger dans la région d'une autre (`WorldMapDef.REGION_OF` : physique-chimie → Laboratoire).
 - Questions proposées par l'IA (`engine/ai_author.py`, route `/admin/ai-questions`) : SDK `anthropic`, modèle
   `claude-sonnet-5-5` et effort `medium` par défaut (`ALDORIA_AI_MODEL`, `ALDORIA_AI_EFFORT` ; prix par modèle
   dans `PRICES_PER_MTOK`), sortie structurée, `fallbacks="default"` ; chaque proposition repasse par `bank.validate` et

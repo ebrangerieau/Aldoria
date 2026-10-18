@@ -89,6 +89,19 @@ func test_every_dungeon_has_its_threshold() -> void:
 	assert_eq(WorldMapDef.size().x > 20.0, true)
 
 
+func test_tom_physics_chemistry_lives_in_the_laboratory() -> void:
+	assert_eq(WorldMapDef.region_of("physique_chimie"), "sciences")
+	assert_eq(WorldMapDef.region_of("maths"), "maths")
+	var lab: Array[DungeonDef] = []
+	for d in DungeonDef.all_for_level("2nde"):
+		if d.subject == "physique_chimie":
+			lab.append(d)
+	assert_eq(lab.size(), 2)
+	assert_eq(lab[0].code, "alambic_elements")
+	assert_string_contains(WorldMapDef.page_greeting(lab, 0), "Laboratoire foudroyé")
+	assert_string_contains(WorldMapDef.page_greeting(lab, 1), "Laboratoire des Inventeurs")
+
+
 func test_map_titles_drop_their_article() -> void:
 	assert_eq(_short("La Tour des Fractions"), "Tour des Fractions")
 	assert_eq(_short("L'Atelier des Balances"), "Atelier des Balances")

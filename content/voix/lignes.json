@@ -211,6 +211,30 @@
   },
   {
     "groupe": "carte",
+    "id": "seuil-alambic_elements",
+    "texte": "Au Laboratoire des Inventeurs, une tour de verre bleu bouillonne jour et nuit : l'Alambic des Éléments. On y pesait, dissolvait et transformait la matière avec soin. Le Dissolveur a tout fait fondre dans son creuset. Rapporte la page de la Matière avant qu'il ne reste plus qu'une flaque.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-alambic_elements",
+    "texte": "Tu as rapporté la page de la Matière ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « Le Laboratoire foudroyé » s'éclaire sur la carte.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-laboratoire_foudroye",
+    "texte": "Plus loin, le Laboratoire foudroyé fume encore. Ici, on étudiait les mouvements, les forces, le son, la lumière et l'électricité. Le Brouilleur l'a frappé d'un éclair : les instruments mentent, les diapasons sonnent faux. Rapporte la page des Ondes et des Forces.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-laboratoire_foudroye",
+    "texte": "Tu as rapporté la page des Ondes et des Forces ! Elle a repris sa place dans la Grande Chronique. Toutes les pages de la région « Le Laboratoire des Inventeurs » sont revenues. Malvrek doit trembler dans sa tour !",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
     "id": "village-6e",
     "texte": "Les habitants de Clairval sentent le Brouillard leur grignoter la mémoire. Parle-leur : chacun a besoin d'un coup de main aujourd'hui.",
     "voix": "ysaline"

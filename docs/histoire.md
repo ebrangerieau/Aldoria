@@ -63,6 +63,8 @@ une manie et une réplique d'entrée et de défaite. Les boss actuels deviennent
 | Portes du Temps (géographie) | *Le Brouille-Cartes*, complice de Dame Sablière | mélange les atlas et les points cardinaux |
 | *Laboratoire des Inventeurs* (sciences, Jules) | *Le Professeur Court-Circuit* | dérègle les expériences : les glaçons bouillent, les lampes refusent de s'allumer |
 | *Laboratoire des Inventeurs* (sciences, Jules) | *Le Pétrificateur* | change en pierre tout ce qui vit et mélange les fossiles |
+| *Laboratoire des Inventeurs* (physique-chimie, Tom) | *Le Dissolveur* | fait tout fondre dans son creuset : atomes sans électrons, équations sans coefficients |
+| *Laboratoire des Inventeurs* (physique-chimie, Tom) | *Le Brouilleur* | met du bruit dans les signaux, du flou dans les lentilles, du désordre dans les forces |
 | Portes du Temps (histoire, Tom) | *Le Grand Censeur* | raye les noms des registres : ce qui n'est pas autorisé n'a jamais existé |
 | Portes du Temps (géographie, Tom) | *L'Arpenteur Aveugle* | mesure le monde sans le voir, efface les écarts et les flux |
 
@@ -102,7 +104,7 @@ le brouillard ; il recule à chaque donjon terminé, et un chemin s'éclaire ver
 | La Bibliothèque des Langues | anglais (puis autres langues) | côte, port, grande bibliothèque | existe : 1 donjon en 6e ; en seconde, la Bibliothèque engloutie et le Port des Couronnes |
 | *Le Bois des Mots* | français | forêt, théâtre en plein air, fontaines | existe : en 6e, le Moulin des Phrases (langue) puis le Puits aux Contes (lectures) ; en seconde, le Théâtre de Verdure |
 | **Les Portes du Temps** | histoire-géographie (puis sciences) | cercle de pierres avec des portes ouvertes sur une autre époque ou un autre lieu | existe : en 6e, la Porte des Origines (histoire) et la Porte des Horizons (géographie) ; en seconde, la Porte des Empires (histoire) et la Porte des Transitions (géographie) |
-| *Le Laboratoire des Inventeurs* | sciences | tour d'expériences, maison du naturaliste | existe en 6e : la Tour des Expériences (matière, énergie) puis la Maison du Naturaliste (vivant, Terre) ; les « portes vers le futur et le laboratoire » imaginées au §6 sont devenues cette région à part, une région par matière |
+| *Le Laboratoire des Inventeurs* | sciences | tour d'expériences, maison du naturaliste | existe en 6e : la Tour des Expériences (matière, énergie) puis la Maison du Naturaliste (vivant, Terre) ; en seconde, la physique-chimie de Tom y a ses deux lieux : l'Alambic des Éléments (matière, atome, transformations) puis le Laboratoire foudroyé (mouvement, forces, son, lumière, circuits), noms provisoires ; les « portes vers le futur et le laboratoire » imaginées au §6 sont devenues cette région à part, une région par matière |
 | Clairval | révision (toutes matières) | village | existe |
 
 ### Les Portes du Temps (idée de Jules)
