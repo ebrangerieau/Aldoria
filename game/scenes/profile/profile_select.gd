@@ -43,7 +43,7 @@ func _build_frame() -> void:
 	add_child(center)
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 18)
-	center.add_child(column)
+	center.add_child(UiKit.fitted(column))  # écran bas (téléphone) : défile au lieu d'être coupé
 	_heading = Control.new()
 	column.add_child(_heading)
 	_cards = HBoxContainer.new()
@@ -145,16 +145,27 @@ func _choose(profile: Dictionary) -> void:
 	_keypad(PIN_LENGTH, true)
 
 
-## Pavé numérique (PIN ou code de liaison) ; « Retour » ne sert qu'au PIN.
+## Pavé numérique (PIN ou code de liaison) ; « Retour » ne sert qu'au PIN. Sur téléphone (écran
+## bas, à l'horizontale), les ronds du code à gauche et le pavé à droite, touches moins hautes.
 func _keypad(length: int, with_back: bool) -> void:
 	_length = length
 	_digits = ""
+	var phone := Quality.is_phone()
+	var holder: VBoxContainer = _root
+	var row := HBoxContainer.new()
+	if phone:
+		row.add_theme_constant_override("separation", 28)
+		_root.add_child(row)
+		holder = VBoxContainer.new()
+		holder.alignment = BoxContainer.ALIGNMENT_CENTER
+		holder.custom_minimum_size.x = 300
+		row.add_child(holder)
 	_dots = UiKit.label("", 56 if length == PIN_LENGTH else 48, _wt.accent)
 	_dots.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_root.add_child(_dots)
+	holder.add_child(_dots)
 	_message = UiKit.label("", 22, _wt.bad_ink)
 	_message.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	_root.add_child(_message)
+	holder.add_child(_message)
 	var grid := GridContainer.new()
 	grid.columns = 3
 	grid.add_theme_constant_override("h_separation", 12)
@@ -163,7 +174,7 @@ func _keypad(length: int, with_back: bool) -> void:
 		if key == "":
 			grid.add_child(Control.new())
 			continue
-		var b := UiKit.button(key, 72.0)
+		var b := UiKit.button(key, 56.0 if phone else 72.0)
 		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		if key.length() > 1:
 			UiKit.style_secondary(b, _wt)
@@ -171,7 +182,11 @@ func _keypad(length: int, with_back: bool) -> void:
 			b.add_theme_font_size_override("font_size", UiKit.font_size(34))
 		b.pressed.connect(_key.bind(key))
 		grid.add_child(b)
-	_root.add_child(grid)
+	if phone:
+		grid.custom_minimum_size.x = 420
+		row.add_child(grid)
+	else:
+		_root.add_child(grid)
 	_refresh_dots()
 
 
