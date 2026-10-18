@@ -207,7 +207,10 @@ sauvegarde avant migration, push, suivi de la CI, contrôle en production). Les 
   `musique/` de l'export par `tools/postprocess_web.py`, téléchargée après le démarrage ; sur PC, lue dans deploy/) :
   en boucle partout, sauf dans les scènes de quête (`Music.FOCUS_SCENES` : donjon, village, défi du jour, arène, tir ;
   une nouvelle scène de quête y est ajoutée), fondu à l'entrée et reprise au retour, plus discrète quand une voix parle.
-  Volume à part dans les Options (`Accessibility.music_volume`, préférence `music`). Captures sur PC : `-- --musique=0`.
+  Volume à part dans les Options (`Accessibility.music_volume`, préférence `music`). Bouton « couper / remettre » toujours en
+  bas à gauche, sur tout écran où elle joue (calque `Music.BUTTON_LAYER`, préférence `music_off`) : une scène ne met rien
+  dans ce coin, ou lui laisse `Music.button_width()` (prologue). Captures sur PC : `-- --musique=0` (sans bouton) ou
+  `--musique=muette` (bouton visible, sans le son).
 - Le héros parle entre les salles (`HeroVoice`, core/world ; bulle `CombatHud.say`, lue si lecture automatique) :
   phrases par ton de monde, combinées, les dernières dites ne reviennent pas.
 - Progression du joueur : `SaveManager` (XP, donjons, bestiaire, défis quotidiens), jamais de fichier de

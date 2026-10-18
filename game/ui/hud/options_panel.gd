@@ -52,7 +52,10 @@ func setup(wt: WorldTheme) -> void:
 	music.step = 0.1
 	music.value = Accessibility.music_volume()
 	music.custom_minimum_size = Vector2(0, 48)
-	music.value_changed.connect(func(value: float) -> void: Accessibility.set_pref("music", value, false))
+	music.value_changed.connect(func(value: float) -> void:
+		Accessibility.set_pref("music", value, false)
+		Accessibility.set_pref("music_off", false, false)  # bouger le curseur remet la musique
+		Music.refresh_button())
 	box.add_child(music)
 
 	if Accessibility.can_speak():

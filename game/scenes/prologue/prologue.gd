@@ -552,6 +552,10 @@ func _build_ui() -> void:
 	buttons.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	buttons.add_theme_constant_override("separation", 14)
 	column.add_child(buttons)
+	var music_room := Control.new()  # coin du bouton de la musique (`Music`), même place sur tous les écrans
+	music_room.custom_minimum_size.x = Music.button_width()
+	music_room.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	buttons.add_child(music_room)
 	_text_button = UiKit.icon_button("Texte", "scroll-unfurled", 52.0)
 	UiKit.style_secondary(_text_button, _wt)
 	_text_button.pressed.connect(toggle_text)

@@ -42,6 +42,7 @@ func _build() -> void:
 	margin.set_anchors_preset(Control.PRESET_FULL_RECT)
 	for side in ["left", "right", "top", "bottom"]:
 		margin.add_theme_constant_override("margin_" + side, 24)
+	margin.add_theme_constant_override("margin_bottom", int(Music.corner_height()))  # coin du bouton de la musique
 	add_child(margin)
 	var column := VBoxContainer.new()
 	column.add_theme_constant_override("separation", 14)
