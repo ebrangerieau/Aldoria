@@ -59,7 +59,7 @@ const SUBJECT_LABELS := {"maths": "Maths", "anglais": "Anglais", "francais": "Fr
 static func all_for_level(level: String) -> Array[DungeonDef]:
 	match level:
 		"6e":
-			return [tour_fractions(), atelier_balances(), observatoire_angles(), bibliotheque_langues(), porte_origines(), porte_horizons()]
+			return [tour_fractions(), atelier_balances(), observatoire_angles(), bibliotheque_langues(), porte_origines(), porte_horizons(), moulin_phrases(), puits_contes()]
 		"2nde":
 			return [labyrinthe_vecteurs(), forge_algebre(), citadelle_fonctions(), theatre_verdure(), bibliotheque_engloutie(), port_couronnes()]
 	return []
@@ -412,6 +412,114 @@ static func porte_horizons() -> DungeonDef:
 			["crates_stacked", Vector3(14.6, 0, 4.4), -20.0, 0.9],
 		],
 		"torch_color": Color(0.95, 0.9, 0.7),
+	}
+	return d
+
+
+# --- Bois des Mots (français de Jules) ------------------------------------------------------------
+
+static func moulin_phrases() -> DungeonDef:
+	var d := DungeonDef.new()
+	d.code = "moulin_phrases"
+	d.boss_intro = "Miam ! Je suis le Gobe-Lettres ! J'avale les accords, je croque les terminaisons et je recrache les phrases toutes de travers. Ta page de la Grammaire ? Elle a un goût de virgule !"
+	d.boss_defeat = "Beurk… j'ai trop mangé de mots. Tiens, reprends-les, je ne digère pas les phrases bien construites !"
+	d.page_text = "Sur la page de la Grammaire, chaque mot retrouve sa place : le sujet devant le verbe, les accords bien faits, les verbes conjugués au bon temps."
+	d.map_piece = "building_windmill_yellow"
+	d.page = "la page de la Grammaire"
+	d.threshold = "À l'orée du Bois des Mots tourne le Moulin des Phrases. Ses ailes broyaient les mots en jolies phrases bien rangées. Mais le Gobe-Lettres s'y est installé : il avale les accords et mélange les verbes. Rapporte la page de la Grammaire et remets le moulin en marche."
+	d.title = "Le Moulin des Phrases"
+	d.subject = "francais"
+	d.chapter_codes = ["6e.francais.grammaire", "6e.francais.conjugaison", "6e.francais.orthographe", "6e.francais.vocabulaire"]
+	d.chapter_title = "Grammaire, conjugaison, orthographe et vocabulaire"
+	d.intro = "Les ailes du moulin grincent : les phrases sortent en miettes ! Monte jusqu'au Gobe-Lettres."
+	d.enigma_generator = "6e.francais.fables"
+	d.enigma_title = "Les Fables défaites"
+	d.enigma_intro = "Le Gobe-Lettres a mâchouillé trois vers de La Fontaine. Remets leurs mots dans l'ordre pour rendre les fables entières."
+	d.enigma_xp = 45
+	d.chest_xp = 120
+	d.outro = "Les ailes du moulin tournent de nouveau, et les phrases en sortent bien rangées."
+	d.rooms = [
+		{"kind": "entree", "title": "La Meule"},
+		{"kind": "combat", "title": "Le Grenier des Mots", "enemies": [
+			_enemy("Mushnub", "Champignon des virgules", 60, 1, 30, Vector2(11, 7)),
+		]},
+		{"kind": "combat", "title": "L'Escalier des Verbes", "enemies": [
+			_enemy("Armabee", "Abeille des accords", 75, 2, 35, Vector2(8, 5)),
+			_enemy("Goleling", "Golem des conjugaisons", 75, 2, 35, Vector2(10.5, 14)),
+		]},
+		{"kind": "enigme", "title": "La Salle des Fables"},
+		{"kind": "combat", "title": "Les Ailes du Moulin", "enemies": [
+			_enemy("GhostSkull", "Fantôme des fautes", 110, 3, 50, Vector2(11, 7)),
+		]},
+		{"kind": "boss", "title": "Le Sommet du Moulin", "enemies": [
+			_enemy("GreenBlob", "Le Gobe-Lettres", 210, 4, 155, Vector2(11, 6), 1.7),
+		]},
+	]
+	d.decor = {
+		"floor": "floor_wood_large",
+		"floor_accent": "floor_wood_large_dark",
+		"walls": ["wall", "wall_window_open"],
+		"banners": ["banner_patternB_yellow", "banner_shield_red"],
+		"props": [
+			["barrel_large", Vector3(1.6, 0, 4.0), 0.0, 0.8],
+			["crates_stacked", Vector3(2.6, 0, 1.4), 15.0, 0.9],
+			["table_medium_decorated_A", Vector3(12.0, 0, 1.6), 0.0, 0.9],
+			["shelf_small_candles", Vector3(14.4, 0, 1.0), 0.0, 0.6],
+		],
+		"torch_color": Color(1.0, 0.88, 0.6),
+	}
+	return d
+
+
+static func puits_contes() -> DungeonDef:
+	var d := DungeonDef.new()
+	d.code = "puits_contes"
+	d.boss_intro = "Grrr… Qui ose descendre dans mon puits ? Je suis l'Ogre Oublieux ! J'ai mangé la fin de tous les contes : plus personne ne sait comment finissent les histoires. Et toi, je vais te manger aussi… enfin, si je m'en souviens !"
+	d.boss_defeat = "Ah… je me souviens ! Il était une fois… un Archiviste très courageux. Reprends tes contes, ils me donnaient mal au ventre."
+	d.page_text = "La page des Contes se remplit de nouveau : les dieux de l'Olympe, Ulysse et le Cyclope, les fables, Scapin et ses ruses, le Minotaure… Chaque histoire retrouve sa fin."
+	d.map_piece = "building_well_yellow"
+	d.page = "la page des Contes"
+	d.threshold = "Au cœur du Bois des Mots se cache le Puits aux Contes. On raconte qu'au fond, toutes les histoires du monde dorment en attendant qu'on les lise. L'Ogre Oublieux y est descendu et a dévoré la fin de chaque conte. Va chercher la page des Contes : mythes, fables, théâtre, aventures et monstres t'attendent."
+	d.title = "Le Puits aux Contes"
+	d.subject = "francais"
+	d.chapter_codes = ["6e.francais.lectures"]
+	d.chapter_title = "Récits des origines, poésie, théâtre, aventures et monstres"
+	d.intro = "Au fond du puits, les histoires s'emmêlent. Descends jusqu'à l'Ogre Oublieux !"
+	d.enigma_generator = "6e.francais.conte"
+	d.enigma_title = "Le Conte en désordre"
+	d.enigma_intro = "L'Ogre a mélangé les pages de trois histoires. Remets leurs étapes dans l'ordre, du début à la fin."
+	d.enigma_xp = 45
+	d.chest_xp = 120
+	d.outro = "Une lumière douce remonte du puits : toutes les histoires ont retrouvé leur fin."
+	d.rooms = [
+		{"kind": "entree", "title": "La Margelle"},
+		{"kind": "combat", "title": "La Grotte des Origines", "enemies": [
+			_enemy("Cactoro", "Cactus de l'Olympe", 60, 1, 30, Vector2(11, 7)),
+		]},
+		{"kind": "combat", "title": "Le Labyrinthe", "enemies": [
+			_enemy("Yeti", "Minotaure des neiges", 80, 2, 35, Vector2(8, 5)),
+			_enemy("MushnubEvolved", "Champignon du Cyclope", 75, 2, 35, Vector2(10.5, 14)),
+		]},
+		{"kind": "enigme", "title": "La Salle des Pages volantes"},
+		{"kind": "combat", "title": "L'Antre du Dragon", "enemies": [
+			_enemy("Dragon", "Dragon des légendes", 110, 3, 50, Vector2(11, 7)),
+		]},
+		{"kind": "boss", "title": "Le Fond du Puits", "enemies": [
+			_enemy("Orc", "L'Ogre Oublieux", 210, 4, 155, Vector2(11, 6), 1.4),
+		]},
+	]
+	d.decor = {
+		"floor": "floor_tile_large",
+		"floor_accent": "floor_dirt_large",
+		"walls": ["wall_arched", "wall_shelves"],
+		"banners": ["banner_patternB_green", "banner_patternC_white"],
+		"props": [
+			["shelf_large", Vector3(1.4, 0, 4.0), 90.0, 0.9],
+			["trunk_large_A", Vector3(2.6, 0, 1.4), 0.0, 0.8],
+			["candle_triple", Vector3(13.2, 0, 1.0), 0.0, 0.3],
+			["chest_gold", Vector3(14.6, 0, 4.6), -90.0, 0.8],
+		],
+		"torch_color": Color(0.75, 0.95, 0.7),
 	}
 	return d
 

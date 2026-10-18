@@ -1,0 +1,40 @@
+{
+  "level": "6e",
+  "subject": {"code": "francais", "label": "Français"},
+  "source": "Programme de français du cycle 3 (arrêté du 10 avril 2025, BO n° 16 du 17 avril 2025), applicable en 6e depuis la rentrée 2025 : grammaire et orthographe grammaticale, conjugaison (temps à mémoriser en 6e : impératif et conditionnel présents ; temps du CM consolidés), vocabulaire, et les cinq entrées littéraires de 6e. Questions : générateurs à base d'exemples relus et conjugaison calculée (api/app/engine/generators/francais_6e_*.py), complétés par la banque.",
+  "chapters": [
+    {"code": "6e.francais.grammaire", "title": "Grammaire : la phrase et ses constituants", "notions": [
+      {"code": "6e.francais.grammaire.classes_mots", "label": "Classes de mots (nom, verbe, adjectif, adverbe, préposition, conjonction)"},
+      {"code": "6e.francais.grammaire.determinants_pronoms", "label": "Déterminants et pronoms personnels"},
+      {"code": "6e.francais.grammaire.fonctions", "label": "Sujet, COD, COI, attribut du sujet, compléments circonstanciels"},
+      {"code": "6e.francais.grammaire.groupe_nominal", "label": "Groupe nominal : nom noyau, épithète, complément du nom"},
+      {"code": "6e.francais.grammaire.types_phrases", "label": "Types et formes de phrases"},
+      {"code": "6e.francais.grammaire.phrase_complexe", "label": "Phrase complexe : juxtaposition, coordination, subordination"}
+    ]},
+    {"code": "6e.francais.conjugaison", "title": "Conjugaison", "notions": [
+      {"code": "6e.francais.conjugaison.formes", "label": "Conjuguer au présent, à l'imparfait, au passé simple, au futur, au conditionnel et à l'impératif"},
+      {"code": "6e.francais.conjugaison.reconnaitre", "label": "Reconnaître le temps et le mode d'un verbe conjugué"},
+      {"code": "6e.francais.conjugaison.temps_composes", "label": "Passé composé et plus-que-parfait : auxiliaire et participe passé"},
+      {"code": "6e.francais.conjugaison.valeurs", "label": "Premières valeurs des temps (discours et récit)"}
+    ]},
+    {"code": "6e.francais.orthographe", "title": "Orthographe grammaticale", "notions": [
+      {"code": "6e.francais.orthographe.accord_gn", "label": "Accords dans le groupe nominal"},
+      {"code": "6e.francais.orthographe.accord_sujet_verbe", "label": "Accord du verbe avec son sujet"},
+      {"code": "6e.francais.orthographe.participe_passe", "label": "Accord du participe passé (avec être, avec avoir et un COD placé avant)"},
+      {"code": "6e.francais.orthographe.homophones", "label": "Homophones grammaticaux (a/à, et/est, son/sont, on/ont, ces/ses)"}
+    ]},
+    {"code": "6e.francais.vocabulaire", "title": "Vocabulaire", "notions": [
+      {"code": "6e.francais.vocabulaire.formation", "label": "Mots simples, dérivés et composés : radical, préfixe, suffixe"},
+      {"code": "6e.francais.vocabulaire.synonymes_antonymes", "label": "Synonymes et antonymes"},
+      {"code": "6e.francais.vocabulaire.sens", "label": "Polysémie, homonymes, sens propre et sens figuré"},
+      {"code": "6e.francais.vocabulaire.familles_registres", "label": "Familles de mots, étymologie et registres de langue"}
+    ]},
+    {"code": "6e.francais.lectures", "title": "Lectures de 6e : récits, poésie, théâtre", "notions": [
+      {"code": "6e.francais.lectures.origines", "label": "Créer, recréer le monde : récits des origines"},
+      {"code": "6e.francais.lectures.poesie", "label": "Chanter et enchanter le monde : poésie et fables"},
+      {"code": "6e.francais.lectures.theatre", "label": "Se masquer, jouer, déjouer : ruses au théâtre"},
+      {"code": "6e.francais.lectures.aventure", "label": "Partir à l'aventure : le récit et ses étapes"},
+      {"code": "6e.francais.lectures.monstres", "label": "Rencontrer des monstres : mythes et contes"}
+    ]}
+  ]
+}

@@ -1,6 +1,8 @@
 """Phase 2, tranche verticale : paquet d'un donjon (chapitre ciblé, énigme) et
 sauvegarde de partie versionnée."""
 
+import pytest
+
 from app.engine import answers
 
 API = "/api/v1/play"
@@ -240,7 +242,7 @@ def test_game_dungeons_match_curriculum_and_generators():
         source,
         re.S,
     )
-    assert len(dungeons) == 12
+    assert len(dungeons) == 14
     for code, chapter_list, enigma in dungeons:
         codes = re.findall(r'"([\w.]+)"', chapter_list)
         levels = {chapters[c] for c in codes}  # KeyError : chapitre absent du programme
@@ -317,3 +319,33 @@ async def test_french_dungeon_stays_in_french(client, login, curriculum):
     assert len(enigma) == 6 and all(i["type"] == "order" for i in enigma)
     # Plusieurs chapitres représentés, pas seulement l'étude de la langue.
     assert len({i["notions"][0].split(".")[2] for i in items}) >= 4
+
+
+@pytest.mark.parametrize(
+    ("chapters", "enigma_code"),
+    [
+        (["grammaire", "conjugaison", "orthographe", "vocabulaire"], "6e.francais.fables"),
+        (["lectures"], "6e.francais.conte"),
+    ],
+)
+async def test_jules_french_dungeons_stay_in_french(
+    client, login, curriculum, chapters, enigma_code
+):
+    """Moulin des Phrases et Puits aux Contes : français de 6e seulement, énigme en ordre."""
+    headers = await login("jules", "1234")
+    body = (
+        await client.post(
+            f"{API}/session/start",
+            json={
+                "mode": "donjon",
+                "focus_chapters": [f"6e.francais.{c}" for c in chapters],
+                "enigma": {"generator": enigma_code, "count": 6},
+            },
+            headers=headers,
+        )
+    ).json()
+    items = body["items"]
+    assert len(items) > 20
+    assert all(i["notions"][0].startswith("6e.francais.") for i in items)
+    enigma = [i for i in items if i["role"] == "enigme"]
+    assert len(enigma) == 6 and all(i["type"] == "order" for i in enigma)

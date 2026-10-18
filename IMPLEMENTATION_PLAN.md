@@ -460,6 +460,16 @@ générateurs naturels, donc des questions à rédiger.
 > questions d'anglais. Reste : le donjon de français de Tom (après une première série de questions publiées),
 > les Archives regroupées par matière, puis les deux semaines d'observation.
 >
+> ✅ **2026-10-18 : français de Jules.** Programme de français du cycle 3 (BO n° 16 du 17 avril 2025, en 6e depuis la
+> rentrée 2025) : `content/seed/6e/francais.json`, 5 chapitres, 23 notions (grammaire, conjugaison, orthographe
+> grammaticale, vocabulaire, les cinq entrées littéraires de 6e). Générateurs : conjugaison calculée
+> (`francais_6e_conjugaison.py` : les verbes du programme et des verbes réguliers des deux premiers groupes, huit temps
+> dont l'impératif et le conditionnel ; reconnaître un temps sans forme ambiguë), exemples relus (`francais_6e_langue.py`,
+> `francais_6e_lectures.py`), deux énigmes à remettre dans l'ordre (vers de La Fontaine, étapes d'un conte ou d'un mythe).
+> Deux lieux dans le Bois des Mots : **le Moulin des Phrases** (langue, énigme « Les Fables défaites », boss le
+> Gobe-Lettres) puis **le Puits aux Contes** (lectures, énigme « Le Conte en désordre », boss l'Ogre Oublieux). Noms
+> provisoires à relire avec Jules ; quatre répliques de Maître Ysaline à faire enregistrer (tools/voix_elevenlabs.py).
+>
 > ✅ **2026-10-15 : français de Tom.** Générateurs à base d'exemples relus pour les 25 notions du programme de
 > seconde (`francais_2nde_langue.py`, `francais_2nde_litterature.py`, moteur `faits.py`) : étude de la
 > langue, figures de style, versification (dont la disposition des rimes, calculée), repères littéraires, littérature

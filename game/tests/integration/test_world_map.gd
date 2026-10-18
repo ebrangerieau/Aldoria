@@ -48,7 +48,8 @@ func test_places_follow_the_class_and_progress() -> void:
 	assert_eq(_place("tour_fractions")["status"], "open")
 	assert_eq(_place("atelier_balances")["status"], "locked", "fermé tant que la Tour n'est pas reprise")
 	assert_eq(_place("bibliotheque_langues")["status"], "open", "chaque région a son premier donjon ouvert")
-	assert_eq(_place("francais")["status"], "fog", "pas de français en 6e : Bois des Mots dans le brouillard")
+	assert_eq(_place("moulin_phrases")["status"], "open", "le Bois des Mots : le Moulin est ouvert")
+	assert_eq(_place("puits_contes")["status"], "locked", "le Puits s'ouvre après le Moulin")
 	assert_eq(_place("tour_oubli")["status"], "fog")
 	assert_eq(_place("porte_origines")["status"], "open", "les Portes du Temps : la première porte est ouverte")
 	assert_eq(_place("porte_horizons")["status"], "locked", "la deuxième s'ouvre après la première")
@@ -56,7 +57,7 @@ func test_places_follow_the_class_and_progress() -> void:
 	await _open()
 	assert_eq(_place("tour_fractions")["status"], "done")
 	assert_eq(_place("atelier_balances")["status"], "open")
-	assert_eq((_scene._badge as HeroBadge).pages_text(), "Pages de la Chronique : 1 / 6")
+	assert_eq((_scene._badge as HeroBadge).pages_text(), "Pages de la Chronique : 1 / 8")
 
 
 func test_dungeons_sit_in_their_region() -> void:

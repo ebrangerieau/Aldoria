@@ -57,6 +57,8 @@ une manie et une réplique d'entrée et de défaite. Les boss actuels deviennent
 | Bibliothèque des Langues (anglais, Tom) | *Sir Tense* | mélange les temps : hier devient demain |
 | Bibliothèque des Langues (anglais, Tom) | *Lady Oblivion* | efface les dates et la mémoire des peuples du Commonwealth |
 | *Bois des Mots* (français) | *Le Ratureur* | barre chaque mot d'un trait d'encre ; défait les vers |
+| *Bois des Mots* (français, Jules) | *Le Gobe-Lettres* | avale les accords et les terminaisons, recrache les phrases de travers |
+| *Bois des Mots* (français, Jules) | *L'Ogre Oublieux* | a mangé la fin de tous les contes… et oublie ce qu'il voulait manger |
 | Portes du Temps (histoire-géographie, puis sciences) | *Dame Sablière* | fige ou dérègle le temps (voir §6) |
 | Portes du Temps (géographie) | *Le Brouille-Cartes*, complice de Dame Sablière | mélange les atlas et les points cardinaux |
 
@@ -94,7 +96,7 @@ le brouillard ; il recule à chaque donjon terminé, et un chemin s'éclaire ver
 | --- | --- | --- | --- |
 | Les Cimes Fractales | maths | montagnes, tours, ateliers | existe (3 donjons par classe) |
 | La Bibliothèque des Langues | anglais (puis autres langues) | côte, port, grande bibliothèque | existe : 1 donjon en 6e ; en seconde, la Bibliothèque engloutie et le Port des Couronnes |
-| *Le Bois des Mots* | français | forêt, théâtre en plein air, fontaines | existe (1 donjon en seconde : le Théâtre de Verdure) |
+| *Le Bois des Mots* | français | forêt, théâtre en plein air, fontaines | existe : en 6e, le Moulin des Phrases (langue) puis le Puits aux Contes (lectures) ; en seconde, le Théâtre de Verdure |
 | **Les Portes du Temps** | histoire-géographie (puis sciences) | cercle de pierres avec des portes ouvertes sur une autre époque ou un autre lieu | existe en 6e : la Porte des Origines (histoire), la Porte des Horizons (géographie) |
 | Clairval | révision (toutes matières) | village | existe |
 

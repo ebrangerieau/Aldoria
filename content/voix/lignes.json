@@ -256,5 +256,29 @@
     "id": "page-porte_horizons",
     "texte": "Tu as rapporté la page de la Géographie ! Elle a repris sa place dans la Grande Chronique. Toutes les pages de la région « Les Portes du Temps » sont revenues. Malvrek doit trembler dans sa tour !",
     "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-moulin_phrases",
+    "texte": "À l'orée du Bois des Mots tourne le Moulin des Phrases. Ses ailes broyaient les mots en jolies phrases bien rangées. Mais le Gobe-Lettres s'y est installé : il avale les accords et mélange les verbes. Rapporte la page de la Grammaire et remets le moulin en marche.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-moulin_phrases",
+    "texte": "Tu as rapporté la page de la Grammaire ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « Le Puits aux Contes » s'éclaire sur la carte.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-puits_contes",
+    "texte": "Au cœur du Bois des Mots se cache le Puits aux Contes. On raconte qu'au fond, toutes les histoires du monde dorment en attendant qu'on les lise. L'Ogre Oublieux y est descendu et a dévoré la fin de chaque conte. Va chercher la page des Contes : mythes, fables, théâtre, aventures et monstres t'attendent.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-puits_contes",
+    "texte": "Tu as rapporté la page des Contes ! Elle a repris sa place dans la Grande Chronique. Toutes les pages de la région « Le Bois des Mots » sont revenues. Malvrek doit trembler dans sa tour !",
+    "voix": "ysaline"
   }
 ]
