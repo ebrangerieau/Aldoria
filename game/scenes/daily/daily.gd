@@ -156,6 +156,7 @@ func _run() -> void:
 		question.setup(item, "Question %d" % (i + 1), _wt, false)  # défi du jour : sans objets
 		_show(question)
 		var res: Array = await question.answered
+		item = question.item  # « Pas vu en classe » a pu remplacer la question
 		var result := QuestionService.submit(item, res[0], res[1], res[2], GAME_MODE)
 		_time_ms += int(res[1])
 		question.reveal(result.correct)

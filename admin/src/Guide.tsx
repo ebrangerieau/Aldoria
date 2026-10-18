@@ -196,6 +196,28 @@ export function Guide({ child, onOpen }: { child?: Profile; onOpen: (page: Guide
           <strong>Et les donjons ?</strong> Chaque donjon a ses propres chapitres (par exemple la Tour des Fractions pour les fractions) : le statut
           que vous choisissez ici agit sur l'arène et le village. Le défi du jour, lui, ne pose que des questions de calcul rapide.
         </div>
+        <h3>Une notion pas encore vue en classe</h3>
+        <p>
+          Un chapitre « en cours » contient souvent des notions que la classe n'a pas encore abordées. Sous le titre du chapitre, chaque notion a
+          une case <strong>pas encore vue en classe</strong>. Cochée, la notion n'est plus jamais posée : ni dans l'arène, ni au village, ni au
+          défi du jour, ni dans les donjons. Décochez-la quand le professeur l'a traitée.
+        </p>
+        <p>
+          {name} peut aussi le dire lui-même : sous chaque question du jeu, le bouton <strong>Pas vu en classe</strong> (à toucher deux fois,
+          pour éviter une erreur) remplace la question par une autre, sans la compter comme une erreur ni lui faire perdre de points de vie. La
+          notion est mise de côté tout de suite, et vous la retrouvez dans le <strong>tableau de bord</strong>, encadré « Mises de côté par{' '}
+          {name} », et dans Programme avec l'étiquette « mise de côté par {name} ».
+        </p>
+        <ol className="steps">
+          <li>Ouvrez le tableau de bord : l'encadré « Mises de côté par {name} » n'apparaît que s'il y en a.</li>
+          <li>Si c'est exact, touchez « C'est exact » : la notion reste de côté et quitte la liste.</li>
+          <li>Si {name} a déjà vu la notion en classe, décochez la case : elle revient dans les questions.</li>
+        </ol>
+        <div className="tip">
+          <strong>Pour éviter les abus.</strong> Le bouton ne fait pas gagner la question : il la remplace. Tout ce que {name} met de côté reste
+          visible ici. Si toute une matière était mise de côté, ses donjons continueraient à poser ses questions (jamais celles d'une autre
+          matière).
+        </div>
       </Section>
 
       <Section id="questions" title="Ajouter vos propres questions" open={() => onOpen('questions')} openLabel="Ouvrir la banque de questions">

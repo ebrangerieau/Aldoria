@@ -10,6 +10,8 @@ signal queue_changed(pending: int)
 const AUTH_FILE := "user://auth.json"
 const PACK_FILE := "user://pack_%s.json"  # un paquet par mode (arène, défi) ou par donjon
 const QUEUE_FILE := "user://attempts_queue.json"
+## Notions mises de côté (« Pas encore vu en classe ») pas encore reçues par le serveur.
+const ASIDE_FILE := "user://aside_queue.json"
 const FLUSH_RETRY_S := 10.0
 const BATCH_SIZE := 50
 
@@ -36,6 +38,10 @@ var break_minutes := 30
 var _last_play_unix := 0.0
 
 var _queue: Array = []
+## Notions mises de côté depuis le dernier paquet du serveur (le paquet suivant ne les contient
+## plus) : le jeu ne les pose plus, même dans un paquet gardé hors connexion.
+var aside: Dictionary = {}
+var _aside_queue: Array = []  # [{profile_id, notion}]
 var _flushing := false
 var _retry_timer: Timer
 var _textures: Dictionary = {}
@@ -43,6 +49,7 @@ var _textures: Dictionary = {}
 
 func _ready() -> void:
 	_queue = _load_json(QUEUE_FILE, [])
+	_aside_queue = _load_json(ASIDE_FILE, [])
 	_retry_timer = Timer.new()
 	_retry_timer.wait_time = FLUSH_RETRY_S
 	_retry_timer.timeout.connect(flush)
@@ -118,6 +125,7 @@ func logout() -> void:
 	Accessibility.load_prefs(0)
 	session_id = ""
 	dungeon_code = ""
+	aside.clear()
 	played_seconds = 0.0
 	_last_play_unix = 0.0
 	DirAccess.remove_absolute(AUTH_FILE)
@@ -139,6 +147,10 @@ func start(mode := "arene", params := {}, cache := "") -> Dictionary:
 	if res.ok:
 		_apply_pack(res.data)
 		_save_json(PACK_FILE % key, res.data)
+		# Le serveur a retiré les notions déjà reçues ; restent celles pas encore envoyées.
+		aside.clear()
+		for entry: Dictionary in _own_aside():
+			aside[str(entry["notion"])] = true
 		return res
 	if res.status == 0:
 		var cached: Dictionary = _load_json(PACK_FILE % key, {})
@@ -223,12 +235,49 @@ func record_attempt(item: Dictionary, correct: bool, time_ms: int, hint_used: bo
 	flush()
 
 
+## « Pas encore vu en classe » : la notion n'est plus posée, et part au serveur (le parent la
+## voit dans l'espace parent). Hors connexion, l'envoi attend le retour du réseau.
+func set_aside_notion(code: String) -> void:
+	if aside.has(code):
+		return
+	aside[code] = true
+	_aside_queue.append({"profile_id": _profile_id(), "notion": code})
+	_save_json(ASIDE_FILE, _aside_queue)
+	_flush_aside()
+
+
+## Vrai si l'item porte sur une notion mise de côté.
+func is_set_aside(item: Dictionary) -> bool:
+	for code in item.get("notions", []):
+		if aside.has(str(code)):
+			return true
+	return false
+
+
+func _own_aside() -> Array:
+	var me := _profile_id()
+	return _aside_queue.filter(func(a: Dictionary) -> bool: return int(a.get("profile_id", me)) == me)
+
+
+func _flush_aside() -> void:
+	if ApiClient.token == "":
+		return
+	for entry: Dictionary in _own_aside():
+		var res := await ApiClient.post_json("/play/notions/set-aside", {"notion": entry["notion"]})
+		if not res.ok and not _rejected_for_good(res.status):
+			return  # nouvel essai au prochain passage du minuteur
+		_aside_queue.erase(entry)
+		_save_json(ASIDE_FILE, _aside_queue)
+
+
 ## Réponses en attente d'envoi pour le joueur connecté.
 func pending_count() -> int:
 	return _own_queue().size()
 
 
 func flush() -> void:
+	if not _own_aside().is_empty():
+		_flush_aside()
 	if _flushing or ApiClient.token == "" or _own_queue().is_empty():
 		return
 	_flushing = true

@@ -252,6 +252,23 @@ class ChapterStatus(Base):
     test_date: Mapped[date | None] = mapped_column(Date)
 
 
+class NotionAside(Base):
+    """Notion mise de côté pour un enfant : pas encore vue en classe. Jamais posée tant que la
+    ligne existe. `source` : « parent » (page Programme) ou « enfant » (bouton « Pas encore vu
+    en classe » du jeu, que le parent voit et peut réactiver)."""
+
+    __tablename__ = "notion_aside"
+
+    profile_id: Mapped[int] = mapped_column(
+        ForeignKey("profile.id", ondelete="CASCADE"), primary_key=True
+    )
+    notion_id: Mapped[int] = mapped_column(
+        ForeignKey("notion.id", ondelete="CASCADE"), primary_key=True
+    )
+    source: Mapped[str] = mapped_column(String(10))
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
 class NotionState(Base):
     """Suivi d'une notion pour un enfant : boîte de Leitner et score de maîtrise."""
 

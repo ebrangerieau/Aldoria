@@ -53,7 +53,26 @@ const { chromium } = require('playwright-core');
   if ((await page.locator('section.now li', { hasText: 'Fractions' }).count()) === 0) {
     problems.push('« En ce moment » ne reprend pas le chapitre en cours');
   }
+  // Notion pas encore vue en classe : la case se coche, la notion passe en grisé ; décochée, elle revient.
+  const notSeen = fractions.getByLabel('pas encore vue en classe').first();
+  if (await notSeen.isChecked()) {
+    // Reste d'un passage interrompu (la base du banc est gardée) : on repart d'une case décochée.
+    const reset = page.waitForResponse((r) => r.url().includes('/notions/') && r.request().method() === 'PUT');
+    await notSeen.uncheck();
+    await reset;
+    await page.waitForTimeout(500);
+  }
+  const putAside = page.waitForResponse((r) => r.url().includes('/notions/') && r.request().method() === 'PUT');
+  await notSeen.check();
+  await putAside;
+  await page.waitForTimeout(500);
+  if ((await fractions.locator('li.notion-aside').count()) !== 1) problems.push('notion « pas encore vue » non appliquée');
   await shot('2_programme');
+  const putBack = page.waitForResponse((r) => r.url().includes('/notions/') && r.request().method() === 'PUT');
+  await fractions.getByLabel('pas encore vue en classe').first().uncheck();
+  await putBack;
+  await page.waitForTimeout(500);
+  if ((await fractions.locator('li.notion-aside').count()) !== 0) problems.push('notion « pas encore vue » non retirée');
   await page.locator('nav.subjects').getByRole('button', { name: /^Histoire-géographie/ }).click();
   await page.locator('section.chapter', { hasText: 'Habiter une métropole' }).first().waitFor();
   if ((await page.locator('section.chapter', { hasText: 'Fractions' }).count()) !== 0) {

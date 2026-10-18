@@ -22,6 +22,7 @@ from app.models import (
     FamilyNotion,
     GameSession,
     Invitation,
+    NotionAside,
     NotionState,
     PairingCode,
     Profile,
@@ -30,7 +31,9 @@ from app.models import (
 )
 
 # Données d'un enfant, dans l'ordre (les réponses avant les sessions qu'elles citent).
-PROFILE_DATA = (Attempt, Report, NotionState, SaveRevision, ChapterStatus, GameSession)
+PROFILE_DATA = (
+    Attempt, Report, NotionState, NotionAside, SaveRevision, ChapterStatus, GameSession
+)
 
 
 async def delete_profile_data(db: AsyncSession, profile_id: int) -> dict[str, int]:

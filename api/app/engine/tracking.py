@@ -23,6 +23,7 @@ from app.models import (
     ChapterStatus,
     FamilyNotion,
     Notion,
+    NotionAside,
     NotionState,
     Profile,
     SaveRevision,
@@ -168,6 +169,10 @@ async def _combat_pack(
         # Donjon : toutes ses questions (sorts, frappes, révisions) restent dans sa matière.
         subjects = {c.subject_id for _, c in rows if c.code in focus_chapters}
         rows = [(n, c) for n, c in rows if not subjects or c.subject_id in subjects]
+    # Notions pas encore vues en classe (parent ou enfant) : jamais posées, sauf si plus rien
+    # ne reste à poser (toute la matière du donjon mise de côté).
+    aside = set(await set_aside(db, profile.id))
+    rows = [(n, c) for n, c in rows if n.id not in aside] or rows
     states = await _states(db, profile.id)
     statuses = {
         c.code: s.status
@@ -189,6 +194,7 @@ async def _combat_pack(
     )
     level_chapters = {c.code for _, c in rows}
     prior = [] if daily or focus_chapters else await _prior_notions(db, profile, playable, states)
+    prior = [(n, c) for n, c in prior if n.id not in aside]
     focus = [code for code in focus_chapters if code in level_chapters]
     if focus:
         statuses = {code: "en_cours" for code in focus}  # donjon : ses chapitres seuls
@@ -314,6 +320,7 @@ async def rebuild(db: AsyncSession) -> int:
 async def progress(db: AsyncSession, profile: Profile) -> list[dict[str, Any]]:
     playable = playable_notions()
     states = await _states(db, profile.id)
+    aside = await set_aside(db, profile.id)
     statuses = {
         s.chapter_id: s.status
         for s in await db.scalars(
@@ -346,9 +353,16 @@ async def progress(db: AsyncSession, profile: Profile) -> list[dict[str, Any]]:
                 "state": mastery.label(m, seen),
                 "mastery": round(m),
                 "seen": seen,
+                "set_aside": aside.get(notion.id),
             }
         )
     return list(chapters.values())
+
+
+async def set_aside(db: AsyncSession, profile_id: int) -> dict[int, str]:
+    """Notions mises de côté pour un enfant : identifiant de notion → source (parent, enfant)."""
+    rows = await db.scalars(sql_select(NotionAside).where(NotionAside.profile_id == profile_id))
+    return {r.notion_id: r.source for r in rows}
 
 
 async def _states(db: AsyncSession, profile_id: int) -> dict[int, NotionState]:

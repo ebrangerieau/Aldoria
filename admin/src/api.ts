@@ -180,6 +180,9 @@ export interface Notion {
   state: NotionState
   mastery: number
   seen: number
+  // Pas encore vue en classe : mise de côté par le parent (page Programme) ou par l'enfant
+  // (bouton « Pas vu en classe » du jeu) ; jamais posée tant qu'elle l'est.
+  set_aside: 'parent' | 'enfant' | null
 }
 
 export interface Chapter {
@@ -207,6 +210,7 @@ export interface Dashboard {
     rating: number | null
   }[]
   weak_notions: (Notion & { chapter: string })[]
+  set_aside_by_child: { code: string; label: string; chapter: string }[]
 }
 
 export interface NotionToValidate {
@@ -358,6 +362,8 @@ export const api = {
       status,
       test_date,
     }),
+  setNotionAside: (id: number, code: string, set_aside: boolean) =>
+    request<{ code: string; set_aside: 'parent' | null }>('PUT', `/profiles/${id}/notions/${encodeURIComponent(code)}`, { set_aside }),
   levels: () => request<LevelsInfo>('GET', '/levels'),
   setLevel: (id: number, level: Level) => request<Profile>('PATCH', `/profiles/${id}`, { level }),
   setWorld: (id: number, world: World) => request<Profile>('PATCH', `/profiles/${id}`, { world }),

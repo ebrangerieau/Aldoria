@@ -89,6 +89,7 @@ func _turn(action: String, reward_xp: int) -> String:
 	panel.setup(item, wt.action_names[action], wt)
 	hud.show_panel(panel)
 	var res: Array = await panel.answered
+	item = panel.item  # « Pas vu en classe » a pu remplacer la question
 	hud.clear_panel()
 	var result := QuestionService.submit(item, res[0], res[1], res[2], "boss" if boss else "combat")
 	questions += 1

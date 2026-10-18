@@ -261,6 +261,7 @@ func _run_quest(npc: Dictionary) -> void:
 		panel.setup(item, "%s · %d / %d" % [spec["title"], i + 1, VillageDef.QUEST_SIZE], _wt)
 		_hud.show_panel(panel)
 		var res: Array = await panel.answered
+		item = panel.item  # « Pas vu en classe » a pu remplacer la question
 		var result := QuestionService.submit(item, res[0], res[1], res[2], GAME_MODE)
 		panel.reveal(result.correct)
 		if result.correct:

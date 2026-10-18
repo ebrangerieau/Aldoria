@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { api, STATUS_LABELS, type Chapter, type ChapterStatus, type Profile } from './api'
+import { api, STATUS_LABELS, type Chapter, type ChapterStatus, type Notion, type Profile } from './api'
 import { Stars } from './Stars'
 
 const ORDER: ChapterStatus[] = ['a_venir', 'en_cours', 'controle_bientot', 'termine']
@@ -65,7 +65,9 @@ export function Program({ child }: { child: Profile }) {
     <div className="stack">
       <p className="intro">
         Indiquez où en est {child.name} en classe. Les chapitres <strong>en cours</strong> fournissent la moitié des questions ; un{' '}
-        <strong>contrôle bientôt</strong> en fournit 70 %. Le reste : révisions espacées et automatismes.
+        <strong>contrôle bientôt</strong> en fournit 70 %. Le reste : révisions espacées et automatismes. Dans un chapitre, cochez{' '}
+        <strong>pas encore vue en classe</strong> pour une notion que {child.name} n'a pas encore apprise : elle n'est plus posée, même
+        dans les donjons, jusqu'à ce que vous la décochiez.
       </p>
       <section className="card now">
         <h2>En ce moment</h2>
@@ -186,8 +188,11 @@ function ChapterCard({ child, chapter }: { child: Profile; chapter: Chapter }) {
           </summary>
           <ul className="notions">
             {playable.map((n) => (
-              <li key={n.code}>
-                <span>{n.label}</span>
+              <li key={n.code} className={n.set_aside ? 'notion-aside' : undefined}>
+                <span>
+                  {n.label}
+                  <NotionAside child={child} notion={n} />
+                </span>
                 <span className="notion-state">
                   <Stars count={n.stars} />{' '}
                   <span className="muted small">{n.seen ? `${n.state} · ${n.seen} réponse${n.seen > 1 ? 's' : ''}` : 'non vue'}</span>
@@ -198,5 +203,48 @@ function ChapterCard({ child, chapter }: { child: Profile; chapter: Chapter }) {
         </details>
       )}
     </section>
+  )
+}
+
+// Case « pas encore vue en classe » d'une notion : cochée, la notion n'est plus posée. Une notion mise
+// de côté par l'enfant dans le jeu est signalée ; la case la réactive.
+export function NotionAside({ child, notion }: { child: Profile; notion: Pick<Notion, 'code' | 'label' | 'set_aside'> }) {
+  const client = useQueryClient()
+  // La case suit le clic tout de suite ; l'état du serveur reprend la main une fois relu.
+  const [optimistic, setOptimistic] = useState<boolean | null>(null)
+  const mutation = useMutation({
+    mutationFn: (aside: boolean) => api.setNotionAside(child.id, notion.code, aside),
+    onSuccess: () =>
+      Promise.all([
+        client.invalidateQueries({ queryKey: ['chapters', child.id] }),
+        client.invalidateQueries({ queryKey: ['dashboard', child.id] }),
+      ]),
+    onSettled: () => setOptimistic(null),
+  })
+  const checked = optimistic ?? notion.set_aside !== null
+  return (
+    <span className="aside-control">
+      <label className="small">
+        <input
+          type="checkbox"
+          checked={checked}
+          disabled={mutation.isPending}
+          onChange={(e) => {
+            setOptimistic(e.target.checked)
+            mutation.mutate(e.target.checked)
+          }}
+        />{' '}
+        pas encore vue en classe
+      </label>
+      {notion.set_aside === 'enfant' && (
+        <>
+          <span className="badge aside-child">mise de côté par {child.name}</span>
+          <button className="link small" disabled={mutation.isPending} onClick={() => mutation.mutate(true)}>
+            C'est exact
+          </button>
+        </>
+      )}
+      {mutation.isError && <span className="error-text small"> Enregistrement impossible.</span>}
+    </span>
   )
 }

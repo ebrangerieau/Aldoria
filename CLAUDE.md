@@ -105,6 +105,13 @@ sauvegarde avant migration, push, suivi de la CI, contrôle en production). Les 
 - Village (`VillageDef`) : chaque habitant confie une quête de trois questions par jour (`revision`, `veille`,
   `enquete`) ; les questions passent par `QuestionService.next_quest_item`. Une enquête porte sur un seul
   document : générateur `shared_document` côté API (même document à graine égale, quelle que soit la difficulté).
+- Notions pas encore vues en classe (`NotionAside`, table `notion_aside`, par enfant) : cochées par le parent (page
+  Programme, `PUT /admin/profiles/{id}/notions/{code}`) ou mises de côté par l'enfant (bouton « Pas vu en classe » du
+  `QuestionPanel`, deux appuis, `POST /play/notions/set-aside` ; tableau de bord « Mises de côté par … », « C'est exact »
+  passe la source au parent). Jamais posées (`tracking._combat_pack`, après le filtre de matière du donjon ; si toute la
+  matière l'est, on les garde). Côté jeu, `Session.aside` les retire du paquet en cours et d'un paquet hors connexion,
+  envoi en file (`ASIDE_FILE`) ; le panneau se refait avec une autre question (`QuestionService.set_aside`), rien n'est
+  compté : l'appelant lit toujours `panel.item` après `answered`. Jamais sur une énigme.
 - Banque de questions (espace parent, `admin_content.py`) : une question rédigée est validée par
   `engine/bank.py` (même schéma qu'un item généré, réponse qui se vérifie elle-même) et n'est jouée qu'une
   fois publiée (`session_pack.build_items`, identifiant `banque:<id>:<version>`). Les signalements des enfants

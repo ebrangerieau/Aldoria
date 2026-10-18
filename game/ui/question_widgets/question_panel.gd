@@ -8,6 +8,10 @@ extends PanelContainer
 ## coup critique (réponse juste en moins de la moitié du temps cible), puis s'efface
 ## discrètement : pas de barre qui se vide, perçue comme un chrono par les enfants
 ## (retour du 2026-10-11).
+##
+## « Pas vu en classe » : l'enfant met la notion de côté (deux appuis, pour éviter un geste
+## malheureux) ; le panneau se refait avec une autre question, sans rien compter. L'appelant lit
+## donc toujours `item` après `answered` (la question réellement posée).
 
 signal answered(user_input: Variant, time_ms: int, hint_used: bool)
 
@@ -26,11 +30,18 @@ var _done := false
 var _visual: Control
 var _tools: MathTools
 var _tools_layer: CanvasLayer
+var _title := ""
+var _with_items := true
+var _glow: Tween
+var _aside_button: Button
+var _aside_armed := false
 
 
 ## `with_items` : plume et parchemin du sac proposés (pas au défi du jour).
 func setup(question: Dictionary, title: String, wt: WorldTheme, with_items := true) -> void:
 	item = question
+	_title = title
+	_with_items = with_items
 	_wt = wt
 	theme = UiKit.make_theme(wt)
 	custom_minimum_size = Vector2(1100, 0)
@@ -66,9 +77,9 @@ func setup(question: Dictionary, title: String, wt: WorldTheme, with_items := tr
 	header.add_child(_bonus)
 	if Accessibility.can_speak():
 		header.add_child(UiKit.listen_button(wt, Accessibility.question_parts(question), Accessibility.auto_read()))
-	var glow := create_tween().set_loops()
-	glow.tween_property(_bonus, "modulate:a", 0.55, 0.6)
-	glow.tween_property(_bonus, "modulate:a", 1.0, 0.6)
+	_glow = create_tween().set_loops()
+	_glow.tween_property(_bonus, "modulate:a", 0.55, 0.6)
+	_glow.tween_property(_bonus, "modulate:a", 1.0, 0.6)
 	box.add_child(header)
 
 	box.add_child(UiKit.label(str(question["prompt"]), 26))
@@ -165,6 +176,13 @@ func setup(question: Dictionary, title: String, wt: WorldTheme, with_items := tr
 		UiKit.style_secondary(tools_button, wt)
 		tools_button.pressed.connect(func() -> void: _tools_layer.visible = not _tools_layer.visible)
 		footer.add_child(tools_button)
+	if can_set_aside(question):
+		_aside_armed = false
+		_aside_button = UiKit.icon_button("Pas vu en classe", "backward-time", 52.0)
+		UiKit.style_secondary(_aside_button, wt)
+		_aside_button.tooltip_text = "Tu n'as pas encore appris ça en classe ? Cette notion est mise de côté et ton parent est prévenu."
+		_aside_button.pressed.connect(_on_aside_pressed)
+		footer.add_child(_aside_button)
 	_hint_label = UiKit.label(str(question.get("hint", "")), 20, wt.text_dim)
 	_hint_label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_hint_label.visible = false
@@ -291,6 +309,44 @@ func _use_item(id: String, button: Button) -> void:
 	else:
 		_hint_label.visible = true
 		_hint_button.visible = false
+
+
+## « Pas vu en classe » : pour toute question d'une notion du programme, jamais pour une énigme
+## (elle appartient au donjon, pas à un chapitre en cours).
+static func can_set_aside(question: Dictionary) -> bool:
+	return str(question.get("role", "")) != "enigme" and not (question.get("notions", []) as Array).is_empty()
+
+
+func _on_aside_pressed() -> void:
+	if _done:
+		return
+	if not _aside_armed:
+		_aside_armed = true
+		_aside_button.text = "Sûr ? Pas encore vu"
+		return
+	var replacement := QuestionService.set_aside(item)
+	if replacement.is_empty():
+		_aside_button.text = "Pas d'autre question"
+		_aside_button.disabled = true
+		return
+	Sfx.play("click")
+	_rebuild(replacement)
+
+
+## Refait le panneau avec une autre question (même titre, mêmes objets).
+func _rebuild(question: Dictionary) -> void:
+	if _glow != null and _glow.is_valid():
+		_glow.kill()
+	for child in get_children():
+		remove_child(child)
+		child.queue_free()
+	_tools = null
+	_tools_layer = null
+	_visual = null
+	_hint_used = false
+	_assisted = false
+	_done = false
+	setup(question, _title, _wt, _with_items)
 
 
 ## Vrai si l'indice ordinaire a été pris (la puissance du coup baisse) ; les objets du

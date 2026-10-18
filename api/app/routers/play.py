@@ -22,7 +22,18 @@ from app.db import get_db
 from app.engine import accommodations, levels, tracking
 from app.engine.generators import REGISTRY
 from app.errors import ApiError
-from app.models import Attempt, Chapter, Device, Family, GameSession, PairingCode, Profile, Report
+from app.models import (
+    Attempt,
+    Chapter,
+    Device,
+    Family,
+    GameSession,
+    Notion,
+    NotionAside,
+    PairingCode,
+    Profile,
+    Report,
+)
 
 router = APIRouter(prefix="/play", tags=["play"])
 Db = Annotated[AsyncSession, Depends(get_db)]
@@ -385,6 +396,30 @@ async def put_save(body: SaveIn, profile: CurrentProfile, db: Db) -> SaveOut:
             current=_save_out(saved, profile.save_epoch).model_dump(mode="json"),
         )
     return _save_out(saved, profile.save_epoch)
+
+
+class SetAsideIn(BaseModel):
+    notion: str = Field(min_length=1, max_length=80)
+
+
+@router.post("/notions/set-aside")
+async def set_notion_aside(body: SetAsideIn, profile: CurrentProfile, db: Db) -> dict[str, Any]:
+    """« Pas encore vu en classe » : l'enfant met une notion de côté ; elle ne lui est plus
+    posée et le parent la retrouve dans l'espace parent (il confirme ou la réactive)."""
+    found = (
+        await db.execute(
+            select(Notion, Chapter)
+            .join(Chapter, Notion.chapter_id == Chapter.id)
+            .where(Notion.code == body.notion)
+        )
+    ).first()
+    if found is None or found[1].level != profile.level:
+        raise ApiError(404, "unknown_notion", "Notion inconnue pour ta classe.")
+    notion = found[0]
+    if await db.get(NotionAside, (profile.id, notion.id)) is None:
+        db.add(NotionAside(profile_id=profile.id, notion_id=notion.id, source="enfant"))
+        await db.commit()
+    return {"code": notion.code, "set_aside": True}
 
 
 @router.post("/reports", status_code=201)

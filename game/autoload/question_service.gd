@@ -51,8 +51,8 @@ func level_for(role: String) -> int:
 ## niveau adaptatif. Rôle « enigme » : items de l'énigme du donjon, dans l'ordre
 ## du paquet (difficulté croissante).
 func next_item(role := "", level := 0) -> Dictionary:
-	var all_of_role: Array = Session.items.filter(func(it: Dictionary) -> bool:
-		return role == "" or it["role"] == role)
+	var all_of_role: Array = _playable(Session.items.filter(func(it: Dictionary) -> bool:
+		return role == "" or it["role"] == role))
 	if all_of_role.is_empty() and role == "automatisme":
 		# Matière sans automatismes (donjon d'anglais) : la frappe rapide prend une question
 		# du chapitre, un cran plus facile.
@@ -100,10 +100,10 @@ func next_quest_item(quest: String, generator := "", chapters: Array = []) -> Di
 			matching = func(it: Dictionary) -> bool:
 				var chapter: String = str(it["notions"][0]).rsplit(".", true, 1)[0]
 				return it.get("category", "") == "chapitre" and chapter in chapters
-	var candidates: Array = Session.items.filter(matching)
+	var candidates: Array = _playable(Session.items.filter(matching))
 	if candidates.is_empty() and quest != "enquete":
-		candidates = Session.items.filter(func(it: Dictionary) -> bool:
-			return it.get("category", "") == "chapitre")
+		candidates = _playable(Session.items.filter(func(it: Dictionary) -> bool:
+			return it.get("category", "") == "chapitre"))
 	if candidates.is_empty():
 		return {}
 	var pool: Array = candidates.filter(func(it: Dictionary) -> bool: return not _used.has(it["id"]))
@@ -114,6 +114,26 @@ func next_quest_item(quest: String, generator := "", chapters: Array = []) -> Di
 	if quest == "enquete":
 		return _take(pool[0])
 	return _take(_closest(pool, level_for("chapitre")))
+
+
+## « Pas encore vu en classe » : la notion de l'item est mise de côté (plus posée, envoyée au
+## serveur pour le parent) ; renvoie une autre question du même rôle, ou {} s'il n'y en a pas.
+## Rien n'est compté : ni erreur, ni réussite.
+func set_aside(item: Dictionary) -> Dictionary:
+	for code in item.get("notions", []):
+		Session.set_aside_notion(str(code))
+	_used[item["id"]] = true
+	var role := str(item.get("role", ""))
+	var replacement := next_item(role if role in ["automatisme", "chapitre"] else "chapitre")
+	if replacement.is_empty() or Session.is_set_aside(replacement):
+		return {}
+	return replacement
+
+
+## Items jouables : sans les notions mises de côté, sauf s'il ne reste rien d'autre.
+func _playable(items: Array) -> Array:
+	var kept := items.filter(func(it: Dictionary) -> bool: return not Session.is_set_aside(it))
+	return kept if not kept.is_empty() else items
 
 
 ## Valide la réponse, ajuste la difficulté et enregistre la tentative.

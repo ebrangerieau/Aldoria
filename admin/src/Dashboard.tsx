@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { api, type Dashboard as DashboardData, type Profile } from './api'
 import { Indicators } from './Indicators'
+import { NotionAside } from './Program'
 import { Stars } from './Stars'
 
 const STATES = [
@@ -63,6 +64,27 @@ export function Dashboard({ child }: { child: Profile }) {
           )}
         </div>
       </section>
+
+      {d.set_aside_by_child.length > 0 && (
+        <section className="card">
+          <h2>Mises de côté par {child.name}</h2>
+          <p className="muted small">
+            {child.name} a indiqué dans le jeu ne pas encore avoir vu ces notions en classe : elles ne sont plus posées. « C'est
+            exact » les garde de côté (elles quittent cette liste) ; décochez la case pour qu'elles reviennent.
+          </p>
+          <ul className="notions">
+            {d.set_aside_by_child.map((n) => (
+              <li key={n.code}>
+                <span>
+                  {n.label}
+                  <span className="muted small"> · {n.chapter}</span>
+                </span>
+                <NotionAside child={child} notion={{ ...n, set_aside: 'enfant' }} />
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
 
       <section className="card">
         <h2>Dernières sessions</h2>

@@ -842,3 +842,25 @@ button.link {
 .notions-fold[open] summary {
   border-bottom: 1px solid var(--border);
 }
+
+/* Notions pas encore vues en classe (page Programme, tableau de bord). */
+.notion-aside > span:first-child {
+  color: var(--muted);
+}
+.aside-control {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 0.2rem;
+}
+.aside-control label {
+  display: inline-flex;
+  gap: 0.35rem;
+  align-items: center;
+  cursor: pointer;
+}
+.badge.aside-child {
+  background: var(--warn);
+  color: #fff;
+}

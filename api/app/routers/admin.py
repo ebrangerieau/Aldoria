@@ -36,6 +36,7 @@ from app.models import (
     FamilyNotion,
     GameSession,
     Notion,
+    NotionAside,
     NotionState,
     Profile,
     Report,
@@ -86,6 +87,10 @@ class ResetIn(BaseModel):
 
 class NotionDecisionIn(BaseModel):
     in_program: bool
+
+
+class NotionAsideIn(BaseModel):
+    set_aside: bool
 
 
 # --- Routes ---------------------------------------------------------------------------
@@ -382,6 +387,13 @@ async def dashboard(profile_id: int, parent: CurrentParent, db: Db) -> dict[str,
         ),
         key=lambda n: n["mastery"],
     )[:6]
+    # Notions que l'enfant a mises de côté dans le jeu (« Pas encore vu en classe »).
+    child_aside = [
+        {"code": n["code"], "label": n["label"], "chapter": ch["title"]}
+        for ch in chapters
+        for n in ch["notions"]
+        if n["set_aside"] == "enfant"
+    ]
 
     now = datetime.now(UTC)
     start = (now - timedelta(days=DAYS - 1)).date()
@@ -398,6 +410,7 @@ async def dashboard(profile_id: int, parent: CurrentParent, db: Db) -> dict[str,
     return {
         "profile": _profile_out(profile),
         "counts": counts,
+        "set_aside_by_child": child_aside,
         "playable": len(playable),
         "week": await _activity(db, profile.id, now - timedelta(days=7)),
         "days": [{"date": d.isoformat(), "minutes": round(m)} for d, m in minutes.items()],
@@ -457,6 +470,32 @@ async def set_chapter_status(
         "status": status.status,
         "test_date": status.test_date.isoformat() if status.test_date else None,
     }
+
+
+@router.put("/profiles/{profile_id}/notions/{notion_code}")
+async def set_notion_aside(
+    profile_id: int, notion_code: str, body: NotionAsideIn, parent: CurrentParent, db: Db
+) -> dict[str, Any]:
+    """Notion pas encore vue en classe (mise de côté) ou de nouveau proposée à l'enfant."""
+    profile = await _profile(db, profile_id, parent)
+    row = await db.execute(
+        select(Notion, Chapter)
+        .join(Chapter, Notion.chapter_id == Chapter.id)
+        .where(Notion.code == notion_code)
+    )
+    found = row.first()
+    if found is None or found[1].level != profile.level:
+        raise ApiError(404, "unknown_notion", "Notion inconnue pour ce niveau.")
+    notion = found[0]
+    aside = await db.get(NotionAside, (profile.id, notion.id))
+    if body.set_aside and aside is None:
+        db.add(NotionAside(profile_id=profile.id, notion_id=notion.id, source="parent"))
+    elif body.set_aside and aside is not None:
+        aside.source = "parent"  # le parent confirme ce que l'enfant a mis de côté
+    elif aside is not None:
+        await db.delete(aside)
+    await db.commit()
+    return {"code": notion.code, "set_aside": "parent" if body.set_aside else None}
 
 
 @router.get("/notions/to-validate")
