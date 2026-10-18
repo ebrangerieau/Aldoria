@@ -1,0 +1,72 @@
+{
+  "level": "2nde",
+  "subject": {"code": "snt", "label": "Sciences numériques et technologie (SNT)"},
+  "source": "Programme de sciences numériques et technologie de seconde générale et technologique (arrêté du 17 janvier 2019, BO spécial n° 1 du 22 janvier 2019), toujours en vigueur en 2026-2027 : sept thèmes (Internet, le Web, les réseaux sociaux, les données structurées, localisation et cartographie, informatique embarquée et objets connectés, la photographie numérique) et des notions transversales de programmation en Python. Une rénovation (avec de l'intelligence artificielle) est annoncée pour la rentrée 2027.",
+  "chapters": [
+    {
+      "code": "2nde.snt.internet",
+      "title": "Internet",
+      "notions": [
+        {"code": "2nde.snt.internet.protocoles", "label": "Protocoles TCP/IP, paquets et routage"},
+        {"code": "2nde.snt.internet.adresses", "label": "Adresses IP et DNS"},
+        {"code": "2nde.snt.internet.echanges", "label": "Réseaux, débits et neutralité du Net"}
+      ]
+    },
+    {
+      "code": "2nde.snt.web",
+      "title": "Le Web",
+      "notions": [
+        {"code": "2nde.snt.web.html_css", "label": "Pages web : HTML, CSS et hypertexte"},
+        {"code": "2nde.snt.web.http", "label": "URL, HTTP et modèle client-serveur"},
+        {"code": "2nde.snt.web.recherche", "label": "Moteurs de recherche, cookies et droit d'auteur"}
+      ]
+    },
+    {
+      "code": "2nde.snt.reseaux_sociaux",
+      "title": "Les réseaux sociaux",
+      "notions": [
+        {"code": "2nde.snt.reseaux_sociaux.usages", "label": "Modèle économique, confidentialité et cyberviolence"},
+        {"code": "2nde.snt.reseaux_sociaux.graphes", "label": "Graphes : distance, diamètre, rayon et centre"}
+      ]
+    },
+    {
+      "code": "2nde.snt.donnees",
+      "title": "Les données structurées et leur traitement",
+      "notions": [
+        {"code": "2nde.snt.donnees.tables", "label": "Tables de données, descripteurs, tri et filtre"},
+        {"code": "2nde.snt.donnees.enjeux", "label": "Données personnelles, open data, métadonnées et nuage"}
+      ]
+    },
+    {
+      "code": "2nde.snt.localisation",
+      "title": "Localisation, cartographie et mobilité",
+      "notions": [
+        {"code": "2nde.snt.localisation.geolocalisation", "label": "Géolocalisation par satellites"},
+        {"code": "2nde.snt.localisation.itineraires", "label": "Cartes numériques et calcul d'itinéraires"}
+      ]
+    },
+    {
+      "code": "2nde.snt.photo",
+      "title": "La photographie numérique",
+      "notions": [
+        {"code": "2nde.snt.photo.pixels", "label": "Pixels, couleurs et poids d'une image"},
+        {"code": "2nde.snt.photo.traitements", "label": "Algorithmes, métadonnées et retouches"}
+      ]
+    },
+    {
+      "code": "2nde.snt.objets",
+      "title": "Informatique embarquée et objets connectés",
+      "notions": [
+        {"code": "2nde.snt.objets.systemes", "label": "Capteurs, actionneurs et systèmes embarqués"},
+        {"code": "2nde.snt.objets.ihm", "label": "Interfaces homme-machine"}
+      ]
+    },
+    {
+      "code": "2nde.snt.programmation",
+      "title": "Programmation en Python",
+      "notions": [
+        {"code": "2nde.snt.programmation.python", "label": "Variables, conditions, boucles et fonctions"}
+      ]
+    }
+  ]
+}

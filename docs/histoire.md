@@ -65,6 +65,8 @@ une manie et une réplique d'entrée et de défaite. Les boss actuels deviennent
 | *Laboratoire des Inventeurs* (sciences, Jules) | *Le Pétrificateur* | change en pierre tout ce qui vit et mélange les fossiles |
 | *Laboratoire des Inventeurs* (physique-chimie, Tom) | *Le Dissolveur* | fait tout fondre dans son creuset : atomes sans électrons, équations sans coefficients |
 | *Laboratoire des Inventeurs* (physique-chimie, Tom) | *Le Brouilleur* | met du bruit dans les signaux, du flou dans les lentilles, du désordre dans les forces |
+| *Carrefour des Messagers* (SNT, Tom) | *Le Crieur Menteur* | égare les paquets, casse les liens, répand des rumeurs plus vite que la vérité |
+| *Carrefour des Messagers* (SNT, Tom) | *Le Détraqueur* | embrouille les cartes, fausse les capteurs, glisse des erreurs dans les programmes |
 | Portes du Temps (histoire, Tom) | *Le Grand Censeur* | raye les noms des registres : ce qui n'est pas autorisé n'a jamais existé |
 | Portes du Temps (géographie, Tom) | *L'Arpenteur Aveugle* | mesure le monde sans le voir, efface les écarts et les flux |
 
@@ -105,6 +107,7 @@ le brouillard ; il recule à chaque donjon terminé, et un chemin s'éclaire ver
 | *Le Bois des Mots* | français | forêt, théâtre en plein air, fontaines | existe : en 6e, le Moulin des Phrases (langue) puis le Puits aux Contes (lectures) ; en seconde, le Théâtre de Verdure |
 | **Les Portes du Temps** | histoire-géographie (puis sciences) | cercle de pierres avec des portes ouvertes sur une autre époque ou un autre lieu | existe : en 6e, la Porte des Origines (histoire) et la Porte des Horizons (géographie) ; en seconde, la Porte des Empires (histoire) et la Porte des Transitions (géographie) |
 | *Le Laboratoire des Inventeurs* | sciences | tour d'expériences, maison du naturaliste | existe en 6e : la Tour des Expériences (matière, énergie) puis la Maison du Naturaliste (vivant, Terre) ; en seconde, la physique-chimie de Tom y a ses deux lieux : l'Alambic des Éléments (matière, atome, transformations) puis le Laboratoire foudroyé (mouvement, forces, son, lumière, circuits), noms provisoires ; les « portes vers le futur et le laboratoire » imaginées au §6 sont devenues cette région à part, une région par matière |
+| *Le Carrefour des Messagers* | SNT | pont des relais, atelier des automates | existe en seconde, sur la côte sud : le Pont des Paquets (Internet, Web, réseaux sociaux, données) puis l'Atelier des Automates (cartes, photo, objets connectés, programmation) ; noms provisoires |
 | Clairval | révision (toutes matières) | village | existe |
 
 ### Les Portes du Temps (idée de Jules)

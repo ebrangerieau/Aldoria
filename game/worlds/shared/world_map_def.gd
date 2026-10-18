@@ -63,6 +63,12 @@ const REGIONS := {
 		"label": Vector2i(11, 7),
 		"fog": "Dans ce cercle de pierres, chaque porte ouvre sur une autre époque ou un autre lieu du monde. Dame Sablière y a tout mélangé. Ces portes s'ouvriront quand l'histoire-géographie entrera dans ta quête.",
 	},
+	"snt": {
+		"title": "Le Carrefour des Messagers",
+		"slots": [Vector2i(6, 9), Vector2i(9, 9)],
+		"label": Vector2i(8, 9),
+		"fog": "Au Carrefour des Messagers, les nouvelles voyagent de relais en relais, et les automates dessinent les cartes. Il s'ouvrira quand les sciences numériques entreront dans ta quête.",
+	},
 }
 
 ## Matières rangées dans la région d'une autre (une seule classe les a : jamais deux fois le même lieu).

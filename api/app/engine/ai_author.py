@@ -113,6 +113,12 @@ ADVICE = {
     "sciences": "Varie : QCM (vocabulaire, expériences, phénomènes), nombre (conversions, "
     "vitesse = distance ÷ durée), remise en ordre (chaîne alimentaire, cycle de vie, frise du "
     "vivant), vrai/faux justifié ; températures écrites en toutes lettres (« 100 degrés »).",
+    "snt": "Varie : QCM (vocabulaire du réseau, du Web, des données, de la photo, des objets "
+    "connectés), nombre (débit et durée de transfert, distance dans un graphe, poids d'une image, "
+    "valeur d'une variable après un court programme Python), remise en ordre (étapes d'un "
+    "échange) ; tailles en Mo et débits en Mbit/s après un nombre, unité demandée en toutes "
+    "lettres ; code "
+    "Python sur des lignes séparées.",
     "physique_chimie": "Varie : QCM (vocabulaire, phénomènes, expériences), nombre (masse "
     "volumique, concentration, vitesse, P = m × g, loi d'Ohm, f = 1 ÷ T, avec une tolérance si "
     "arrondi), remise en ordre (échelles, sons du grave à l'aigu) ; formules chimiques avec "

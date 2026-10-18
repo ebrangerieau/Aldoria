@@ -460,6 +460,16 @@ générateurs naturels, donc des questions à rédiger.
 > questions d'anglais. Reste : le donjon de français de Tom (après une première série de questions publiées),
 > les Archives regroupées par matière, puis les deux semaines d'observation.
 >
+> ✅ **2026-10-18 : SNT de Tom.** Programme de seconde de 2019 (arrêté du 17 janvier 2019, BO spécial n° 1 du
+> 22 janvier 2019), toujours en vigueur en 2026-2027 (rénovation avec de l'IA annoncée pour 2027, pas encore publiée) :
+> 8 chapitres (les 7 thèmes et la programmation Python), 17 notions. 16 notions à exemples relus ; calculés : durée de
+> transfert et débits, graphes d'un réseau d'amis (distance, diamètre, rayon, centre), table CSV (filtres, tri,
+> maximum), plus court chemin (Dijkstra), pixels et couleurs (définition, poids, négatif, gris), programmes Python
+> (valeur d'une variable, vérifiée en exécutant le programme dans les tests). Lecture à voix haute : Mo, Mbit/s,
+> balises HTML, lignes de code. Nouvelle région sur la côte sud, le Carrefour des Messagers : le Pont des Paquets
+> (énigme « Les Étapes du message », boss le Crieur Menteur) puis l'Atelier des Automates (énigme « Les Panneaux de
+> l'Atelier », boss le Détraqueur). Noms provisoires. Reste : voix enregistrées des 5 nouvelles répliques.
+>
 > ✅ **2026-10-18 : physique-chimie de Tom.** Programme de seconde de 2019 (arrêté du 17 janvier 2019, BO spécial
 > n° 1 du 22 janvier 2019), toujours en vigueur : 8 chapitres, 26 notions (« Constitution et transformations de la
 > matière », « Mouvement et interactions », « Ondes et signaux »). 18 notions à exemples relus ; calculés : masse

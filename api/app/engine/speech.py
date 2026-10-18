@@ -104,6 +104,14 @@ _UNITS = {
     "V": "volts",
     "kΩ": "kilo-ohms",
     "Ω": "ohms",
+    # SNT : tailles et débits.
+    "Mbit/s": "mégabits par seconde",
+    "Gbit/s": "gigabits par seconde",
+    "Mbit": "mégabits",
+    "ko": "kilooctets",
+    "Mo": "mégaoctets",
+    "Go": "gigaoctets",
+    "To": "téraoctets",
 }
 _SUPERSCRIPTS = str.maketrans("⁰¹²³⁴⁵⁶⁷⁸⁹⁻", "0123456789-")
 _SUBSCRIPTS = str.maketrans("₀₁₂₃₄₅₆₇₈₉", "0123456789")
@@ -200,6 +208,18 @@ def _chemistry(line: str) -> str:
     return re.sub(r"\bsin\(", "sinus de (", line)
 
 
+_CODE_LINE = re.compile(r"^\s*(?:[a-z_]\w* = |for |if |else:|while |def |return )")
+
+
+def _code(line: str) -> str:
+    """Ligne d'un programme Python (SNT) : « x - 4 », « b * 3 », « x == 2 » lus en mots."""
+    if not _CODE_LINE.match(line):
+        return line
+    line = re.sub(r"(?<=\w) - (?=\w)", " moins ", line)
+    line = re.sub(r"(?<=\w) \* (?=\w)", " fois ", line)
+    return line.replace(" == ", " est égal à ").replace(" != ", " est différent de ")
+
+
 def text(value: str) -> str:
     """Texte affiché → texte lu."""
     # Unités après un nombre ou des points de suspension : « 9,46 cL » → « 9,46 centilitres ».
@@ -212,9 +232,15 @@ def text(value: str) -> str:
         str(value),
     )
     # Formules et équations chimiques, ligne par ligne (une équation est sur sa propre ligne).
-    out = "\n".join(_chemistry(line) for line in out.split("\n"))
+    out = "\n".join(_code(_chemistry(line)) for line in out.split("\n"))
     # Retours à la ligne (programme du robot…) : une pause à chaque ligne.
     out = re.sub(r"([.?!:;])?\s*\n+\s*", lambda m: (m.group(1) or ".") + " ", out)
+    # Balises HTML (SNT) : « <h1> » → « balise h1 ».
+    out = re.sub(
+        r"<(/?)([a-z][a-z0-9]*)>",
+        lambda m: f" balise {'fermante ' if m.group(1) else ''}{m.group(2)} ",
+        out,
+    )
     # Ensembles de solutions : « S = { −7 ; −1 } » → « l'ensemble formé de −7 et −1 ».
     out = re.sub(
         r"\{\s*([^{}]*?)\s*\}",

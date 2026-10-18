@@ -61,7 +61,7 @@ static func all_for_level(level: String) -> Array[DungeonDef]:
 		"6e":
 			return [tour_fractions(), atelier_balances(), observatoire_angles(), bibliotheque_langues(), porte_origines(), porte_horizons(), moulin_phrases(), puits_contes(), tour_experiences(), maison_naturaliste()]
 		"2nde":
-			return [labyrinthe_vecteurs(), forge_algebre(), citadelle_fonctions(), theatre_verdure(), bibliotheque_engloutie(), port_couronnes(), porte_empires(), porte_transitions(), alambic_elements(), laboratoire_foudroye()]
+			return [labyrinthe_vecteurs(), forge_algebre(), citadelle_fonctions(), theatre_verdure(), bibliotheque_engloutie(), port_couronnes(), porte_empires(), porte_transitions(), alambic_elements(), laboratoire_foudroye(), pont_paquets(), atelier_automates()]
 	return []
 
 
@@ -1150,6 +1150,114 @@ static func laboratoire_foudroye() -> DungeonDef:
 			["barrel_large", Vector3(14.6, 0, 4.6), 0.0, 0.8],
 		],
 		"torch_color": Color(0.85, 0.9, 1.0),
+	}
+	return d
+
+
+# --- Carrefour des Messagers (SNT de Tom) ---------------------------------------------------------
+
+static func pont_paquets() -> DungeonDef:
+	var d := DungeonDef.new()
+	d.code = "pont_paquets"
+	d.boss_intro = "Je suis le Crieur Menteur ! Je mélange les paquets, j'envoie les messages au mauvais destinataire et je répands des rumeurs plus vite que la vérité. Ta page des Messages ? Je l'ai partagée… à l'envers."
+	d.boss_defeat = "Mes rumeurs… plus personne ne les relaie. Chaque paquet retrouve son adresse, chaque page son lien. La vérité arrive toujours, même par un chemin plus long."
+	d.page_text = "La page des Messages se recompose : paquets et routeurs, adresses et noms de domaine, pages et liens, réseaux d'amis et tables de données. Chaque message arrive enfin à bon port."
+	d.map_piece = "building_bridge_A"
+	d.page = "la page des Messages"
+	d.threshold = "Sur la côte sud, au Carrefour des Messagers, un pont relie les relais où passent tous les messages du royaume. Le Crieur Menteur s'y est installé : les paquets s'égarent, les liens mènent nulle part, les rumeurs courent. Rapporte la page des Messages et remets le réseau en ordre."
+	d.title = "Le Pont des Paquets"
+	d.subject = "snt"
+	d.chapter_codes = ["2nde.snt.internet", "2nde.snt.web", "2nde.snt.reseaux_sociaux", "2nde.snt.donnees"]
+	d.chapter_title = "Internet, le Web, les réseaux sociaux et les données"
+	d.intro = "Des messages perdus volent dans les couloirs. Remonte jusqu'à la tour du Crieur Menteur."
+	d.enigma_generator = "2nde.snt.requete"
+	d.enigma_title = "Les Étapes du message"
+	d.enigma_intro = "Le Crieur Menteur a mélangé trois parcours de messages. Remets chaque étape à sa place, de la première à la dernière."
+	d.enigma_xp = 50
+	d.chest_xp = 130
+	d.outro = "Les relais se rallument un à un : chaque message suit de nouveau son chemin."
+	d.rooms = [
+		{"kind": "entree", "title": "Le Relais du Pont"},
+		{"kind": "combat", "title": "La Salle des Routeurs", "enemies": [
+			_enemy("Armabee", "Paquet égaré", 85, 2, 40, Vector2(11, 7)),
+		]},
+		{"kind": "combat", "title": "La Galerie des Liens", "enemies": [
+			_enemy("Ghost", "Lien brisé", 85, 2, 45, Vector2(8, 5)),
+			_enemy("Mushnub", "Rumeur rampante", 90, 3, 45, Vector2(10.5, 14)),
+		]},
+		{"kind": "enigme", "title": "La Salle des Étapes"},
+		{"kind": "combat", "title": "Les Archives des Données", "enemies": [
+			_enemy("GolelingEvolved", "Golem des tables", 130, 4, 60, Vector2(11, 7)),
+		]},
+		{"kind": "boss", "title": "La Tour du Crieur", "enemies": [
+			_enemy("Orc", "Le Crieur Menteur", 240, 5, 170, Vector2(11, 6), 1.4),
+		]},
+	]
+	d.decor = {
+		"floor": "floor_wood_large",
+		"floor_accent": "floor_tile_large",
+		"walls": ["wall_window_open", "wall_shelves"],
+		"banners": ["banner_patternA_blue", "banner_patternB_yellow"],
+		"props": [
+			["crates_stacked", Vector3(2.6, 0, 1.4), -15.0, 0.9],
+			["table_long_decorated_A", Vector3(1.6, 0, 4.2), 90.0, 0.9],
+			["barrel_large", Vector3(13.6, 0, 1.4), 0.0, 0.8],
+			["candle_triple", Vector3(14.6, 0, 4.4), 0.0, 0.3],
+		],
+		"torch_color": Color(1.0, 0.85, 0.6),
+	}
+	return d
+
+
+static func atelier_automates() -> DungeonDef:
+	var d := DungeonDef.new()
+	d.code = "atelier_automates"
+	d.boss_intro = "Je suis le Détraqueur. J'ai embrouillé les cartes, faussé les capteurs, mélangé les pixels et glissé des erreurs dans chaque programme. Tes automates tournent en rond. Et toi, sauras-tu retrouver ton chemin ?"
+	d.boss_defeat = "Mes rouages… se remettent à tourner rond. Les cartes indiquent le bon chemin, les capteurs mesurent juste, les programmes s'exécutent sans erreur. Bien calculé, Archiviste."
+	d.page_text = "La page des Automates se rallume : satellites et cartes, itinéraires, pixels et couleurs, capteurs et actionneurs, programmes bien écrits. Les machines de l'atelier obéissent de nouveau."
+	d.map_piece = "building_home_B_yellow"
+	d.page = "la page des Automates"
+	d.threshold = "Un peu plus loin sur la côte, l'Atelier des Automates cliquette jour et nuit : on y dessine les cartes, on y développe les images et on y programme des machines. Le Détraqueur a tout déréglé. Rapporte la page des Automates."
+	d.title = "L'Atelier des Automates"
+	d.subject = "snt"
+	d.chapter_codes = ["2nde.snt.localisation", "2nde.snt.photo", "2nde.snt.objets", "2nde.snt.programmation"]
+	d.chapter_title = "Cartes, photos, objets connectés et programmation"
+	d.intro = "Les automates s'agitent sans but. Traverse l'atelier jusqu'à l'établi du Détraqueur."
+	d.enigma_generator = "2nde.snt.destinations"
+	d.enigma_title = "Les Panneaux de l'Atelier"
+	d.enigma_intro = "Le Détraqueur a mélangé les panneaux de trois carrefours. Calcule les plus courts chemins et range les villes de la plus proche à la plus lointaine."
+	d.enigma_xp = 50
+	d.chest_xp = 130
+	d.outro = "Le cliquetis s'apaise : chaque automate a retrouvé son programme."
+	d.rooms = [
+		{"kind": "entree", "title": "L'Établi d'entrée"},
+		{"kind": "combat", "title": "La Salle des Cartes", "enemies": [
+			_enemy("Goleling", "Golem boussole", 85, 2, 40, Vector2(11, 7)),
+		]},
+		{"kind": "combat", "title": "Le Laboratoire photo", "enemies": [
+			_enemy("GhostSkull", "Spectre pixelisé", 90, 3, 45, Vector2(8, 5)),
+			_enemy("Cactoro", "Cactus à capteurs", 90, 3, 45, Vector2(10.5, 14)),
+		]},
+		{"kind": "enigme", "title": "La Salle des Panneaux"},
+		{"kind": "combat", "title": "L'Atelier des Programmes", "enemies": [
+			_enemy("MushnubEvolved", "Champignon en boucle", 130, 4, 60, Vector2(11, 7)),
+		]},
+		{"kind": "boss", "title": "L'Établi du Détraqueur", "enemies": [
+			_enemy("GolelingEvolved", "Le Détraqueur", 240, 5, 170, Vector2(11, 6), 1.45),
+		]},
+	]
+	d.decor = {
+		"floor": "floor_wood_large_dark",
+		"floor_accent": "floor_tile_large",
+		"walls": ["wall_shelves", "wall"],
+		"banners": ["banner_patternC_white", "banner_patternB_green"],
+		"props": [
+			["table_medium_decorated_A", Vector3(2.4, 0, 1.4), 0.0, 0.9],
+			["shelf_small_candles", Vector3(1.4, 0, 4.0), 90.0, 0.6],
+			["trunk_large_A", Vector3(13.6, 0, 1.4), 0.0, 0.8],
+			["crates_stacked", Vector3(14.6, 0, 4.4), -20.0, 0.9],
+		],
+		"torch_color": Color(1.0, 0.9, 0.7),
 	}
 	return d
 

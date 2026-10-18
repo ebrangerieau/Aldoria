@@ -103,6 +103,12 @@
   },
   {
     "groupe": "carte",
+    "id": "brouillard-snt",
+    "texte": "Au Carrefour des Messagers, les nouvelles voyagent de relais en relais, et les automates dessinent les cartes. Il s'ouvrira quand les sciences numériques entreront dans ta quête.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
     "id": "secret-tour_oubli",
     "texte": "Là-bas se dresse la Tour de l'Oubli, le repaire de Malvrek, l'Archiviste déchu. Elle ne s'ouvrira que lorsque tu auras repris assez de pages et vraiment appris ce qu'elles contiennent.",
     "voix": "ysaline"
@@ -231,6 +237,30 @@
     "groupe": "carte",
     "id": "page-laboratoire_foudroye",
     "texte": "Tu as rapporté la page des Ondes et des Forces ! Elle a repris sa place dans la Grande Chronique. Toutes les pages de la région « Le Laboratoire des Inventeurs » sont revenues. Malvrek doit trembler dans sa tour !",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-pont_paquets",
+    "texte": "Sur la côte sud, au Carrefour des Messagers, un pont relie les relais où passent tous les messages du royaume. Le Crieur Menteur s'y est installé : les paquets s'égarent, les liens mènent nulle part, les rumeurs courent. Rapporte la page des Messages et remets le réseau en ordre.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-pont_paquets",
+    "texte": "Tu as rapporté la page des Messages ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « L'Atelier des Automates » s'éclaire sur la carte.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-atelier_automates",
+    "texte": "Un peu plus loin sur la côte, l'Atelier des Automates cliquette jour et nuit : on y dessine les cartes, on y développe les images et on y programme des machines. Le Détraqueur a tout déréglé. Rapporte la page des Automates.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-atelier_automates",
+    "texte": "Tu as rapporté la page des Automates ! Elle a repris sa place dans la Grande Chronique. Toutes les pages de la région « Le Carrefour des Messagers » sont revenues. Malvrek doit trembler dans sa tour !",
     "voix": "ysaline"
   },
   {

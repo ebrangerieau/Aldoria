@@ -102,6 +102,22 @@ func test_tom_physics_chemistry_lives_in_the_laboratory() -> void:
 	assert_string_contains(WorldMapDef.page_greeting(lab, 1), "Laboratoire des Inventeurs")
 
 
+func test_every_place_has_its_own_land_cell() -> void:
+	var cells := [WorldMapDef.CITADEL, WorldMapDef.VILLAGE]
+	for subject in WorldMapDef.REGIONS:
+		cells.append_array(WorldMapDef.REGIONS[subject]["slots"])
+	for id in WorldMapDef.SECRETS:
+		cells.append(WorldMapDef.SECRETS[id]["cell"])
+	for cell: Vector2i in cells:
+		assert_eq(cells.count(cell), 1, "deux lieux sur %s" % cell)
+		assert_ne(WorldMapDef.terrain(cell), "~", "lieu dans l'eau : %s" % cell)
+	var snt: Array[DungeonDef] = []
+	for d in DungeonDef.all_for_level("2nde"):
+		if d.subject == "snt":
+			snt.append(d)
+	assert_eq(snt.map(func(d: DungeonDef) -> String: return d.code), ["pont_paquets", "atelier_automates"])
+
+
 func test_map_titles_drop_their_article() -> void:
 	assert_eq(_short("La Tour des Fractions"), "Tour des Fractions")
 	assert_eq(_short("L'Atelier des Balances"), "Atelier des Balances")
