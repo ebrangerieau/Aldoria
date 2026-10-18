@@ -128,6 +128,11 @@ ADVICE = {
     "indices "
     "(H₂O) et charges (Ca²⁺), équations avec ⟶ ; unité demandée en toutes lettres, températures "
     "en toutes lettres.",
+    "emc": "Varie : QCM (vocabulaire civique, situations de la vie de classe ou en ligne, "
+    "textes de référence), nombre (voix nécessaires pour la majorité absolue), remise en "
+    "ordre (échelons de la représentation, frise des droits), vrai/faux justifié ; une "
+    "situation concrète plutôt qu'une définition ; citations exactes (Déclaration des droits "
+    "de l'homme, loi de 1905), jamais d'opinion politique ni religieuse.",
     "histoire_geo": "Varie : QCM (dates, personnages, vocabulaire), remise en ordre (frise "
     "chronologique), vrai/faux justifié ; dates des manuels, « vers » si approximative, "
     "« av. J.-C. » écrit ainsi.",

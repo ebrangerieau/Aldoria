@@ -271,7 +271,9 @@ def text(value: str) -> str:
     out = re.sub(r"([\[\]])\s*([^;\[\]]+?)\s*;\s*([^;\[\]]+?)\s*([\[\]])", _interval, out)
     # Siècles en chiffres romains : « IVe siècle av. J.-C. » → « quatrième siècle avant J.-C. »,
     # lu ensuite « avant Jésus-Christ ».
-    out = re.sub(r"\b([IVXL]+)(er|e) (siècles?|millénaires?)\b", _century, out)
+    out = re.sub(r"\b([IVXL]+)(er|e) (siècles?|millénaires?|République)\b", _century, out)
+    # Numéro contre le cyberharcèlement (EMC), dit « trente dix-huit ».
+    out = re.sub(r"\b3018\b", "trente dix-huit", out)
     out = re.sub(r"\bav\. J\.-C\.", "avant Jésus-Christ", out)
     out = re.sub(r"\b(?:apr\.|après) J\.-C\.", "après Jésus-Christ", out)
     # Vitesse sans nombre devant : « en km/h ? » → « en kilomètres par heure ? ».

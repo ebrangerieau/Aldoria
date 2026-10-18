@@ -52,6 +52,8 @@ func test_places_follow_the_class_and_progress() -> void:
 	assert_eq(_place("puits_contes")["status"], "locked", "le Puits s'ouvre après le Moulin")
 	assert_eq(_place("tour_experiences")["status"], "open", "le Laboratoire des Inventeurs : la Tour est ouverte")
 	assert_eq(_place("maison_naturaliste")["status"], "locked", "la Maison s'ouvre après la Tour")
+	assert_eq(_place("tribune_conseil")["status"], "open", "le Forum des Citoyens : la Tribune est ouverte")
+	assert_eq(_place("palais_libertes")["status"], "locked", "le Palais s'ouvre après la Tribune")
 	assert_eq(_place("tour_oubli")["status"], "fog")
 	assert_eq(_place("porte_origines")["status"], "open", "les Portes du Temps : la première porte est ouverte")
 	assert_eq(_place("porte_horizons")["status"], "locked", "la deuxième s'ouvre après la première")
@@ -59,7 +61,7 @@ func test_places_follow_the_class_and_progress() -> void:
 	await _open()
 	assert_eq(_place("tour_fractions")["status"], "done")
 	assert_eq(_place("atelier_balances")["status"], "open")
-	assert_eq((_scene._badge as HeroBadge).pages_text(), "Pages de la Chronique : 1 / 10")
+	assert_eq((_scene._badge as HeroBadge).pages_text(), "Pages de la Chronique : 1 / 12")
 
 
 func test_dungeons_sit_in_their_region() -> void:

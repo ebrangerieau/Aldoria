@@ -63,6 +63,12 @@ const REGIONS := {
 		"label": Vector2i(11, 7),
 		"fog": "Dans ce cercle de pierres, chaque porte ouvre sur une autre époque ou un autre lieu du monde. Dame Sablière y a tout mélangé. Ces portes s'ouvriront quand l'histoire-géographie entrera dans ta quête.",
 	},
+	"emc": {
+		"title": "Le Forum des Citoyens",
+		"slots": [Vector2i(8, 6), Vector2i(7, 7), Vector2i(9, 5)],
+		"label": Vector2i(8, 7),
+		"fog": "Près de la Citadelle, le Forum des Citoyens attend ses débats. On y vote, on y défend ses droits et ceux des autres. Il s'ouvrira quand l'enseignement moral et civique entrera dans ta quête.",
+	},
 	"snt": {
 		"title": "Le Carrefour des Messagers",
 		"slots": [Vector2i(6, 9), Vector2i(9, 9)],

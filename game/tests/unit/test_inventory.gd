@@ -57,7 +57,9 @@ func test_feather_removes_two_wrong_choices_and_keeps_full_power() -> void:
 	assert_false(panel.penalized_hint(), "pas de baisse de puissance")
 	watch_signals(panel)
 	panel._on_submitted(1)
-	assert_signal_emitted_with_parameters(panel, "answered", [1, panel.elapsed_ms(), true])
+	var params: Array = get_signal_parameters(panel, "answered")
+	assert_eq(params[0], 1)
+	assert_eq(params[2], true)  # le temps (params[1]) peut avoir avancé d'une milliseconde
 
 
 func test_daily_challenge_offers_no_items() -> void:

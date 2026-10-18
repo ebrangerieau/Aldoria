@@ -103,6 +103,12 @@
   },
   {
     "groupe": "carte",
+    "id": "brouillard-emc",
+    "texte": "Près de la Citadelle, le Forum des Citoyens attend ses débats. On y vote, on y défend ses droits et ceux des autres. Il s'ouvrira quand l'enseignement moral et civique entrera dans ta quête.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
     "id": "brouillard-snt",
     "texte": "Au Carrefour des Messagers, les nouvelles voyagent de relais en relais, et les automates dessinent les cartes. Il s'ouvrira quand les sciences numériques entreront dans ta quête.",
     "voix": "ysaline"
@@ -399,6 +405,30 @@
     "groupe": "carte",
     "id": "page-maison_naturaliste",
     "texte": "Tu as rapporté la page du Vivant ! Elle a repris sa place dans la Grande Chronique. Toutes les pages de la région « Le Laboratoire des Inventeurs » sont revenues. Malvrek doit trembler dans sa tour !",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-tribune_conseil",
+    "texte": "Sur le Forum des Citoyens se dresse la Tribune du Conseil. Les habitants y venaient débattre, voter et choisir ceux qui parlent en leur nom. Le Voleur de Voix a vidé les urnes : maintenant, il décide de tout, tout seul. Rapporte la page du Conseil pour que chacun retrouve sa voix.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-tribune_conseil",
+    "texte": "Tu as rapporté la page du Conseil ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « Le Palais des Libertés » s'éclaire sur la carte.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-palais_libertes",
+    "texte": "Un peu plus loin sur le Forum, le Palais des Libertés garde les textes qui protègent chacun : liberté de conscience, laïcité, vie privée. Le Fouineur s'y est glissé : il ouvre les tiroirs, lit les secrets et veut que tout le monde pense comme lui. Rapporte la page des Libertés.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-palais_libertes",
+    "texte": "Tu as rapporté la page des Libertés ! Elle a repris sa place dans la Grande Chronique. Toutes les pages de la région « Le Forum des Citoyens » sont revenues. Malvrek doit trembler dans sa tour !",
     "voix": "ysaline"
   }
 ]

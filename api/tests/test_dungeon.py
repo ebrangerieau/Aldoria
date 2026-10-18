@@ -242,7 +242,7 @@ def test_game_dungeons_match_curriculum_and_generators():
         source,
         re.S,
     )
-    assert len(dungeons) == 23
+    assert len(dungeons) == 25
     for code, chapter_list, enigma in dungeons:
         codes = re.findall(r'"([\w.]+)"', chapter_list)
         levels = {chapters[c] for c in codes}  # KeyError : chapitre absent du programme
@@ -487,5 +487,30 @@ async def test_tom_spanish_dungeon(client, login, curriculum):
     items = body["items"]
     assert len(items) > 20
     assert all(i["notions"][0].startswith("2nde.espagnol.") for i in items)
+    enigma = [i for i in items if i["role"] == "enigme"]
+    assert len(enigma) == 6 and all(i["type"] == "order" for i in enigma)
+
+
+@pytest.mark.parametrize(
+    ("chapters", "enigma_code"),
+    [(["representer"], "6e.emc.echelons"), (["laicite", "vie_privee"], "6e.emc.frise")],
+)
+async def test_jules_civics_dungeons(client, login, curriculum, chapters, enigma_code):
+    """Tribune du Conseil et Palais des Libertés : EMC de 6e seulement."""
+    headers = await login("jules", "1234")
+    body = (
+        await client.post(
+            f"{API}/session/start",
+            json={
+                "mode": "donjon",
+                "focus_chapters": [f"6e.emc.{c}" for c in chapters],
+                "enigma": {"generator": enigma_code, "count": 6},
+            },
+            headers=headers,
+        )
+    ).json()
+    items = body["items"]
+    assert len(items) > 20
+    assert all(i["notions"][0].startswith("6e.emc.") for i in items)
     enigma = [i for i in items if i["role"] == "enigme"]
     assert len(enigma) == 6 and all(i["type"] == "order" for i in enigma)

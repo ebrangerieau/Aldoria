@@ -1,0 +1,25 @@
+{
+  "level": "6e",
+  "subject": {"code": "emc", "label": "Enseignement moral et civique"},
+  "source": "Programme d'enseignement moral et civique de l'école et du collège (arrêté du 29 mai 2024, BO n° 24 du 13 juin 2024), en vigueur en 6e à la rentrée 2026 : trois thèmes annuels (représenter les autres et servir l'intérêt général ; respecter des règles et en comprendre la finalité, la laïcité à l'école ; avoir des droits et respecter ceux des autres, la vie privée). Questions : générateurs (api/app/engine/generators/emc_6e.py), complétés par la banque.",
+  "chapters": [
+    {"code": "6e.emc.representer", "title": "Représenter les autres et servir l'intérêt général", "notions": [
+      {"code": "6e.emc.representer.interet_general", "label": "Intérêt général et intérêts particuliers"},
+      {"code": "6e.emc.representer.vote", "label": "Voter : pourquoi et comment, l'élection des délégués"},
+      {"code": "6e.emc.representer.representants", "label": "Les représentants, de la classe au Parlement européen"},
+      {"code": "6e.emc.representer.services", "label": "À quoi servent les représentants : services publics, développement durable"}
+    ]},
+    {"code": "6e.emc.laicite", "title": "Respecter des règles : la laïcité à l'école", "notions": [
+      {"code": "6e.emc.laicite.regles", "label": "Règles, lois et leur finalité"},
+      {"code": "6e.emc.laicite.liberte_conscience", "label": "La liberté de conscience"},
+      {"code": "6e.emc.laicite.principe", "label": "La laïcité : loi de 1905, neutralité de l'État, libre exercice des cultes"},
+      {"code": "6e.emc.laicite.ecole", "label": "La laïcité à l'école : loi de 2004, Charte de la laïcité, sphères publique et privée"}
+    ]},
+    {"code": "6e.emc.vie_privee", "title": "Avoir des droits et respecter ceux des autres : la vie privée", "notions": [
+      {"code": "6e.emc.vie_privee.droits", "label": "Les droits de l'enfant et les textes qui les protègent"},
+      {"code": "6e.emc.vie_privee.intimite", "label": "Intimité et droit à l'image"},
+      {"code": "6e.emc.vie_privee.numerique", "label": "Données personnelles, traces numériques et majorité numérique"},
+      {"code": "6e.emc.vie_privee.harcelement", "label": "Cyberharcèlement, désinformation et responsabilité"}
+    ]}
+  ]
+}

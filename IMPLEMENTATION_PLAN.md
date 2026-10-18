@@ -460,6 +460,15 @@ générateurs naturels, donc des questions à rédiger.
 > questions d'anglais. Reste : le donjon de français de Tom (après une première série de questions publiées),
 > les Archives regroupées par matière, puis les deux semaines d'observation.
 >
+> ✅ **2026-10-18 : EMC de Jules.** Nouveau programme d'EMC (arrêté du 29 mai 2024, BO n° 24 du 13 juin 2024), en
+> vigueur en 6e à la rentrée 2026 : 3 chapitres (thèmes annuels), 12 notions (intérêt général, vote, représentants,
+> services publics ; règles, liberté de conscience, loi de 1905, laïcité à l'école ; droits de l'enfant, droit à l'image,
+> données personnelles et majorité numérique, cyberharcèlement et désinformation). Exemples relus ; calculés : élection
+> des délégués (majorité absolue des suffrages exprimés, bulletins blancs, second tour), échelons de la représentation,
+> frise des droits. Nouvelle région au centre, le Forum des Citoyens : la Tribune du Conseil (boss le Voleur de Voix)
+> puis le Palais des Libertés (boss le Fouineur). Lecture : « Ve République », « 3018 ». Noms provisoires. Reste : 5
+> répliques à enregistrer (ElevenLabs).
+>
 > ✅ **2026-10-18 : espagnol de Tom (LVB).** Programme d'espagnol du lycée (arrêté du 5 mai 2025, BO n° 22 du 29 mai
 > 2025), en vigueur en seconde depuis la rentrée 2025, niveau visé A2+ en LVB (faits de langue B1+ non posés) : 5
 > chapitres, 28 notions (verbe, phrase, groupe nominal, lexique des six axes, repères culturels). 20 notions à exemples

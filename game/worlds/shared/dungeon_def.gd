@@ -59,7 +59,7 @@ const SUBJECT_LABELS := {"maths": "Maths", "anglais": "Anglais", "francais": "Fr
 static func all_for_level(level: String) -> Array[DungeonDef]:
 	match level:
 		"6e":
-			return [tour_fractions(), atelier_balances(), observatoire_angles(), bibliotheque_langues(), porte_origines(), porte_horizons(), moulin_phrases(), puits_contes(), tour_experiences(), maison_naturaliste()]
+			return [tour_fractions(), atelier_balances(), observatoire_angles(), bibliotheque_langues(), porte_origines(), porte_horizons(), moulin_phrases(), puits_contes(), tour_experiences(), maison_naturaliste(), tribune_conseil(), palais_libertes()]
 		"2nde":
 			return [labyrinthe_vecteurs(), forge_algebre(), citadelle_fonctions(), theatre_verdure(), bibliotheque_engloutie(), port_couronnes(), porte_empires(), porte_transitions(), alambic_elements(), laboratoire_foudroye(), pont_paquets(), atelier_automates(), moulin_mancha()]
 	return []
@@ -628,6 +628,114 @@ static func maison_naturaliste() -> DungeonDef:
 			["table_medium_decorated_A", Vector3(12.0, 0, 1.6), 0.0, 0.9],
 		],
 		"torch_color": Color(0.75, 1.0, 0.7),
+	}
+	return d
+
+
+# --- Forum des Citoyens (EMC de Jules) ---------------------------------------------------------
+
+static func tribune_conseil() -> DungeonDef:
+	var d := DungeonDef.new()
+	d.code = "tribune_conseil"
+	d.boss_intro = "Silence ! Je suis le Voleur de Voix. J'ai vidé les urnes et rangé tous les bulletins dans ma poche. Pourquoi voter ? Je décide tout seul, pour moi seul. Ta page du Conseil, je l'ai déjà votée : elle est à moi !"
+	d.boss_defeat = "Mes poches se vident… Les bulletins s'envolent vers les urnes, et chacun retrouve sa voix. Bon, d'accord : vous êtes plus nombreux que moi."
+	d.page_text = "La page du Conseil revient : on y lit pourquoi l'on vote, ce que fait un délégué, qui décide de la commune jusqu'à l'Europe, et que l'intérêt général pense à tous, même à ceux qui ne sont pas encore nés."
+	d.map_piece = "building_stage_A"
+	d.page = "la page du Conseil"
+	d.threshold = "Sur le Forum des Citoyens se dresse la Tribune du Conseil. Les habitants y venaient débattre, voter et choisir ceux qui parlent en leur nom. Le Voleur de Voix a vidé les urnes : maintenant, il décide de tout, tout seul. Rapporte la page du Conseil pour que chacun retrouve sa voix."
+	d.title = "La Tribune du Conseil"
+	d.subject = "emc"
+	d.chapter_codes = ["6e.emc.representer"]
+	d.chapter_title = "L'intérêt général, le vote et les représentants"
+	d.intro = "Les urnes sont vides et les bancs déserts. Monte jusqu'au Voleur de Voix."
+	d.enigma_generator = "6e.emc.echelons"
+	d.enigma_title = "Les Échelons du Conseil"
+	d.enigma_intro = "Le Voleur de Voix a mélangé les échelons du Conseil. Range-les, de la classe jusqu'à l'Europe."
+	d.enigma_xp = 45
+	d.chest_xp = 120
+	d.outro = "Les bancs de la Tribune se remplissent : on débat, on vote, on s'écoute."
+	d.rooms = [
+		{"kind": "entree", "title": "Le Parvis des Urnes"},
+		{"kind": "combat", "title": "La Salle des Bulletins", "enemies": [
+			_enemy("GreenBlob", "Gelée qui vote deux fois", 60, 1, 30, Vector2(11, 7)),
+		]},
+		{"kind": "combat", "title": "Les Bancs du Conseil", "enemies": [
+			_enemy("Mushnub", "Champignon qui coupe la parole", 75, 2, 35, Vector2(8, 5)),
+			_enemy("Armabee", "Bourdon braillard", 75, 2, 35, Vector2(10.5, 14)),
+		]},
+		{"kind": "enigme", "title": "L'Escalier des Échelons"},
+		{"kind": "combat", "title": "La Galerie des Élus", "enemies": [
+			_enemy("Goleling", "Golem sans écharpe", 110, 3, 50, Vector2(11, 7)),
+		]},
+		{"kind": "boss", "title": "Le Balcon de la Tribune", "enemies": [
+			_enemy("Demon", "Le Voleur de Voix", 210, 4, 155, Vector2(11, 6), 1.1),
+		]},
+	]
+	d.decor = {
+		"floor": "floor_wood_large",
+		"floor_accent": "floor_tile_large",
+		"walls": ["wall_arched", "wall_window_open"],
+		"banners": ["banner_patternA_blue", "banner_patternC_white", "banner_patternA_red"],
+		"props": [
+			["table_long_decorated_A", Vector3(2.4, 0, 1.4), 0.0, 1.0],
+			["crates_stacked", Vector3(1.4, 0, 4.0), 20.0, 0.8],
+			["barrel_large", Vector3(13.6, 0, 1.4), 0.0, 0.8],
+			["chest_gold", Vector3(14.6, 0, 4.6), -90.0, 0.8],
+		],
+		"torch_color": Color(1.0, 0.9, 0.7),
+	}
+	return d
+
+
+static func palais_libertes() -> DungeonDef:
+	var d := DungeonDef.new()
+	d.code = "palais_libertes"
+	d.boss_intro = "Hé hé… Je suis le Fouineur. Je lis les journaux intimes, je publie les photos sans demander, et je voudrais que tout le monde pense exactement comme moi. Tes secrets, ta page, tout m'appartient !"
+	d.boss_defeat = "Aïe ! Toutes les portes se referment sur mon nez… Les secrets restent secrets, et chacun pense librement. Je n'ai plus rien à fouiller."
+	d.page_text = "La page des Libertés se déplie : la liberté de croire ou de ne pas croire, la laïcité qui protège chacun à l'école, le droit à l'image, les données personnelles et le respect de la vie privée de tous."
+	d.map_piece = "building_castle_red"
+	d.page = "la page des Libertés"
+	d.threshold = "Un peu plus loin sur le Forum, le Palais des Libertés garde les textes qui protègent chacun : liberté de conscience, laïcité, vie privée. Le Fouineur s'y est glissé : il ouvre les tiroirs, lit les secrets et veut que tout le monde pense comme lui. Rapporte la page des Libertés."
+	d.title = "Le Palais des Libertés"
+	d.subject = "emc"
+	d.chapter_codes = ["6e.emc.laicite", "6e.emc.vie_privee"]
+	d.chapter_title = "La laïcité à l'école, les droits et la vie privée"
+	d.intro = "Les tiroirs sont ouverts, les secrets éparpillés. Traverse le palais jusqu'au Fouineur."
+	d.enigma_generator = "6e.emc.frise"
+	d.enigma_title = "La Frise des Droits"
+	d.enigma_intro = "Le Fouineur a mélangé les archives du palais. Remets ces textes et ces droits dans l'ordre, du plus ancien au plus récent."
+	d.enigma_xp = 45
+	d.chest_xp = 120
+	d.outro = "Les tiroirs se referment : chacun garde ses secrets et pense librement."
+	d.rooms = [
+		{"kind": "entree", "title": "Le Vestibule des Chartes"},
+		{"kind": "combat", "title": "La Salle des Croyances", "enemies": [
+			_enemy("Mushnub", "Champignon qui impose son avis", 60, 1, 30, Vector2(11, 7)),
+		]},
+		{"kind": "combat", "title": "Le Couloir des Portraits", "enemies": [
+			_enemy("Armabee", "Abeille paparazzi", 75, 2, 35, Vector2(8, 5)),
+			_enemy("GreenBlob", "Gelée qui colle aux écrans", 75, 2, 35, Vector2(10.5, 14)),
+		]},
+		{"kind": "enigme", "title": "La Salle des Archives"},
+		{"kind": "combat", "title": "Le Cabinet des Secrets", "enemies": [
+			_enemy("GhostSkull", "Spectre des rumeurs", 110, 3, 50, Vector2(11, 7)),
+		]},
+		{"kind": "boss", "title": "La Tour des Serrures", "enemies": [
+			_enemy("Ghost", "Le Fouineur", 210, 4, 155, Vector2(11, 6), 1.3),
+		]},
+	]
+	d.decor = {
+		"floor": "floor_tile_large",
+		"floor_accent": "floor_wood_large_dark",
+		"walls": ["wall_shelves", "wall_arched"],
+		"banners": ["banner_patternC_blue", "banner_shield_red"],
+		"props": [
+			["shelf_large", Vector3(1.4, 0, 4.0), 90.0, 0.9],
+			["trunk_large_A", Vector3(2.6, 0, 1.4), 0.0, 0.8],
+			["candle_triple", Vector3(13.2, 0, 1.0), 0.0, 0.3],
+			["table_medium_decorated_A", Vector3(12.0, 0, 1.6), 0.0, 0.9],
+		],
+		"torch_color": Color(0.95, 0.85, 1.0),
 	}
 	return d
 

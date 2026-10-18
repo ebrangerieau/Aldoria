@@ -68,6 +68,8 @@ une manie et une réplique d'entrée et de défaite. Les boss actuels deviennent
 | *Carrefour des Messagers* (SNT, Tom) | *Le Crieur Menteur* | égare les paquets, casse les liens, répand des rumeurs plus vite que la vérité |
 | *Carrefour des Messagers* (SNT, Tom) | *Le Détraqueur* | embrouille les cartes, fausse les capteurs, glisse des erreurs dans les programmes |
 | *Bibliothèque des Langues* (espagnol, Tom) | *L'Enredador* | « celui qui emmêle » : noue les verbes, retourne les points d'interrogation, brouille les accents |
+| *Forum des Citoyens* (EMC, Jules) | *Le Voleur de Voix* | vide les urnes et décide de tout, tout seul |
+| *Forum des Citoyens* (EMC, Jules) | *Le Fouineur* | lit les secrets, publie les photos sans demander, veut que tous pensent comme lui |
 | Portes du Temps (histoire, Tom) | *Le Grand Censeur* | raye les noms des registres : ce qui n'est pas autorisé n'a jamais existé |
 | Portes du Temps (géographie, Tom) | *L'Arpenteur Aveugle* | mesure le monde sans le voir, efface les écarts et les flux |
 
@@ -109,6 +111,7 @@ le brouillard ; il recule à chaque donjon terminé, et un chemin s'éclaire ver
 | **Les Portes du Temps** | histoire-géographie (puis sciences) | cercle de pierres avec des portes ouvertes sur une autre époque ou un autre lieu | existe : en 6e, la Porte des Origines (histoire) et la Porte des Horizons (géographie) ; en seconde, la Porte des Empires (histoire) et la Porte des Transitions (géographie) |
 | *Le Laboratoire des Inventeurs* | sciences | tour d'expériences, maison du naturaliste | existe en 6e : la Tour des Expériences (matière, énergie) puis la Maison du Naturaliste (vivant, Terre) ; en seconde, la physique-chimie de Tom y a ses deux lieux : l'Alambic des Éléments (matière, atome, transformations) puis le Laboratoire foudroyé (mouvement, forces, son, lumière, circuits), noms provisoires ; les « portes vers le futur et le laboratoire » imaginées au §6 sont devenues cette région à part, une région par matière |
 | *Le Carrefour des Messagers* | SNT | pont des relais, atelier des automates | existe en seconde, sur la côte sud : le Pont des Paquets (Internet, Web, réseaux sociaux, données) puis l'Atelier des Automates (cartes, photo, objets connectés, programmation) ; noms provisoires |
+| *Le Forum des Citoyens* | EMC | tribune, palais des libertés | existe en 6e, au centre près de la Citadelle : la Tribune du Conseil (intérêt général, vote, représentants) puis le Palais des Libertés (laïcité, vie privée) ; noms provisoires ; une troisième place attend l'EMC de Tom |
 | Clairval | révision (toutes matières) | village | existe |
 
 ### Les Portes du Temps (idée de Jules)
