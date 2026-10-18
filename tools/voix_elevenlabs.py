@@ -9,6 +9,11 @@ prochaine génération. tools/postprocess_web.py copie deploy/voix/ dans l'expor
 Ne génère que ce qui manque ou a changé (texte, voix, modèle) ; retire les sons des textes
 disparus. Seul le texte de l'histoire part chez ElevenLabs : aucune donnée d'enfant.
 
+Volume : ElevenLabs rend des voix bien plus faibles que la voix du serveur (Piper, environ
+-16 LUFS ; Maître Ysaline sortait vers -31). Chaque son est donc ramené à LOUDNESS par ffmpeg
+(gain mesuré, puis limiteur doux : crêtes sous -2 dB après encodage) ; le manifeste note le niveau atteint
+(« niveau »). Sans ffmpeg, le son reste tel quel et sera ajusté au passage suivant.
+
 Variables d'environnement (jamais dans le dépôt ; avec PowerShell, `$env:…` ne dure que le temps
 de la fenêtre) :
   ELEVENLABS_API_KEY          clé de l'API (toujours nécessaire pour générer)
@@ -23,7 +28,8 @@ Usage :
   python tools/voix_elevenlabs.py --voix              voix du compte (nom, identifiant)
   python tools/voix_elevenlabs.py --exemple ysaline   une réplique d'essai (dossier temporaire)
   python tools/voix_elevenlabs.py [--groupe prologue|carte|tout]
-Bibliothèque standard uniquement.
+  python tools/voix_elevenlabs.py --niveau            ajuste le volume des sons déjà générés
+Bibliothèque standard uniquement (et ffmpeg pour le volume).
 """
 
 from __future__ import annotations
@@ -32,6 +38,9 @@ import argparse
 import hashlib
 import json
 import os
+import re
+import shutil
+import subprocess
 import sys
 import tempfile
 import urllib.error
@@ -46,6 +55,32 @@ API = "https://api.elevenlabs.io/v1"
 FORMAT = "mp3_44100_64"  # voix seule : 64 kbit/s suffisent (≈ 0,5 Mo par minute)
 DEFAULT_MODEL = "eleven_multilingual_v2"
 VOICE_ENV = {"narrateur": "ELEVENLABS_VOIX_NARRATEUR", "ysaline": "ELEVENLABS_VOIX_YSALINE"}
+LOUDNESS = -16.0  # LUFS : niveau de la voix du serveur (Piper), mesuré le 2026-10-18
+PEAK_LIMIT = -4.5  # dBFS au limiteur : l'encodage MP3 à 64 kbit/s remonte les crêtes d'environ 2 dB
+
+
+def normalize(path: Path) -> bool:
+    """Ramène le son à LOUDNESS : gain mesuré (loudnorm), puis limiteur doux à PEAK_LIMIT pour que
+    les crêtes, rares dans une voix, ne saturent pas. Faux si ffmpeg est absent."""
+    if shutil.which("ffmpeg") is None:
+        return False
+    measure = subprocess.run(
+        ["ffmpeg", "-hide_banner", "-nostats", "-i", str(path), "-af",
+         f"loudnorm=I={LOUDNESS}:print_format=json", "-f", "null", "-"],
+        capture_output=True, text=True, encoding="utf-8", errors="replace", check=True,
+    )
+    found = json.loads(re.findall(r"\{[^{}]*\}", measure.stderr)[-1])
+    gain = LOUDNESS - float(found["input_i"])
+    limit = 10 ** (PEAK_LIMIT / 20)
+    temp = path.with_suffix(".tmp.mp3")
+    subprocess.run(
+        ["ffmpeg", "-hide_banner", "-loglevel", "error", "-y", "-i", str(path), "-af",
+         f"volume={gain:.2f}dB,alimiter=limit={limit:.3f}:attack=5:release=80:level=false",
+         "-ar", "44100", "-ac", "1", "-c:a", "libmp3lame", "-b:a", "64k", str(temp)],
+        check=True,
+    )
+    temp.replace(path)
+    return True
 
 
 def digest(text: str) -> str:
@@ -125,6 +160,7 @@ def main() -> None:
     parser.add_argument("--essai", action="store_true", help="ce qui serait généré, sans appel")
     parser.add_argument("--voix", action="store_true", help="voix disponibles sur le compte")
     parser.add_argument("--exemple", choices=sorted(VOICE_ENV), help="une réplique d'essai")
+    parser.add_argument("--niveau", action="store_true", help="ajuste le volume des sons existants")
     args = parser.parse_args()
 
     lines = load_lines()
@@ -133,6 +169,16 @@ def main() -> None:
 
     if args.voix:
         list_voices(env("ELEVENLABS_API_KEY"))
+        return
+    if args.niveau:
+        if shutil.which("ffmpeg") is None:
+            sys.exit("ffmpeg introuvable (winget install ffmpeg).")
+        for entry in manifest.values():
+            if entry.get("niveau") != LOUDNESS and (OUT / entry["fichier"]).exists():
+                normalize(OUT / entry["fichier"])
+                entry["niveau"] = LOUDNESS
+                save_manifest(manifest)
+                print(f"  {entry['fichier']}")
         return
     if args.exemple:
         key = env("ELEVENLABS_API_KEY")
@@ -172,6 +218,7 @@ def main() -> None:
         h = digest(line["texte"])
         name = f"{line['id']}-{h[:8]}.mp3"
         (OUT / name).write_bytes(speak(line["texte"], voices[line["voix"]], model, key))
+        level = LOUDNESS if normalize(OUT / name) else None
         old = manifest.get(h)
         if old and old["fichier"] != name:
             (OUT / old["fichier"]).unlink(missing_ok=True)
@@ -179,6 +226,8 @@ def main() -> None:
             "id": line["id"], "voix": line["voix"], "fichier": name,
             "voix_id": voices[line["voix"]], "modele": model,
         }
+        if level is not None:
+            manifest[h]["niveau"] = level
         save_manifest(manifest)  # après chaque son : une coupure ne fait rien perdre
         print(f"  {name}")
 
@@ -187,6 +236,8 @@ def main() -> None:
     for h in [h for h in manifest if h not in current]:
         (OUT / manifest.pop(h)["fichier"]).unlink(missing_ok=True)
     save_manifest(manifest)
+    if any(e.get("niveau") != LOUDNESS for e in manifest.values()):
+        print("Volume pas encore ajusté pour certains sons : installer ffmpeg, puis --niveau.")
     size = sum(p.stat().st_size for p in OUT.glob("*.mp3"))
     print(f"{len(manifest)} sons dans {OUT} ({size / 1e6:.1f} Mo).")
 

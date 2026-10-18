@@ -4,454 +4,519 @@
     "voix": "ysaline",
     "fichier": "brouillard-anglais-c0d13307.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "e068d04cc163c450ce30dad2c27a040c0bfdde162de99227421cf914db96bfe4": {
     "id": "brouillard-francais",
     "voix": "ysaline",
     "fichier": "brouillard-francais-e068d04c.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "7abbfa5c1e76b2eb44f472dac684c894e845af3f9da34a8b50b755e95a90326b": {
     "id": "brouillard-histoire_geo",
     "voix": "ysaline",
     "fichier": "brouillard-histoire_geo-7abbfa5c.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "71afd36459f9538c26ec0faa0dad6174f0bec50dad10b65a378a4c8b2fda54be": {
     "id": "brouillard-maths",
     "voix": "ysaline",
     "fichier": "brouillard-maths-71afd364.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "323a95ac1572286212707ffce9bee7f0d8d45e611756847eddd71d602126f334": {
     "id": "brouillard-sciences",
     "voix": "ysaline",
     "fichier": "brouillard-sciences-323a95ac.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "2544b8f735cbcf2b25e343ed817109646de223dc75fc6b5d2c97d33b17f10b5b": {
     "id": "brouillard-snt",
     "voix": "ysaline",
     "fichier": "brouillard-snt-2544b8f7.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "5de756ebdd0839b3d7e2c539e7fdef38f9e165082ac187a128465829959d829a": {
     "id": "carte-accueil",
     "voix": "ysaline",
     "fichier": "carte-accueil-5de756eb.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "be0f27d8d3da0d4cdc938806fdd2d37f3f02546a4bbafa1945b475a512841495": {
     "id": "carte-citadelle",
     "voix": "ysaline",
     "fichier": "carte-citadelle-be0f27d8.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "1177961b391a2e0a61d99010b22029c0310f232f626c62697e79e6c0fd3782ef": {
     "id": "page-alambic_elements",
     "voix": "ysaline",
     "fichier": "page-alambic_elements-1177961b.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "198b90e2f6a4812a4b974e9735e4c271f7880e6e40960a149e95b51f358a35fb": {
     "id": "page-atelier_automates",
     "voix": "ysaline",
     "fichier": "page-atelier_automates-198b90e2.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "28bf6ef9680c1420e63bea05e96e365d10aeb79bbddf388a0762a3a824377bc3": {
     "id": "page-atelier_balances",
     "voix": "ysaline",
     "fichier": "page-atelier_balances-28bf6ef9.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "315a3b849ee8588e0462e4c6dfb16600933e328f74ea1501d820d0eb8e4c9ab0": {
     "id": "page-bibliotheque_engloutie",
     "voix": "ysaline",
     "fichier": "page-bibliotheque_engloutie-315a3b84.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "d5323b215a156f31876cd033ad3c06b984849b61507a79aa6a809da31ff9bdb4": {
     "id": "page-bibliotheque_langues",
     "voix": "ysaline",
     "fichier": "page-bibliotheque_langues-d5323b21.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "74b81c2f9ee692790853beb45a475b63a5d63d20adcc0d5e31e093345f6b6fa7": {
     "id": "page-citadelle_fonctions",
     "voix": "ysaline",
     "fichier": "page-citadelle_fonctions-74b81c2f.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "0ed3bd49418905cebb5e3255521413a592376fed9b2a91706d1ec659d6fc1bcb": {
     "id": "page-forge_algebre",
     "voix": "ysaline",
     "fichier": "page-forge_algebre-0ed3bd49.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "a6f06b127a23178ec45682b5b70c1aa40c757de8eed69f5d06649c1c3f4a6c74": {
     "id": "page-laboratoire_foudroye",
     "voix": "ysaline",
     "fichier": "page-laboratoire_foudroye-a6f06b12.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "8dc24bf0762f4f9643f7c9818a3a7639b59fa9b493d31b222bb246fa3a17af06": {
     "id": "page-labyrinthe_vecteurs",
     "voix": "ysaline",
     "fichier": "page-labyrinthe_vecteurs-8dc24bf0.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "83f297d4e41716b46ecf99a42658e2ad2481190b1c5ee3a4fcad2a3555249424": {
     "id": "page-maison_naturaliste",
     "voix": "ysaline",
     "fichier": "page-maison_naturaliste-83f297d4.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "47936c0b3eb7414770e97887e31916e17f8c0081f864c65e1c695875d6d6a532": {
     "id": "page-moulin_phrases",
     "voix": "ysaline",
     "fichier": "page-moulin_phrases-47936c0b.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "05671a482676eb80af8d1ef24e6178566c6fe16d4b284f18911da45f627eebd0": {
     "id": "page-observatoire_angles",
     "voix": "ysaline",
     "fichier": "page-observatoire_angles-05671a48.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "0c3f0eda610136e4b1633de126fa2d62ad87721c5bc0dee75ce7f02140d63f57": {
     "id": "page-pont_paquets",
     "voix": "ysaline",
     "fichier": "page-pont_paquets-0c3f0eda.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "41d5d448e8b52ee5e6337f937af23e5a3f4605ce585307887699449ea2bff5a6": {
     "id": "page-port_couronnes",
     "voix": "ysaline",
     "fichier": "page-port_couronnes-41d5d448.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "bc4423cee9eec2bb0642097bc02d5ef2bf53bd8c1a866438e6cc595bd79aff4e": {
     "id": "page-porte_empires",
     "voix": "ysaline",
     "fichier": "page-porte_empires-bc4423ce.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "b9db2d368dec47bef23e6eac8185b57ed6f6119e9cebec4e3bda8be19ab090e7": {
     "id": "page-porte_horizons",
     "voix": "ysaline",
     "fichier": "page-porte_horizons-b9db2d36.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "89318568f7f7d88580698de23e15d2ec616e1c212dc0044255c00ee07c0cabef": {
     "id": "page-porte_origines",
     "voix": "ysaline",
     "fichier": "page-porte_origines-89318568.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "b68b01ad4a64a3ffa46107ba0a13ff63b71e793b1bf234d58e1ccdff8abf94c0": {
     "id": "page-porte_transitions",
     "voix": "ysaline",
     "fichier": "page-porte_transitions-b68b01ad.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "1412def82945207ae744d8b9e84172e68797f4e667296f756ec16cbe6312578c": {
     "id": "page-puits_contes",
     "voix": "ysaline",
     "fichier": "page-puits_contes-1412def8.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "dbde712f4b1dfa3d5d8fac83a3c9bff4061c1f8c7caccd7073ff4c7465aaa4ae": {
     "id": "page-theatre_verdure",
     "voix": "ysaline",
     "fichier": "page-theatre_verdure-dbde712f.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "f9aa59bbc4d18a0d3b6a771cd5bb07dd6a03fe9545daed3df9c38f9d7b469b76": {
     "id": "page-tour_experiences",
     "voix": "ysaline",
     "fichier": "page-tour_experiences-f9aa59bb.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "088dbbb2335bcf577245a20a9d64142b1d73f07a5093b9c29c604ac0c98e5ee8": {
     "id": "page-tour_fractions",
     "voix": "ysaline",
     "fichier": "page-tour_fractions-088dbbb2.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "0ff298e9a1a74f9168ed04f1e567aaa3bc3c045746aa0e28f0bed4f5d340d47c": {
     "id": "prologue-chronique-brouillard",
     "voix": "narrateur",
     "fichier": "prologue-chronique-brouillard-0ff298e9.mp3",
     "voix_id": "aQROLel5sQbj1vuIVi6B",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "1ffc418379fba5532d94b30bf2b419f66853b84bb2fb0565310b332184e4578f": {
     "id": "prologue-chronique-lumineux",
     "voix": "narrateur",
     "fichier": "prologue-chronique-lumineux-1ffc4183.mp3",
     "voix_id": "aQROLel5sQbj1vuIVi6B",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "878f76aacec0798c77a0c76183a75979fb0240caa4f34d5c8a0d3c1eb31d1b47": {
     "id": "prologue-oubli-brouillard",
     "voix": "narrateur",
     "fichier": "prologue-oubli-brouillard-878f76aa.mp3",
     "voix_id": "aQROLel5sQbj1vuIVi6B",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "0bd9605ed4033b830e4b705096870d495acf7cc2626c841fc3e416a0c786ee64": {
     "id": "prologue-oubli-lumineux",
     "voix": "narrateur",
     "fichier": "prologue-oubli-lumineux-0bd9605e.mp3",
     "voix_id": "aQROLel5sQbj1vuIVi6B",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "d4d8209d4125a2d418b0ee11bdd1b7a5929a3e1c84e8a9b321e77441aba40a77": {
     "id": "prologue-quete-brouillard",
     "voix": "ysaline",
     "fichier": "prologue-quete-brouillard-d4d8209d.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "3926287f79035ece856f083cef49dd9aa2fd0f3ad14e6365687f83fb6599e0a2": {
     "id": "prologue-quete-lumineux",
     "voix": "ysaline",
     "fichier": "prologue-quete-lumineux-3926287f.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "cdc47881f8b55372c0cae092e8b39d12b0991dd5018c385e6adadf556584ce53": {
     "id": "prologue-vol-brouillard",
     "voix": "narrateur",
     "fichier": "prologue-vol-brouillard-cdc47881.mp3",
     "voix_id": "aQROLel5sQbj1vuIVi6B",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "1c4ee26532cc24cdef5e146806fcbca09e06abab61f7b8b809a33eb00bde4d77": {
     "id": "prologue-vol-lumineux",
     "voix": "narrateur",
     "fichier": "prologue-vol-lumineux-1c4ee265.mp3",
     "voix_id": "aQROLel5sQbj1vuIVi6B",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "095c24b4f6f5700e23bb4806f6dbe136919984fb7dd21e668ffa75e5d44f389d": {
     "id": "prologue-ysaline-brouillard",
     "voix": "ysaline",
     "fichier": "prologue-ysaline-brouillard-095c24b4.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "bb90228dd45f12372f858647ce23865bf849c3b21e8968b537d9ecd2ee13db66": {
     "id": "prologue-ysaline-lumineux",
     "voix": "ysaline",
     "fichier": "prologue-ysaline-lumineux-bb90228d.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "9e4d8887a37041d051dfc2470d0c2e3b8e45a4a8492389d1832d577cb5be10ec": {
     "id": "secret-tour_oubli",
     "voix": "ysaline",
     "fichier": "secret-tour_oubli-9e4d8887.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "d13c5e97ba3ab18db7bd0c96ed1a39f80e2ebe29ef2559e2a3ff579cd05cd17d": {
     "id": "seuil-alambic_elements",
     "voix": "ysaline",
     "fichier": "seuil-alambic_elements-d13c5e97.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "c9147b93d5015d9c8220e69498d89f27a53753bccb36c82c740a78e47c0e0c6a": {
     "id": "seuil-atelier_automates",
     "voix": "ysaline",
     "fichier": "seuil-atelier_automates-c9147b93.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "cc235586f7986fb847e6f59703b6b6ba9cb5c7528653459b055c33edf53a2780": {
     "id": "seuil-atelier_balances",
     "voix": "ysaline",
     "fichier": "seuil-atelier_balances-cc235586.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "d1fcfa623f2af860a4a70a16c3a6e6a23dc2e506b5710ff0326ac4383e5afb23": {
     "id": "seuil-bibliotheque_engloutie",
     "voix": "ysaline",
     "fichier": "seuil-bibliotheque_engloutie-d1fcfa62.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "a0b637443f89187a3d9514960a7680bee901a1aad1c15850d1244333a0b83ab2": {
     "id": "seuil-bibliotheque_langues",
     "voix": "ysaline",
     "fichier": "seuil-bibliotheque_langues-a0b63744.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "f3a48925dccc0ff24497f5b11de05cd02ffc149b90db1c267170a35777ffb8d3": {
     "id": "seuil-citadelle_fonctions",
     "voix": "ysaline",
     "fichier": "seuil-citadelle_fonctions-f3a48925.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "16fcbf18bce9af81066bfc8739c8d4c53b9ec4b86b2c2fe8bb54eb93ee83b8e1": {
     "id": "seuil-forge_algebre",
     "voix": "ysaline",
     "fichier": "seuil-forge_algebre-16fcbf18.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "975b3013fdaaa190c0ae59189574a15a599c5d4a7c547de270d83cdd2f18d285": {
     "id": "seuil-laboratoire_foudroye",
     "voix": "ysaline",
     "fichier": "seuil-laboratoire_foudroye-975b3013.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "4a27d5864b283cfc32bc5b0dc13c2ccb7355b35faf6e5ec04e197ec517c29fed": {
     "id": "seuil-labyrinthe_vecteurs",
     "voix": "ysaline",
     "fichier": "seuil-labyrinthe_vecteurs-4a27d586.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "546f7fcfe75cb1b04260af8b468f8d5fcc7320eb361e2984ecd82a607618da75": {
     "id": "seuil-maison_naturaliste",
     "voix": "ysaline",
     "fichier": "seuil-maison_naturaliste-546f7fcf.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "f50a12c61474052ca860ab49a950a9468baec54d337c58f2ae157b74037c7ec1": {
     "id": "seuil-moulin_phrases",
     "voix": "ysaline",
     "fichier": "seuil-moulin_phrases-f50a12c6.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "38cb6c3cb63c1935cb6f4244c2f0a5cb68518ea7a32de473d3c3dfee4192cfe8": {
     "id": "seuil-observatoire_angles",
     "voix": "ysaline",
     "fichier": "seuil-observatoire_angles-38cb6c3c.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "3232ab382e73d2a43eaee9881b10205bfaaecaa7f629f8da296a8ccf97deba08": {
     "id": "seuil-pont_paquets",
     "voix": "ysaline",
     "fichier": "seuil-pont_paquets-3232ab38.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "6e1ab69602415c30aa71f247701f46f3180ceae7c7ca3aaa8f5b47f3b0de392f": {
     "id": "seuil-port_couronnes",
     "voix": "ysaline",
     "fichier": "seuil-port_couronnes-6e1ab696.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "722caada15c1fc5f9fc37c8aaea3060258652c8bddfccaf4c620facfd994bd4a": {
     "id": "seuil-porte_empires",
     "voix": "ysaline",
     "fichier": "seuil-porte_empires-722caada.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "251531587a98d5ab6f821e2b061a4b624093681e5b7f939ae8f4ce998b43f318": {
     "id": "seuil-porte_horizons",
     "voix": "ysaline",
     "fichier": "seuil-porte_horizons-25153158.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "14cb5b4406e5c18c5d47846438c664df67e6e13a87707644a0a6cf23767c356d": {
     "id": "seuil-porte_origines",
     "voix": "ysaline",
     "fichier": "seuil-porte_origines-14cb5b44.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "914a757fc5dc1633c02aff133947a680e4bc735fa713ec709dedca7a9f4f5352": {
     "id": "seuil-porte_transitions",
     "voix": "ysaline",
     "fichier": "seuil-porte_transitions-914a757f.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "4d8a1a74fbccd794377d69402d8dc95b0e70721a16ae2f3c0ba978599e79d1a0": {
     "id": "seuil-puits_contes",
     "voix": "ysaline",
     "fichier": "seuil-puits_contes-4d8a1a74.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "4e3ba894ca66b13d7976ce55689ac5c8692ec6ea2b7dce784bff062856df12a1": {
     "id": "seuil-theatre_verdure",
     "voix": "ysaline",
     "fichier": "seuil-theatre_verdure-4e3ba894.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "896febddfe5f6a1ca0380c760b2d679ce754785372f4193955c63582a08e1849": {
     "id": "seuil-tour_experiences",
     "voix": "ysaline",
     "fichier": "seuil-tour_experiences-896febdd.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "a1ded29873277cc4675e535a731bf789ef6d562386513c748a4597366d279e74": {
     "id": "seuil-tour_fractions",
     "voix": "ysaline",
     "fichier": "seuil-tour_fractions-a1ded298.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "a915f023bfddab83cac9726e36e7209a7f688d44f9b75c8da5adc7dcceed06c7": {
     "id": "village-2nde",
     "voix": "ysaline",
     "fichier": "village-2nde-a915f023.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   },
   "26d57cfec7ad614f5dbca3c6e6e7887ee82c96f74bc8cc76919b7f74311095f0": {
     "id": "village-6e",
     "voix": "ysaline",
     "fichier": "village-6e-26d57cfe.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
-    "modele": "eleven_multilingual_v2"
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
   }
 }

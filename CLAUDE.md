@@ -204,7 +204,7 @@ sauvegarde avant migration, push, suivi de la CI, contrôle en production). Les 
 - Voix enregistrées (ElevenLabs) du narrateur du prologue et de Maître Ysaline : `tools/export_voice_lines.gd` écrit
   `content/voix/lignes.json` (texte exact lu par le jeu), `tools/voix_elevenlabs.py` génère `deploy/voix/*.mp3` et
   `manifest.json` (empreinte SHA-256 du texte → fichier ; seulement ce qui manque ou a changé ; clé et voix dans des
-  variables d'environnement, jamais dans le dépôt), `tools/postprocess_web.py` les copie dans `voix/` de l'export.
+  variables d'environnement, jamais dans le dépôt ; volume ramené à celui de Piper, -16 LUFS, par ffmpeg : `--niveau`), `tools/postprocess_web.py` les copie dans `voix/` de l'export.
   `Voice` charge le manifeste et joue le son d'un texte français qui en a un, sinon Piper (texte modifié : Piper
   jusqu'à la génération suivante). Sur PC : `-- --voix=<adresse du site>`. Une réplique de Maître Ysaline lue à
   part (`listen_button` avec des morceaux) garde sa voix enregistrée. Après la modification d'un de ces textes :
