@@ -288,5 +288,5 @@ func test_child_can_report_a_question_with_the_answer_given() -> void:
 	(panel._report_box.get_child(0) as Button).pressed.emit()
 	assert_signal_emitted_with_parameters(panel, "reported", ["reponse"])
 	assert_false(panel._report_box.visible)
-	await wait_for_signal(get_tree().process_frame, 0.2)
+	await wait_process_frames(1)  # pas wait_for_signal sur process_frame : GUT le surveillerait encore au test suivant
 

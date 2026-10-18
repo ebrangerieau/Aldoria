@@ -14,7 +14,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import Integer, cast, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import accounts, play_time
+from app import accounts, client_errors, play_time
 from app.accounts import CurrentDevice, aware, utcnow
 from app.auth import CurrentProfile, create_token, verify_pin
 from app.config import get_settings
@@ -420,6 +420,14 @@ async def set_notion_aside(body: SetAsideIn, profile: CurrentProfile, db: Db) ->
         db.add(NotionAside(profile_id=profile.id, notion_id=notion.id, source="enfant"))
         await db.commit()
     return {"code": notion.code, "set_aside": True}
+
+
+@router.post("/client-errors")
+async def post_client_errors(
+    body: client_errors.ErrorsIn, device: CurrentDevice, db: Db
+) -> dict[str, int]:
+    """Erreurs du jeu sur cet appareil (autoload ErrorReport), sans donnée d'enfant."""
+    return {"created": await client_errors.record(db, device, body)}
 
 
 @router.post("/reports", status_code=201)

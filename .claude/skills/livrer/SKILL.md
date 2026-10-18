@@ -14,13 +14,14 @@ quand Eric a demandé la modification.
 | --- | --- |
 | API | `uv run --directory api pytest -q` puis `uv run --directory api ruff check .` (et `ruff format` si besoin) |
 | Générateur | + `uv run --directory api python ../tools/export_pack_fixture.py` (paquets des tests du jeu) |
-| Jeu | `godot --headless --path game --import` si assets ou `class_name` ajoutés, puis `godot --headless --path game -s addons/gut/gut_cmdln.gd -gexit` (sans `-d`) |
+| Jeu | `godot --headless --path game --import` si assets ou `class_name` ajoutés, puis `GODOT=<godot> bash tools/gut.sh` (GUT sans `-d`, échoue aussi si un fichier de test n'a pas tourné) |
 | Espace parent | `npm --prefix admin run build` ; toute fonction modifiée est décrite dans `admin/src/Guide.tsx` |
 | Réseau, interface, polices, espace parent | `powershell -File tools/e2e_web.ps1` (`-SkipExport` si le jeu n'a pas changé) ; regarder les captures dans `%TEMP%\aldoria-e2e` |
 
 `godot` = `D:\developpement\tools\godot\4.7.2\Godot_v4.7.2-stable_win64_console.exe`. Docker Desktop doit tourner
 pour l'e2e (conteneur `aldoria-pg`). `godot --check-only` échoue avec les autoloads : ce n'est pas une erreur.
-Un test GUT dont le fichier est ignoré (« cannot infer the type ») compte comme un échec.
+Un fichier de test GUT ignoré (« cannot infer the type ») ou une erreur GUT hors assertion fait échouer `tools/gut.sh`
+(et la CI).
 
 ## 2. Migration de base (Alembic) : sauvegarde d'abord
 
@@ -45,7 +46,10 @@ Vérifier que le fichier n'est pas vide. Restauration : `docs/exploitation.md`.
 
 ## 4. Contrôle en production
 
-- Santé : `curl --ssl-no-revoke -s -o /dev/null -w "%{http_code}" https://aldoria.bandtrack.fr/api/v1/health` → 200.
+- Automatique : la dernière étape de la CI attend que `/api/v1/health` donne `"version": <commit>` et
+  `/version.txt` le même commit (5 minutes au plus) ; sinon la CI échoue. Migration appliquée : champ `migration`.
+- À la main : `curl --ssl-no-revoke -s https://aldoria.bandtrack.fr/api/v1/health`.
+- Erreurs du jeu sur les appareils : espace parent, Exploitation → Erreurs du jeu (version = 7 premiers caractères du commit).
 - Contenu : `ssh -i ~/.ssh/aldoria_deploy root@72.60.188.128 'cd /docker/aldoria && docker compose exec -T api python -c "…"'`
   (ex. compter `REGISTRY` d'un préfixe, lister les chapitres en base). Lecture seule.
 

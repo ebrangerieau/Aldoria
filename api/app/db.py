@@ -27,10 +27,17 @@ async def get_db() -> AsyncIterator[AsyncSession]:
         yield session
 
 
-async def database_is_up() -> bool:
+async def database_revision() -> str | None:
+    """Migration appliquée à la base (table d'Alembic), « » si aucune ;
+    None si la base ne répond pas."""
     try:
         async with get_engine().connect() as conn:
-            await conn.execute(text("SELECT 1"))
-        return True
+            rows = await conn.execute(text("SELECT version_num FROM alembic_version"))
+            return ",".join(sorted(str(r[0]) for r in rows))
     except Exception:
-        return False
+        try:
+            async with get_engine().connect() as conn:
+                await conn.execute(text("SELECT 1"))
+            return ""  # base joignable, pas encore migrée
+        except Exception:
+            return None

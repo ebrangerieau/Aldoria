@@ -19,6 +19,10 @@ RUN useradd --system --uid 10001 aldoria \
     && mkdir -p /cache/voix && chown aldoria /cache/voix
 USER aldoria
 
+# Commit du code (posé par la CI), renvoyé par /health pour vérifier une mise en ligne.
+ARG GIT_SHA=dev
+ENV ALDORIA_VERSION=${GIT_SHA}
+
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s \
     CMD python -c "import urllib.request,sys; sys.exit(0 if urllib.request.urlopen('http://127.0.0.1:8000/api/v1/health').status == 200 else 1)"

@@ -75,6 +75,7 @@ func setup(wt: WorldTheme) -> void:
 		box.add_child(UiKit.label("Musique : « Ritual of the Cursed », créée avec Suno.", 15, wt.text_dim))
 	# Crédit demandé par la licence des icônes (CC BY 3.0).
 	box.add_child(UiKit.label("Icônes : game-icons.net (Lorc, Delapouite, Carl Olsen, Skoll, Zeromancer, Sbed), sous licence CC BY 3.0. Titres : police Cinzel (OFL).", 15, wt.text_dim))
+	box.add_child(UiKit.label("Version du jeu : %s" % BuildInfo.VERSION, 15, wt.text_dim))
 	var close := UiKit.icon_button("Fermer", "check-mark", 64.0)
 	close.pressed.connect(func() -> void: closed.emit())
 	box.add_child(close)

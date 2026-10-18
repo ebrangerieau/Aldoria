@@ -37,6 +37,9 @@ class Settings(BaseSettings):
     voice_cache_dir: str = "/cache/voix"
     # Dossier où le service « backup » écrit l'état des sauvegardes (vide = non configuré).
     backup_status_dir: str = ""
+    # Commit du code en service (posé à la construction de l'image par la CI ; « dev » en local),
+    # renvoyé par /health pour vérifier une mise en ligne.
+    version: str = "dev"
 
     def check(self) -> None:
         if self.environment == "prod" and self.jwt_secret == DEV_JWT_SECRET:

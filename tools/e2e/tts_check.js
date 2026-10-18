@@ -2,6 +2,8 @@
 // automatique activée pour le profil de test, l'introduction d'un donjon doit être
 // confiée à la synthèse vocale du navigateur (speechSynthesis.speak). Le navigateur
 // headless n'a pas de voix : on intercepte les appels au lieu d'écouter.
+// Le jeu est ouvert avec ?erreur_test=1 : l'erreur d'essai doit arriver au serveur (ErrorReport,
+// Exploitation → Erreurs du jeu) avec la version et le type d'appareil.
 //
 // Usage : node tts_check.js <url du jeu> <url de l'API locale> <clé admin locale> <code de liaison>
 //        <e-mail du parent du banc> <mot de passe du parent du banc> [pin]
@@ -21,6 +23,8 @@ const { chromium } = require('playwright-core');
       body: JSON.stringify(body),
     });
   let failed = false;
+  const errorsUrl = `${apiUrl}/api/v1/admin/client-errors`;
+  await fetch(errorsUrl, { method: 'DELETE', headers: { ...base, Cookie: cookie } });
   await admin({ read_aloud: true, auto_read: true });
   const browser = await chromium.launch({ channel: 'msedge', headless: true, args: ['--use-angle=d3d11'] });
   try {
@@ -35,7 +39,7 @@ const { chromium } = require('playwright-core');
         };
       }
     });
-    await page.goto(url);
+    await page.goto(url + (url.includes('?') ? '&' : '?') + 'erreur_test=1');
     await page.waitForTimeout(8000);
     await page.mouse.click(640, 400); // écran titre
     await page.waitForTimeout(2500);
@@ -67,6 +71,24 @@ const { chromium } = require('playwright-core');
       failed = true;
     } else {
       console.log('OK : lecture à voix haute appelée dans le navigateur');
+    }
+    // Erreur d'essai remontée (envoi toutes les 15 s, une fois l'appareil relié).
+    let reported = null;
+    for (let i = 0; i < 25 && !reported; i++) {
+      const rows = await (await fetch(errorsUrl, { headers: { ...base, Cookie: cookie } })).json();
+      reported = rows.find((r) => r.message.includes("Erreur d'essai"));
+      if (!reported) await page.waitForTimeout(1000);
+    }
+    if (!reported) {
+      console.log("ÉCHEC : l'erreur d'essai n'est pas arrivée au serveur");
+      failed = true;
+    } else if (!reported.location.includes('error_report.gd')) {
+      // Sans always_track_call_stacks, l'export publié ne donne que l'endroit dans le moteur.
+      console.log(`ÉCHEC : erreur remontée sans l'endroit dans le script (${reported.location})`);
+      failed = true;
+    } else {
+      console.log(`OK : erreur remontée (version ${reported.version}, ${reported.platform}, ${reported.location})`);
+      await fetch(errorsUrl, { method: 'DELETE', headers: { ...base, Cookie: cookie } });
     }
   } finally {
     await admin({});

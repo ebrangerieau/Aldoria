@@ -354,3 +354,24 @@ class Report(Base):
     reason: Mapped[str] = mapped_column(String(30))
     status: Mapped[str] = mapped_column(String(12), default="ouvert")  # ouvert | traite
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class ClientError(Base):
+    """Erreur du jeu remontée par un appareil (client_errors.py) : où, quoi, combien de fois.
+    Aucune donnée d'enfant : ni profil, ni question, ni réponse. Gardée 30 jours."""
+
+    __tablename__ = "client_error"
+    __table_args__ = (UniqueConstraint("family_id", "fingerprint"),)
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    family_id: Mapped[int] = mapped_column(ForeignKey("family.id", ondelete="CASCADE"), index=True)
+    device_id: Mapped[int | None] = mapped_column(ForeignKey("device.id", ondelete="SET NULL"))
+    fingerprint: Mapped[str] = mapped_column(String(64))  # SHA-256 de version, endroit, message
+    version: Mapped[str] = mapped_column(String(40))
+    platform: Mapped[str] = mapped_column(String(80), default="")
+    scene: Mapped[str] = mapped_column(String(120), default="")
+    location: Mapped[str] = mapped_column(String(200), default="")
+    message: Mapped[str] = mapped_column(String(500))
+    count: Mapped[int] = mapped_column(Integer, default=1)
+    first_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    last_seen: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, index=True)

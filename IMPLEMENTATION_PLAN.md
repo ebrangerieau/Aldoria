@@ -460,6 +460,12 @@ générateurs naturels, donc des questions à rédiger.
 > questions d'anglais. Reste : le donjon de français de Tom (après une première série de questions publiées),
 > les Archives regroupées par matière, puis les deux semaines d'observation.
 >
+> ✅ **2026-10-18 : fiabilité du développement.** Erreurs du jeu remontées par les appareils (autoload `ErrorReport`,
+> table `client_error`, migration 0012 ; Exploitation → Erreurs du jeu ; jamais de donnée d'enfant), endroit dans le
+> script même dans l'export publié (`always_track_call_stacks`, coût à surveiller sur la tablette). Version en service :
+> `/health` (commit, migration), `/version.txt`, Options du jeu ; la CI attend ce commit en production. Tests du jeu :
+> `tools/gut.sh` échoue si un fichier de test n'a pas tourné ; erreur « signal non surveillé » corrigée.
+>
 > ✅ **2026-10-18 : sciences et technologie de Jules.** Programme du cycle 3 de 2023 (BO n° 25 du 22 juin 2023), en
 > vigueur en 6e en 2026-2027 (celui du BO n° 24 du 11 juin 2026 s'appliquera en 6e à la rentrée 2027) : depuis 2023, la
 > technologie n'est plus enseignée en 6e ; la reproduction humaine n'est pas posée en questions. `content/seed/6e/sciences.json`,

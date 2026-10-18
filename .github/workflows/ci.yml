@@ -10,6 +10,7 @@ env:
   GODOT_VERSION: 4.7.2
   REGISTRY: ghcr.io
   IMAGE_PREFIX: ghcr.io/ebrangerieau/aldoria
+  PROD_URL: https://aldoria.bandtrack.fr
 
 jobs:
   api-tests:
@@ -52,7 +53,8 @@ jobs:
         run: godot --headless --path game --import
       - name: Tests GUT
         # Sans -d : en mode debug, une erreur de script fige Godot au lieu d'échouer.
-        run: timeout 600 godot --headless --path game -s addons/gut/gut_cmdln.gd -gexit
+        # tools/gut.sh échoue aussi si un fichier de test n'a pas tourné (GUT l'ignore sans échouer).
+        run: bash tools/gut.sh
 
   export-web:
     runs-on: ubuntu-latest
@@ -68,6 +70,9 @@ jobs:
             ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
       - name: Export web
         run: |
+          # Version du jeu (Options, erreurs remontées) : le commit.
+          sed -i "s/^const VERSION := \"dev\"/const VERSION := \"$(echo "$GITHUB_SHA" | cut -c1-7)\"/" game/core/build_info.gd
+          grep -q "$(echo "$GITHUB_SHA" | cut -c1-7)" game/core/build_info.gd
           mkdir -p build/web
           godot --headless --path game --import
           godot --headless --path game --export-release "Web" ../build/web/index.html
@@ -92,6 +97,8 @@ jobs:
           path: build/web
       - name: Post-traitement (CSP, gzip, poids)
         run: python3 tools/postprocess_web.py build/web | tee -a "$GITHUB_STEP_SUMMARY"
+      - name: Version publiée (vérifiée après la mise en ligne)
+        run: echo "$GITHUB_SHA" > build/web/version.txt
       - uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -100,7 +107,7 @@ jobs:
       - name: Construction et publication des images
         run: |
           for svc in web api voice; do
-            docker build -f deploy/${svc}.Dockerfile \
+            docker build -f deploy/${svc}.Dockerfile --build-arg GIT_SHA=${GITHUB_SHA} \
               -t ${IMAGE_PREFIX}-${svc}:${GITHUB_SHA} \
               -t ${IMAGE_PREFIX}-${svc}:latest .
             docker push --all-tags ${IMAGE_PREFIX}-${svc}
@@ -134,3 +141,22 @@ jobs:
           # (il rattrape la sauvegarde du jour si elle manque, sinon il attend la suivante).
           ssh -i ~/key "$VPS_USER@$VPS_HOST" \
             "cd /docker/aldoria && sed -i 's/^ALDORIA_TAG=.*/ALDORIA_TAG=${GITHUB_SHA}/' .env && docker compose pull && docker compose up -d --remove-orphans && docker compose restart backup"
+      - name: Contrôle en production (nouvelle version en service)
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          [ -z "$VPS_HOST" ] && exit 0  # pas de déploiement (secrets absents)
+          # L'API (base joignable, migrations appliquées au démarrage) et le jeu doivent servir ce commit
+          # dans les 5 minutes.
+          for i in $(seq 1 30); do
+            health=$(curl -fsS "$PROD_URL/api/v1/health" || true)
+            web=$(curl -fsS "$PROD_URL/version.txt?n=$i" || true)
+            if echo "$health" | grep -q "\"version\":\"$GITHUB_SHA\"" && echo "$health" | grep -q '"status":"ok"' \
+               && [ "$web" = "$GITHUB_SHA" ]; then
+              echo "En production : $health" | tee -a "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "La production ne sert pas ce commit : API $health ; jeu ${web:-?}" | tee -a "$GITHUB_STEP_SUMMARY"
+          exit 1

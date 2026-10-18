@@ -20,8 +20,9 @@ Godot est installé hors du dépôt : `D:\developpement\tools\godot\4.7.2\Godot_
 ```powershell
 # Import des ressources (après ajout d'assets ou de class_name)
 godot --headless --path game --import
-# Tests client (GUT 9.7.1) — sans -d : en mode debug une erreur de script fige Godot
-godot --headless --path game -s addons/gut/gut_cmdln.gd -gexit
+# Tests client (GUT 9.7.1) — sans -d : en mode debug une erreur de script fige Godot. tools/gut.sh échoue aussi
+# si un fichier de test n'a pas tourné (GUT l'ignore sans échouer) ou sur une erreur GUT hors assertion (CI)
+GODOT=<godot> bash tools/gut.sh   # ou : godot --headless --path game -s addons/gut/gut_cmdln.gd -gexit [-gselect=…]
 # Paquets de session de test (après modification d'un générateur)
 uv run --directory api python ../tools/export_pack_fixture.py
 # Lancer la scène d'étalonnage avec une capture d'écran (vérification visuelle)
@@ -218,6 +219,13 @@ sauvegarde avant migration, push, suivi de la CI, contrôle en production). Les 
   rebours à l'écran (les enfants l'ont vécu comme un chrono).
 - Un test qui enregistre des réponses réécrit ensuite la file locale (`Session._save_json`) : sinon de fausses
   réponses partent vers l'API de dev au lancement suivant du jeu.
+- Erreurs du jeu remontées (autoload `ErrorReport`, `Logger` de Godot ; API `client_errors.py`, table `client_error`,
+  `POST /play/client-errors` avec l'appareil relié) : message, endroit dans le script (`always_track_call_stacks` dans
+  project.godot), écran, version, type d'appareil ; jamais de donnée d'enfant. Actif sur le web seulement (PC :
+  `-- --erreurs=1`) ; `?erreur_test=1` déclenche une erreur d'essai (tools/e2e/tts_check.js). L'exploitant les lit dans
+  Exploitation → Erreurs du jeu. Version : `BuildInfo.VERSION` (commit posé par la CI avant l'export, « dev » sur le
+  poste, affichée dans les Options) ; l'API la donne par `/health` (`version`, `migration` ; `ALDORIA_VERSION`, argument
+  de build `GIT_SHA`) et la CI attend ce commit en production avant de finir.
 - Pas de `JavaScriptBridge.eval` : la CSP interdit `eval`. Utiliser `JavaScriptBridge.get_interface`.
 - Pièges GDScript déjà rencontrés :
   - `var x := dico["clé"]` (ou un élément d'`Array`, ou le retour d'une fonction non typée) donne un Variant : erreur

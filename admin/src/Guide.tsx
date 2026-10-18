@@ -714,6 +714,15 @@ export function Guide({ child, onOpen }: { child?: Profile; onOpen: (page: Guide
           </p>
         </details>
         <details>
+          <summary>Comment savoir si le jeu rencontre des erreurs ? (exploitant du serveur)</summary>
+          <p>
+            Ouvrez l'onglet <strong>Exploitation</strong>, carte <strong>Erreurs du jeu</strong>. Chaque erreur rencontrée sur un appareil y
+            apparaît : ce qui s'est passé, l'écran, le type d'appareil et la version du jeu, avec le nombre de fois. Rien sur les enfants (ni
+            prénom, ni réponse). Quand une erreur est corrigée, cliquez sur « Vider la liste » : si elle revient, elle réapparaît. Les erreurs
+            s'effacent seules au bout de 30 jours. La version du jeu d'un appareil se lit dans ses Options, tout en bas.
+          </p>
+        </details>
+        <details>
           <summary>Où sont les sauvegardes, et comment revenir en arrière ?</summary>
           <p>
             Sur le serveur, dans <code>/docker/aldoria/backups/quotidiennes</code> ; à la maison, dans le dossier{' '}

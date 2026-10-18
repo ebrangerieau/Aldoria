@@ -25,10 +25,15 @@ Sfx="*res://autoload/sfx.gd"
 Voice="*res://autoload/voice.gd"
 Accessibility="*res://autoload/accessibility.gd"
 Music="*res://autoload/music.gd"
+ErrorReport="*res://autoload/error_report.gd"
 
 [audio]
 
 general/text_to_speech=true
+
+[debug]
+
+settings/gdscript/always_track_call_stacks=true
 
 [display]
 

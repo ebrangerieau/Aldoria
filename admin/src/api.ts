@@ -258,6 +258,21 @@ export interface FamilyRow {
   ai_cost_month_usd: number
 }
 
+// Erreur du jeu remontée par un appareil (exploitant) : jamais de donnée d'enfant.
+export interface ClientErrorRow {
+  id: number
+  family: string
+  device: string
+  version: string
+  platform: string
+  scene: string
+  location: string
+  message: string
+  count: number
+  first_seen: string
+  last_seen: string
+}
+
 export interface AiResult {
   created: BankRow[]
   rejected: { summary: string; errors: string[] }[]
@@ -354,6 +369,8 @@ export const api = {
   }) => request<AiResult>('POST', '/ai-questions', body),
   inviteFamily: (note: string) => request<Link>('POST', '/families/invitations', { note }),
   backups: () => request<BackupStatus>('GET', '/backups'),
+  clientErrors: () => request<ClientErrorRow[]>('GET', '/client-errors'),
+  clearClientErrors: () => request<{ deleted: number }>('DELETE', '/client-errors'),
   profiles: () => request<Profile[]>('GET', '/profiles'),
   dashboard: (id: number) => request<Dashboard>('GET', `/profiles/${id}/dashboard`),
   chapters: (id: number) => request<Chapter[]>('GET', `/profiles/${id}/chapters`),

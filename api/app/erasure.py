@@ -17,6 +17,7 @@ from app.models import (
     Attempt,
     BankItem,
     ChapterStatus,
+    ClientError,
     Device,
     Family,
     FamilyNotion,
@@ -59,6 +60,6 @@ async def delete_family(db: AsyncSession, family_id: int) -> None:
             (Invitation.family_id == family_id) | Invitation.adult_id.in_(adults)
         )
     )
-    for model in (Adult, BankItem, Device, PairingCode, FamilyNotion, AiUsage):
+    for model in (Adult, BankItem, ClientError, Device, PairingCode, FamilyNotion, AiUsage):
         await db.execute(delete(model).where(model.family_id == family_id))
     await db.execute(delete(Family).where(Family.id == family_id))

@@ -19,7 +19,7 @@ from pydantic import BaseModel, Field
 from sqlalchemy import Integer, cast, delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import backups
+from app import backups, client_errors
 from app.accounts import CurrentAdult, CurrentOperator
 from app.auth import hash_pin, verify_pin
 from app.config import get_settings
@@ -113,6 +113,18 @@ async def list_levels(parent: CurrentParent, db: Db) -> dict[str, Any]:
 async def backup_status(operator: CurrentOperator) -> dict[str, Any]:
     """Dernière sauvegarde de la base et dernière copie à la maison (exploitant)."""
     return backups.status(get_settings().backup_status_dir)
+
+
+@router.get("/client-errors")
+async def list_client_errors(operator: CurrentOperator, db: Db) -> list[dict[str, Any]]:
+    """Erreurs du jeu remontées par les appareils, 30 derniers jours (exploitant)."""
+    return await client_errors.recent(db)
+
+
+@router.delete("/client-errors")
+async def clear_client_errors(operator: CurrentOperator, db: Db) -> dict[str, int]:
+    """Vide la liste (après correction) ; une erreur qui revient y réapparaît."""
+    return {"deleted": await client_errors.clear(db)}
 
 
 @router.get("/profiles")

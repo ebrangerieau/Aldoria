@@ -1,10 +1,10 @@
-import { useMutation, useQuery } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 import { api } from './api'
 import { formatDate, LinkBox } from './Family'
 import { Backups } from './Settings'
 
-// Onglet « Exploitation » (exploitant du serveur seulement) : familles et sauvegardes.
+// Onglet « Exploitation » (exploitant du serveur seulement) : familles, erreurs du jeu et sauvegardes.
 export function Operator() {
   const families = useQuery({ queryKey: ['families'], queryFn: api.families })
   const [note, setNote] = useState('')
@@ -70,7 +70,74 @@ export function Operator() {
           (Famille → Supprimer la famille).
         </div>
       </section>
+      <GameErrors />
       <Backups />
     </div>
+  )
+}
+
+// Erreurs remontées par le jeu sur les appareils (30 derniers jours) : on les voit avant que les enfants les racontent.
+function GameErrors() {
+  const client = useQueryClient()
+  const errors = useQuery({ queryKey: ['client-errors'], queryFn: api.clientErrors })
+  const clear = useMutation({
+    mutationFn: api.clearClientErrors,
+    onSuccess: () => client.invalidateQueries({ queryKey: ['client-errors'] }),
+  })
+  return (
+    <section className="card" id="erreurs">
+      <h2>Erreurs du jeu</h2>
+      <p className="muted small">
+        Le jeu envoie ici chaque erreur rencontrée sur une tablette, un téléphone ou un ordinateur : ce qui s'est passé, où dans le code, sur
+        quel écran, avec quelle version du jeu. Jamais le prénom d'un enfant ni ses réponses. Une même erreur n'occupe qu'une ligne, avec le
+        nombre de fois où elle s'est produite.
+      </p>
+      {errors.isPending && <p className="loading">Chargement…</p>}
+      {errors.isError && <p className="status-line bad">Liste des erreurs indisponible.</p>}
+      {errors.data && errors.data.length === 0 && <p className="status-line ok">Aucune erreur ces 30 derniers jours.</p>}
+      {errors.data && errors.data.length > 0 && (
+        <>
+          <table className="report">
+            <thead>
+              <tr>
+                <th>Dernière fois</th>
+                <th>Erreur</th>
+                <th>Écran</th>
+                <th>Appareil</th>
+                <th>Version</th>
+                <th>Fois</th>
+              </tr>
+            </thead>
+            <tbody>
+              {errors.data.map((e) => (
+                <tr key={e.id}>
+                  <td>{formatDate(e.last_seen)}</td>
+                  <td>
+                    {e.message}
+                    {e.location && <div className="muted small">{e.location}</div>}
+                  </td>
+                  <td>{e.scene.replace('res://scenes/', '').replace('.tscn', '')}</td>
+                  <td>
+                    {e.platform}
+                    <div className="muted small">
+                      {e.family}
+                      {e.device && ` · ${e.device}`}
+                    </div>
+                  </td>
+                  <td>{e.version}</td>
+                  <td>{e.count}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <div className="row">
+            <button type="button" onClick={() => clear.mutate()} disabled={clear.isPending}>
+              Vider la liste
+            </button>
+            <span className="muted small">Après une correction : une erreur qui revient réapparaît.</span>
+          </div>
+        </>
+      )}
+    </section>
   )
 }
