@@ -34,6 +34,13 @@
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
     "modele": "eleven_multilingual_v2"
   },
+  "2544b8f735cbcf2b25e343ed817109646de223dc75fc6b5d2c97d33b17f10b5b": {
+    "id": "brouillard-snt",
+    "voix": "ysaline",
+    "fichier": "brouillard-snt-2544b8f7.mp3",
+    "voix_id": "oQZyHVc6FnIvc9bYS5yl",
+    "modele": "eleven_multilingual_v2"
+  },
   "5de756ebdd0839b3d7e2c539e7fdef38f9e165082ac187a128465829959d829a": {
     "id": "carte-accueil",
     "voix": "ysaline",
@@ -52,6 +59,13 @@
     "id": "page-alambic_elements",
     "voix": "ysaline",
     "fichier": "page-alambic_elements-1177961b.mp3",
+    "voix_id": "oQZyHVc6FnIvc9bYS5yl",
+    "modele": "eleven_multilingual_v2"
+  },
+  "198b90e2f6a4812a4b974e9735e4c271f7880e6e40960a149e95b51f358a35fb": {
+    "id": "page-atelier_automates",
+    "voix": "ysaline",
+    "fichier": "page-atelier_automates-198b90e2.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
     "modele": "eleven_multilingual_v2"
   },
@@ -122,6 +136,13 @@
     "id": "page-observatoire_angles",
     "voix": "ysaline",
     "fichier": "page-observatoire_angles-05671a48.mp3",
+    "voix_id": "oQZyHVc6FnIvc9bYS5yl",
+    "modele": "eleven_multilingual_v2"
+  },
+  "0c3f0eda610136e4b1633de126fa2d62ad87721c5bc0dee75ce7f02140d63f57": {
+    "id": "page-pont_paquets",
+    "voix": "ysaline",
+    "fichier": "page-pont_paquets-0c3f0eda.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
     "modele": "eleven_multilingual_v2"
   },
@@ -272,6 +293,13 @@
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
     "modele": "eleven_multilingual_v2"
   },
+  "c9147b93d5015d9c8220e69498d89f27a53753bccb36c82c740a78e47c0e0c6a": {
+    "id": "seuil-atelier_automates",
+    "voix": "ysaline",
+    "fichier": "seuil-atelier_automates-c9147b93.mp3",
+    "voix_id": "oQZyHVc6FnIvc9bYS5yl",
+    "modele": "eleven_multilingual_v2"
+  },
   "cc235586f7986fb847e6f59703b6b6ba9cb5c7528653459b055c33edf53a2780": {
     "id": "seuil-atelier_balances",
     "voix": "ysaline",
@@ -339,6 +367,13 @@
     "id": "seuil-observatoire_angles",
     "voix": "ysaline",
     "fichier": "seuil-observatoire_angles-38cb6c3c.mp3",
+    "voix_id": "oQZyHVc6FnIvc9bYS5yl",
+    "modele": "eleven_multilingual_v2"
+  },
+  "3232ab382e73d2a43eaee9881b10205bfaaecaa7f629f8da296a8ccf97deba08": {
+    "id": "seuil-pont_paquets",
+    "voix": "ysaline",
+    "fichier": "seuil-pont_paquets-3232ab38.mp3",
     "voix_id": "oQZyHVc6FnIvc9bYS5yl",
     "modele": "eleven_multilingual_v2"
   },
