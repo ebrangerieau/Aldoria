@@ -168,11 +168,13 @@ sauvegarde avant migration, push, suivi de la CI, contrôle en production). Les 
   indices et charges (H₂O, Ca²⁺), équations avec ⟶, configurations « 1s² 2s² 2p⁶ » ; `speech._chemistry` les lit (lettres
   épelées, « donnent ») ; une unité après un nombre est lue par `speech._UNITS`, l'unité demandée s'écrit en toutes
   lettres. Une matière peut loger dans la région d'une autre (`WorldMapDef.REGION_OF` : physique-chimie → Laboratoire,
-  espagnol → Bibliothèque des Langues ; `page_greeting` le dit quand la région garde des pages d'une autre matière).
+  espagnol → Bibliothèque des Langues, SES → Forum des Citoyens de l'EMC ; `page_greeting` le dit quand la région garde des pages d'une autre matière).
   Espagnol : voix du serveur `es_ES-davefx-medium`, clavier des réponses écrites avec á, ñ, ¿ (`TextAnswerWidget`,
   notion `*.espagnol.*`) ; conjugaisons écrites avec accents exigés.
   SVT : séquences d'ADN en majuscules (« ATGC », épelées), allèles et génotypes notés « B », « Bb » après « allèle » ou
   « génotype » (lus « grand B, petit b »), tailles en µm, nm, mm après un nombre.
+  SES : montants « 1200 € » sans séparateur (lus « euros »), sigles PIB, CAP, BEP épelés ; pas de statistique
+  d'actualité dans une réponse.
   SNT : tailles et débits abrégés après un nombre (« 5 Mo », « 20 Mbit/s »), balises HTML lues « balise h1 », code
   Python sur des lignes séparées (`speech._code` lit « - », « * », « == » sur une ligne de code seulement).
 - Questions proposées par l'IA (`engine/ai_author.py`, route `/admin/ai-questions`) : SDK `anthropic`, modèle

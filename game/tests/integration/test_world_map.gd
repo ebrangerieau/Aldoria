@@ -152,6 +152,16 @@ func test_both_brothers_share_the_citizens_forum() -> void:
 	assert_eq(jules.map(func(d: DungeonDef) -> String: return d.code), ["tribune_conseil", "palais_libertes"])
 	assert_eq(tom.map(func(d: DungeonDef) -> String: return d.code), ["haute_cour"])
 	assert_eq((tom[0] as DungeonDef).chapter_codes.size(), 3, "les trois axes de seconde")
+	# Les SES de Tom logent au Forum, après la Haute Cour : les trois cases de la région.
+	var forum: Array[DungeonDef] = []
+	for d in DungeonDef.all_for_level("2nde"):
+		if WorldMapDef.region_of(d.subject) == "emc":
+			forum.append(d)
+	assert_eq(forum.map(func(d: DungeonDef) -> String: return d.code), ["haute_cour", "marche_forum", "maison_commune"])
+	assert_eq(forum.size(), (WorldMapDef.REGIONS["emc"]["slots"] as Array).size())
+	assert_true(SaveManager.dungeon_unlocked(forum, 1), "le premier lieu de SES est ouvert")
+	assert_string_contains(WorldMapDef.page_greeting(forum, 0), "toutes les pages de cette matière")
+	assert_string_contains(WorldMapDef.page_greeting(forum, 1), "Maison Commune")
 
 
 func test_map_titles_drop_their_article() -> void:

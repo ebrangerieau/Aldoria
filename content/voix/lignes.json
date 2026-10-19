@@ -320,7 +320,31 @@
   {
     "groupe": "carte",
     "id": "page-haute_cour",
-    "texte": "Tu as rapporté la page des Droits ! Elle a repris sa place dans la Grande Chronique. Toutes les pages de la région « Le Forum des Citoyens » sont revenues. Malvrek doit trembler dans sa tour !",
+    "texte": "Tu as rapporté la page des Droits ! Elle a repris sa place dans la Grande Chronique. Tu as rapporté toutes les pages de cette matière dans la région « Le Forum des Citoyens ». Malvrek doit trembler dans sa tour !",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-marche_forum",
+    "texte": "Sur le Forum des Citoyens, le Marché réunissait marchands et acheteurs : chacun y trouvait un prix juste. Le Spéculateur y a truqué les balances et gonflé les comptes ; plus personne ne sait ce qui vaut quoi. Rapporte la page de l'Économie.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-marche_forum",
+    "texte": "Tu as rapporté la page de l'Économie ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « La Maison Commune » s'éclaire sur la carte.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-maison_commune",
+    "texte": "Au bout du Forum, la Maison Commune accueillait les assemblées, les fêtes et les débats. Le Fataliste s'y est installé : il répète que chacun restera à sa place, que voter et étudier ne servent à rien. Rapporte la page de la Société.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-maison_commune",
+    "texte": "Tu as rapporté la page de la Société ! Elle a repris sa place dans la Grande Chronique. Tu as rapporté toutes les pages de cette matière dans la région « Le Forum des Citoyens ». Malvrek doit trembler dans sa tour !",
     "voix": "ysaline"
   },
   {

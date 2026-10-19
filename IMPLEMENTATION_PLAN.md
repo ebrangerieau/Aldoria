@@ -460,6 +460,14 @@ générateurs naturels, donc des questions à rédiger.
 > questions d'anglais. Reste : le donjon de français de Tom (après une première série de questions publiées),
 > les Archives regroupées par matière, puis les deux semaines d'observation.
 >
+> ✅ **2026-10-19 : SES de Tom.** Programme de SES de seconde de 2019 (arrêté du 17 janvier 2019, BO spécial n° 1 du
+> 22 janvier 2019), toujours en vigueur : 6 chapitres, 17 notions (démarche des sciences sociales et données chiffrées,
+> richesses et PIB, marché, socialisation, vie politique, diplôme, emploi et salaire). Exemples relus (mécanismes, pas de
+> statistique d'actualité) ; calculés : valeur ajoutée et PIB, taux de variation et répartition, moyenne et médiane, prix
+> d'équilibre et excédents, taux de chômage, classements (valeur ajoutée, chômage selon le diplôme). Les SES logent au
+> Forum des Citoyens (`REGION_OF`), après la Haute Cour : le Marché du Forum (boss le Spéculateur) puis la Maison Commune
+> (boss le Fataliste). Lecture : €, PIB, CAP, BEP. Noms provisoires. Reste : répliques à enregistrer (ElevenLabs).
+>
 > ✅ **2026-10-19 : EMC de Tom.** Programme d'EMC du 29 mai 2024 (BO n° 24 du 13 juin 2024), en vigueur en seconde
 > depuis la rentrée 2024, thème « Droits, libertés et responsabilité » (annexe officielle relue) : 3 chapitres (les trois
 > axes), 10 notions (État de droit et hiérarchie des normes, laïcité et pluralisme, nouveaux droits, Europe ; presse,

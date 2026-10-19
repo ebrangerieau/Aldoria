@@ -107,6 +107,8 @@ from app.engine.generators import (  # noqa: E402, F401
     problemes_6e,
     raisonnement,
     sciences_6e,
+    ses_2nde,
+    ses_2nde_calculs,
     snt_2nde,
     snt_2nde_calculs,
     svt_2nde,

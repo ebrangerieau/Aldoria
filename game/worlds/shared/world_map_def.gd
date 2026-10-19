@@ -65,7 +65,7 @@ const REGIONS := {
 	},
 	"emc": {
 		"title": "Le Forum des Citoyens",
-		"slots": [Vector2i(8, 6), Vector2i(7, 7), Vector2i(9, 5)],
+		"slots": [Vector2i(8, 6), Vector2i(9, 5), Vector2i(7, 7)],
 		"label": Vector2i(8, 7),
 		"fog": "Près de la Citadelle, le Forum des Citoyens attend ses débats. On y vote, on y défend ses droits et ceux des autres. Il s'ouvrira quand l'enseignement moral et civique entrera dans ta quête.",
 	},
@@ -84,7 +84,7 @@ const REGIONS := {
 }
 
 ## Matières rangées dans la région d'une autre (une seule classe les a : jamais deux fois le même lieu).
-const REGION_OF := {"physique_chimie": "sciences", "espagnol": "anglais"}
+const REGION_OF := {"physique_chimie": "sciences", "espagnol": "anglais", "ses": "emc"}
 
 
 ## Région (clé de `REGIONS`) d'une matière.

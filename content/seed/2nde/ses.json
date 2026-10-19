@@ -1,0 +1,36 @@
+{
+  "level": "2nde",
+  "subject": {"code": "ses", "label": "Sciences économiques et sociales"},
+  "source": "Programme de SES de seconde générale et technologique (arrêté du 17 janvier 2019, BO spécial n° 1 du 22 janvier 2019), toujours en vigueur en 2026-2027 : questionnement transversal, science économique, sociologie et science politique, regards croisés ; savoir-faire quantitatifs (proportions, pourcentages de répartition, taux de variation, moyenne, médiane). Questions : générateurs (api/app/engine/generators/ses_2nde.py et ses_2nde_calculs.py), complétés par la banque.",
+  "chapters": [
+    {"code": "2nde.ses.demarche", "title": "Comment les économistes, les sociologues et les politistes raisonnent-ils et travaillent-ils ?", "notions": [
+      {"code": "2nde.ses.demarche.disciplines", "label": "Les objets de la science économique, de la sociologie et de la science politique"},
+      {"code": "2nde.ses.demarche.methodes", "label": "Hypothèses, modèles, enquêtes et données"},
+      {"code": "2nde.ses.demarche.donnees", "label": "Proportions, pourcentages de répartition, taux de variation, moyenne et médiane"}
+    ]},
+    {"code": "2nde.ses.richesses", "title": "Comment crée-t-on des richesses et comment les mesure-t-on ?", "notions": [
+      {"code": "2nde.ses.richesses.production", "label": "Production marchande et non marchande, organisations productives"},
+      {"code": "2nde.ses.richesses.facteurs", "label": "Facteurs de production et productivité"},
+      {"code": "2nde.ses.richesses.mesure", "label": "Valeur ajoutée, PIB et ses limites"}
+    ]},
+    {"code": "2nde.ses.marche", "title": "Comment se forment les prix sur un marché ?", "notions": [
+      {"code": "2nde.ses.marche.offre_demande", "label": "Offre, demande et leurs courbes"},
+      {"code": "2nde.ses.marche.equilibre", "label": "Prix et quantité d'équilibre, déplacements des courbes"},
+      {"code": "2nde.ses.marche.intervention", "label": "Effets d'une taxe ou d'une subvention"}
+    ]},
+    {"code": "2nde.ses.socialisation", "title": "Comment devenons-nous des acteurs sociaux ?", "notions": [
+      {"code": "2nde.ses.socialisation.instances", "label": "Socialisation primaire et secondaire, instances de socialisation"},
+      {"code": "2nde.ses.socialisation.normes", "label": "Normes, valeurs et rôles sociaux"},
+      {"code": "2nde.ses.socialisation.differenciee", "label": "Socialisation différenciée selon le genre et le milieu social"}
+    ]},
+    {"code": "2nde.ses.politique", "title": "Comment s'organise la vie politique ?", "notions": [
+      {"code": "2nde.ses.politique.pouvoir", "label": "Le pouvoir politique et l'État"},
+      {"code": "2nde.ses.politique.institutions", "label": "Les institutions de la Ve République et la séparation des pouvoirs"},
+      {"code": "2nde.ses.politique.participation", "label": "Partis, élections et participation à la vie politique"}
+    ]},
+    {"code": "2nde.ses.diplome", "title": "Quelles relations entre le diplôme, l'emploi et le salaire ?", "notions": [
+      {"code": "2nde.ses.diplome.emploi", "label": "Population active, emploi et chômage"},
+      {"code": "2nde.ses.diplome.salaire", "label": "Le diplôme protège du chômage et influence le salaire"}
+    ]}
+  ]
+}

@@ -71,6 +71,8 @@ une manie et une réplique d'entrée et de défaite. Les boss actuels deviennent
 | *Forum des Citoyens* (EMC, Jules) | *Le Voleur de Voix* | vide les urnes et décide de tout, tout seul |
 | *Forum des Citoyens* (EMC, Jules) | *Le Fouineur* | lit les secrets, publie les photos sans demander, veut que tous pensent comme lui |
 | *Forum des Citoyens* (EMC, Tom) | *L'Arbitraire* | juge sans juges, fait taire la presse, signe des permis de polluer |
+| *Forum des Citoyens* (SES, Tom) | *Le Spéculateur* | truque les balances, cache les stocks, gonfle les comptes |
+| *Forum des Citoyens* (SES, Tom) | *Le Fataliste* | répète que chacun restera à sa place, que voter et étudier ne servent à rien |
 | *Vallée du Vivant* (SVT, Tom) | *Le Brouille-Gènes* | mélange l'ADN des bocaux, dérègle les hormones, lâche les microbes |
 | *Vallée du Vivant* (SVT, Tom) | *Le Rongeur* | ronge les roches et les sols, épuise les champs, emporte la terre vers la mer |
 | Portes du Temps (histoire, Tom) | *Le Grand Censeur* | raye les noms des registres : ce qui n'est pas autorisé n'a jamais existé |
@@ -114,7 +116,7 @@ le brouillard ; il recule à chaque donjon terminé, et un chemin s'éclaire ver
 | **Les Portes du Temps** | histoire-géographie (puis sciences) | cercle de pierres avec des portes ouvertes sur une autre époque ou un autre lieu | existe : en 6e, la Porte des Origines (histoire) et la Porte des Horizons (géographie) ; en seconde, la Porte des Empires (histoire) et la Porte des Transitions (géographie) |
 | *Le Laboratoire des Inventeurs* | sciences | tour d'expériences, maison du naturaliste | existe en 6e : la Tour des Expériences (matière, énergie) puis la Maison du Naturaliste (vivant, Terre) ; en seconde, la physique-chimie de Tom y a ses deux lieux : l'Alambic des Éléments (matière, atome, transformations) puis le Laboratoire foudroyé (mouvement, forces, son, lumière, circuits), noms provisoires ; les « portes vers le futur et le laboratoire » imaginées au §6 sont devenues cette région à part, une région par matière |
 | *Le Carrefour des Messagers* | SNT | pont des relais, atelier des automates | existe en seconde, sur la côte sud : le Pont des Paquets (Internet, Web, réseaux sociaux, données) puis l'Atelier des Automates (cartes, photo, objets connectés, programmation) ; noms provisoires |
-| *Le Forum des Citoyens* | EMC | tribune, palais des libertés | existe en 6e, au centre près de la Citadelle : la Tribune du Conseil (intérêt général, vote, représentants) puis le Palais des Libertés (laïcité, vie privée) ; en seconde, la Haute Cour (État de droit, information, environnement) ; noms provisoires |
+| *Le Forum des Citoyens* | EMC | tribune, palais des libertés | existe en 6e, au centre près de la Citadelle : la Tribune du Conseil (intérêt général, vote, représentants) puis le Palais des Libertés (laïcité, vie privée) ; en seconde, la Haute Cour (EMC : État de droit, information, environnement), puis, pour les SES, le Marché du Forum (richesses, marchés) et la Maison Commune (socialisation, vie politique, diplôme et emploi) ; noms provisoires |
 | *La Vallée du Vivant* | SVT | conservatoire de bocaux et de graines, puits au milieu des champs | existe en seconde, au sud-ouest : le Conservatoire du Vivant (cellules, ADN, biodiversité, évolution, corps humain et santé) puis le Puits de la Vallée (érosion, sédiments, sols, agrosystèmes) ; noms provisoires |
 | Clairval | révision (toutes matières) | village | existe |
 

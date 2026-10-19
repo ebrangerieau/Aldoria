@@ -133,6 +133,11 @@ ADVICE = {
     "ordre (échelons, hiérarchie des normes, frise des droits), vrai/faux justifié ; une "
     "situation concrète plutôt qu'une définition ; citations exactes (Déclaration des droits "
     "de l'homme, loi de 1905), jamais d'opinion politique ni religieuse.",
+    "ses": "Varie : QCM (mécanismes économiques, socialisation, vie politique, emploi), "
+    "nombre (valeur ajoutée, PIB, taux de variation, part en pourcentage, moyenne, médiane, "
+    "prix d'équilibre, taux de chômage), remise en ordre (classer selon un indicateur "
+    "calculé) ; montants « 1200 € » sans séparateur ; pas de statistique d'actualité dans "
+    "une réponse, des mécanismes et des ordres de grandeur ; jamais d'opinion partisane.",
     "svt": "Varie : QCM (cellule, ADN, métabolisme, biodiversité, évolution, sols, "
     "agrosystèmes, hormones, micro-organismes), nombre (taille réelle au microscope, "
     "capture-recapture, fréquence d'un allèle, rendement de l'élevage), réponse écrite (brin "

@@ -99,6 +99,7 @@ _UNITS = {
     "s": "secondes",
     "nm": "nanomètres",
     "µm": "micromètres",
+    "€": "euros",
     "dB": "décibels",
     "mA": "milliampères",
     "A": "ampères",
@@ -284,6 +285,8 @@ def text(value: str) -> str:
     # (« l'allèle b », « génotype Bb ») dits « grand B », « petit b ».
     out = re.sub(r"\b[ACGT]{4,}\b", lambda m: " ".join(m.group(0)), out)
     out = re.sub(r"\bSRY\b", "S R Y", out)
+    # SES : sigles épelés (PIB, CAP, BEP).
+    out = re.sub(r"\b(PIB|CAP|BEP)\b", lambda m: " ".join(m.group(1)), out)
     out = re.sub(r"\b([Aa]llèles?|[Gg]énotypes?) ([A-Za-z])([A-Za-z])?\b", _allele, out)
     # Numéro contre le cyberharcèlement (EMC), dit « trente dix-huit ».
     out = re.sub(r"\b3018\b", "trente dix-huit", out)

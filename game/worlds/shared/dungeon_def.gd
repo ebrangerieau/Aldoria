@@ -61,7 +61,7 @@ static func all_for_level(level: String) -> Array[DungeonDef]:
 		"6e":
 			return [tour_fractions(), atelier_balances(), observatoire_angles(), bibliotheque_langues(), porte_origines(), porte_horizons(), moulin_phrases(), puits_contes(), tour_experiences(), maison_naturaliste(), tribune_conseil(), palais_libertes()]
 		"2nde":
-			return [labyrinthe_vecteurs(), forge_algebre(), citadelle_fonctions(), theatre_verdure(), bibliotheque_engloutie(), port_couronnes(), porte_empires(), porte_transitions(), alambic_elements(), laboratoire_foudroye(), pont_paquets(), atelier_automates(), moulin_mancha(), conservatoire_vivant(), puits_vallee(), haute_cour()]
+			return [labyrinthe_vecteurs(), forge_algebre(), citadelle_fonctions(), theatre_verdure(), bibliotheque_engloutie(), port_couronnes(), porte_empires(), porte_transitions(), alambic_elements(), laboratoire_foudroye(), pont_paquets(), atelier_automates(), moulin_mancha(), conservatoire_vivant(), puits_vallee(), haute_cour(), marche_forum(), maison_commune()]
 	return []
 
 
@@ -1584,6 +1584,114 @@ static func haute_cour() -> DungeonDef:
 			["trunk_large_A", Vector3(14.6, 0, 4.6), -90.0, 0.8],
 		],
 		"torch_color": Color(0.85, 0.9, 1.0),
+	}
+	return d
+
+
+# --- Forum des Citoyens : les SES de Tom ----------------------------------------------------------
+
+static func marche_forum() -> DungeonDef:
+	var d := DungeonDef.new()
+	d.code = "marche_forum"
+	d.boss_intro = "Approchez, approchez ! Je suis le Spéculateur. J'ai truqué les balances, caché les stocks et gonflé les comptes : ici, plus personne ne sait ce qui vaut quoi. Ta page de l'Économie ? Je te la revends au double."
+	d.boss_defeat = "Mes prix s'effondrent… L'offre et la demande se retrouvent, les comptes redeviennent justes. Personne n'achète plus mes promesses en l'air."
+	d.page_text = "La page de l'Économie se remet en ordre : ce que l'on produit et comment on le mesure, la valeur ajoutée et le PIB, l'offre, la demande et le prix d'équilibre, et ce que changent une taxe ou une subvention."
+	d.map_piece = "building_market_yellow"
+	d.page = "la page de l'Économie"
+	d.threshold = "Sur le Forum des Citoyens, le Marché réunissait marchands et acheteurs : chacun y trouvait un prix juste. Le Spéculateur y a truqué les balances et gonflé les comptes ; plus personne ne sait ce qui vaut quoi. Rapporte la page de l'Économie."
+	d.title = "Le Marché du Forum"
+	d.subject = "ses"
+	d.chapter_codes = ["2nde.ses.demarche", "2nde.ses.richesses", "2nde.ses.marche"]
+	d.chapter_title = "Richesses, prix et marchés"
+	d.intro = "Les étals débordent, les prix s'affolent. Traverse le marché jusqu'au Spéculateur."
+	d.enigma_generator = "2nde.ses.classement_va"
+	d.enigma_title = "Les Registres du Marché"
+	d.enigma_intro = "Le Spéculateur a mélangé les registres. Calcule ce que chaque entreprise crée vraiment, et range-les."
+	d.enigma_xp = 50
+	d.chest_xp = 130
+	d.outro = "Les balances du Marché sont de nouveau justes : chaque prix dit vrai."
+	d.rooms = [
+		{"kind": "entree", "title": "Les Étals"},
+		{"kind": "combat", "title": "La Halle aux Grains", "enemies": [
+			_enemy("Goleling", "Golem des stocks cachés", 85, 2, 40, Vector2(11, 7)),
+		]},
+		{"kind": "combat", "title": "Le Comptoir des Changes", "enemies": [
+			_enemy("Armabee", "Frelon de la surenchère", 90, 3, 45, Vector2(8, 5)),
+			_enemy("GreenBlob", "Bulle spéculative", 90, 3, 45, Vector2(10.5, 14)),
+		]},
+		{"kind": "enigme", "title": "La Salle des Registres"},
+		{"kind": "combat", "title": "L'Entrepôt", "enemies": [
+			_enemy("GolelingEvolved", "Golem de la pénurie", 130, 4, 60, Vector2(11, 7)),
+		]},
+		{"kind": "boss", "title": "La Tour des Enchères", "enemies": [
+			_enemy("MushnubEvolved", "Le Spéculateur", 240, 5, 170, Vector2(11, 6), 1.1),
+		]},
+	]
+	d.decor = {
+		"floor": "floor_wood_large",
+		"floor_accent": "floor_tile_large",
+		"walls": ["wall", "wall_window_open"],
+		"banners": ["banner_triple_yellow", "banner_patternB_yellow"],
+		"props": [
+			["barrel_large", Vector3(1.6, 0, 4.0), 0.0, 0.8],
+			["crates_stacked", Vector3(2.6, 0, 1.4), -15.0, 0.9],
+			["table_medium_decorated_A", Vector3(13.2, 0, 1.6), 0.0, 0.9],
+			["chest_gold", Vector3(14.6, 0, 4.6), -90.0, 0.8],
+		],
+		"torch_color": Color(1.0, 0.85, 0.55),
+	}
+	return d
+
+
+static func maison_commune() -> DungeonDef:
+	var d := DungeonDef.new()
+	d.code = "maison_commune"
+	d.boss_intro = "À quoi bon, Archiviste ? Je suis le Fataliste. Chacun restera à la place où il est né. Voter ne change rien, étudier ne sert à rien. Ta page de la Société ? Elle était écrite d'avance, et pas pour toi."
+	d.boss_defeat = "Tiens… les règles s'apprennent, les votes comptent, les diplômes ouvrent des portes. Rien n'était écrit d'avance. Je déteste quand on me prouve le contraire."
+	d.page_text = "La page de la Société revient : comment on apprend les normes et les valeurs, comment s'organise le pouvoir et comment on y participe, et ce que le diplôme change pour l'emploi et le salaire."
+	d.map_piece = "building_home_A_yellow"
+	d.page = "la page de la Société"
+	d.threshold = "Au bout du Forum, la Maison Commune accueillait les assemblées, les fêtes et les débats. Le Fataliste s'y est installé : il répète que chacun restera à sa place, que voter et étudier ne servent à rien. Rapporte la page de la Société."
+	d.title = "La Maison Commune"
+	d.subject = "ses"
+	d.chapter_codes = ["2nde.ses.socialisation", "2nde.ses.politique", "2nde.ses.diplome"]
+	d.chapter_title = "Socialisation, vie politique, diplôme et emploi"
+	d.intro = "Les bancs sont vides, les urnes poussiéreuses. Monte jusqu'au Fataliste."
+	d.enigma_generator = "2nde.ses.classement_chomage"
+	d.enigma_title = "Le Registre des Actifs"
+	d.enigma_intro = "Le Fataliste a brouillé le registre des actifs. Calcule chaque taux de chômage et range les groupes."
+	d.enigma_xp = 50
+	d.chest_xp = 130
+	d.outro = "La Maison Commune se remplit de voix : on y débat, on y vote, on y apprend."
+	d.rooms = [
+		{"kind": "entree", "title": "Le Vestibule des Habitudes"},
+		{"kind": "combat", "title": "La Salle de Classe", "enemies": [
+			_enemy("Mushnub", "Champignon du « c'est comme ça »", 85, 2, 40, Vector2(11, 7)),
+		]},
+		{"kind": "combat", "title": "La Salle des Votes", "enemies": [
+			_enemy("Armabee", "Abeille abstentionniste", 90, 3, 45, Vector2(8, 5)),
+			_enemy("Cactoro", "Cactus des préjugés", 90, 3, 45, Vector2(10.5, 14)),
+		]},
+		{"kind": "enigme", "title": "Le Bureau du Registre"},
+		{"kind": "combat", "title": "La Bourse du Travail", "enemies": [
+			_enemy("GhostSkull", "Spectre du découragement", 130, 4, 60, Vector2(11, 7)),
+		]},
+		{"kind": "boss", "title": "Le Grenier des Destins", "enemies": [
+			_enemy("Ghost", "Le Fataliste", 240, 5, 170, Vector2(11, 6), 1.3),
+		]},
+	]
+	d.decor = {
+		"floor": "floor_wood_large_dark",
+		"floor_accent": "floor_wood_large",
+		"walls": ["wall_window_open", "wall_shelves"],
+		"banners": ["banner_patternA_blue", "banner_patternC_white"],
+		"props": [
+			["table_long_decorated_A", Vector3(2.4, 0, 1.4), 0.0, 1.0],
+			["shelf_large", Vector3(1.4, 0, 4.0), 90.0, 0.9],
+			["candle_triple", Vector3(13.2, 0, 1.0), 0.0, 0.3],
+			["trunk_large_A", Vector3(14.6, 0, 4.6), -90.0, 0.8],
+		],
+		"torch_color": Color(1.0, 0.9, 0.75),
 	}
 	return d
 
