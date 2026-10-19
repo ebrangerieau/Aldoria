@@ -164,6 +164,18 @@ func test_both_brothers_share_the_citizens_forum() -> void:
 	assert_string_contains(WorldMapDef.page_greeting(forum, 1), "Maison Commune")
 
 
+func test_compact_badge_leaves_the_map_corner_free() -> void:
+	var full := HeroBadge.create(WorldTheme.brouillard(), DungeonDef.all_for_level("2nde"))
+	var small := HeroBadge.create(WorldTheme.brouillard(), DungeonDef.all_for_level("2nde"), true)
+	add_child_autofree(full)
+	add_child_autofree(small)
+	await wait_process_frames(2)
+	assert_true(small.is_compact())
+	assert_lt(small.get_combined_minimum_size().y, full.get_combined_minimum_size().y, "sans la ligne du sac")
+	assert_lt(small.get_combined_minimum_size().x, full.get_combined_minimum_size().x, "barre plus courte")
+	assert_eq(small.pages_text(), full.pages_text(), "les pages restent affichées")
+
+
 func test_map_titles_drop_their_article() -> void:
 	assert_eq(_short("La Tour des Fractions"), "Tour des Fractions")
 	assert_eq(_short("L'Atelier des Balances"), "Atelier des Balances")

@@ -439,7 +439,8 @@ func _build_hud() -> void:
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", 18)
 	top.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_badge = HeroBadge.create(_wt, _dungeons)
+	# Téléphone : badge compact, sinon il cache les lieux du coin nord-ouest (Port des Couronnes).
+	_badge = HeroBadge.create(_wt, _dungeons, Quality.is_phone())
 	_badge.size_flags_vertical = Control.SIZE_SHRINK_BEGIN
 	top.add_child(_badge)
 	var spacer := Control.new()

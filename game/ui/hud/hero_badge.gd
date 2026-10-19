@@ -2,7 +2,8 @@ class_name HeroBadge
 extends PanelContainer
 ## Panneau du héros (Citadelle, carte du royaume) : nom gravé, niveau et barre d'expérience
 ## dorée, pages de la Grande Chronique retrouvées (si `dungeons` n'est pas vide) et objets du sac
-## en icônes. Se met à jour avec la sauvegarde (`refresh`).
+## en icônes. Se met à jour avec la sauvegarde (`refresh`). Compact (carte, sur téléphone) : sans le sac
+## et avec une barre plus courte, pour ne pas cacher les lieux du coin de la carte.
 
 var _wt: WorldTheme
 var _dungeons: Array[DungeonDef] = []
@@ -12,12 +13,14 @@ var _xp_text: Label
 var _pages: Label
 var _bag: HBoxContainer
 var _lines: VBoxContainer
+var _compact := false
 
 
-static func create(wt: WorldTheme, dungeons: Array[DungeonDef] = []) -> HeroBadge:
+static func create(wt: WorldTheme, dungeons: Array[DungeonDef] = [], compact := false) -> HeroBadge:
 	var badge := HeroBadge.new()
 	badge._wt = wt
 	badge._dungeons = dungeons
+	badge._compact = compact
 	badge._build()
 	badge.refresh()
 	return badge
@@ -39,7 +42,7 @@ func _build() -> void:
 	_level.autowrap_mode = TextServer.AUTOWRAP_OFF
 	level_row.add_child(_level)
 	_xp_bar = ProgressBar.new()
-	_xp_bar.custom_minimum_size = Vector2(200, 16)
+	_xp_bar.custom_minimum_size = Vector2(120 if _compact else 200, 16)
 	_xp_bar.show_percentage = false
 	_xp_bar.max_value = 1.0
 	_xp_bar.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -70,6 +73,11 @@ func refresh() -> void:
 		var found := _dungeons.filter(func(d: DungeonDef) -> bool: return int(SaveManager.dungeon(d.code)["completed"]) > 0).size()
 		_pages.text = "Pages de la Chronique : %d / %d" % [found, _dungeons.size()]
 	_bag = UiKit.swap(_bag, UiKit.bag_row(SaveManager.items(), _wt.text_dim))
+	_bag.visible = not _compact
+
+
+func is_compact() -> bool:
+	return _compact
 
 
 func pages_text() -> String:
