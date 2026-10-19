@@ -61,7 +61,7 @@ static func all_for_level(level: String) -> Array[DungeonDef]:
 		"6e":
 			return [tour_fractions(), atelier_balances(), observatoire_angles(), bibliotheque_langues(), porte_origines(), porte_horizons(), moulin_phrases(), puits_contes(), tour_experiences(), maison_naturaliste(), tribune_conseil(), palais_libertes()]
 		"2nde":
-			return [labyrinthe_vecteurs(), forge_algebre(), citadelle_fonctions(), theatre_verdure(), bibliotheque_engloutie(), port_couronnes(), porte_empires(), porte_transitions(), alambic_elements(), laboratoire_foudroye(), pont_paquets(), atelier_automates(), moulin_mancha(), conservatoire_vivant(), puits_vallee()]
+			return [labyrinthe_vecteurs(), forge_algebre(), citadelle_fonctions(), theatre_verdure(), bibliotheque_engloutie(), port_couronnes(), porte_empires(), porte_transitions(), alambic_elements(), laboratoire_foudroye(), pont_paquets(), atelier_automates(), moulin_mancha(), conservatoire_vivant(), puits_vallee(), haute_cour()]
 	return []
 
 
@@ -1529,6 +1529,61 @@ static func puits_vallee() -> DungeonDef:
 			["chest_gold", Vector3(14.6, 0, 4.6), -90.0, 0.8],
 		],
 		"torch_color": Color(0.9, 0.85, 0.6),
+	}
+	return d
+
+
+# --- Forum des Citoyens : l'EMC de Tom ------------------------------------------------------------
+
+static func haute_cour() -> DungeonDef:
+	var d := DungeonDef.new()
+	d.code = "haute_cour"
+	d.boss_intro = "Silence dans la Cour ! Je suis l'Arbitraire. Ici, la loi, c'est moi : je juge sans juges, je fais taire les journaux et je signe des permis de polluer. Ta page des Droits ? Je l'ai déclarée illégale."
+	d.boss_defeat = "Objection… rejetée. Les juges reprennent leur siège, la presse imprime de nouveau, la Charte de l'environnement est remise au mur. Même moi, je dois obéir à la loi."
+	d.page_text = "La page des Droits revient : l'État de droit et la hiérarchie des normes, la laïcité qui protège le pluralisme, la liberté de la presse et ses limites, et le devoir de chacun envers l'environnement et le vivant."
+	d.map_piece = "building_tower_B_blue"
+	d.page = "la page des Droits"
+	d.threshold = "Au cœur du Forum des Citoyens se dresse la Haute Cour, où l'on rendait la justice selon le droit, et non selon l'humeur des puissants. L'Arbitraire s'y est installé : il juge seul, censure les journaux et méprise la nature. Rapporte la page des Droits."
+	d.title = "La Haute Cour"
+	d.subject = "emc"
+	d.chapter_codes = ["2nde.emc.etat_droit", "2nde.emc.information", "2nde.emc.environnement"]
+	d.chapter_title = "État de droit, information, environnement"
+	d.intro = "Les balances de la justice penchent toutes du même côté. Monte jusqu'à l'Arbitraire."
+	d.enigma_generator = "2nde.emc.normes"
+	d.enigma_title = "La Pyramide des Normes"
+	d.enigma_intro = "L'Arbitraire a renversé la pyramide des normes et mélangé les portes de la justice. Remets chaque règle à sa place."
+	d.enigma_xp = 50
+	d.chest_xp = 130
+	d.outro = "Les balances de la Haute Cour retrouvent leur équilibre : le droit s'applique à tous."
+	d.rooms = [
+		{"kind": "entree", "title": "La Salle des Pas Perdus"},
+		{"kind": "combat", "title": "Le Greffe", "enemies": [
+			_enemy("GreenBlob", "Gelée du faux témoignage", 85, 2, 40, Vector2(11, 7)),
+		]},
+		{"kind": "combat", "title": "L'Imprimerie Muselée", "enemies": [
+			_enemy("Armabee", "Frelon de la rumeur", 90, 3, 45, Vector2(8, 5)),
+			_enemy("Mushnub", "Champignon censeur", 90, 3, 45, Vector2(10.5, 14)),
+		]},
+		{"kind": "enigme", "title": "La Salle des Normes"},
+		{"kind": "combat", "title": "Le Jardin Saccagé", "enemies": [
+			_enemy("Cactoro", "Cactus pollueur", 130, 4, 60, Vector2(11, 7)),
+		]},
+		{"kind": "boss", "title": "La Grande Chambre", "enemies": [
+			_enemy("Demon", "L'Arbitraire", 240, 5, 170, Vector2(11, 6), 1.1),
+		]},
+	]
+	d.decor = {
+		"floor": "floor_tile_large",
+		"floor_accent": "floor_wood_large_dark",
+		"walls": ["wall_arched", "wall_shelves"],
+		"banners": ["banner_patternA_blue", "banner_patternC_white", "banner_patternA_red"],
+		"props": [
+			["table_long_decorated_A", Vector3(2.4, 0, 1.4), 0.0, 1.0],
+			["shelf_large", Vector3(1.4, 0, 4.0), 90.0, 0.9],
+			["candle_triple", Vector3(13.2, 0, 1.0), 0.0, 0.3],
+			["trunk_large_A", Vector3(14.6, 0, 4.6), -90.0, 0.8],
+		],
+		"torch_color": Color(0.85, 0.9, 1.0),
 	}
 	return d
 

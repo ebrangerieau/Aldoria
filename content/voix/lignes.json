@@ -313,6 +313,18 @@
   },
   {
     "groupe": "carte",
+    "id": "seuil-haute_cour",
+    "texte": "Au cœur du Forum des Citoyens se dresse la Haute Cour, où l'on rendait la justice selon le droit, et non selon l'humeur des puissants. L'Arbitraire s'y est installé : il juge seul, censure les journaux et méprise la nature. Rapporte la page des Droits.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-haute_cour",
+    "texte": "Tu as rapporté la page des Droits ! Elle a repris sa place dans la Grande Chronique. Toutes les pages de la région « Le Forum des Citoyens » sont revenues. Malvrek doit trembler dans sa tour !",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
     "id": "village-6e",
     "texte": "Les habitants de Clairval sentent le Brouillard leur grignoter la mémoire. Parle-leur : chacun a besoin d'un coup de main aujourd'hui.",
     "voix": "ysaline"

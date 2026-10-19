@@ -130,7 +130,7 @@ ADVICE = {
     "en toutes lettres.",
     "emc": "Varie : QCM (vocabulaire civique, situations de la vie de classe ou en ligne, "
     "textes de référence), nombre (voix nécessaires pour la majorité absolue), remise en "
-    "ordre (échelons de la représentation, frise des droits), vrai/faux justifié ; une "
+    "ordre (échelons, hiérarchie des normes, frise des droits), vrai/faux justifié ; une "
     "situation concrète plutôt qu'une définition ; citations exactes (Déclaration des droits "
     "de l'homme, loi de 1905), jamais d'opinion politique ni religieuse.",
     "svt": "Varie : QCM (cellule, ADN, métabolisme, biodiversité, évolution, sols, "

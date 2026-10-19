@@ -460,6 +460,14 @@ générateurs naturels, donc des questions à rédiger.
 > questions d'anglais. Reste : le donjon de français de Tom (après une première série de questions publiées),
 > les Archives regroupées par matière, puis les deux semaines d'observation.
 >
+> ✅ **2026-10-19 : EMC de Tom.** Programme d'EMC du 29 mai 2024 (BO n° 24 du 13 juin 2024), en vigueur en seconde
+> depuis la rentrée 2024, thème « Droits, libertés et responsabilité » (annexe officielle relue) : 3 chapitres (les trois
+> axes), 10 notions (État de droit et hiérarchie des normes, laïcité et pluralisme, nouveaux droits, Europe ; presse,
+> liberté d'expression et ses limites, désinformation ; Charte de l'environnement, responsabilité, respect du vivant).
+> Exemples relus, sigles écrits en toutes lettres ; énigmes calculées : pyramide des normes et ordre des recours, frise des
+> libertés (1789 à 2024). Lieu : la Haute Cour, au Forum des Citoyens (boss l'Arbitraire). Noms provisoires. Reste : 2
+> répliques à enregistrer (ElevenLabs).
+>
 > ✅ **2026-10-18 : SVT de Tom.** Programme de seconde de 2019 (arrêté du 17 janvier 2019, BO spécial n° 1 du
 > 22 janvier 2019), toujours en vigueur : 6 chapitres, 19 notions (organisation du vivant, biodiversité et évolution,
 > géosciences et paysages, agrosystèmes, procréation et sexualité, micro-organismes et santé). Exemples relus (procréation :

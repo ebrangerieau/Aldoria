@@ -82,6 +82,7 @@ from app.engine.generators import (  # noqa: E402, F401
     anglais_2nde,
     anglais_6e,
     developper_2nde,
+    emc_2nde,
     emc_6e,
     enquetes,
     espagnol_2nde,

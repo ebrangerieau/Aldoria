@@ -146,6 +146,14 @@ func test_tom_life_sciences_open_the_valley() -> void:
 		"Jules : la Vallée reste dans le brouillard")
 
 
+func test_both_brothers_share_the_citizens_forum() -> void:
+	var jules: Array = DungeonDef.all_for_level("6e").filter(func(d: DungeonDef) -> bool: return d.subject == "emc")
+	var tom: Array = DungeonDef.all_for_level("2nde").filter(func(d: DungeonDef) -> bool: return d.subject == "emc")
+	assert_eq(jules.map(func(d: DungeonDef) -> String: return d.code), ["tribune_conseil", "palais_libertes"])
+	assert_eq(tom.map(func(d: DungeonDef) -> String: return d.code), ["haute_cour"])
+	assert_eq((tom[0] as DungeonDef).chapter_codes.size(), 3, "les trois axes de seconde")
+
+
 func test_map_titles_drop_their_article() -> void:
 	assert_eq(_short("La Tour des Fractions"), "Tour des Fractions")
 	assert_eq(_short("L'Atelier des Balances"), "Atelier des Balances")

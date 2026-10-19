@@ -242,7 +242,7 @@ def test_game_dungeons_match_curriculum_and_generators():
         source,
         re.S,
     )
-    assert len(dungeons) == 27
+    assert len(dungeons) == 28
     for code, chapter_list, enigma in dungeons:
         codes = re.findall(r'"([\w.]+)"', chapter_list)
         levels = {chapters[c] for c in codes}  # KeyError : chapitre absent du programme
@@ -540,5 +540,28 @@ async def test_tom_life_sciences_dungeons(client, login, curriculum, chapters, e
     items = body["items"]
     assert len(items) > 20
     assert all(i["notions"][0].startswith("2nde.svt.") for i in items)
+    enigma = [i for i in items if i["role"] == "enigme"]
+    assert len(enigma) == 6 and all(i["type"] == "order" for i in enigma)
+
+
+async def test_tom_civics_dungeon(client, login, curriculum):
+    """Haute Cour : EMC de seconde seulement, énigme de la pyramide des normes."""
+    headers = await login("tom", "9876")
+    body = (
+        await client.post(
+            f"{API}/session/start",
+            json={
+                "mode": "donjon",
+                "focus_chapters": [
+                    f"2nde.emc.{c}" for c in ("etat_droit", "information", "environnement")
+                ],
+                "enigma": {"generator": "2nde.emc.normes", "count": 6},
+            },
+            headers=headers,
+        )
+    ).json()
+    items = body["items"]
+    assert len(items) > 20
+    assert all(i["notions"][0].startswith("2nde.emc.") for i in items)
     enigma = [i for i in items if i["role"] == "enigme"]
     assert len(enigma) == 6 and all(i["type"] == "order" for i in enigma)
