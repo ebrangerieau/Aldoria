@@ -7,7 +7,7 @@
 //
 // Usage : node tts_check.js <url du jeu> <url de l'API locale> <clé admin locale> <code de liaison>
 //        <e-mail du parent du banc> <mot de passe du parent du banc> [pin]
-const { launch, SLOW } = require('./browser');
+const { launch, SLOW, HOLD } = require('./browser');
 
 (async () => {
   const [url, apiUrl, adminKey, pairing, email, password, pin = '1234'] = process.argv.slice(2);
@@ -58,32 +58,32 @@ const { launch, SLOW } = require('./browser');
         { timeout: 60000 * SLOW });
     await page.goto(url + (url.includes('?') ? '&' : '?') + 'erreur_test=1');
     await page.waitForTimeout((8000) * SLOW);
-    await page.mouse.click(640, 400); // écran titre
+    await page.mouse.click(640, 400, HOLD); // écran titre
     await page.waitForTimeout((2500) * SLOW);
     const pairedNow = answered('/play/devices/pair', 'POST');
     for (const digit of pairing) {     // liaison de l'appareil (navigateur neuf)
-      await page.keyboard.press(digit);
+      await page.keyboard.press(digit, HOLD);
       await page.waitForTimeout((120) * SLOW);
     }
     await step('liaison de l\'appareil', pairedNow);
     await page.waitForTimeout((3000) * SLOW);
-    await page.mouse.click(478, 440); // carte de Jules
+    await page.mouse.click(478, 440, HOLD); // carte de Jules
     await page.waitForTimeout((800) * SLOW);
     const loggedIn = answered('/play/login', 'POST');
     for (const digit of pin) {
-      await page.keyboard.press(digit);
+      await page.keyboard.press(digit, HOLD);
       await page.waitForTimeout((120) * SLOW);
     }
     await step('connexion de Jules', loggedIn);
     await page.waitForTimeout((5000) * SLOW);
-    await page.keyboard.press('Escape'); // « Passer » le prologue (première fois seulement)
+    await page.keyboard.press('Escape', HOLD); // « Passer » le prologue (première fois seulement)
     await page.waitForTimeout((4000) * SLOW);    // retour sur la carte
-    await page.keyboard.press('Enter'); // accueil de Maître Ysaline (première fois seulement)
+    await page.keyboard.press('Enter', HOLD); // accueil de Maître Ysaline (première fois seulement)
     await page.waitForTimeout((800) * SLOW);
-    await page.mouse.click(771, 329); // la Tour des Fractions → son seuil
+    await page.mouse.click(771, 329, HOLD); // la Tour des Fractions → son seuil
     await page.waitForTimeout((1000) * SLOW);
     const started = answered('/play/session/start', 'POST');
-    await page.keyboard.press('Enter'); // « J'y vais »
+    await page.keyboard.press('Enter', HOLD); // « J'y vais »
     await step('ouverture du donjon', started);
     // L'introduction est lue une fois la salle construite : on l'attend (au plus 30 s × SLOW).
     let spoken = [];

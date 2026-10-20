@@ -9,7 +9,7 @@
 // Usage : node login_flow.js <url> <dossier captures> <code de liaison> [pin]
 // Échoue (code 1) si un appel /api/ ne répond pas 2xx ou si la console du jeu
 // signale une erreur [Aldoria/api].
-const { launch, SLOW } = require('./browser');
+const { launch, SLOW, HOLD } = require('./browser');
 
 (async () => {
   const [url, outDir, pairing, pin = '1234'] = process.argv.slice(2);
@@ -41,77 +41,77 @@ const { launch, SLOW } = require('./browser');
   const shot = async (name) => page.screenshot({ path: `${outDir}/e2e_${name}.png` });
   await page.goto(url);
   await page.waitForTimeout((8000) * SLOW);   // chargement du moteur
-  await page.mouse.click(640, 400);  // écran titre
+  await page.mouse.click(640, 400, HOLD);  // écran titre
   await page.waitForTimeout((2500) * SLOW);
   await shot('0_liaison');
   for (const digit of pairing) {     // code de liaison (espace parent → Famille → Appareils)
-    await page.keyboard.press(digit);
+    await page.keyboard.press(digit, HOLD);
     await page.waitForTimeout((120) * SLOW);
   }
   paired = true;
   await page.waitForTimeout((3000) * SLOW);
   await shot('1_profils');
-  await page.mouse.click(478, 440);  // carte du premier profil (Jules)
+  await page.mouse.click(478, 440, HOLD);  // carte du premier profil (Jules)
   await page.waitForTimeout((800) * SLOW);
   for (const digit of pin) {
-    await page.keyboard.press(digit);
+    await page.keyboard.press(digit, HOLD);
     await page.waitForTimeout((120) * SLOW);
   }
   await page.waitForTimeout((5000) * SLOW);   // connexion + sauvegarde → carte du royaume
   await shot('2_carte');
-  await page.keyboard.press('Escape'); // « Passer » le prologue (première fois seulement)
+  await page.keyboard.press('Escape', HOLD); // « Passer » le prologue (première fois seulement)
   await page.waitForTimeout((4000) * SLOW);    // retour sur la carte
-  await page.keyboard.press('Enter'); // accueil de Maître Ysaline (première fois seulement)
+  await page.keyboard.press('Enter', HOLD); // accueil de Maître Ysaline (première fois seulement)
   await page.waitForTimeout((800) * SLOW);
-  await page.mouse.click(771, 329);  // la Tour des Fractions → son seuil
+  await page.mouse.click(771, 329, HOLD);  // la Tour des Fractions → son seuil
   await page.waitForTimeout((1000) * SLOW);
   await shot('2b_seuil');
-  await page.keyboard.press('Enter'); // « J'y vais » (paquet + scène 3D)
+  await page.keyboard.press('Enter', HOLD); // « J'y vais » (paquet + scène 3D)
   await page.waitForTimeout((6000) * SLOW);
   await shot('3_donjon_intro');
-  await page.mouse.click(640, 722);  // « En avant ! »
+  await page.mouse.click(640, 722, HOLD);  // « En avant ! »
   await page.waitForTimeout((800) * SLOW);
   await page.keyboard.down('d');     // marcher vers l'est (D, ou → )
   await page.waitForTimeout((1500) * SLOW);
   await page.keyboard.up('d');
   await page.waitForTimeout((500) * SLOW);
   await shot('4_donjon_marche');
-  await page.mouse.click(1180, 42);  // « Quitter » → carte
+  await page.mouse.click(1180, 42, HOLD);  // « Quitter » → carte
   await page.waitForTimeout((4000) * SLOW);
-  await page.mouse.click(659, 384);  // la Citadelle → son seuil
+  await page.mouse.click(659, 384, HOLD);  // la Citadelle → son seuil
   await page.waitForTimeout((1000) * SLOW);
-  await page.keyboard.press('Enter'); // « Entrer »
+  await page.keyboard.press('Enter', HOLD); // « Entrer »
   await page.waitForTimeout((2500) * SLOW);
   await shot('4b_citadelle');
-  await page.mouse.click(927, 630);  // tuile « Archives »
+  await page.mouse.click(927, 630, HOLD);  // tuile « Archives »
   await page.waitForTimeout((3000) * SLOW);
   await shot('5_archives');
-  await page.mouse.click(1097, 53);  // « Retour à la Citadelle »
+  await page.mouse.click(1097, 53, HOLD);  // « Retour à la Citadelle »
   await page.waitForTimeout((2500) * SLOW);
-  await page.mouse.click(1054, 630); // tuile « Apparence » (héros et renard en 3D)
+  await page.mouse.click(1054, 630, HOLD); // tuile « Apparence » (héros et renard en 3D)
   await page.waitForTimeout((3000) * SLOW);
   await shot('5b_apparence');
-  await page.mouse.click(1097, 53);  // « Retour à la Citadelle »
+  await page.mouse.click(1097, 53, HOLD);  // « Retour à la Citadelle »
   await page.waitForTimeout((2500) * SLOW);
-  await page.mouse.click(1008, 464); // « Relever » le défi du jour
+  await page.mouse.click(1008, 464, HOLD); // « Relever » le défi du jour
   await page.waitForTimeout((4000) * SLOW);
-  await page.mouse.click(640, 542);  // « C'est parti ! »
+  await page.mouse.click(640, 542, HOLD);  // « C'est parti ! »
   await page.waitForTimeout((1500) * SLOW);
   await shot('7_defi');
-  await page.mouse.click(1172, 53);  // « Quitter » → Citadelle
+  await page.mouse.click(1172, 53, HOLD);  // « Quitter » → Citadelle
   await page.waitForTimeout((3000) * SLOW);
-  await page.mouse.click(1008, 285); // « Ouvrir la carte du royaume »
+  await page.mouse.click(1008, 285, HOLD); // « Ouvrir la carte du royaume »
   await page.waitForTimeout((4000) * SLOW);
-  await page.mouse.click(496, 504);  // Clairval → son seuil
+  await page.mouse.click(496, 504, HOLD);  // Clairval → son seuil
   await page.waitForTimeout((1000) * SLOW);
-  await page.keyboard.press('Enter'); // « J'y vais »
+  await page.keyboard.press('Enter', HOLD); // « J'y vais »
   await page.waitForTimeout((6000) * SLOW);
-  await page.mouse.click(640, 722);  // « Entrer dans le village »
+  await page.mouse.click(640, 722, HOLD);  // « Entrer dans le village »
   await page.waitForTimeout((1200) * SLOW);
   await shot('6_village');
-  await page.mouse.click(1180, 42);  // « Quitter » → carte
+  await page.mouse.click(1180, 42, HOLD);  // « Quitter » → carte
   await page.waitForTimeout((4000) * SLOW);
-  await page.mouse.click(1112, 44);  // « Changer de joueur » (carte)
+  await page.mouse.click(1112, 44, HOLD);  // « Changer de joueur » (carte)
   await page.waitForTimeout((2500) * SLOW);
   await shot('8_changer_joueur');
 
