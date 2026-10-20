@@ -29,6 +29,18 @@ const { launch, SLOW } = require('./browser');
   const browser = await launch(true);
   try {
     const page = await browser.newPage({ viewport: { width: 1280, height: 800 } });
+    // Capture en cas d'échec, dans E2E_OUT si le banc le donne (CI : artefact e2e-captures).
+    const shot = async (name) => {
+      if (process.env.E2E_OUT) await page.screenshot({ path: `${process.env.E2E_OUT}/voix_${name}.png` });
+    };
+    const step = async (what, promise) => {
+      try {
+        await promise;
+      } catch (e) {
+        await shot(what.replace(/\W+/g, '_'));
+        throw new Error(`étape « ${what} » : pas de réponse du serveur (${e.message.split('\n')[0]})`);
+      }
+    };
     await page.addInitScript(() => {
       window.__spoken = [];
       if ('speechSynthesis' in window) {
@@ -39,21 +51,30 @@ const { launch, SLOW } = require('./browser');
         };
       }
     });
+    // Chaque étape attend la réponse du serveur qui la conclut (et non une durée fixe) : en CI, le
+    // rendu logiciel rend le jeu lent et irrégulier.
+    const answered = (path, method = 'GET') =>
+      page.waitForResponse((r) => r.url().includes(path) && r.request().method() === method && r.ok(),
+        { timeout: 60000 * SLOW });
     await page.goto(url + (url.includes('?') ? '&' : '?') + 'erreur_test=1');
     await page.waitForTimeout((8000) * SLOW);
     await page.mouse.click(640, 400); // écran titre
     await page.waitForTimeout((2500) * SLOW);
+    const pairedNow = answered('/play/devices/pair', 'POST');
     for (const digit of pairing) {     // liaison de l'appareil (navigateur neuf)
       await page.keyboard.press(digit);
       await page.waitForTimeout((120) * SLOW);
     }
+    await step('liaison de l\'appareil', pairedNow);
     await page.waitForTimeout((3000) * SLOW);
     await page.mouse.click(478, 440); // carte de Jules
     await page.waitForTimeout((800) * SLOW);
+    const loggedIn = answered('/play/login', 'POST');
     for (const digit of pin) {
       await page.keyboard.press(digit);
       await page.waitForTimeout((120) * SLOW);
     }
+    await step('connexion de Jules', loggedIn);
     await page.waitForTimeout((5000) * SLOW);
     await page.keyboard.press('Escape'); // « Passer » le prologue (première fois seulement)
     await page.waitForTimeout((4000) * SLOW);    // retour sur la carte
@@ -61,13 +82,21 @@ const { launch, SLOW } = require('./browser');
     await page.waitForTimeout((800) * SLOW);
     await page.mouse.click(771, 329); // la Tour des Fractions → son seuil
     await page.waitForTimeout((1000) * SLOW);
+    const started = answered('/play/session/start', 'POST');
     await page.keyboard.press('Enter'); // « J'y vais »
-    await page.waitForTimeout((7000) * SLOW);
-    const spoken = await page.evaluate(() => window.__spoken);
+    await step('ouverture du donjon', started);
+    // L'introduction est lue une fois la salle construite : on l'attend (au plus 30 s × SLOW).
+    let spoken = [];
+    for (let i = 0; i < 30; i++) {
+      spoken = await page.evaluate(() => window.__spoken);
+      if (spoken.some((t) => t.includes('sens dessus dessous'))) break;
+      await page.waitForTimeout((1000) * SLOW);
+    }
     console.log('Textes confiés à la synthèse vocale :\n  ' + spoken.join('\n  '));
     // Introduction du donjon (et non le seuil de la carte, qui porte aussi son nom).
     if (!spoken.some((t) => t.includes('sens dessus dessous'))) {
       console.log("ÉCHEC : l'introduction du donjon n'a pas été lue");
+      await shot('introduction');
       failed = true;
     } else {
       console.log('OK : lecture à voix haute appelée dans le navigateur');

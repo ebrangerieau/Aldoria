@@ -54,7 +54,7 @@ sleep 3
 cd tools/e2e
 npm ci --no-audit --no-fund --silent
 node node_modules/playwright-core/cli.js install --with-deps chromium >/dev/null
-export E2E_BROWSER=chromium E2E_SLOW=${E2E_SLOW:-3}
+export E2E_BROWSER=chromium E2E_SLOW=${E2E_SLOW:-3} E2E_OUT="$out"
 status=0
 node login_flow.js "http://127.0.0.1:8097/" "$out" "$pair_game" || status=1
 node tts_check.js "http://127.0.0.1:8097/" "http://127.0.0.1:8098" $key "$pair_tts" $email $password || status=1

@@ -16,7 +16,7 @@ quand Eric a demandé la modification.
 | Générateur | + `uv run --directory api python ../tools/export_pack_fixture.py` (paquets des tests du jeu) |
 | Jeu | `godot --headless --path game --import` si assets ou `class_name` ajoutés, puis `GODOT=<godot> bash tools/gut.sh` (GUT sans `-d`, échoue aussi si un fichier de test n'a pas tourné) |
 | Espace parent | `npm --prefix admin run build` ; toute fonction modifiée est décrite dans `admin/src/Guide.tsx` |
-| Réseau, interface, polices, espace parent | `powershell -File tools/e2e_web.ps1` (`-SkipExport` si le jeu n'a pas changé) ; regarder les captures dans `%TEMP%\aldoria-e2e` |
+| Réseau, interface, polices, espace parent | `powershell -File tools/e2e_web.ps1` (`-SkipExport` si le jeu n'a pas changé) ; regarder les captures dans `%TEMP%\aldoria-e2e`. La CI rejoue ces parcours (job `e2e-web`, `tools/e2e_ci.sh`) : rien n'est publié s'ils échouent ; captures dans l'artefact `e2e-captures` (`gh run download <id> -n e2e-captures`) |
 
 `godot` = `D:\developpement\tools\godot\4.7.2\Godot_v4.7.2-stable_win64_console.exe`. Docker Desktop doit tourner
 pour l'e2e (conteneur `aldoria-pg`). `godot --check-only` échoue avec les autoloads : ce n'est pas une erreur.
