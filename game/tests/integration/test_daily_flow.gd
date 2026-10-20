@@ -60,9 +60,10 @@ func test_citadel_counts_pages_and_daily_challenge() -> void:
 	_scene = (load("res://scenes/hub/hub.tscn") as PackedScene).instantiate()
 	add_child(_scene)
 	await wait_process_frames(3)
-	assert_eq((_scene._pages_state as Label).text, "Pages retrouvées : 0 / 12")
+	var total := DungeonDef.all_for_level("6e").size()  # une page par lieu de la classe
+	assert_eq((_scene._pages_state as Label).text, "Pages retrouvées : 0 / %d" % total)
 	SaveManager.complete_dungeon("tour_fractions")
-	assert_eq((_scene._pages_state as Label).text, "Pages retrouvées : 1 / 12")
+	assert_eq((_scene._pages_state as Label).text, "Pages retrouvées : 1 / %d" % total)
 	var buttons := _scene.find_children("*", "Button", true, false).map(func(b: Button) -> String: return b.text)
 	assert_has(buttons, "Ouvrir la carte du royaume")
 	assert_does_not_have(buttons, "Y aller", "le village part de la carte, par son seuil")

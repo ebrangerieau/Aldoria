@@ -19,7 +19,7 @@ lettre mise en minuscule seulement), `intro`, `outro`, `threshold` (texte du seu
 - Ajouter la fonction à `all_for_level(<classe>)` : **l'ordre compte**, les donjons d'une même matière s'ouvrent l'un
   après l'autre (`DungeonDef.previous`).
 - Le donjon ne transmet que ses chapitres et son générateur d'énigme à `session/start` ; `api/tests/test_dungeon.py`
-  vérifie qu'ils existent (mettre à jour `assert len(dungeons) == N`).
+  vérifie qu'ils existent, et que chaque fabrique figure dans `all_for_level` (aucun nombre à mettre à jour).
 
 ## 2. Salles (`rooms`, 6 salles d'ordinaire)
 
@@ -49,8 +49,7 @@ ajouter un emplacement sur une case de terre libre, vérifié avec `--places=1`.
 
 ## 6. Tests et vérification
 
-- GUT : `test_world_map.gd` (statut ouvert / fermé du lieu, total des pages), `test_daily_flow.gd` (pages
-  retrouvées), `test_daily_challenge.gd` si la matière est nouvelle.
+- GUT : `test_world_map.gd` (statut ouvert / fermé du lieu ; les totaux de pages se calculent seuls).
 - Captures (skill `captures`) : seuil sur la carte (`--seuil=<code>`), chaque salle (`--dungeon=<code> --room=N`),
   énigme et boss (`--approach=1`), escalier (`--stairs=1`). Regarder : ennemis hors des murs et de l'escalier, texte
   du seuil sans débordement, boss à la bonne taille.

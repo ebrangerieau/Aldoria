@@ -6,11 +6,11 @@
 // Recette de sécurité : sur l'hôte public, même avec une session valide, l'API parent n'existe pas.
 //
 // Usage : node admin_flow.js <url admin> <url publique> <dossier captures> <e-mail> <mot de passe>
-const { chromium } = require('playwright-core');
+const { launch, SLOW } = require('./browser');
 
 (async () => {
   const [adminUrl, publicUrl, outDir, email, password] = process.argv.slice(2);
-  const browser = await chromium.launch({ channel: 'msedge', headless: true });
+  const browser = await launch(false);
   const page = await browser.newPage({ viewport: { width: 1280, height: 900 } });
   const problems = [];
   const api = [];
@@ -47,7 +47,7 @@ const { chromium } = require('playwright-core');
   const fractions = page.locator('section.chapter', { hasText: 'Fractions' }).first();
   await fractions.getByRole('radio', { name: 'En cours en classe' }).click();
   await page.waitForResponse((r) => r.url().includes('/chapters/') && r.request().method() === 'PUT');
-  await page.waitForTimeout(500);
+  await page.waitForTimeout((500) * SLOW);
   const checked = await fractions.getByRole('radio', { name: 'En cours en classe' }).getAttribute('aria-checked');
   if (checked !== 'true') problems.push('statut « En cours » non appliqué');
   if ((await page.locator('section.now li', { hasText: 'Fractions' }).count()) === 0) {
@@ -60,18 +60,18 @@ const { chromium } = require('playwright-core');
     const reset = page.waitForResponse((r) => r.url().includes('/notions/') && r.request().method() === 'PUT');
     await notSeen.uncheck();
     await reset;
-    await page.waitForTimeout(500);
+    await page.waitForTimeout((500) * SLOW);
   }
   const putAside = page.waitForResponse((r) => r.url().includes('/notions/') && r.request().method() === 'PUT');
   await notSeen.check();
   await putAside;
-  await page.waitForTimeout(500);
+  await page.waitForTimeout((500) * SLOW);
   if ((await fractions.locator('li.notion-aside').count()) !== 1) problems.push('notion « pas encore vue » non appliquée');
   await shot('2_programme');
   const putBack = page.waitForResponse((r) => r.url().includes('/notions/') && r.request().method() === 'PUT');
   await fractions.getByLabel('pas encore vue en classe').first().uncheck();
   await putBack;
-  await page.waitForTimeout(500);
+  await page.waitForTimeout((500) * SLOW);
   if ((await fractions.locator('li.notion-aside').count()) !== 0) problems.push('notion « pas encore vue » non retirée');
   await page.locator('nav.subjects').getByRole('button', { name: /^Histoire-géographie/ }).click();
   await page.locator('section.chapter', { hasText: 'Habiter une métropole' }).first().waitFor();
@@ -87,7 +87,7 @@ const { chromium } = require('playwright-core');
   await page.getByRole('button', { name: 'Générateurs' }).click();
   await page.getByLabel('Générateur').selectOption('6e.fractions.addition');
   await page.locator('ol.previews li', { hasText: 'Calcule' }).first().waitFor();
-  await page.waitForTimeout(500);
+  await page.waitForTimeout((500) * SLOW);
   const formulas = await page.locator('img.formula').evaluateAll((imgs) => imgs.filter((i) => i.naturalWidth > 0).length);
   if (formulas === 0) problems.push("aucune formule affichée dans l'aperçu des générateurs");
   await shot('3_generateurs');
@@ -143,7 +143,7 @@ const { chromium } = require('playwright-core');
   await page.locator('#amenagements').getByRole('button', { name: 'Enregistrer' }).click();
   await page.waitForResponse((r) => r.url().includes('/accommodations') && r.request().method() === 'PUT');
   await page.getByRole('button', { name: /Tom/ }).click();
-  await page.waitForTimeout(800);
+  await page.waitForTimeout((800) * SLOW);
   // Code secret : deux saisies différentes bloquent le bouton ; puis le même code que
   // celui du banc (9876), pour ne pas changer le profil de test.
   const code = page.locator('#code');

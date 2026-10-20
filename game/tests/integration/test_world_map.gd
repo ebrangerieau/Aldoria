@@ -61,7 +61,8 @@ func test_places_follow_the_class_and_progress() -> void:
 	await _open()
 	assert_eq(_place("tour_fractions")["status"], "done")
 	assert_eq(_place("atelier_balances")["status"], "open")
-	assert_eq((_scene._badge as HeroBadge).pages_text(), "Pages de la Chronique : 1 / 12")
+	var total := DungeonDef.all_for_level("6e").size()  # une page par lieu de la classe
+	assert_eq((_scene._badge as HeroBadge).pages_text(), "Pages de la Chronique : 1 / %d" % total)
 
 
 func test_dungeons_sit_in_their_region() -> void:

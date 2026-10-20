@@ -82,9 +82,37 @@ jobs:
           path: build/web
           retention-days: 7
 
+  e2e-web:
+    # Parcours joueur, lecture à voix haute et espace parent dans un navigateur, sur un banc jetable
+    # (tools/e2e_ci.sh) : rien n'est publié si un parcours échoue.
+    runs-on: ubuntu-latest
+    needs: export-web
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: tools/e2e/package-lock.json
+      - uses: actions/download-artifact@v4
+        with:
+          name: web-export
+          path: build/web
+      - name: Post-traitement (comme pour l'image publiée)
+        run: python3 tools/postprocess_web.py build/web | tail -1
+      - name: Parcours dans le navigateur
+        run: bash tools/e2e_ci.sh "$RUNNER_TEMP/aldoria-e2e"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-captures
+          path: ${{ runner.temp }}/aldoria-e2e
+          retention-days: 7
+
   images:
     runs-on: ubuntu-latest
-    needs: [api-tests, admin-build, export-web]
+    needs: [api-tests, admin-build, export-web, e2e-web]
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
       contents: read
@@ -120,6 +148,8 @@ jobs:
     environment: production
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # historique complet : migrations ajoutées depuis la version en service
       - name: Déploiement sur le VPS
         env:
           SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
@@ -135,6 +165,21 @@ jobs:
           # Le scan de clé échoue parfois (réseau) : 3 essais.
           for i in 1 2 3; do ssh-keyscan -T 15 -H "$VPS_HOST" >> ~/.ssh/known_hosts && break; sleep 10; done
           ssh -i ~/key "$VPS_USER@$VPS_HOST" "mkdir -p /docker/aldoria/backup"
+          # Sauvegarde de la base avant toute nouvelle migration (l'image API l'applique au démarrage) :
+          # quand une migration a changé depuis le commit en service, ou si ce commit est inconnu.
+          # Dump complet vérifié (sinon le déploiement s'arrête) ; les 10 plus récents sont gardés.
+          live=$(curl -fsS "$PROD_URL/api/v1/health" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("version",""))' || true)
+          if [ -z "$live" ] || ! git cat-file -e "${live}^{commit}" 2>/dev/null \
+             || [ -n "$(git diff --name-only "$live" "$GITHUB_SHA" -- api/alembic/versions)" ]; then
+            dump="avant-deploiement-$(echo "$GITHUB_SHA" | cut -c1-7)-$(date -u +%Y%m%dT%H%M%SZ).sql.gz"
+            ssh -i ~/key "$VPS_USER@$VPS_HOST" "cd /docker/aldoria && mkdir -p backups \
+              && docker compose exec -T db sh -c 'pg_dump -U \$POSTGRES_USER \$POSTGRES_DB' | gzip > backups/$dump \
+              && chmod 600 backups/$dump \
+              && gzip -dc backups/$dump | tail -c 300 | grep -q 'PostgreSQL database dump complete' \
+              && (ls -1t backups/avant-deploiement-*.sql.gz | tail -n +11 | xargs -r rm --) \
+              && ls -l backups/$dump"
+            echo "Sauvegarde avant migration : backups/$dump (version en service : ${live:-inconnue})" >> "$GITHUB_STEP_SUMMARY"
+          fi
           scp -i ~/key deploy/docker-compose.yml "$VPS_USER@$VPS_HOST:/docker/aldoria/docker-compose.yml"
           scp -i ~/key deploy/backup/*.sh "$VPS_USER@$VPS_HOST:/docker/aldoria/backup/"
           # Le service backup est relancé pour lire la nouvelle version de son script

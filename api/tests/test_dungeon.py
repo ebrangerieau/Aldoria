@@ -242,7 +242,14 @@ def test_game_dungeons_match_curriculum_and_generators():
         source,
         re.S,
     )
-    assert len(dungeons) == 30
+    # Chaque fabrique `static func x() -> DungeonDef:` est lue, et chacune figure dans la liste
+    # d'une classe (`all_for_level`) : un donjon oublié dans la liste ne passerait pas inaperçu.
+    factories = re.findall(r"^static func (\w+)\(\) -> DungeonDef:", source, re.M)
+    assert len(dungeons) == len(factories) > 0
+    listed = re.findall(r"return \[([^\]]*)\]", source.split("static func all_for_level")[1]
+                        .split("static func")[0])
+    called = re.findall(r"(\w+)\(\)", ",".join(listed))
+    assert sorted(called) == sorted(factories), "donjon absent de all_for_level, ou en double"
     for code, chapter_list, enigma in dungeons:
         codes = re.findall(r'"([\w.]+)"', chapter_list)
         levels = {chapters[c] for c in codes}  # KeyError : chapitre absent du programme

@@ -48,7 +48,8 @@ Modèles à relire avant d'écrire : le français de seconde (commit `662dadf`) 
 - Couverture : chaque notion du seed a un générateur (`REGISTRY[code].notion`).
 - Unicité de la bonne réponse, intrus distincts, réponse écrite acceptée sans article, texte lu sans symbole.
 - Générateurs calculés : cas pièges explicites (`pytest.mark.parametrize`).
-- `tests/test_dungeon.py` : nombre de donjons (`assert len(dungeons) == N`).
+- `tests/test_dungeon.py` : un test de session par donjon (chapitres, énigme) ; le nombre de donjons n'est
+  plus écrit en dur (chaque fabrique de `dungeon_def.gd` doit figurer dans `all_for_level`).
 
 ## 6. Jeu : région et donjons
 
@@ -64,9 +65,7 @@ Modèles à relire avant d'écrire : le français de seconde (commit `662dadf`) 
 
 ## 7. Tests du jeu à mettre à jour (échouent sinon)
 
-- `tests/integration/test_world_map.gd` : statut des nouveaux lieux, total « Pages de la Chronique : x / N ».
-- `tests/integration/test_daily_flow.gd` : « Pages retrouvées : x / N ».
-- `tests/unit/test_daily_challenge.gd` : liste `DungeonDef.subjects(...)`.
+- `tests/integration/test_world_map.gd` : statut des nouveaux lieux (les totaux de pages se calculent seuls).
 - `tests/integration/test_question_flow.gd` : seuils qui comptent des questions d'une matière dans un paquet partagé.
 - Paquets de test : `uv run --directory api python ../tools/export_pack_fixture.py`.
 

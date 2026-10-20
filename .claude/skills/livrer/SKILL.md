@@ -23,10 +23,13 @@ pour l'e2e (conteneur `aldoria-pg`). `godot --check-only` échoue avec les autol
 Un fichier de test GUT ignoré (« cannot infer the type ») ou une erreur GUT hors assertion fait échouer `tools/gut.sh`
 (et la CI).
 
-## 2. Migration de base (Alembic) : sauvegarde d'abord
+## 2. Migration de base (Alembic) : sauvegarde automatique
 
-L'image API applique `alembic upgrade head` au démarrage. **Avant de pousser** une migration, sauvegarder la base
-de production :
+L'image API applique `alembic upgrade head` au démarrage. La CI (étape « Déploiement sur le VPS ») sauvegarde la base
+**avant** la mise en ligne dès qu'un fichier de `api/alembic/versions` a changé depuis le commit en service (ou si ce
+commit est inconnu) : `/docker/aldoria/backups/avant-deploiement-<commit>-<date>.sql.gz`, dump vérifié complet (sinon
+le déploiement s'arrête), 10 gardés. Le résumé de la CI donne le nom du fichier. Sauvegarde manuelle (avant une
+opération à la main sur la base) :
 
 ```bash
 ssh -i ~/.ssh/aldoria_deploy root@72.60.188.128 'cd /docker/aldoria && \

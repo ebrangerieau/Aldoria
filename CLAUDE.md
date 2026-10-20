@@ -56,6 +56,8 @@ Test de bout en bout **dans le navigateur** (à lancer avant tout déploiement t
 l'interface ou les polices) : `powershell -File tools/e2e_web.ps1` — export web, nginx + API + PostgreSQL
 locaux derrière un proxy de même origine, parcours titre → PIN → combat dans Edge headless.
 Le web diffère du PC : décompression gzip faite par le navigateur, pas de polices système.
+La CI rejoue les mêmes parcours avant toute publication (`tools/e2e_ci.sh` : base neuve, Chromium, WebGL logiciel,
+attentes × `E2E_SLOW` ; navigateur choisi par `tools/e2e/browser.js`) ; captures dans l'artefact `e2e-captures`.
 
 Sauvegardes de la base (service `backup`, copie à la maison, restauration) : `docs/exploitation.md`.
 Vérifier qu'une sauvegarde se restaure, dans un PostgreSQL jetable : `powershell -File tools/test_restauration.ps1 <fichier.sql.gz>`.
