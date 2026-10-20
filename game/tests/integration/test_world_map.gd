@@ -165,6 +165,24 @@ func test_both_brothers_share_the_citizens_forum() -> void:
 	assert_string_contains(WorldMapDef.page_greeting(forum, 1), "Maison Commune")
 
 
+func test_places_are_far_enough_for_their_names() -> void:
+	# Les noms ne se chevauchent pas : sur une même rangée ou deux rangées voisines, quatre colonnes
+	# d'écart au moins ; le coin nord-ouest (panneau du héros) reste sans lieu.
+	var cells: Array[Vector2i] = [WorldMapDef.CITADEL, WorldMapDef.VILLAGE]
+	for subject in WorldMapDef.REGIONS:
+		for cell: Vector2i in WorldMapDef.REGIONS[subject]["slots"]:
+			cells.append(cell)
+	for id in WorldMapDef.SECRETS:
+		cells.append(WorldMapDef.SECRETS[id]["cell"])
+	for i in cells.size():
+		assert_false(cells[i].x < 4 and cells[i].y < 3, "sous le panneau du héros : %s" % cells[i])
+		for j in range(i + 1, cells.size()):
+			var a := cells[i]
+			var b := cells[j]
+			if absi(a.y - b.y) <= 1:
+				assert_gte(absi(a.x - b.x), 4, "%s et %s trop proches" % [a, b])
+
+
 func test_compact_badge_leaves_the_map_corner_free() -> void:
 	var full := HeroBadge.create(WorldTheme.brouillard(), DungeonDef.all_for_level("2nde"))
 	var small := HeroBadge.create(WorldTheme.brouillard(), DungeonDef.all_for_level("2nde"), true)

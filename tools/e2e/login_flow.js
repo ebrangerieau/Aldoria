@@ -63,7 +63,7 @@ const { launch, SLOW, HOLD } = require('./browser');
   await page.waitForTimeout((4000) * SLOW);    // retour sur la carte
   await page.keyboard.press('Enter', HOLD); // accueil de Maître Ysaline (première fois seulement)
   await page.waitForTimeout((800) * SLOW);
-  await page.mouse.click(771, 329, HOLD);  // la Tour des Fractions → son seuil
+  await page.mouse.click(749, 320, HOLD);  // la Tour des Fractions → son seuil
   await page.waitForTimeout((1000) * SLOW);
   await shot('2b_seuil');
   await page.keyboard.press('Enter', HOLD); // « J'y vais » (paquet + scène 3D)
@@ -78,7 +78,7 @@ const { launch, SLOW, HOLD } = require('./browser');
   await shot('4_donjon_marche');
   await page.mouse.click(1180, 42, HOLD);  // « Quitter » → carte
   await page.waitForTimeout((4000) * SLOW);
-  await page.mouse.click(659, 384, HOLD);  // la Citadelle → son seuil
+  await page.mouse.click(653, 391, HOLD);  // la Citadelle → son seuil
   await page.waitForTimeout((1000) * SLOW);
   await page.keyboard.press('Enter', HOLD); // « Entrer »
   await page.waitForTimeout((2500) * SLOW);
@@ -102,7 +102,7 @@ const { launch, SLOW, HOLD } = require('./browser');
   await page.waitForTimeout((3000) * SLOW);
   await page.mouse.click(1008, 285, HOLD); // « Ouvrir la carte du royaume »
   await page.waitForTimeout((4000) * SLOW);
-  await page.mouse.click(496, 504, HOLD);  // Clairval → son seuil
+  await page.mouse.click(451, 391, HOLD);  // Clairval → son seuil
   await page.waitForTimeout((1000) * SLOW);
   await page.keyboard.press('Enter', HOLD); // « J'y vais »
   await page.waitForTimeout((6000) * SLOW);

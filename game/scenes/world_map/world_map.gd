@@ -14,7 +14,12 @@ const PICK_RADIUS := 90.0  # pixels autour d'un lieu touché
 const CAMERA_PITCH := -58.0
 const CAMERA_FOV := 38.0
 ## Zoom : distance de la caméra, de la carte entière (FAR) au plus près (NEAR).
-const CAMERA_FAR := 31.0
+const CAMERA_FAR := 47.0
+## Noms des lieux : leur taille de base vaut pour cette distance ; ils gardent la même taille à l'écran
+## quelle que soit la distance de la caméra (l'île agrandie écarte les lieux, pas les lettres).
+const LABEL_DISTANCE := 31.0
+## Bâtiments des lieux agrandis : sur l'île de 21 colonnes, une tuile est plus petite à l'écran.
+const PIECE_SCALE := 1.35
 const CAMERA_NEAR := 12.0
 const ZOOM_STEP := 1.25  # boutons + / − et molette
 const DRAG_THRESHOLD := 14.0  # pixels : au-delà, un doigt qui bouge déplace la carte au lieu de toucher un lieu
@@ -29,6 +34,7 @@ var _ground: Node3D
 var _camera: Camera3D
 var _places: Array[Dictionary] = []  # {kind, id, title, cell, status, index, label}
 var _markers: Array[Label3D] = []  # repères qui flottent au-dessus des quêtes ouvertes
+var _labels: Array[Label3D] = []  # noms et repères, mis à l'échelle de la distance (`_place_camera`)
 var _time := 0.0
 var _hud: CanvasLayer
 var _badge: HeroBadge
@@ -144,30 +150,30 @@ func _collect_places() -> void:
 
 
 func _build_places() -> void:
-	_add_piece("building_castle_blue", WorldMapDef.CITADEL, Vector2.ZERO, 30.0, 1.2)
-	_add_piece("building_archeryrange_green", WorldMapDef.CITADEL + Vector2i(1, 0), Vector2.ZERO, -20.0)
-	_add_piece("flag_blue", WorldMapDef.CITADEL, Vector2(0.75, 0.6), 0.0, 2.2)
+	_add_piece("building_castle_blue", WorldMapDef.CITADEL, Vector2.ZERO, 30.0, 1.2 * PIECE_SCALE)
+	_add_piece("building_archeryrange_green", WorldMapDef.CITADEL + Vector2i(1, 0), Vector2.ZERO, -20.0, PIECE_SCALE)
+	_add_piece("flag_blue", WorldMapDef.CITADEL, Vector2(0.75, 0.6), 0.0, 2.2 * PIECE_SCALE)
 	if _village != null:
-		_add_piece("building_market_yellow", WorldMapDef.VILLAGE, Vector2(0.15, -0.2), 10.0)
-		_add_piece("building_well_yellow", WorldMapDef.VILLAGE, Vector2(-0.55, 0.55), 0.0)
-		_add_piece("building_home_A_yellow", WorldMapDef.VILLAGE + Vector2i(-1, 0), Vector2(0.3, -0.2), 40.0)
-		_add_piece("building_home_B_yellow", WorldMapDef.VILLAGE + Vector2i(-1, 0), Vector2(-0.4, 0.4), -30.0)
-		_add_piece("building_windmill_yellow", WorldMapDef.VILLAGE + Vector2i(0, 1), Vector2.ZERO, 15.0)
+		_add_piece("building_market_yellow", WorldMapDef.VILLAGE, Vector2(0.15, -0.2), 10.0, PIECE_SCALE)
+		_add_piece("building_well_yellow", WorldMapDef.VILLAGE, Vector2(-0.55, 0.55), 0.0, PIECE_SCALE)
+		_add_piece("building_home_A_yellow", WorldMapDef.VILLAGE + Vector2i(-1, 0), Vector2(0.3, -0.2), 40.0, PIECE_SCALE)
+		_add_piece("building_home_B_yellow", WorldMapDef.VILLAGE + Vector2i(-1, 0), Vector2(-0.4, 0.4), -30.0, PIECE_SCALE)
+		_add_piece("building_windmill_yellow", WorldMapDef.VILLAGE + Vector2i(0, 1), Vector2.ZERO, 15.0, PIECE_SCALE)
 	for p in _places:
 		match p["kind"]:
 			"dungeon":
 				var d := _dungeons[int(p["index"])]
-				_add_piece(d.map_piece, p["cell"], Vector2.ZERO, 20.0, 1.15)
+				_add_piece(d.map_piece, p["cell"], Vector2.ZERO, 20.0, 1.15 * PIECE_SCALE)
 				if p["status"] == "done":
-					_add_piece("flag_blue", p["cell"], Vector2(0.6, 0.5), 0.0, 2.2)
+					_add_piece("flag_blue", p["cell"], Vector2(0.6, 0.5), 0.0, 2.2 * PIECE_SCALE)
 				elif p["status"] == "locked":
-					_add_piece("cloud_small", p["cell"], Vector2.ZERO, 0.0, 0.8, 2.2)
+					_add_piece("cloud_small", p["cell"], Vector2.ZERO, 0.0, 0.8 * PIECE_SCALE, 2.2 * PIECE_SCALE)
 			"fog":
 				for cell in WorldMapDef.REGIONS[p["region"]]["slots"]:
-					_add_piece("cloud_big", cell, Vector2.ZERO, randf_range(0, 360), 0.9, 1.8)
+					_add_piece("cloud_big", cell, Vector2.ZERO, randf_range(0, 360), 0.9 * PIECE_SCALE, 1.8)
 			"secret":
-				_add_piece(WorldMapDef.SECRETS[p["id"]]["piece"], p["cell"], Vector2.ZERO, 0.0, 1.1)
-				_add_piece("cloud_big", p["cell"], Vector2(0.3, 0.2), 30.0, 0.9, 2.6)
+				_add_piece(WorldMapDef.SECRETS[p["id"]]["piece"], p["cell"], Vector2.ZERO, 0.0, 1.1 * PIECE_SCALE)
+				_add_piece("cloud_big", p["cell"], Vector2(0.3, 0.2), 30.0, 0.9 * PIECE_SCALE, 2.6 * PIECE_SCALE)
 		_add_label(p)
 
 
@@ -179,31 +185,37 @@ func _add_label(p: Dictionary) -> void:
 	title.fixed_size = false
 	title.font = Accessibility.font()
 	title.font_size = UiKit.font_size(36)
-	title.pixel_size = 0.011
+	title.set_meta("base_px", 0.011)
 	title.outline_size = 14
 	title.outline_modulate = Color(0, 0, 0, 0.75)
-	title.position = at + Vector3(0, 3.2 if p["kind"] == "citadel" else 2.6, 0.4)
+	title.position = at + Vector3(0, 0, 0.4)
+	# Au-dessus du toit, d'autant plus haut que le nom est grand dans le monde (caméra lointaine).
+	title.set_meta("roof", (2.2 if p["kind"] == "citadel" else 1.6) * PIECE_SCALE)
+	title.set_meta("lift", 1.0)
 	title.text = "%s\n%s" % [short_title(p["title"]), _status_text(p)]
 	title.modulate = {"done": _wt.good.lightened(0.35), "open": Color.WHITE, "locked": Color(0.85, 0.85, 0.85), "fog": Color(0.8, 0.82, 0.9)}[p["status"]]
 	title.render_priority = 2
 	add_child(title)
+	_labels.append(title)
 	p["label"] = title
 	if p["kind"] in ["dungeon", "village"] and p["status"] == "open":
 		var marker := Label3D.new()
 		marker.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		marker.no_depth_test = true
 		marker.font = Accessibility.font()
-		marker.font_size = 96
-		marker.pixel_size = 0.012
+		marker.font_size = 72
+		marker.set_meta("base_px", 0.012)
 		marker.outline_size = 16
 		marker.outline_modulate = Color(0, 0, 0, 0.6)
 		marker.modulate = Color("#ffd447")
 		marker.text = "▼"
-		marker.position = at + Vector3(0, 4.3, 0.4)
-		marker.set_meta("base_y", marker.position.y)
+		marker.position = at + Vector3(0, 0, 0.4)
+		marker.set_meta("roof", 1.6 * PIECE_SCALE)
+		marker.set_meta("lift", 3.2)  # au-dessus des deux lignes du nom
 		marker.render_priority = 3
 		add_child(marker)
 		_markers.append(marker)
+		_labels.append(marker)
 
 
 ## Nom sur la carte, sans article (« Tour des Fractions ») : plus court, il se chevauche moins.
@@ -367,7 +379,8 @@ func _build_camera() -> void:
 	_camera.far = 200.0
 	add_child(_camera)
 	var size := WorldMapDef.size()
-	_home = Vector3(size.x / 2.0 - WorldMapDef.TILE_W / 2.0, 0, size.y / 2.0 - 1.0)
+	# Un peu au nord du centre : l'île descend à l'écran, son bord nord passe sous le panneau du héros.
+	_home = Vector3(size.x / 2.0 - WorldMapDef.TILE_W / 2.0, 0, size.y / 2.0 - 2.8)
 	_focus = _home
 	_camera.rotation = Vector3(deg_to_rad(CAMERA_PITCH), 0, 0)
 	_place_camera()
@@ -384,6 +397,11 @@ func _place_camera() -> void:
 	_focus.y = 0.0
 	var pitch := deg_to_rad(CAMERA_PITCH)
 	_camera.position = _focus + Vector3(0, -sin(pitch) * _distance, cos(pitch) * _distance)
+	var grow := _distance / LABEL_DISTANCE
+	for label in _labels:  # même taille à l'écran, de la carte entière au plus près
+		label.pixel_size = float(label.get_meta("base_px")) * grow
+		label.position.y = float(label.get_meta("roof")) + float(label.get_meta("lift")) * grow
+		label.set_meta("base_y", label.position.y)  # repères : leur balancement part de là
 	for b in _zoom_buttons:
 		b.disabled = (b.text == "+" and _distance <= CAMERA_NEAR + 0.01) or (b.text == "−" and _distance >= CAMERA_FAR - 0.01)
 

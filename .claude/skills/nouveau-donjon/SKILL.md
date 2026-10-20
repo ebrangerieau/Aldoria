@@ -45,7 +45,8 @@ Rien d'éclairé en dur : la scène suit `Quality.settings()`.
 ## 5. Carte
 
 Emplacement = prochain `slots` libre de la région dans `world_map_def.gd` (dans l'ordre des donjons). Région pleine :
-ajouter un emplacement sur une case de terre libre, vérifié avec `--places=1`.
+ajouter un emplacement sur une case de terre libre, à quatre colonnes au moins de tout lieu de la même rangée ou
+d'une rangée voisine (`test_places_are_far_enough_for_their_names`), vérifié sur une capture (PC et téléphone).
 
 ## 6. Tests et vérification
 

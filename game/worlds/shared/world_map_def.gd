@@ -6,7 +6,9 @@ extends RefCounted
 ## région sans donjon pour la classe de l'enfant reste dans le brouillard.
 ##
 ## Grille : hexagones à pointe vers le haut, lignes impaires décalées d'une demi-tuile vers l'est.
-## Colonne q (0 à 12) vers l'est, ligne r (0 à 10) vers le sud.
+## Colonne q (0 à 20) vers l'est, ligne r (0 à 12) vers le sud. Les lieux sont espacés (au moins quatre
+## colonnes sur une même rangée ou deux rangées voisines) : leurs noms ne se chevauchent pas, même sur un
+## téléphone ; le coin nord-ouest, sous le panneau du héros, reste sans lieu.
 
 const PIECES := "res://assets/kaykit/hexagon/%s.gltf"
 const TILE_W := 2.0
@@ -14,71 +16,65 @@ const ROW_H := 1.732  # 3/4 de la hauteur d'une tuile (2,31 m)
 
 ## ~ eau · . herbe · M montagne · H collines boisées · h collines · T forêt
 const GRID := [
-	"~~~~~~~~~~~~~",
-	"~~~..H..MMMM~",
-	"~~...h.MMM.M~",
-	"~~.....hM.MM~",
-	"~~......M...~",
-	"~~..........~",
-	"~~.....h..h.~",
-	"~~.........H~",
-	"~~.TT...T.T.~",
-	"~~~TTT.TT..~~",
-	"~~~~~~~~~~~~~",
+	"~~~~~~~~~~~~~~~~~~~~~",
+	"~~~~.........M.MMM.~~",
+	"~~..Hh.h.h.MMMMMMMM~~",
+	"~............MMM.MHM~",
+	"~..h.....h.......M..~",
+	"~...........H...H...~",
+	"~......h.....h.h.h..~",
+	"~...................~",
+	"~..T.T.....h.....h..~",
+	"~..TT..TT...........~",
+	"~~TTTTTTTTTTTT.h...~~",
+	"~~~TTTTTTTTTT......~~",
+	"~~~~~~~~~~~~~~~~~~~~~",
 ]
 
-const CITADEL := Vector2i(6, 5)
-const VILLAGE := Vector2i(4, 7)
+const CITADEL := Vector2i(10, 5)
+const VILLAGE := Vector2i(6, 5)
 
-## Régions : matière → titre, emplacements des donjons (dans l'ordre d'ouverture), cellule du
-## nom, texte du brouillard (région pas encore au programme de l'enfant).
+## Régions : matière → titre, emplacements des donjons (dans l'ordre d'ouverture), texte du
+## brouillard (région pas encore au programme de l'enfant).
 const REGIONS := {
 	"maths": {
 		"title": "Les Cimes Fractales",
-		"slots": [Vector2i(8, 4), Vector2i(9, 2), Vector2i(10, 1)],
-		"label": Vector2i(10, 3),
+		"slots": [Vector2i(12, 3), Vector2i(14, 1), Vector2i(18, 1)],
 		"fog": "Les Cimes Fractales dorment sous le brouillard. Leurs pages t'attendront quand ta classe y montera.",
 	},
 	"anglais": {
 		"title": "La Bibliothèque des Langues",
-		"slots": [Vector2i(2, 5), Vector2i(2, 3), Vector2i(2, 7)],
-		"label": Vector2i(3, 4),
+		"slots": [Vector2i(2, 5), Vector2i(4, 7), Vector2i(2, 9)],
 		"fog": "Au bord de la mer, la Bibliothèque des Langues est encore noyée de brume. Ses portes s'ouvriront quand l'anglais entrera dans ta quête.",
 	},
 	"francais": {
 		"title": "Le Bois des Mots",
-		"slots": [Vector2i(6, 8), Vector2i(8, 8), Vector2i(7, 9)],
-		"label": Vector2i(5, 9),
+		"slots": [Vector2i(10, 9), Vector2i(8, 11), Vector2i(12, 11)],
 		"fog": "Le Bois des Mots est perdu dans le brouillard. On raconte que les arbres y murmurent des histoires. Un jour, un Archiviste y entrera.",
 	},
 	"sciences": {
 		"title": "Le Laboratoire des Inventeurs",
-		"slots": [Vector2i(5, 3), Vector2i(4, 4), Vector2i(6, 2)],
-		"label": Vector2i(4, 2),
+		"slots": [Vector2i(8, 3), Vector2i(6, 1), Vector2i(4, 3)],
 		"fog": "Derrière ses vitres embuées, le Laboratoire des Inventeurs garde ses expériences et ses spécimens. Il s'ouvrira quand les sciences entreront dans ta quête.",
 	},
 	"histoire_geo": {
 		"title": "Les Portes du Temps",
-		"slots": [Vector2i(10, 6), Vector2i(10, 8), Vector2i(11, 5)],
-		"label": Vector2i(11, 7),
+		"slots": [Vector2i(16, 7), Vector2i(18, 5), Vector2i(16, 3)],
 		"fog": "Dans ce cercle de pierres, chaque porte ouvre sur une autre époque ou un autre lieu du monde. Dame Sablière y a tout mélangé. Ces portes s'ouvriront quand l'histoire-géographie entrera dans ta quête.",
 	},
 	"emc": {
 		"title": "Le Forum des Citoyens",
-		"slots": [Vector2i(8, 6), Vector2i(9, 5), Vector2i(7, 7)],
-		"label": Vector2i(8, 7),
+		"slots": [Vector2i(8, 7), Vector2i(12, 7), Vector2i(14, 5)],
 		"fog": "Près de la Citadelle, le Forum des Citoyens attend ses débats. On y vote, on y défend ses droits et ceux des autres. Il s'ouvrira quand l'enseignement moral et civique entrera dans ta quête.",
 	},
 	"svt": {
 		"title": "La Vallée du Vivant",
-		"slots": [Vector2i(3, 9), Vector2i(2, 8)],
-		"label": Vector2i(3, 8),
+		"slots": [Vector2i(4, 11), Vector2i(6, 9)],
 		"fog": "Au sud-ouest, la Vallée du Vivant cache ses bocaux, ses fossiles et ses champs sous la brume. Elle s'ouvrira quand les sciences de la vie et de la Terre entreront dans ta quête.",
 	},
 	"snt": {
 		"title": "Le Carrefour des Messagers",
-		"slots": [Vector2i(6, 9), Vector2i(9, 9)],
-		"label": Vector2i(8, 9),
+		"slots": [Vector2i(14, 9), Vector2i(16, 11)],
 		"fog": "Au Carrefour des Messagers, les nouvelles voyagent de relais en relais, et les automates dessinent les cartes. Il s'ouvrira quand les sciences numériques entreront dans ta quête.",
 	},
 }
@@ -96,7 +92,7 @@ static func region_of(subject: String) -> String:
 const SECRETS := {
 	"tour_oubli": {
 		"title": "La Tour de l'Oubli",
-		"cell": Vector2i(5, 1),
+		"cell": Vector2i(10, 1),
 		"piece": "building_tower_B_red",
 		"text": "Là-bas se dresse la Tour de l'Oubli, le repaire de Malvrek, l'Archiviste déchu. Elle ne s'ouvrira que lorsque tu auras repris assez de pages et vraiment appris ce qu'elles contiennent.",
 	},

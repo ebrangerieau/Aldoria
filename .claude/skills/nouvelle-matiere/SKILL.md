@@ -54,8 +54,10 @@ Modèles à relire avant d'écrire : le français de seconde (commit `662dadf`) 
 ## 6. Jeu : région et donjons
 
 - `game/worlds/shared/world_map_def.gd` : entrée `REGIONS["<matiere>"]` (`title`, `slots` dans l'ordre des
-  donjons, `label`, `fog`) ; retirer le lieu de `SECRETS` s'il y était. Cases libres : vérifier sur une capture
-  `--places=1` (skill `captures`).
+  donjons, `fog`) ; retirer le lieu de `SECRETS` s'il y était. Cases libres : quatre colonnes d'écart avec tout lieu
+  de la même rangée ou d'une rangée voisine, rien sous le panneau du héros (q < 4, r < 3) —
+  `test_places_are_far_enough_for_their_names` le vérifie ; regarder aussi une capture (skill `captures`), PC et
+  téléphone. Île pleine : l'agrandir (`GRID`, `CAMERA_FAR` dans world_map.gd).
 - Matière proche d'une région existante qu'une autre classe occupe (physique-chimie de seconde → Laboratoire des
   Inventeurs des sciences de 6e) : `WorldMapDef.REGION_OF` plutôt qu'une nouvelle région (mêmes cases, jamais deux
   classes à la fois).
