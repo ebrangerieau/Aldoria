@@ -287,6 +287,8 @@ sauvegarde avant migration, push, suivi de la CI, contrôle en production). Les 
   Effacement d'un enfant ou d'une famille : `erasure.py` (toute nouvelle table liée à un enfant y est ajoutée).
   Exploitant (`adult.is_operator`) : familles et sauvegardes (`CurrentOperator`).
   L'espace parent n'utilise aucun style en ligne (CSP `style-src 'self'`) : graphiques en SVG.
+  Résumé de la semaine (onglet Semaine, `GET /admin/profiles/{id}/week?offset=N`, `app/weekly.py`) : lundi à dimanche,
+  heure de Paris (`tzdata`), comparé à la semaine précédente, une phrase de résumé sans pronom (le prénom).
   Toute fonction ajoutée ou modifiée dans l'espace parent est décrite dans son guide (`admin/src/Guide.tsx`),
   en langage simple, avec les étapes pour s'en servir.
 - Textes visibles par les enfants en français ; aucune donnée personnelle hors du foyer.

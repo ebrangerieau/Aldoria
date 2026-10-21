@@ -10,11 +10,13 @@ import { Program } from './Program'
 import { Questions, type View } from './Questions'
 import { Reports } from './Reports'
 import { Settings } from './Settings'
+import { Week } from './Week'
 
 type Page = GuideTarget | 'guide' | 'operator'
 
 const PAGES: { id: Page; label: string; operator?: boolean; needsChild?: boolean }[] = [
   { id: 'dashboard', label: 'Tableau de bord', needsChild: true },
+  { id: 'week', label: 'Semaine', needsChild: true },
   { id: 'program', label: 'Programme', needsChild: true },
   { id: 'questions', label: 'Questions', needsChild: true },
   { id: 'reports', label: 'Signalements', needsChild: true },
@@ -162,6 +164,7 @@ function Space() {
           </div>
         )}
         {child && current === 'dashboard' && <Dashboard child={child} />}
+        {child && current === 'week' && <Week key={child.id} child={child} />}
         {child && current === 'program' && <Program child={child} />}
         {child && current === 'questions' && (
           <Questions key={`${child.level}-${openItem}-${questionsView}`} child={child} openItem={openItem} initialView={questionsView} />

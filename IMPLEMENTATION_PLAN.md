@@ -460,6 +460,12 @@ générateurs naturels, donc des questions à rédiger.
 > questions d'anglais. Reste : le donjon de français de Tom (après une première série de questions publiées),
 > les Archives regroupées par matière, puis les deux semaines d'observation.
 >
+> ✅ **2026-10-21 : résumé de la semaine (espace parent).** Onglet « Semaine » : pour l'enfant choisi, une phrase de
+> résumé, le temps de jeu, les séances, les jours joués et les réponses (comparés à la semaine précédente), les minutes jour
+> par jour, les matières travaillées, les notions réussies (80 % au moins) et à revoir (moins de 50 %, à partir de 3
+> réponses), les notions nouvelles, mises de côté et les signalements de la semaine ; on remonte semaine par semaine.
+> Semaine du lundi au dimanche, heure de Paris (`app/weekly.py`). Guide mis à jour.
+>
 > ✅ **2026-10-19 : SES de Tom.** Programme de SES de seconde de 2019 (arrêté du 17 janvier 2019, BO spécial n° 1 du
 > 22 janvier 2019), toujours en vigueur : 6 chapitres, 17 notions (démarche des sciences sociales et données chiffrées,
 > richesses et PIB, marché, socialisation, vie politique, diplôme, emploi et salaire). Exemples relus (mécanismes, pas de

@@ -14,12 +14,12 @@ from __future__ import annotations
 from datetime import UTC, date, datetime, time, timedelta
 from typing import Annotated, Any, Literal
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel, Field
 from sqlalchemy import Integer, cast, delete, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app import backups, client_errors
+from app import backups, client_errors, weekly
 from app.accounts import CurrentAdult, CurrentOperator
 from app.auth import hash_pin, verify_pin
 from app.config import get_settings
@@ -429,6 +429,29 @@ async def dashboard(profile_id: int, parent: CurrentParent, db: Db) -> dict[str,
         "recent_sessions": recent,
         "weak_notions": weak,
     }
+
+
+@router.get("/profiles/{profile_id}/week")
+async def week(
+    profile_id: int, parent: CurrentParent, db: Db, offset: int = Query(0, ge=0, le=104)
+) -> dict[str, Any]:
+    """Résumé d'une semaine (lundi à dimanche, heure de Paris) : `offset` semaines avant la
+    semaine en cours, comparée à la précédente (weekly.py)."""
+    profile = await _profile(db, profile_id, parent)
+    _monday, start, end = weekly.week_bounds(offset)
+    _before, before_start, _end = weekly.week_bounds(offset + 1)
+    played = await _played_sessions(db, profile.id, before_start)
+
+    def within(s: dict[str, Any], low: datetime, high: datetime) -> bool:
+        return low <= datetime.fromisoformat(s["started_at"]) < high
+
+    return await weekly.summary(
+        db,
+        profile,
+        offset,
+        [s for s in played if within(s, start, end)],
+        [s for s in played if within(s, before_start, start)],
+    )
 
 
 @router.get("/profiles/{profile_id}/chapters")

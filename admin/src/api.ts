@@ -76,6 +76,44 @@ export interface Indicator {
   detail: string
 }
 
+export interface WeekActivity {
+  sessions: number
+  minutes: number
+  days_played: number
+  answers: number
+  correct: number
+  rate: number | null
+}
+
+export interface WeekNotion {
+  code: string
+  label: string
+  subject: string
+  answers: number
+  correct: number
+  rate: number
+}
+
+// Résumé d'une semaine (api/app/weekly.py).
+export interface WeekSummary {
+  start: string
+  end: string
+  label: string
+  offset: number
+  current: boolean
+  sentence: string
+  activity: WeekActivity
+  previous: WeekActivity
+  days: { date: string; minutes: number; answers: number }[]
+  subjects: { code: string; label: string; answers: number; correct: number; rate: number }[]
+  successes: WeekNotion[]
+  struggles: WeekNotion[]
+  new_notions: number
+  set_aside: { label: string; source: 'parent' | 'enfant' }[]
+  reports: number
+  rating: number | null
+}
+
 export interface Indicators {
   weeks: { start: string; sessions: number }[]
   indicators: Indicator[]
@@ -391,6 +429,7 @@ export const api = {
   setPin: (id: number, pin: string) => request<null>('PUT', `/profiles/${id}/pin`, { pin }),
   reset: (id: number, confirm: string) => request<Record<string, number>>('POST', `/profiles/${id}/reset`, { confirm }),
   indicators: (id: number) => request<Indicators>('GET', `/profiles/${id}/indicators`),
+  week: (id: number, offset: number) => request<WeekSummary>('GET', `/profiles/${id}/week?offset=${offset}`),
   bank: (level: Level) => request<BankRow[]>('GET', `/bank?level=${level}`),
   bankItem: (id: number) => request<BankRow>('GET', `/bank/${id}`),
   saveBankItem: (id: number | null, level: Level, status: BankStatus, question: QuestionIn) =>

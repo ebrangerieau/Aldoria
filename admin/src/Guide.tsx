@@ -2,13 +2,14 @@ import type { Profile } from './api'
 import type { View } from './Questions'
 import { Stars } from './Stars'
 
-export type GuideTarget = 'dashboard' | 'program' | 'questions' | 'reports' | 'settings' | 'family'
+export type GuideTarget = 'dashboard' | 'week' | 'program' | 'questions' | 'reports' | 'settings' | 'family'
 
 const SECTIONS = [
   { id: 'demarrer', title: 'Démarrer en 3 gestes' },
   { id: 'famille', title: 'Votre famille : enfants, adultes, appareils' },
   { id: 'enfant', title: 'Choisir l’enfant' },
   { id: 'tableau', title: 'Suivre la progression' },
+  { id: 'semaine', title: 'Le résumé de la semaine' },
   { id: 'programme', title: 'Dire au jeu ce qui se passe en classe' },
   { id: 'questions', title: 'Ajouter vos propres questions' },
   { id: 'ia', title: "Faire proposer des questions par l'IA" },
@@ -58,8 +59,8 @@ export function Guide({ child, onOpen }: { child?: Profile; onOpen: (page: Guide
             <strong>Avant un contrôle</strong>, passez le chapitre en « Contrôle bientôt » : le jeu le fait réviser en priorité.
           </li>
           <li>
-            <strong>Une fois par semaine</strong>, ouvrez le Tableau de bord : notions à retravailler, temps de jeu, et l'onglet Signalements si un
-            chiffre rouge y apparaît.
+            <strong>Une fois par semaine</strong>, ouvrez l'onglet Semaine : en une phrase, ce que {name} a fait, puis ce qui marche et ce qui
+            reste à revoir. Regardez aussi l'onglet Signalements si un chiffre rouge y apparaît.
           </li>
         </ol>
         <div className="tip">
@@ -148,6 +149,45 @@ export function Guide({ child, onOpen }: { child?: Profile; onOpen: (page: Guide
           <strong>Bon à savoir.</strong> L'indicateur « Progrès entre la 1re et la 4e rencontre » mesure si l'enfant apprend vraiment : il compare
           sa réussite la première fois qu'il croise une notion et la quatrième fois.
         </div>
+      </Section>
+
+      <Section id="semaine" title="Le résumé de la semaine" open={() => onOpen('week')} openLabel="Ouvrir la semaine">
+        <p>
+          L'onglet <strong>Semaine</strong> fait le bilan d'une semaine, du lundi au dimanche, pour l'enfant choisi. Tout en haut, une phrase
+          résume l'essentiel : combien de jours {name} a joué, combien de temps, combien de questions, dans quelles matières, et ce qui est à
+          revoir en priorité.
+        </p>
+        <ul className="bullets">
+          <li>
+            <strong>Les quatre chiffres</strong> : temps de jeu, séances, jours joués et réponses (avec la part de justes), chacun comparé à la
+            semaine d'avant.
+          </li>
+          <li>
+            <strong>Jour par jour</strong> : les minutes de jeu de chaque jour (passez la souris sur une barre pour le détail), et le nombre de
+            notions rencontrées pour la première fois.
+          </li>
+          <li>
+            <strong>Matières travaillées</strong> : le nombre de réponses et la part de justes dans chaque matière.
+          </li>
+          <li>
+            <strong>Ce qui marche</strong> et <strong>À revoir</strong> : les notions réussies à 80 % au moins, et celles ratées plus d'une fois
+            sur deux. Une notion n'y figure qu'à partir de 3 réponses dans la semaine.
+          </li>
+          <li>
+            <strong>À regarder</strong> : les notions mises de côté dans la semaine (par vous ou par {name}) et les questions signalées.
+          </li>
+        </ul>
+        <ol className="steps">
+          <li>Ouvrez l'onglet <strong>Semaine</strong> : la semaine en cours s'affiche.</li>
+          <li>
+            Touchez <strong>← Semaine précédente</strong> pour remonter dans le temps, <strong>Semaine suivante →</strong> pour revenir, ou{' '}
+            <strong>Cette semaine</strong> pour y retourner d'un coup.
+          </li>
+          <li>
+            Une notion revient souvent dans « À revoir » ? Revoyez la leçon avec {name}, ou passez son chapitre en « Contrôle bientôt » dans
+            Programme : le jeu la fera travailler davantage.
+          </li>
+        </ol>
       </Section>
 
       <Section id="programme" title="Dire au jeu ce qui se passe en classe" open={() => onOpen('program')} openLabel="Ouvrir le programme">

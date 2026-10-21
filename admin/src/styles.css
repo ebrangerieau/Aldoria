@@ -864,3 +864,15 @@ button.link {
   background: var(--warn);
   color: #fff;
 }
+
+/* Résumé de la semaine */
+.row.spread {
+  justify-content: space-between;
+}
+.week-title {
+  margin: 0;
+}
+.week-sentence {
+  font-size: 1.05rem;
+  line-height: 1.5;
+}

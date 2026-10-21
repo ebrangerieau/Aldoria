@@ -41,6 +41,15 @@ const { launch, SLOW } = require('./browser');
   await page.getByText('Objectifs du projet').waitFor();
   await shot('1_tableau_de_bord');
 
+  // Semaine : la phrase de résumé, puis la semaine précédente et retour.
+  await page.getByRole('button', { name: 'Semaine', exact: true }).click();
+  await page.locator('.week-sentence').waitFor({ timeout: 15000 });
+  await shot('1b_semaine');
+  await page.getByRole('button', { name: '← Semaine précédente' }).click();
+  await page.getByText('Semaine terminée.').waitFor();
+  await page.getByRole('button', { name: 'Semaine suivante →' }).click();
+  await page.getByRole('heading', { name: 'Cette semaine' }).waitFor();
+
   // Programme : une matière à la fois (onglets), le chapitre du moment repris en tête.
   await page.getByRole('button', { name: 'Programme' }).click();
   await page.locator('nav.subjects').getByRole('button', { name: /^Mathématiques/ }).click();
