@@ -84,8 +84,9 @@ jobs:
 
   e2e-web:
     # Parcours joueur, lecture à voix haute et espace parent dans un navigateur, sur un banc jetable
-    # (tools/e2e_ci.sh) : rien n'est publié si un parcours échoue.
-    runs-on: ubuntu-latest
+    # (tools/e2e_ci.sh) : rien n'est publié si un parcours échoue. Ubuntu 24.04 fixé : Playwright 1.56
+    # n'installe pas Chromium sur ubuntu-latest passé en 26.04 (octobre 2026).
+    runs-on: ubuntu-24.04
     needs: export-web
     timeout-minutes: 30
     steps:
