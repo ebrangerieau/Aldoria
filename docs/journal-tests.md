@@ -52,6 +52,7 @@ les autres, si le temps le permet.
 
 | Quoi | Où | Ce qu'on regarde | Noté |
 | --- | --- | --- | --- |
+| ★ Pont des fractions | Citadelle → « Pont » | Additionne-t-il les fractions avant de poser, ou essaie-t-il au hasard ? Le pont qui s'effondre l'aide-t-il à corriger (la somme affichée) ? Les couleurs et longueurs des planches l'aident-elles ? Ravins de demis et tiers : trop durs ? A-t-il envie d'y revenir ? | |
 | ★ Balance géante | Tour des Fractions, salle 4 (énigme) | Comprend-il « enlever la même chose des deux côtés » ? Utilise-t-il le fléau qui penche pour corriger ? | |
 | ★ Forum des Citoyens (EMC) | Carte → Tribune du Conseil | Les questions sur le vote, les délégués, la laïcité lui parlent-elles ? L'élection des délégués (majorité) : compris ? L'énigme des échelons (de la classe à l'Europe) : trop dure ? | |
 | ★ Laboratoire des Inventeurs (sciences) | Carte → Tour des Expériences | Les questions ressemblent-elles à la classe ? La course à classer (calcul de vitesses) : faisable ? | |

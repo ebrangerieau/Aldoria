@@ -642,6 +642,15 @@ export function Guide({ child, onOpen }: { child?: Profile; onOpen: (page: Guide
             une masse ; le fléau penche du côté trop lourd. Seul le premier essai compte comme réponse dans le suivi. À la Citadelle,
             le <strong>stand de tir</strong> propose six tirs calculés : {tom ? 'Tom donne le coefficient directeur de la droite de son arbalète' : 'Jules mesure un angle sur un rapporteur géant'} ;
             un tir raté montre où il est parti, et seul le premier tir de chaque cible compte dans le suivi.
+            {!tom && (
+              <>
+                {' '}
+                Le <strong>pont des fractions</strong> propose six ravins à franchir : Jules choisit des planches (1/2, 1/3, 1/4…) et les pose
+                bout à bout. Le pont tient si leurs longueurs font exactement la largeur du ravin ; sinon il s'effondre et le jeu montre la
+                somme posée. Toute combinaison juste est acceptée, et seul le premier pont de chaque ravin compte dans le suivi (notion
+                « Additionner et soustraire des fractions »).
+              </>
+            )}
           </li>
           <li>
             <strong>Le sac</strong> : des objets gagnés en jouant (plume qui retire deux mauvaises propositions, parchemin d'indice, bouclier,

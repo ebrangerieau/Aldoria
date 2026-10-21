@@ -22,6 +22,9 @@ var torch_color := Color(1.0, 0.62, 0.28)
 var front_rows := 0
 ## Sol uni, sans dalles à éboulis (dessins au sol lisibles : stand de tir).
 var plain_floor := false
+## Gouffre du nord au sud (pont des fractions) : pas de dalle ni de décor là où |x| < chasm,
+## ni de meuble dans l'allée du pont (|z| < 5).
+var chasm := 0.0
 
 var sun: DirectionalLight3D
 var built_settings: Dictionary
@@ -110,7 +113,8 @@ func _build_structure() -> void:
 	for ix in ROOM:
 		for iz in ROOM + front_rows:
 			var tile := "floor_tile_large_rocks" if (ix + iz) % 3 == 0 and not plain_floor else "floor_tile_large"
-			_place(tile, Vector3(ix * TILE - half, 0, iz * TILE - half))
+			if absf(ix * TILE - half) >= chasm:
+				_place(tile, Vector3(ix * TILE - half, 0, iz * TILE - half))
 	var back_z := -half - TILE / 2.0
 	var side_x := half + TILE / 2.0
 	for ix in ROOM:
@@ -144,6 +148,9 @@ func _build_props() -> void:
 
 
 func _place(piece: String, pos: Vector3, yaw_deg := 0.0) -> Node3D:
+	var structure := piece.begins_with("wall") or piece.begins_with("banner") or piece.begins_with("floor") 		or piece.begins_with("pillar") or piece.begins_with("torch")
+	if chasm > 0.0 and not structure and (absf(pos.x) < chasm or absf(pos.z) < 5.0):
+		return null  # rien ne flotte au-dessus du gouffre ; le passage du pont reste libre
 	var node: Node3D = (load(DUNGEON % piece) as PackedScene).instantiate()
 	node.position = pos
 	node.rotation_degrees.y = yaw_deg

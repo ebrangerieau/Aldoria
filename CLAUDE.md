@@ -195,6 +195,12 @@ sauvegarde avant migration, push, suivi de la CI, contrôle en production). Les 
   l'arbalète, `LineRange`), paquet `Session.start("arene", TirScene.params(level))`, panneau `TirPanel`. Seul le premier tir
   d'une cible passe par `QuestionService.submit` (`game_mode` "tir"). Générateurs `combat=False` : jamais tirés en combat
   (`combat_notions()` compose les paquets). Capture : `--goto=tir --tir=<valeur>|go`.
+- Pont des fractions (`scenes/pont`, classe `PontScene`, tuile « Pont » de la Citadelle, 6e seulement : `PontScene.GENERATORS`) :
+  six ravins, planches de longueurs fractionnaires posées bout à bout (`ChasmBridge`, core/world : gouffre de
+  `DungeonRoom.chasm`, fractions exactes en `Vector2i`, une couleur par dénominateur), générateur `6e.fractions.pont`
+  (`combat=False`, réserve qui contient toujours une solution), panneau `PontPanel`. Toute somme juste est acceptée : la
+  réponse enregistrée est la somme posée (`game_mode` "pont"), au premier pont seulement. Capture :
+  `--goto=pont --pont=1/2+1/4|juste|go`.
 - Combat : `Encounter` (core/combat) est partagé par l'arène et le donjon ; une scène ne réécrit pas le tour par tour.
   Boss : `BOSS_HITS` sceaux, difficulté d'un cran sous le niveau à un cran au-dessus ; forces rendues avant le boss ;
   après un repli, l'ennemi garde ses blessures (rien n'est perdu).

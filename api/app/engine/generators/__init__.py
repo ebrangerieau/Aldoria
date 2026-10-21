@@ -103,6 +103,7 @@ from app.engine.generators import (  # noqa: E402, F401
     nombres_6e,
     physique_chimie_2nde,
     physique_chimie_2nde_calculs,
+    pont,
     prealgebre_6e,
     problemes_6e,
     raisonnement,

@@ -460,6 +460,16 @@ générateurs naturels, donc des questions à rédiger.
 > questions d'anglais. Reste : le donjon de français de Tom (après une première série de questions publiées),
 > les Archives regroupées par matière, puis les deux semaines d'observation.
 >
+> ✅ **2026-10-21 : pont des fractions (Jules).** Premier jeu « qui change des questions » : tuile « Pont » de la
+> Citadelle (6e seulement), six ravins. Jules choisit des planches de longueurs fractionnaires (une couleur par
+> dénominateur, dessinées à l'échelle) et les pose bout à bout ; le pont tient si leur somme vaut exactement la largeur
+> du ravin, sinon il s'effondre (trop court) ou la dernière planche bute sur l'autre rive (trop long), avec la somme
+> posée en retour. Générateur `6e.fractions.pont` (notion « additionner des fractions », `combat=False`) : demis et
+> quarts, puis dénominateurs multiples, ravins de plus d'une perche, dénominateurs non multiples (demis et tiers…),
+> planches non unitaires ; toute combinaison juste est acceptée, seul le premier pont compte. Gouffre :
+> `DungeonRoom.chasm`, `ChasmBridge`, scène `scenes/pont`. Pistes suivantes proposées : navigation aux vecteurs (Tom),
+> duel de cartes (les deux).
+>
 > ✅ **2026-10-21 : résumé de la semaine (espace parent).** Onglet « Semaine » : pour l'enfant choisi, une phrase de
 > résumé, le temps de jeu, les séances, les jours joués et les réponses (comparés à la semaine précédente), les minutes jour
 > par jour, les matières travaillées, les notions réussies (80 % au moins) et à revoir (moins de 50 %, à partir de 3

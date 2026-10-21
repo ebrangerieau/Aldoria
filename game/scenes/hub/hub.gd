@@ -130,6 +130,9 @@ func _build() -> void:
 	if TirScene.generator_for(Session.level()) != "":
 		var shooting := _small_button(grid, "Tir", "round-star")
 		shooting.pressed.connect(_enter_shooting)
+	if PontScene.generator_for(Session.level()) != "":
+		var bridge := _small_button(grid, "Pont", "arch-bridge")
+		bridge.pressed.connect(_enter_bridge)
 	var archives := _small_button(grid, "Archives", "open-book")
 	archives.pressed.connect(func() -> void:
 		get_tree().change_scene_to_file("res://scenes/archives/archives.tscn"))
@@ -222,6 +225,11 @@ func _enter_shooting() -> void:
 	await _launch("arene", TirScene.params(Session.level()), TirScene.SCENE, "tir")
 
 
+## Pont des fractions (Jules) : des planches à poser bout à bout au-dessus d'un gouffre.
+func _enter_bridge() -> void:
+	await _launch("arene", PontScene.params(Session.level()), PontScene.SCENE, "pont")
+
+
 func _launch(mode: String, params: Dictionary, scene: String, cache := "") -> void:
 	if _busy:
 		return
@@ -278,7 +286,7 @@ func _switch_player() -> void:
 	get_tree().change_scene_to_file("res://scenes/profile/profile_select.tscn")
 
 
-## Développement, PC uniquement : `-- --goto=donjon|village|defi|arene|tir|archives|apparence|prologue`
+## Développement, PC uniquement : `-- --goto=donjon|village|defi|arene|tir|pont|archives|apparence|prologue`
 ## (`--dungeon=<code>` pour un autre donjon que le premier). Le donjon et le village partent
 ## d'ici sans passer par leur seuil sur la carte (captures d'écran).
 func _dev_goto() -> void:
@@ -304,6 +312,8 @@ func _dev_goto() -> void:
 			_enter_arena()
 		"tir":
 			_enter_shooting()
+		"pont":
+			_enter_bridge()
 		"archives":
 			get_tree().change_scene_to_file("res://scenes/archives/archives.tscn")
 		"apparence":
