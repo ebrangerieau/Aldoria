@@ -33,6 +33,7 @@ Jamais les codes PIN de production.
 | Salle de donjon | `--goto=donjon --dungeon=<code> --room=N` (0 à 5, même un donjon fermé) |
 | Combat, énigme, boss | + `--approach=1` (héros mené au premier ennemi ou piédestal) |
 | Escalier | + `--stairs=1` |
+| Île du Sphinx | `--goto=sphinx --sphinx=<palier>:<indice>[:<pas de solution rejoués>]` (téléphone : `--resolution 1688x780 -- --ui=telephone`) ; seuil : `--seuil=sphinx` |
 | Qualité | `--quality=haut|tablette|bas` ; interface de tablette sur PC : `--ui=tablette` |
 
 `--shot-delay` : 1,5 s pour un menu, 4 s pour une salle, 6 s ou plus pour un boss qui parle.

@@ -460,6 +460,19 @@ générateurs naturels, donc des questions à rédiger.
 > questions d'anglais. Reste : le donjon de français de Tom (après une première série de questions publiées),
 > les Archives regroupées par matière, puis les deux semaines d'observation.
 >
+> ✅ **2026-10-21 : l'Île du Sphinx (idée de Jules).** Une deuxième île sur la carte, à l'est, pour des jeux de
+> logique et de réflexion, sans questions de leçon, dans un autre cadre (sable, pyramides, un vieux Sphinx gardien
+> d'un temple). Accès décidé avec Eric : **un passage par activité** (au moins 6 réponses enregistrées : donjon, défi du
+> jour, village, Lice), 3 au plus en réserve ; une traversée = 3 énigmes. Premier jeu : **les blocs du temple** (type
+> Sokoban : pousser des blocs sur des dalles gravées, jamais les tirer), commandes au clavier, croix à l'écran, glisser du
+> doigt ou toucher une dalle ; annuler, recommencer, aide du Sphinx (il rejoue un tiers de plus de la solution à chaque
+> appel). 180 niveaux sur 6 paliers, générés à reculons depuis la solution par `tools/make_sphinx_levels.py` (donc toujours
+> faisables) et mesurés par un solveur ; trois énigmes réussies sans aide font monter d'un palier (la seconde commence au
+> palier 2). Session « sphinx » côté API : aucune question, le temps passé compte dans la limite du parent (il n'apparaît
+> pas encore dans le tableau de bord, qui ne liste que les sessions avec réponses). Suites possibles : d'autres jeux sur
+> l'île (lanternes, miroirs du phare, golem à programmer, duel des pierres), niveaux dessinés par Jules, récompense
+> d'apparence, temps passé sur l'île dans l'espace parent.
+>
 > ✅ **2026-10-21 : pont des fractions (Jules).** Premier jeu « qui change des questions » : tuile « Pont » de la
 > Citadelle (6e seulement), six ravins. Jules choisit des planches de longueurs fractionnaires (une couleur par
 > dénominateur, dessinées à l'échelle) et les pose bout à bout ; le pont tient si leur somme vaut exactement la largeur

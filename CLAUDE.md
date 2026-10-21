@@ -201,6 +201,16 @@ sauvegarde avant migration, push, suivi de la CI, contrôle en production). Les 
   (`combat=False`, réserve qui contient toujours une solution), panneau `PontPanel`. Toute somme juste est acceptée : la
   réponse enregistrée est la somme posée (`game_mode` "pont"), au premier pont seulement. Capture :
   `--goto=pont --pont=1/2+1/4|juste|go`.
+- Île du Sphinx (idée de Jules ; jeux de logique, aucune question de leçon) : île de sable à l'est de la carte
+  (`WorldMapDef.SPHINX`, cadrage qui la garde à l'écran : `_frame_both_islands`). On y va en barque avec un **passage** :
+  une activité où l'enfant enregistre au moins `SphinxIsland.PASS_ANSWERS` réponses en rapporte un (`Session.end`, compteur
+  `Session.answered`), `MAX_PASSES` au plus ; état dans `SaveManager.sphinx()`. Une traversée (`Session.start("sphinx")` :
+  session sans questions, elle compte le temps de jeu ; hors connexion, l'île reste jouable) propose `VISIT_PUZZLES`
+  énigmes de blocs (type Sokoban : `SphinxBoard` règles, `SphinxTemple` décor en formes simples à couleurs par sommet,
+  `scenes/sphinx`). Niveaux générés hors du jeu, toujours solubles, avec leur solution la plus courte en poussées :
+  `python tools/make_sphinx_levels.py` → `worlds/shared/sphinx_levels.gd` (six paliers ; trois énigmes sans aide = un palier
+  de plus). Aide du Sphinx : il rejoue un tiers de plus de la solution à chaque appel. Capture : `--goto=sphinx
+  --sphinx=<palier>:<indice>[:<pas rejoués>]` ; seuil : `--seuil=sphinx`.
 - Combat : `Encounter` (core/combat) est partagé par l'arène et le donjon ; une scène ne réécrit pas le tour par tour.
   Boss : `BOSS_HITS` sceaux, difficulté d'un cran sous le niveau à un cran au-dessus ; forces rendues avant le boss ;
   après un repli, l'ennemi garde ses blessures (rien n'est perdu).
@@ -226,7 +236,7 @@ sauvegarde avant migration, push, suivi de la CI, contrôle en production). Les 
   relancer les deux scripts.
 - Musique (autoload `Music`, `deploy/musique/theme.mp3` : réencodée depuis `music/`, hors du dépôt ; copiée dans
   `musique/` de l'export par `tools/postprocess_web.py`, téléchargée après le démarrage ; sur PC, lue dans deploy/) :
-  en boucle partout, sauf dans les scènes de quête (`Music.FOCUS_SCENES` : donjon, village, défi du jour, arène, tir ;
+  en boucle partout, sauf dans les scènes de quête (`Music.FOCUS_SCENES` : donjon, village, défi du jour, arène, tir, pont, île ;
   une nouvelle scène de quête y est ajoutée), fondu à l'entrée et reprise au retour, plus discrète quand une voix parle.
   Volume à part dans les Options (`Accessibility.music_volume`, préférence `music`). Bouton « couper / remettre » toujours en
   bas à gauche, sur tout écran où elle joue (calque `Music.BUTTON_LAYER`, préférence `music_off`) : une scène ne met rien

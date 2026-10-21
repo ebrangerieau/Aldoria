@@ -84,9 +84,10 @@ class EnigmaIn(BaseModel):
 class SessionStartIn(BaseModel):
     """Mode de jeu et paramètres d'un donjon (tous facultatifs : l'arène s'en passe).
     `defi` : défi quotidien, paquet d'automatismes seulement. `village` : quêtes des
-    habitants (révision espacée, veille de contrôle) ; `enigmas` : leurs enquêtes."""
+    habitants (révision espacée, veille de contrôle) ; `enigmas` : leurs enquêtes.
+    `sphinx` : île des jeux de logique, sans question ; la session compte le temps de jeu."""
 
-    mode: Literal["arene", "donjon", "defi", "village"] = "arene"
+    mode: Literal["arene", "donjon", "defi", "village", "sphinx"] = "arene"
     focus_chapters: list[Annotated[str, Field(max_length=80)]] = Field(
         default_factory=list, max_length=8
     )
@@ -288,9 +289,12 @@ async def start_session(
     session = GameSession(id=str(uuid.uuid4()), profile_id=profile.id, mode=body.mode)
     db.add(session)
     await db.commit()
-    pack = await tracking.build_pack(
-        db, profile, random.Random(), focus, enigmas, daily=body.mode == "defi"
-    )
+    if body.mode == "sphinx":
+        pack: dict[str, Any] = {"items": [], "formulas": {}, "start_levels": {}}
+    else:
+        pack = await tracking.build_pack(
+            db, profile, random.Random(), focus, enigmas, daily=body.mode == "defi"
+        )
     return SessionStartOut(
         session_id=session.id,
         items=pack["items"],

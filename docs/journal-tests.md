@@ -52,6 +52,7 @@ les autres, si le temps le permet.
 
 | Quoi | Où | Ce qu'on regarde | Noté |
 | --- | --- | --- | --- |
+| ★ Île du Sphinx (son idée) | Carte → île à l'est (après une activité : un passage) | Comprend-il comment gagner un passage ? Les blocs : règle comprise sans aide (« on ne peut pas tirer ») ? Annuler, recommencer, aide du Sphinx utilisés ? Commandes : flèches, glisser ou toucher une dalle ? Paliers trop durs ou trop faciles ? Le cadre lui plaît-il (nom du Sphinx à choisir) ? | |
 | ★ Pont des fractions | Citadelle → « Pont » | Additionne-t-il les fractions avant de poser, ou essaie-t-il au hasard ? Le pont qui s'effondre l'aide-t-il à corriger (la somme affichée) ? Les couleurs et longueurs des planches l'aident-elles ? Ravins de demis et tiers : trop durs ? A-t-il envie d'y revenir ? | |
 | ★ Balance géante | Tour des Fractions, salle 4 (énigme) | Comprend-il « enlever la même chose des deux côtés » ? Utilise-t-il le fléau qui penche pour corriger ? | |
 | ★ Forum des Citoyens (EMC) | Carte → Tribune du Conseil | Les questions sur le vote, les délégués, la laïcité lui parlent-elles ? L'élection des délégués (majorité) : compris ? L'énigme des échelons (de la classe à l'Europe) : trop dure ? | |
@@ -66,6 +67,7 @@ les autres, si le temps le permet.
 | Quoi | Où | Ce qu'on regarde | Noté |
 | --- | --- | --- | --- |
 | ★ Téléphone | Tout le jeu | Installé comme une application ? Tenu à l'horizontale ? Textes lisibles, boutons faciles à toucher, fenêtres qui défilent au doigt ? Le Port des Couronnes est-il bien visible sur la carte ? Ralentissements, chauffe ? | |
+| ★ Île du Sphinx (idée de Jules) | Carte → île à l'est | Sur le téléphone : la croix, le glissé du doigt, le toucher d'une dalle sont-ils précis ? Le temple est-il lisible en entier ? Palier 2 de départ : trop facile ? | |
 | ★ Choisir 2 ou 3 matières nouvelles | Vallée du Vivant (SVT), Laboratoire (physique-chimie), Carrefour des Messagers (SNT), Moulin de la Mancha (espagnol), Haute Cour (EMC), Marché du Forum (SES), Portes des Empires et des Transitions (histoire-géo) | Lesquelles choisit-il ? Pour chacune : « ça ressemble à ce qu'on fait en classe ? », trop facile, trop dur ? Notions pas encore vues à noter. | |
 | Énigmes calculées | Selon les lieux choisis | Brin d'ADN, équations chimiques, débit, valeur ajoutée, taux de chômage, phrases espagnoles : les calcule-t-il ou devine-t-il ? | |
 | Espagnol | Moulin de la Mancha | La voix espagnole et le clavier (á, ñ, ¿) : pratiques ? Conjugaisons au bon niveau ? | |

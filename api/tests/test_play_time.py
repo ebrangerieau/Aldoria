@@ -102,3 +102,21 @@ async def test_login_me_and_session_report_play_time(client, login):
     assert me["play_time"]["idle_seconds"] < 60
     again = (await client.post(f"{API}/session/start", headers=headers, json={})).json()
     assert again["settings"]["play_time"]["played_seconds"] == 600
+
+
+async def test_sphinx_island_counts_as_play_time(client, login, curriculum):
+    """L'Île du Sphinx (jeux de logique) : aucune question, mais le temps passé compte."""
+    headers = await login("jules", "1234")
+    body = (
+        await client.post(f"{API}/session/start", json={"mode": "sphinx"}, headers=headers)
+    ).json()
+    assert body["items"] == [] and body["formulas"] == {}
+    assert "play_time" in body["settings"]
+    ended = await client.post(
+        f"{API}/session/end",
+        json={"session_id": body["session_id"], "active_seconds": 300},
+        headers=headers,
+    )
+    assert ended.json() == {"nb_questions": 0, "nb_correct": 0}
+    me = (await client.get(f"{API}/me", headers=headers)).json()
+    assert me["play_time"]["played_seconds"] >= 300

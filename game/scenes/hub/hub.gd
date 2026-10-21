@@ -286,7 +286,7 @@ func _switch_player() -> void:
 	get_tree().change_scene_to_file("res://scenes/profile/profile_select.tscn")
 
 
-## Développement, PC uniquement : `-- --goto=donjon|village|defi|arene|tir|pont|archives|apparence|prologue`
+## Développement, PC uniquement : `-- --goto=donjon|village|defi|arene|tir|pont|sphinx|archives|apparence|prologue`
 ## (`--dungeon=<code>` pour un autre donjon que le premier). Le donjon et le village partent
 ## d'ici sans passer par leur seuil sur la carte (captures d'écran).
 func _dev_goto() -> void:
@@ -314,6 +314,8 @@ func _dev_goto() -> void:
 			_enter_shooting()
 		"pont":
 			_enter_bridge()
+		"sphinx":  # l'île part de la carte ; ici, sans passer par le seuil (captures)
+			_launch("sphinx", {}, SphinxIsland.SCENE, "sphinx")
 		"archives":
 			get_tree().change_scene_to_file("res://scenes/archives/archives.tscn")
 		"apparence":

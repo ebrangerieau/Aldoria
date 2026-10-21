@@ -120,6 +120,15 @@ le brouillard ; il recule à chaque donjon terminé, et un chemin s'éclaire ver
 | *La Vallée du Vivant* | SVT | conservatoire de bocaux et de graines, puits au milieu des champs | existe en seconde, au sud-ouest : le Conservatoire du Vivant (cellules, ADN, biodiversité, évolution, corps humain et santé) puis le Puits de la Vallée (érosion, sédiments, sols, agrosystèmes) ; noms provisoires |
 | Clairval | révision (toutes matières) | village | existe |
 
+### L'Île du Sphinx (idée de Jules)
+
+Au large, à l'est de la grande île, une île de sable avec ses pyramides et un temple. Un vieux **Sphinx** (nom et
+caractère à relire avec les enfants) le garde : ni ami de Malvrek ni Effaceur, il aime les énigmes et juge les
+Archivistes à leur façon de réfléchir. Pas de leçon à réviser sur l'île : on y pense, on essaie, on se trompe et on
+recommence. La barque y conduit l'enfant avec un passage, gagné en terminant une activité sur la grande île (Maître
+Ysaline l'annonce la première fois). Premier jeu : les blocs du temple, à pousser sur les dalles gravées ; quand une
+énigme est résolue, les yeux du Sphinx s'allument. D'autres jeux pourront s'y ajouter (lanternes, miroirs, golem).
+
 ### Les Portes du Temps (idée de Jules)
 
 Un cercle de portes de pierre. Chaque porte ouvre sur une époque, et *Dame Sablière*, Effaceuse du temps, y a

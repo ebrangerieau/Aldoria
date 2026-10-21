@@ -2,7 +2,8 @@ extends Node
 ## Sauvegarde de partie (TRD §2.7) : XP, progression dans les donjons, bestiaire,
 ## défis quotidiens (jours faits, record, coffres de la semaine ouverts), quêtes du
 ## village (dernier jour où chaque habitant a été aidé), apparence (« look », facultative),
-## objets du sac (« items », Inventory), étapes de l'histoire déjà vues (« story »).
+## objets du sac (« items », Inventory), étapes de l'histoire déjà vues (« story »), île du
+## Sphinx (« sphinx » : passages, palier des énigmes, SphinxIsland).
 ##
 ## Écrite d'abord dans `user://` (IndexedDB sur le web), puis envoyée au serveur
 ## (`PUT /play/save` avec la révision sur laquelle elle s'appuie). Deux appareils
@@ -168,6 +169,21 @@ func mark_story(key: String) -> void:
 	_touch()
 
 
+## Île du Sphinx : passages pour la barque, palier et énigme suivante de chaque palier, énigmes
+## résolues, passages gagnés pas encore annoncés sur la carte (« news »).
+func sphinx() -> Dictionary:
+	_ensure_loaded()
+	var full := {"passes": 0, "tier": SphinxIsland.start_tier(Session.level()), "streak": 0, "solved": 0, "next": {}, "news": 0}
+	if data.get("sphinx") is Dictionary:
+		full.merge(data["sphinx"], true)
+	data["sphinx"] = full
+	return full
+
+
+func sphinx_passes() -> int:
+	return int(sphinx()["passes"])
+
+
 # --- Modifications ---------------------------------------------------------------------
 
 ## Récompense : `count` objets tirés au hasard (Inventory.draw). Rend ceux gagnés.
@@ -187,6 +203,65 @@ func use_item(id: String) -> bool:
 	items()[id] = item_count(id) - 1
 	_touch()
 	return true
+
+
+## Activité assez remplie (Session.end) : un passage de plus, sauf réserve pleine. Vrai si gagné.
+func earn_passage() -> bool:
+	var s := sphinx()
+	if int(s["passes"]) >= SphinxIsland.MAX_PASSES:
+		return false
+	s["passes"] = int(s["passes"]) + 1
+	s["news"] = int(s["news"]) + 1
+	_touch()
+	return true
+
+
+## Départ de la barque ; faux sans passage.
+func spend_passage() -> bool:
+	var s := sphinx()
+	if int(s["passes"]) <= 0:
+		return false
+	s["passes"] = int(s["passes"]) - 1
+	_touch()
+	return true
+
+
+## Passages gagnés depuis la dernière annonce (la carte les annonce une fois).
+func take_passage_news() -> int:
+	var s := sphinx()
+	var news := int(s["news"])
+	if news > 0:
+		s["news"] = 0
+		_touch()
+	return news
+
+
+## Prochaine énigme du palier atteint : {tier, index} ; l'indice avance à chaque énigme proposée.
+func next_sphinx_puzzle() -> Dictionary:
+	var s := sphinx()
+	var tier := clampi(int(s["tier"]), 1, SphinxIsland.tier_count())
+	if not s["next"] is Dictionary:
+		s["next"] = {}
+	var key := str(tier)
+	var index := int((s["next"] as Dictionary).get(key, 0))
+	s["next"][key] = index + 1
+	_touch()
+	return {"tier": tier, "index": index}
+
+
+## Énigme résolue ; sans l'aide du Sphinx, elle compte pour monter d'un palier. Vrai si l'on monte.
+func record_sphinx_solved(helped: bool) -> bool:
+	var s := sphinx()
+	s["solved"] = int(s["solved"]) + 1
+	var up := false
+	if not helped:
+		s["streak"] = int(s["streak"]) + 1
+		if int(s["streak"]) >= SphinxIsland.TIER_UP and int(s["tier"]) < SphinxIsland.tier_count():
+			s["tier"] = int(s["tier"]) + 1
+			s["streak"] = 0
+			up = true
+	_touch()
+	return up
 
 
 func add_xp(amount: int) -> void:

@@ -653,6 +653,15 @@ export function Guide({ child, onOpen }: { child?: Profile; onOpen: (page: Guide
             )}
           </li>
           <li>
+            <strong>L'Île du Sphinx</strong> (une idée de Jules) : une petite île à l'est de la carte, pour des jeux de logique sans
+            question de leçon. On y va en barque avec un passage : chaque activité où {tom ? 'Tom' : 'Jules'} répond à au moins 6
+            questions (donjon, défi du jour, village, Lice) en rapporte un, 3 au plus en réserve. Une traversée propose 3 énigmes de
+            blocs : pousser des blocs de pierre sur des dalles gravées, sans pouvoir les tirer. Les boutons Annuler et Recommencer
+            sont toujours là ; l'aide du Sphinx montre le début de la solution. Les énigmes deviennent plus difficiles après trois
+            réussites sans aide. Rien n'entre dans le suivi des notions, mais le temps passé sur l'île compte dans la durée de jeu
+            que vous avez fixée.
+          </li>
+          <li>
             <strong>Le sac</strong> : des objets gagnés en jouant (plume qui retire deux mauvaises propositions, parchemin d'indice, bouclier,
             potion). Aucun ne fait sauter une question ; une aide par objet compte comme un indice dans vos statistiques.
           </li>

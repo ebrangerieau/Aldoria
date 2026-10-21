@@ -80,7 +80,7 @@ const { launch, SLOW, HOLD } = require('./browser');
     await page.waitForTimeout((4000) * SLOW);    // retour sur la carte
     await page.keyboard.press('Enter', HOLD); // accueil de Maître Ysaline (première fois seulement)
     await page.waitForTimeout((800) * SLOW);
-    await page.mouse.click(749, 320, HOLD); // la Tour des Fractions → son seuil
+    await page.mouse.click(662, 288, HOLD); // la Tour des Fractions → son seuil
     await page.waitForTimeout((1000) * SLOW);
     const started = answered('/play/session/start', 'POST');
     await page.keyboard.press('Enter', HOLD); // « J'y vais »

@@ -28,6 +28,10 @@ var start_levels: Dictionary = {}
 var context: Dictionary = {}
 ## Donjon choisi au camp (code d'un DungeonDef du monde du joueur).
 var dungeon_code := ""
+## Mode de la session en cours (arene, donjon, defi, village, sphinx) et réponses enregistrées :
+## une activité assez remplie rapporte un passage pour l'Île du Sphinx (SphinxIsland).
+var mode := ""
+var answered := 0
 var active_seconds := 0.0
 ## Temps de jeu actif de la séance (toutes sessions qui se suivent) : limite fixée par le
 ## parent. Une pause de `break_minutes` sans jouer ouvre une nouvelle séance. Le serveur fait
@@ -135,14 +139,16 @@ func logout() -> void:
 			DirAccess.remove_absolute("user://" + file)
 
 
-## Ouvre une session et charge le paquet de questions. `mode` : arene, donjon ou
-## defi ; `params` : chapitres et énigme d'un donjon (voir DungeonDef). Sans réseau,
+## Ouvre une session et charge le paquet de questions. `wanted` : arene, donjon, defi,
+## village ou sphinx (l'île : aucune question, la session compte le temps de jeu) ; `params` : chapitres et énigme d'un donjon (voir DungeonDef). Sans réseau,
 ## reprend le dernier paquet enregistré sous `cache` (le mode par défaut, le code
 ## du donjon sinon) pour que le jeu reste jouable.
-func start(mode := "arene", params := {}, cache := "") -> Dictionary:
+func start(wanted := "arene", params := {}, cache := "") -> Dictionary:
 	var body := params.duplicate()
-	body["mode"] = mode
-	var key := cache if cache != "" else mode
+	body["mode"] = wanted
+	mode = wanted
+	answered = 0
+	var key := cache if cache != "" else wanted
 	var res := await ApiClient.post_json("/play/session/start", body)
 	if res.ok:
 		_apply_pack(res.data)
@@ -157,11 +163,18 @@ func start(mode := "arene", params := {}, cache := "") -> Dictionary:
 		if not cached.is_empty():
 			_apply_pack(cached)
 			return {"ok": true, "status": 0, "data": cached, "error": {}, "offline": true}
+		if wanted == "sphinx":  # l'île n'a pas besoin de questions : on y joue aussi hors connexion
+			_apply_pack({})
+			return {"ok": true, "status": 0, "data": {}, "error": {}, "offline": true}
 	return res
 
 
 ## Fin de session ; `rating` : note de plaisir de 1 à 5 (fin de donjon), 0 sinon.
 func end(rating := 0) -> void:
+	if mode != "sphinx" and answered >= SphinxIsland.PASS_ANSWERS:
+		SaveManager.earn_passage()
+	mode = ""
+	answered = 0
 	await flush()
 	if session_id != "":
 		var body := {"session_id": session_id, "active_seconds": int(active_seconds)}
@@ -230,6 +243,7 @@ func record_attempt(item: Dictionary, correct: bool, time_ms: int, hint_used: bo
 		"game_mode": game_mode,
 		"answered_at": Time.get_datetime_string_from_system(true) + "Z",
 	})
+	answered += 1
 	_save_json(QUEUE_FILE, _queue)
 	queue_changed.emit(pending_count())
 	flush()

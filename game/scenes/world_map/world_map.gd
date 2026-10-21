@@ -2,7 +2,8 @@ extends Node3D
 ## Carte du royaume (docs/histoire.md) : écran principal après la connexion. La Citadelle des
 ## Archives au centre, le village de Clairval, une région par matière avec ses donjons (pages de
 ## la Grande Chronique retrouvées, quêtes ouvertes, lieux encore fermés), et les régions pas encore
-## au programme dans le brouillard. Toucher un lieu ouvre son seuil : Maître Ysaline présente le
+## au programme dans le brouillard ; au large, l'Île du Sphinx (jeux de logique, SphinxIsland), où la
+## barque conduit l'enfant s'il a gagné un passage. Toucher un lieu ouvre son seuil : Maître Ysaline présente le
 ## monde et la quête, l'enfant choisit d'y entrer ou non.
 ##
 ## Géométrie : une seule texture pour tout le pack, donc un matériau partagé et un seul maillage
@@ -29,8 +30,10 @@ var _dungeons: Array[DungeonDef] = []
 var _village: VillageDef
 var _material: StandardMaterial3D
 var _grass_material: StandardMaterial3D  # herbe du pack teintée en vert (elle est vert-jaune)
+var _sand_material: StandardMaterial3D  # la même tuile, couleur sable (Île du Sphinx)
 var _static: Node3D
 var _ground: Node3D
+var _sand: Node3D
 var _camera: Camera3D
 var _places: Array[Dictionary] = []  # {kind, id, title, cell, status, index, label}
 var _markers: Array[Label3D] = []  # repères qui flottent au-dessus des quêtes ouvertes
@@ -44,6 +47,7 @@ var _panel_open := false
 var _home := Vector3.ZERO  # centre de la carte entière
 var _focus := Vector3.ZERO  # point visé par la caméra
 var _distance := CAMERA_FAR
+var _far := CAMERA_FAR  # carte entière : un peu plus loin si l'écran est étroit (Île du Sphinx)
 var _touches := {}  # doigt → position à l'écran
 var _pinch := 0.0  # écart entre deux doigts au dernier mouvement
 var _press_at := Vector2(-1, -1)  # où le doigt (ou la souris) s'est posé
@@ -62,6 +66,9 @@ func _ready() -> void:
 		_material.shading_mode = BaseMaterial3D.SHADING_MODE_PER_VERTEX
 	_grass_material = _material.duplicate()
 	_grass_material.albedo_color = Color(0.56, 0.8, 0.52) if _wt.id == "lumineux" else Color(0.48, 0.64, 0.54)
+	_sand_material = _material.duplicate()
+	_sand_material.albedo_texture = null  # tuile d'herbe sans sa texture : couleur unie du sable
+	_sand_material.albedo_color = (SphinxTemple.palette(_wt.id)["dune"] as Color).darkened(0.22)
 	_build_environment()
 	_static = Node3D.new()
 	_static.name = "Static"
@@ -69,12 +76,16 @@ func _ready() -> void:
 	_ground = Node3D.new()
 	_ground.name = "Ground"
 	add_child(_ground)
+	_sand = Node3D.new()
+	_sand.name = "Sand"
+	add_child(_sand)
 	_build_terrain()
 	_collect_places()
 	_build_places()
 	if Quality.option("merge", "1") != "0":
 		StaticBatcher.merge(_static, _material)
 		StaticBatcher.merge(_ground, _grass_material)
+		StaticBatcher.merge(_sand, _sand_material)
 	_build_paths()
 	_build_camera()
 	_build_hud()
@@ -95,6 +106,19 @@ func _ready() -> void:
 		SaveManager.mark_story("welcome")
 		await _dialog("La carte du royaume", WorldMapDef.WELCOME, "", "Je suis prêt !", "")
 	await _celebrate_pages()
+	await _announce_passages()
+
+
+## Passage gagné pour l'Île du Sphinx : Maître Ysaline l'explique la première fois, ensuite une ligne suffit.
+func _announce_passages() -> void:
+	var news := SaveManager.take_passage_news()
+	if news <= 0:
+		return
+	if not SaveManager.story_seen("sphinx_passage"):
+		SaveManager.mark_story("sphinx_passage")
+		await _dialog(SphinxIsland.TITLE, "Bravo, tu as gagné un passage pour l'Île du Sphinx ! Quand tu veux, touche l'île au large, à l'est : la barque t'y conduira. Chaque fois que tu termines une activité, tu en gagnes un autre.", "", "D'accord", "")
+	else:
+		_message.text = "Passage gagné pour l'Île du Sphinx !"
 
 
 ## Maître Ysaline salue chaque page rapportée (une fois) et montre le chemin qui s'ouvre.
@@ -147,6 +171,8 @@ func _collect_places() -> void:
 	for id in WorldMapDef.SECRETS:
 		var secret: Dictionary = WorldMapDef.SECRETS[id]
 		_places.append({"kind": "secret", "id": id, "title": secret["title"], "cell": secret["cell"], "status": "fog"})
+	_places.append({"kind": "sphinx", "id": "sphinx", "title": SphinxIsland.TITLE, "cell": WorldMapDef.SPHINX,
+		"status": "open" if SaveManager.sphinx_passes() > 0 else "locked"})
 
 
 func _build_places() -> void:
@@ -174,6 +200,12 @@ func _build_places() -> void:
 			"secret":
 				_add_piece(WorldMapDef.SECRETS[p["id"]]["piece"], p["cell"], Vector2.ZERO, 0.0, 1.1 * PIECE_SCALE)
 				_add_piece("cloud_big", p["cell"], Vector2(0.3, 0.2), 30.0, 0.9 * PIECE_SCALE, 2.6 * PIECE_SCALE)
+			"sphinx":
+				var temple := SphinxTemple.map_piece(_wt.id)
+				temple.position = WorldMapDef.cell_position(p["cell"])
+				temple.rotation_degrees.y = -20.0
+				temple.scale = Vector3.ONE * PIECE_SCALE
+				add_child(temple)
 		_add_label(p)
 
 
@@ -198,7 +230,7 @@ func _add_label(p: Dictionary) -> void:
 	add_child(title)
 	_labels.append(title)
 	p["label"] = title
-	if p["kind"] in ["dungeon", "village"] and p["status"] == "open":
+	if p["kind"] in ["dungeon", "village", "sphinx"] and p["status"] == "open":
 		var marker := Label3D.new()
 		marker.billboard = BaseMaterial3D.BILLBOARD_ENABLED
 		marker.no_depth_test = true
@@ -243,6 +275,8 @@ func _status_text(p: Dictionary) -> String:
 					return "Fermé"
 			var checkpoint := int(SaveManager.dungeon(d.code)["checkpoint"])
 			return "Reprise : étage %d" % (checkpoint + 1) if checkpoint > 0 else "Nouvelle quête !"
+		"sphinx":
+			return SphinxIsland.passes_text(SaveManager.sphinx_passes())
 	return "Dans le brouillard"
 
 
@@ -259,7 +293,7 @@ func _build_terrain() -> void:
 			if kind == "~":
 				_add_piece("hex_water", cell, Vector2.ZERO, 0.0)
 				continue
-			_add_piece("hex_grass", cell, Vector2.ZERO, 0.0, 1.0, 0.0, _ground)
+			_add_piece("hex_grass", cell, Vector2.ZERO, 0.0, 1.0, 0.0, _sand if kind == "s" else _ground)
 			if _is_place_cell(cell):
 				continue
 			match kind:
@@ -271,13 +305,16 @@ func _build_terrain() -> void:
 					_add_piece("hills_B", cell, Vector2.ZERO, yaw, 1.0, 0.0, _ground)
 				"T":
 					_add_piece(["trees_A_large", "trees_B_large", "trees_A_medium"][rng.randi_range(0, 2)], cell, Vector2.ZERO, yaw)
+				"s":
+					if rng.randf() < 0.4:
+						_add_piece("rock_single_A", cell, Vector2(rng.randf_range(-0.4, 0.4), rng.randf_range(-0.4, 0.4)), yaw)
 				_:
 					if rng.randf() < 0.25:
 						_add_piece(["trees_B_small", "rock_single_A"][rng.randi_range(0, 1)], cell, Vector2(rng.randf_range(-0.4, 0.4), rng.randf_range(-0.4, 0.4)), yaw)
 
 
 func _is_place_cell(cell: Vector2i) -> bool:
-	if cell in [WorldMapDef.CITADEL, WorldMapDef.CITADEL + Vector2i(1, 0), WorldMapDef.VILLAGE,
+	if cell in [WorldMapDef.CITADEL, WorldMapDef.CITADEL + Vector2i(1, 0), WorldMapDef.SPHINX, WorldMapDef.VILLAGE,
 			WorldMapDef.VILLAGE + Vector2i(-1, 0), WorldMapDef.VILLAGE + Vector2i(0, 1)]:
 		return true
 	for subject in WorldMapDef.REGIONS:
@@ -295,13 +332,14 @@ func _add_piece(piece: String, cell: Vector2i, offset: Vector2, yaw: float, scal
 	node.rotation_degrees.y = yaw
 	node.scale = Vector3.ONE * scale_factor
 	var into := parent if parent != null else _static
+	var material := _grass_material if into == _ground else (_sand_material if into == _sand else _material)
 	for child in node.find_children("*", "MeshInstance3D", true, false):
-		(child as MeshInstance3D).material_override = _grass_material if into == _ground else _material
+		(child as MeshInstance3D).material_override = material
 	into.add_child(node)
 
 
 ## Chemins lumineux depuis la Citadelle : vers le village, et vers chaque donjon ouvert ou
-## repris, de proche en proche dans sa région. Des pastilles dorées (pages retrouvées) ou
+## repris, de proche en proche dans sa région ; avec un passage, la route de la barque vers l'île. Des pastilles dorées (pages retrouvées) ou
 ## claires (quêtes ouvertes), dessinées en une seule fois.
 func _build_paths() -> void:
 	var dots: Array[Vector3] = []
@@ -317,6 +355,9 @@ func _build_paths() -> void:
 				var from: Vector2i = previous.get(p["region"], WorldMapDef.CITADEL)
 				_dots_between(from, p["cell"], gold if p["status"] == "done" else dots)
 				previous[p["region"]] = p["cell"]
+			"sphinx":
+				if p["status"] == "open":
+					_dots_between(WorldMapDef.SPHINX_SHORE, p["cell"], dots)
 	_add_dots(dots, Color(1, 1, 1, 0.9))
 	_add_dots(gold, Color("#ffd447"))
 
@@ -380,17 +421,47 @@ func _build_camera() -> void:
 	add_child(_camera)
 	var size := WorldMapDef.size()
 	# Un peu au nord du centre : l'île descend à l'écran, son bord nord passe sous le panneau du héros.
-	_home = Vector3(size.x / 2.0 - WorldMapDef.TILE_W / 2.0, 0, size.y / 2.0 - 2.8)
-	_focus = _home
+	_home = Vector3(WorldMapDef.MAIN_COLUMNS * WorldMapDef.TILE_W / 2.0, 0, size.y / 2.0 - 2.8)
 	_camera.rotation = Vector3(deg_to_rad(CAMERA_PITCH), 0, 0)
+	_frame_both_islands()
+	_focus = _home
 	_place_camera()
 	_camera.make_current()
 
 
+## Carte entière : le lieu le plus à l'ouest et l'Île du Sphinx (avec leurs noms) tiennent à l'écran.
+## La caméra glisse d'abord vers l'est (au plus HOME_EAST mètres), puis recule si l'écran est trop étroit.
+func _frame_both_islands() -> void:
+	var west := WorldMapDef.cell_position(WorldMapDef.SPHINX)
+	for p in _places:
+		var at := WorldMapDef.cell_position(p["cell"])
+		if at.x < west.x:
+			west = at
+	var east := WorldMapDef.cell_position(WorldMapDef.SPHINX)
+	var width := get_viewport().get_visible_rect().size.x
+	var margin := 125.0  # un peu plus que la moitié d'un nom de lieu
+	var base := _home
+	for step in 25:
+		_far = CAMERA_FAR + step * 0.5
+		var shift := 0.0
+		while shift <= WorldMapDef.HOME_EAST:
+			_home = base + Vector3(shift, 0, 0)
+			_focus = _home
+			_distance = _far
+			_place_camera()
+			var left := _camera.unproject_position(west).x
+			var right := _camera.unproject_position(east).x
+			if right <= width - margin:
+				if left >= margin:
+					return
+				break  # assez à l'est, mais l'ouest déborde : reculer
+			shift += 0.25
+
+
 ## Caméra au-dessus du point visé ; zoomée, elle peut se déplacer, jamais hors de la carte.
 func _place_camera() -> void:
-	_distance = clampf(_distance, CAMERA_NEAR, CAMERA_FAR)
-	var freedom := 1.0 - (_distance - CAMERA_NEAR) / (CAMERA_FAR - CAMERA_NEAR)  # 0 : carte entière
+	_distance = clampf(_distance, CAMERA_NEAR, _far)
+	var freedom := 1.0 - (_distance - CAMERA_NEAR) / (_far - CAMERA_NEAR)  # 0 : carte entière
 	var half := WorldMapDef.size() / 2.0 * freedom
 	_focus.x = clampf(_focus.x, _home.x - half.x, _home.x + half.x)
 	_focus.z = clampf(_focus.z, _home.z - half.y, _home.z + half.y)
@@ -403,7 +474,7 @@ func _place_camera() -> void:
 		label.position.y = float(label.get_meta("roof")) + float(label.get_meta("lift")) * grow
 		label.set_meta("base_y", label.position.y)  # repères : leur balancement part de là
 	for b in _zoom_buttons:
-		b.disabled = (b.text == "+" and _distance <= CAMERA_NEAR + 0.01) or (b.text == "−" and _distance >= CAMERA_FAR - 0.01)
+		b.disabled = (b.text == "+" and _distance <= CAMERA_NEAR + 0.01) or (b.text == "−" and _distance >= _far - 0.01)
 
 
 ## Zoom d'un facteur (> 1 : rapproche), en gardant sous le doigt le point `at` de l'écran.
@@ -637,6 +708,15 @@ func _open_threshold(p: Dictionary) -> void:
 			await _dialog(p["title"], WorldMapDef.REGIONS[p["region"]]["fog"], "", "D'accord", "")
 		"secret":
 			await _dialog(p["title"], WorldMapDef.SECRETS[p["id"]]["text"], "", "D'accord", "")
+		"sphinx":
+			var passes := SaveManager.sphinx_passes()
+			var detail := "Tes passages : %s (%d au plus).
+%s
+Une traversée : %d énigmes du temple, sans questions de leçon." 				% [SphinxIsland.passes_text(passes).to_lower(), SphinxIsland.MAX_PASSES, SphinxIsland.HOW_TO_EARN, SphinxIsland.VISIT_PUZZLES]
+			if passes <= 0:
+				await _dialog(p["title"], SphinxIsland.THRESHOLD, detail, "D'accord", "")
+			elif await _dialog(p["title"], SphinxIsland.THRESHOLD, detail, "J'y vais", "Pas maintenant"):
+				_launch("sphinx", {}, SphinxIsland.SCENE, "sphinx")
 
 
 func _dungeon_detail(d: DungeonDef, status: String) -> String:

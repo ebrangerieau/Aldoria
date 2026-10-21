@@ -6,32 +6,40 @@ extends RefCounted
 ## région sans donjon pour la classe de l'enfant reste dans le brouillard.
 ##
 ## Grille : hexagones à pointe vers le haut, lignes impaires décalées d'une demi-tuile vers l'est.
-## Colonne q (0 à 20) vers l'est, ligne r (0 à 12) vers le sud. Les lieux sont espacés (au moins quatre
+## Colonne q (0 à 25) vers l'est, ligne r (0 à 12) vers le sud ; l'Île du Sphinx, au large de la côte est
+## (colonnes 22 à 24), est séparée de la grande île par un bras de mer. Les lieux sont espacés (au moins quatre
 ## colonnes sur une même rangée ou deux rangées voisines) : leurs noms ne se chevauchent pas, même sur un
 ## téléphone ; le coin nord-ouest, sous le panneau du héros, reste sans lieu.
 
 const PIECES := "res://assets/kaykit/hexagon/%s.gltf"
 const TILE_W := 2.0
+## Colonnes de la grande île : la caméra la cadre, puis glisse vers l'est juste assez pour montrer l'Île du
+## Sphinx (au plus `HOME_EAST` mètres), et recule un peu si l'écran est trop étroit (world_map.gd).
+const MAIN_COLUMNS := 21
+const HOME_EAST := 4.0
 const ROW_H := 1.732  # 3/4 de la hauteur d'une tuile (2,31 m)
 
-## ~ eau · . herbe · M montagne · H collines boisées · h collines · T forêt
+## ~ eau · . herbe · M montagne · H collines boisées · h collines · T forêt · s sable (Île du Sphinx)
 const GRID := [
-	"~~~~~~~~~~~~~~~~~~~~~",
-	"~~~~.........M.MMM.~~",
-	"~~..Hh.h.h.MMMMMMMM~~",
-	"~............MMM.MHM~",
-	"~..h.....h.......M..~",
-	"~...........H...H...~",
-	"~......h.....h.h.h..~",
-	"~...................~",
-	"~..T.T.....h.....h..~",
-	"~..TT..TT...........~",
-	"~~TTTTTTTTTTTT.h...~~",
-	"~~~TTTTTTTTTT......~~",
-	"~~~~~~~~~~~~~~~~~~~~~",
+	"~~~~~~~~~~~~~~~~~~~~~~~~~~",
+	"~~~~.........M.MMM.~~~~~~~",
+	"~~..Hh.h.h.MMMMMMMM~~~~~~~",
+	"~............MMM.MHM~~~ss~",
+	"~..h.....h.......M..~~sss~",
+	"~...........H...H...~~sss~",
+	"~......h.....h.h.h..~~sss~",
+	"~...................~~~s~~",
+	"~..T.T.....h.....h..~~~~~~",
+	"~..TT..TT...........~~~~~~",
+	"~~TTTTTTTTTTTT.h...~~~~~~~",
+	"~~~TTTTTTTTTT......~~~~~~~",
+	"~~~~~~~~~~~~~~~~~~~~~~~~~~",
 ]
 
 const CITADEL := Vector2i(10, 5)
+## Île du Sphinx (jeux de logique, SphinxIsland) et la côte d'où part la barque.
+const SPHINX := Vector2i(23, 5)
+const SPHINX_SHORE := Vector2i(19, 5)
 const VILLAGE := Vector2i(6, 5)
 
 ## Régions : matière → titre, emplacements des donjons (dans l'ordre d'ouverture), texte du
