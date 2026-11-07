@@ -4,8 +4,12 @@ Jeu éducatif 2.5D (Godot 4.7.2, export web) pour réviser les maths de 6ème (J
 Documents de référence : `docs/PRD.md`, `docs/TRD.md`, `IMPLEMENTATION_PLAN.md` (phases, décisions, écarts au TRD).
 
 **v2 en préparation dans `v2/`** (île ouverte en 3D, Babylon.js, PC seulement) : elle a son propre `v2/CLAUDE.md`, sa CI
-(`.github/workflows/v2.yml`) et ses copies de l'API, de l'espace parent et des contenus. Une modification de la v1 ne touche pas
-`v2/`, et inversement ; l'API v2 garde la compatibilité avec la v1 (même base, emplacement de sauvegarde `v1`).
+(`.github/workflows/v2.yml`) et ses copies de l'API, de l'espace parent et des contenus.
+
+**L'API de production se construit depuis `v2/api`** et sert les deux jeux, sur la même base (`v2/docs/decisions.md`, D11) :
+`api/` à la racine est **gelé**, toute évolution de l'API se fait dans `v2/api` (qui garde les tests de la v1 et ne doit jamais
+casser le jeu v1). Le Compose de production (`deploy/docker-compose.yml`) a deux jeux : `web` (v1, déployé par `ci.yml`) et
+`web2` (v2, sur `aldoria2.*`, déployé avec l'API par `v2.yml`) ; chaque CI ne recrée que ses services.
 
 ## Arborescence
 

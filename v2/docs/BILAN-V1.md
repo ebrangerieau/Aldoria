@@ -61,7 +61,7 @@
 | Programmes, schémas, vecteurs de test | `v2/content/` (copie) | inchangés |
 | Données des donjons, régions, villages, phrases du héros | `v2/content/monde/*.json` | exportées par `v2/tools/export_v1_content.py` |
 | Voix Piper, voix enregistrées, musique | `v2/voice/`, `v2/deploy/voix/`, `v2/deploy/musique/` | copiés ; voix enregistrées pas encore lues par le client |
-| Déploiement (Traefik, nginx, sauvegardes) | `v2/deploy/` | adapté : projet `aldoria2`, nginx pour le build Vite, CSP sans `unsafe-inline` |
+| Déploiement (Traefik, nginx, sauvegardes) | `v2/deploy/` et le Compose de la racine | nginx pour le build Vite, CSP sans `unsafe-inline` ; en production, le jeu v2 à côté du jeu v1, même API et même base (D11) |
 | Modèles 3D (KayKit, Quaternius), polices, sons, icônes | `v2/client/public/ressources/` | copiés (fichiers `.import` de Godot retirés) |
 | Validation des réponses, analyse des expressions | `client/src/core/answers.ts`, `mathExpr.ts` | portés ligne à ligne, mêmes 81 vecteurs |
 | Choix des questions, file hors connexion, sauvegarde | `client/src/core/questionService.ts`, `session.ts`, `save.ts` | portés, testés |

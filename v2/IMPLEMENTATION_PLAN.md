@@ -31,13 +31,14 @@
 
 | Étape | Quoi | Comment vérifier |
 | --- | --- | --- |
-| 0.1 | Lancer la v2 contre l'API locale (Docker) avec un vrai profil : connexion, séance `monde`, réponses en base, sauvegarde `v2` | `docker compose` local, `python -m app.cli create …`, puis l'espace parent montre la séance « Exploration » |
+| 0.1 | Jouer la v2 avec un vrai profil (connexion, séance `monde`, réponses en base, sauvegarde `v2`) : se fait sur `aldoria2.bandtrack.fr` dès l'étape 0.6 | l'espace parent montre la séance « Exploration » et les réponses de la v2 |
 | 0.2 | Renard de Jules : réexporter `Fox.glb` (ou un autre renard CC0) pour que Babylon.js l'affiche sans pointes ; le remettre par défaut | capture `depart` avec le renard ; `?renard=1` retiré |
 | 0.3 | Commandes au clavier vérifiées sur AZERTY et QWERTY ; souris (orbite, molette) sur le PC familial | séance de 5 minutes avec Eric |
 | 0.4 | WebGPU : servir twgsl depuis le site, mesurer face à WebGL 2, décider du moteur par défaut (D9) | `docs/perf-log.md`, nouvelle décision si changement |
 | 0.5 | Mesures sur le PC familial (et le PC de Tom) : images par seconde par profil, chargement, mémoire | `docs/perf-log.md` ; profil par défaut choisi d'après les mesures |
-| 0.6 | Mise en ligne de `aldoria2.bandtrack.fr` : images `aldoria2-*` publiées par la CI, compose sur le VPS, base restaurée depuis une sauvegarde de la v1 (`docs/exploitation.md`) | `/api/v1/health` et `version.txt` du commit ; parcours navigateur contre le site |
+| 0.6 | Mise en ligne (D11) : la CI v2 publie l'API (depuis `v2/api`) et le jeu v2, sauvegarde la base, applique la migration 0013 et ouvre `aldoria2.bandtrack.fr` à côté du jeu v1. À faire par Eric une fois : l'entrée DNS `aldoria2`, et vérifier que le VPS peut tirer la nouvelle image `aldoria-web2` | job `deploy` de `v2.yml` vert : API et `version.txt` du commit, parcours navigateur contre le site |
 | 0.7 | Remontée des erreurs du jeu (reprise d'`ErrorReport` de la v1 : `window.onerror` vers `POST /play/client-errors`) | une erreur d'essai visible dans Exploitation → Erreurs du jeu |
+| 0.8 | Espace parent servi par `web2` (code de `v2/admin`) au lieu du conteneur de la v1 ; `admin/` à la racine gelé | `aldoria-admin.bandtrack.fr` sert le build de `v2/admin` (libellé « Exploration », guide à jour) |
 
 **Critère de passage** : Jules et Tom se promènent dix minutes dans l'île sans aide, trouvent et éveillent au moins trois
 pierres chacun, et disent ce qu'ils voudraient y trouver. On note où ils s'ennuient et où ils se perdent.
@@ -89,10 +90,11 @@ Dans l'ordre que les enfants choisiront à la séance de la phase 1 :
 
 ## Phase 4 : bascule
 
-1. Sauvegarde de la base de production, migration 0013 (sans effet sur la v1).
-2. L'image `web` de la v2 remplace celle de la v1 sur `aldoria.bandtrack.fr` ; la v1 reste disponible à part quelques semaines.
-3. Décision sur la partie v1 (XP, apparence, lieux terminés) : conversion vers la partie v2 ou nouveau départ, avec les enfants.
-4. Le dossier `game/` (Godot) est archivé, puis retiré du dépôt ; `v2/` remonte à la racine.
+L'API et la base sont communes depuis l'étape 0.6 (D11) : la bascule ne touche plus aux données.
+
+1. Le jeu v2 est servi aussi sur `aldoria.bandtrack.fr` ; la v1 reste quelques semaines sur une autre adresse.
+2. Décision sur la partie v1 (XP, apparence, lieux terminés) : conversion vers la partie v2 ou nouveau départ, avec les enfants.
+3. Le dossier `game/` (Godot) est archivé, puis retiré du dépôt ; `v2/` remonte à la racine, avec le Compose de production.
 
 **Critère de passage** : plus aucune séance sur la v1 pendant trois semaines.
 
