@@ -1,0 +1,37 @@
+{
+  "level": "2nde",
+  "subject": {"code": "svt", "label": "Sciences de la vie et de la Terre"},
+  "source": "Programme de SVT de seconde générale et technologique (arrêté du 17 janvier 2019, BO spécial n° 1 du 22 janvier 2019), en vigueur en 2026-2027 : la Terre, la vie et l'organisation du vivant ; enjeux contemporains de la planète ; corps humain et santé. Questions : générateurs (api/app/engine/generators/svt_2nde.py et svt_2nde_calculs.py), complétés par la banque.",
+  "chapters": [
+    {"code": "2nde.svt.organisation", "title": "L'organisation fonctionnelle du vivant", "notions": [
+      {"code": "2nde.svt.organisation.cellules", "label": "L'organisme pluricellulaire, un ensemble de cellules spécialisées"},
+      {"code": "2nde.svt.organisation.adn", "label": "L'ADN, molécule de l'information génétique"},
+      {"code": "2nde.svt.organisation.metabolisme", "label": "Le métabolisme des cellules : photosynthèse, respiration, fermentation"}
+    ]},
+    {"code": "2nde.svt.biodiversite", "title": "Biodiversité, résultat et étape de l'évolution", "notions": [
+      {"code": "2nde.svt.biodiversite.echelles", "label": "Les échelles de la biodiversité et son estimation"},
+      {"code": "2nde.svt.biodiversite.changement", "label": "La biodiversité change au cours du temps"},
+      {"code": "2nde.svt.biodiversite.forces", "label": "Les forces évolutives : sélection naturelle, dérive génétique, spéciation"},
+      {"code": "2nde.svt.biodiversite.selection_sexuelle", "label": "Communication intra-spécifique et sélection sexuelle"}
+    ]},
+    {"code": "2nde.svt.geosciences", "title": "Géosciences et dynamique des paysages", "notions": [
+      {"code": "2nde.svt.geosciences.erosion", "label": "L'érosion, processus et conséquences"},
+      {"code": "2nde.svt.geosciences.sedimentation", "label": "Sédimentation et milieux de sédimentation"},
+      {"code": "2nde.svt.geosciences.activite_humaine", "label": "Érosion et activité humaine"}
+    ]},
+    {"code": "2nde.svt.agrosystemes", "title": "Agrosystèmes et développement durable", "notions": [
+      {"code": "2nde.svt.agrosystemes.structure", "label": "Structure et fonctionnement des agrosystèmes"},
+      {"code": "2nde.svt.agrosystemes.sols", "label": "Caractéristiques des sols et production de biomasse"},
+      {"code": "2nde.svt.agrosystemes.gestion", "label": "Vers une gestion durable des agrosystèmes"}
+    ]},
+    {"code": "2nde.svt.procreation", "title": "Procréation et sexualité humaine", "notions": [
+      {"code": "2nde.svt.procreation.developpement", "label": "Corps d'homme, corps de femme : de la fécondation à la puberté"},
+      {"code": "2nde.svt.procreation.cerveau", "label": "Cerveau, plaisir, sexualité"},
+      {"code": "2nde.svt.procreation.hormones", "label": "Hormones et reproduction humaine"}
+    ]},
+    {"code": "2nde.svt.microorganismes", "title": "Micro-organismes et santé", "notions": [
+      {"code": "2nde.svt.microorganismes.pathogenes", "label": "Agents pathogènes et maladies vectorielles"},
+      {"code": "2nde.svt.microorganismes.microbiote", "label": "Microbiote humain et santé"}
+    ]}
+  ]
+}

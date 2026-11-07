@@ -1,0 +1,110 @@
+{
+ "source": "exporté du prototype v1 par v2/tools/export_v1_content.py ; ce fichier fait foi",
+ "memory": 24,
+ "lines": {
+  "lumineux": {
+   "start": [
+    "C'est parti pour l'aventure !",
+    "Allez, courage !",
+    "Je suis prêt. Enfin… presque !",
+    "Cette fois, je vais tout réussir.",
+    "Respire… et en avant !",
+    "Bon, par où commencer ?",
+    "Mes leçons sont dans ma tête, mon épée dans ma main !"
+   ],
+   "cleared": [
+    "Et une salle de plus !",
+    "On avance bien !",
+    "Ça, c'est fait !",
+    "Pas mal du tout !",
+    "Je me sens plus fort à chaque pas.",
+    "Les Archives seraient fières de moi.",
+    "Hop, la porte est ouverte !",
+    "Mes leçons me servent vraiment.",
+    "Je progresse, je le sens.",
+    "Allez, on continue !",
+    "Rien ne m'arrête aujourd'hui.",
+    "Je n'ai même pas tremblé !",
+    "Encore un mystère résolu.",
+    "Quelle équipe on fait !",
+    "Youpi, la voie est libre !",
+    "On monte, on monte !",
+    "Un étage de plus, et toc !",
+    "Ça grimpe, mais je tiens bon !"
+   ],
+   "combat": [
+    "J'entends des os qui craquent derrière la porte.",
+    "Je vois une ombre bouger plus loin.",
+    "Quelqu'un garde la salle suivante. Il n'a pas l'air commode.",
+    "Il y a du bruit plus loin : un combat se prépare.",
+    "Garde un sort sous le coude : on va se battre.",
+    "Un ennemi rôde. Mes meilleures réponses vont servir !"
+   ],
+   "enigme": [
+    "Plus loin, une énigme. Ici, personne ne me presse.",
+    "La prochaine salle cache un mystère à résoudre.",
+    "Pas d'ennemi devant, mais un casse-tête !",
+    "Une énigme m'attend. Je peux demander un indice.",
+    "On dirait une salle à énigme. Je vais bien réfléchir."
+   ],
+   "boss": [
+    "Derrière cette porte, c'est le boss. Je connais tout ça !",
+    "Dernière salle. Je respire un grand coup.",
+    "Le chef des lieux m'attend. Pas de panique : une question à la fois.",
+    "C'est le grand combat. Je suis prêt !",
+    "Le boss est tout proche. Je vais lui montrer ce que je sais."
+   ],
+   "left": [
+    "Encore %d étages avant le boss.",
+    "Il reste %d étages à grimper.",
+    "Plus que %d étages jusqu'au sommet !"
+   ]
+  },
+  "brouillard": {
+   "start": [
+    "Bon. Allons-y.",
+    "Le Brouillard ne m'impressionne pas.",
+    "Concentration.",
+    "Une salle après l'autre.",
+    "Je connais la méthode. Avançons."
+   ],
+   "cleared": [
+    "Une de moins.",
+    "Le Brouillard recule.",
+    "Propre.",
+    "Ça avance.",
+    "Méthodique. Efficace.",
+    "Archive suivante.",
+    "Je garde le rythme.",
+    "Rien d'insurmontable.",
+    "Proprement réglé.",
+    "La lumière revient, peu à peu.",
+    "Un étage plus haut.",
+    "On grimpe. Le sommet approche."
+   ],
+   "combat": [
+    "Des pas derrière la porte. Il va falloir se battre.",
+    "Une silhouette dans le Brouillard. Combat en vue.",
+    "Ça bouge plus loin. Prépare tes arcanes.",
+    "Quelqu'un garde la salle suivante."
+   ],
+   "enigme": [
+    "Une énigme plus loin. Aucun chrono : je prends mon temps.",
+    "Salle suivante : un mécanisme à comprendre.",
+    "Pas d'ennemi devant. Un problème à résoudre.",
+    "Un sceau plus loin. Réfléchir avant d'agir."
+   ],
+   "boss": [
+    "Dernière porte. Le maître des lieux m'attend.",
+    "Le boss est là. Une question à la fois.",
+    "Fin du parcours. Tout ce que je sais va servir.",
+    "Le cœur du donjon. Calme et précision."
+   ],
+   "left": [
+    "Encore %d étages.",
+    "%d étages avant le sommet.",
+    "Il en reste %d."
+   ]
+  }
+ }
+}

@@ -1,0 +1,500 @@
+[
+  {
+    "groupe": "prologue",
+    "id": "prologue-chronique-lumineux",
+    "texte": "Au cœur du royaume d'Aldoria se dresse la Citadelle des Archives. Elle garde un livre immense : la Grande Chronique. Chaque page garde un savoir : les nombres, les mots, les langues. Grâce à elle, tout le monde sait compter, lire et parler.",
+    "voix": "narrateur"
+  },
+  {
+    "groupe": "prologue",
+    "id": "prologue-chronique-brouillard",
+    "texte": "Le royaume d'Aldoria tient grâce à un livre : la Grande Chronique. Il repose au cœur de la Citadelle des Archives. Chaque page garde un savoir : les nombres, les mots, les langues. Tant qu'il est entier, personne n'oublie.",
+    "voix": "narrateur"
+  },
+  {
+    "groupe": "prologue",
+    "id": "prologue-vol-lumineux",
+    "texte": "Mais une nuit, quelqu'un est entré sans bruit. C'était Malvrek, un ancien Archiviste. Il a arraché les pages de la Chronique, une par une. Puis il les a confiées à ses Effaceurs, qui les ont cachées dans tout le royaume.",
+    "voix": "narrateur"
+  },
+  {
+    "groupe": "prologue",
+    "id": "prologue-vol-brouillard",
+    "texte": "Une nuit, Malvrek est revenu. Autrefois, il était Archiviste lui aussi. Il a arraché les pages de la Chronique. Ses Effaceurs les ont emportées aux quatre coins du royaume.",
+    "voix": "narrateur"
+  },
+  {
+    "groupe": "prologue",
+    "id": "prologue-oubli-lumineux",
+    "texte": "Depuis, partout où une page manque, les habitants oublient. Le boulanger ne sait plus compter ses pains. Les livres se vident. Un brouillard gris recouvre les régions : le Brouillard de l'Oubli.",
+    "voix": "narrateur"
+  },
+  {
+    "groupe": "prologue",
+    "id": "prologue-oubli-brouillard",
+    "texte": "Depuis, là où une page manque, le savoir s'efface. Les calculs se brouillent. Les livres se vident. Le Brouillard de l'Oubli gagne les régions, une à une.",
+    "voix": "narrateur"
+  },
+  {
+    "groupe": "prologue",
+    "id": "prologue-ysaline-lumineux",
+    "texte": "Te voilà enfin ! Je suis Maître Ysaline, la gardienne de la Chronique. Je suis la seule à n'avoir rien oublié. Tu es le plus jeune des Archivistes. Tu te trompes parfois ? Tant mieux : c'est comme ça qu'on apprend. Malvrek, lui, n'a jamais accepté de se tromper.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "prologue",
+    "id": "prologue-ysaline-brouillard",
+    "texte": "Je suis Maître Ysaline, la gardienne de la Chronique. Je n'ai rien oublié, mais je ne peux pas tout reprendre seule. Tu es le plus jeune des Archivistes. Tu te tromperas : c'est comme ça qu'on apprend. Malvrek n'a jamais accepté l'erreur. C'est ce qui l'a perdu.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "prologue",
+    "id": "prologue-quete-lumineux",
+    "texte": "Va retrouver les pages, une à une. Chaque Effaceur vaincu t'en rendra une. Avant chaque chemin, je te dirai ce qui t'attend. Je t'attends ici, à la Citadelle, au centre de la carte. En route, jeune Archiviste !",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "prologue",
+    "id": "prologue-quete-brouillard",
+    "texte": "Retrouve les pages, une à une. Chaque Effaceur vaincu t'en rendra une. Avant chaque chemin, je te dirai ce qui t'attend. La Citadelle sera ton point de départ, au centre de la carte. La Chronique compte sur toi.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "carte-accueil",
+    "texte": "Voici la carte du royaume. Touche un lieu : je te dirai ce qui t'y attend, et tu choisiras d'y aller ou non. La Citadelle, au centre, garde ta salle d'armes, la Lice et la Pierre du Jour.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "carte-citadelle",
+    "texte": "Voici la Citadelle des Archives, le cœur du royaume. Tu y retrouves la Grande Chronique, ta salle d'armes, la Lice pour t'entraîner et la Pierre du Jour, ton défi quotidien.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "brouillard-maths",
+    "texte": "Les Cimes Fractales dorment sous le brouillard. Leurs pages t'attendront quand ta classe y montera.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "brouillard-anglais",
+    "texte": "Au bord de la mer, la Bibliothèque des Langues est encore noyée de brume. Ses portes s'ouvriront quand l'anglais entrera dans ta quête.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "brouillard-francais",
+    "texte": "Le Bois des Mots est perdu dans le brouillard. On raconte que les arbres y murmurent des histoires. Un jour, un Archiviste y entrera.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "brouillard-sciences",
+    "texte": "Derrière ses vitres embuées, le Laboratoire des Inventeurs garde ses expériences et ses spécimens. Il s'ouvrira quand les sciences entreront dans ta quête.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "brouillard-histoire_geo",
+    "texte": "Dans ce cercle de pierres, chaque porte ouvre sur une autre époque ou un autre lieu du monde. Dame Sablière y a tout mélangé. Ces portes s'ouvriront quand l'histoire-géographie entrera dans ta quête.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "brouillard-emc",
+    "texte": "Près de la Citadelle, le Forum des Citoyens attend ses débats. On y vote, on y défend ses droits et ceux des autres. Il s'ouvrira quand l'enseignement moral et civique entrera dans ta quête.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "brouillard-svt",
+    "texte": "Au sud-ouest, la Vallée du Vivant cache ses bocaux, ses fossiles et ses champs sous la brume. Elle s'ouvrira quand les sciences de la vie et de la Terre entreront dans ta quête.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "brouillard-snt",
+    "texte": "Au Carrefour des Messagers, les nouvelles voyagent de relais en relais, et les automates dessinent les cartes. Il s'ouvrira quand les sciences numériques entreront dans ta quête.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "secret-tour_oubli",
+    "texte": "Là-bas se dresse la Tour de l'Oubli, le repaire de Malvrek, l'Archiviste déchu. Elle ne s'ouvrira que lorsque tu auras repris assez de pages et vraiment appris ce qu'elles contiennent.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "village-2nde",
+    "texte": "Brumegarde tient bon face au Brouillard, mais ses habitants ont besoin d'un esprit vif. Écoute leurs demandes.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-labyrinthe_vecteurs",
+    "texte": "Au cœur des Cimes, le Labyrinthe guidait les voyageurs grâce à ses flèches de lumière. L'Architecte du Brouillard a volé la page des Vecteurs : les couloirs se sont figés. Rallume le phare du centre.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-labyrinthe_vecteurs",
+    "texte": "Tu as rapporté la page des Vecteurs ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « La Forge de l'Algèbre » s'éclaire sur la carte.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-forge_algebre",
+    "texte": "La Forge de l'Algèbre façonnait les formules du royaume. Le Maître de Forge, un démon de feu, a volé la page du Calcul : tout sort tordu de l'enclume. Reprends-la et redresse les formules.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-forge_algebre",
+    "texte": "Tu as rapporté la page du Calcul ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « La Citadelle des Fonctions » s'éclaire sur la carte.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-citadelle_fonctions",
+    "texte": "Le Veilleur de la Citadelle lisait l'avenir dans les courbes. Le Seigneur des Courbes, un dragon, a volé la page des Courbes, et le Veilleur ne voit plus rien. Rends-lui la vue.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-citadelle_fonctions",
+    "texte": "Tu as rapporté la page des Courbes ! Elle a repris sa place dans la Grande Chronique. Toutes les pages de la région « Les Cimes Fractales » sont revenues. Malvrek doit trembler dans sa tour !",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-theatre_verdure",
+    "texte": "Au cœur du Bois des Mots, le Théâtre de Verdure donnait la parole aux arbres : chaque feuille portait un vers. Le Ratureur a volé la page du Français. Il barre chaque mot d'un trait d'encre, et le théâtre s'est tu. Reprends-lui la page, scène après scène.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-theatre_verdure",
+    "texte": "Tu as rapporté la page du Français ! Elle a repris sa place dans la Grande Chronique. Toutes les pages de la région « Le Bois des Mots » sont revenues. Malvrek doit trembler dans sa tour !",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-bibliotheque_engloutie",
+    "texte": "Sous la Bibliothèque des Langues, la marée a envahi les salles d'archives. Les grammaires y flottent page contre page, et les temps se mélangent : hier devient demain. Sir Tense, un Effaceur qui ne supporte aucune règle, a volé la page de la Grammaire anglaise. Descends la reprendre.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-bibliotheque_engloutie",
+    "texte": "Tu as rapporté la page de la Grammaire anglaise ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « Le Port des Couronnes » s'éclaire sur la carte.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-port_couronnes",
+    "texte": "Au pied de la Bibliothèque, le Port des Couronnes accueillait les navires de tout le Commonwealth : Inde, Canada, Ghana, Australie, Jamaïque… Chaque bateau apportait ses récits. Lady Oblivion, l'Effaceuse aux voiles grises, a déchiré la chronique du port. Rends aux mondes anglophones leur mémoire.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-port_couronnes",
+    "texte": "Tu as rapporté la page des Mondes anglophones ! Elle a repris sa place dans la Grande Chronique. Tu as rapporté toutes les pages de cette matière dans la région « La Bibliothèque des Langues ». Malvrek doit trembler dans sa tour !",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-porte_empires",
+    "texte": "Une porte de pierre, plus haute que les autres, ouvre sur vingt siècles d'histoire : la Méditerranée antique, l'Atlantique de 1492, les cours royales, les salons des Lumières. Le Grand Censeur y raye les noms et brûle les registres. Rapporte la page de l'Histoire moderne avant que tout soit effacé.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-porte_empires",
+    "texte": "Tu as rapporté la page de l'Histoire moderne ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « La Porte des Transitions » s'éclaire sur la carte.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-porte_transitions",
+    "texte": "La porte suivante ne s'ouvre pas sur le passé, mais sur le monde d'aujourd'hui : des littoraux menacés, des villes qui grandissent, des routes de migrants, des parcs de safari. L'Arpenteur Aveugle a effacé les écarts et les flux de toutes les cartes. Rapporte la page de la Géographie du monde.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-porte_transitions",
+    "texte": "Tu as rapporté la page de la Géographie du monde ! Elle a repris sa place dans la Grande Chronique. Toutes les pages de la région « Les Portes du Temps » sont revenues. Malvrek doit trembler dans sa tour !",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-alambic_elements",
+    "texte": "Au Laboratoire des Inventeurs, une tour de verre bleu bouillonne jour et nuit : l'Alambic des Éléments. On y pesait, dissolvait et transformait la matière avec soin. Le Dissolveur a tout fait fondre dans son creuset. Rapporte la page de la Matière avant qu'il ne reste plus qu'une flaque.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-alambic_elements",
+    "texte": "Tu as rapporté la page de la Matière ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « Le Laboratoire foudroyé » s'éclaire sur la carte.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-laboratoire_foudroye",
+    "texte": "Plus loin, le Laboratoire foudroyé fume encore. Ici, on étudiait les mouvements, les forces, le son, la lumière et l'électricité. Le Brouilleur l'a frappé d'un éclair : les instruments mentent, les diapasons sonnent faux. Rapporte la page des Ondes et des Forces.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-laboratoire_foudroye",
+    "texte": "Tu as rapporté la page des Ondes et des Forces ! Elle a repris sa place dans la Grande Chronique. Toutes les pages de la région « Le Laboratoire des Inventeurs » sont revenues. Malvrek doit trembler dans sa tour !",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-pont_paquets",
+    "texte": "Sur la côte sud, au Carrefour des Messagers, un pont relie les relais où passent tous les messages du royaume. Le Crieur Menteur s'y est installé : les paquets s'égarent, les liens mènent nulle part, les rumeurs courent. Rapporte la page des Messages et remets le réseau en ordre.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-pont_paquets",
+    "texte": "Tu as rapporté la page des Messages ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « L'Atelier des Automates » s'éclaire sur la carte.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-atelier_automates",
+    "texte": "Un peu plus loin sur la côte, l'Atelier des Automates cliquette jour et nuit : on y dessine les cartes, on y développe les images et on y programme des machines. Le Détraqueur a tout déréglé. Rapporte la page des Automates.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-atelier_automates",
+    "texte": "Tu as rapporté la page des Automates ! Elle a repris sa place dans la Grande Chronique. Toutes les pages de la région « Le Carrefour des Messagers » sont revenues. Malvrek doit trembler dans sa tour !",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-moulin_mancha",
+    "texte": "Au bord de la Bibliothèque des Langues tourne un moulin venu de la Mancha, comme ceux que Don Quichotte prenait pour des géants. On y apprenait l'espagnol en écoutant chanter les ailes. L'Enredador y a emmêlé tous les mots. Rapporte la page d'espagnol.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-moulin_mancha",
+    "texte": "Tu as rapporté la page d'espagnol ! Elle a repris sa place dans la Grande Chronique. Tu as rapporté toutes les pages de cette matière dans la région « La Bibliothèque des Langues ». Malvrek doit trembler dans sa tour !",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-conservatoire_vivant",
+    "texte": "Au fond de la Vallée du Vivant, le Conservatoire garde des milliers de bocaux, de graines et de lames de microscope. Le Brouille-Gènes y a tout mélangé : l'ADN, les espèces, et jusqu'aux hormones et aux microbes du corps humain. Rapporte la page du Vivant.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-conservatoire_vivant",
+    "texte": "Tu as rapporté la page du Vivant ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « Le Puits de la Vallée » s'éclaire sur la carte.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-puits_vallee",
+    "texte": "Plus loin dans la Vallée du Vivant, le Puits de la Vallée descend jusqu'aux couches de roches les plus anciennes. Autour, les champs nourrissaient tout le royaume. Le Rongeur y ronge les sols et emporte la terre vers la mer. Rapporte la page de la Terre.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-puits_vallee",
+    "texte": "Tu as rapporté la page de la Terre ! Elle a repris sa place dans la Grande Chronique. Toutes les pages de la région « La Vallée du Vivant » sont revenues. Malvrek doit trembler dans sa tour !",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-haute_cour",
+    "texte": "Au cœur du Forum des Citoyens se dresse la Haute Cour, où l'on rendait la justice selon le droit, et non selon l'humeur des puissants. L'Arbitraire s'y est installé : il juge seul, censure les journaux et méprise la nature. Rapporte la page des Droits.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-haute_cour",
+    "texte": "Tu as rapporté la page des Droits ! Elle a repris sa place dans la Grande Chronique. Tu as rapporté toutes les pages de cette matière dans la région « Le Forum des Citoyens ». Malvrek doit trembler dans sa tour !",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-marche_forum",
+    "texte": "Sur le Forum des Citoyens, le Marché réunissait marchands et acheteurs : chacun y trouvait un prix juste. Le Spéculateur y a truqué les balances et gonflé les comptes ; plus personne ne sait ce qui vaut quoi. Rapporte la page de l'Économie.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-marche_forum",
+    "texte": "Tu as rapporté la page de l'Économie ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « La Maison Commune » s'éclaire sur la carte.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-maison_commune",
+    "texte": "Au bout du Forum, la Maison Commune accueillait les assemblées, les fêtes et les débats. Le Fataliste s'y est installé : il répète que chacun restera à sa place, que voter et étudier ne servent à rien. Rapporte la page de la Société.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-maison_commune",
+    "texte": "Tu as rapporté la page de la Société ! Elle a repris sa place dans la Grande Chronique. Tu as rapporté toutes les pages de cette matière dans la région « Le Forum des Citoyens ». Malvrek doit trembler dans sa tour !",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "village-6e",
+    "texte": "Les habitants de Clairval sentent le Brouillard leur grignoter la mémoire. Parle-leur : chacun a besoin d'un coup de main aujourd'hui.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-tour_fractions",
+    "texte": "La Tour des Fractions se dresse au-dessus des Cimes. Ses habitants savaient partager une tarte en parts égales. Depuis que le Grand Diviseur a volé leur page, ils coupent tout de travers. Rapporte la page des Fractions, et la Tour se souviendra.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-tour_fractions",
+    "texte": "Tu as rapporté la page des Fractions ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « L'Atelier des Balances » s'éclaire sur la carte.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-atelier_balances",
+    "texte": "Dans l'Atelier des Balances, on pesait tout au gramme près. Le Faux Peseur a volé la page des Mesures : les poids mentent et les cartes sont fausses. Retrouve-la, et l'Atelier saura de nouveau peser juste.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-atelier_balances",
+    "texte": "Tu as rapporté la page des Mesures ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « L'Observatoire des Angles » s'éclaire sur la carte.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-observatoire_angles",
+    "texte": "Tout en haut des Cimes, l'Observatoire visait les étoiles. Le Dragon des Constellations a emporté la page des Étoiles. Sans elle, les lunettes visent de travers et personne ne sait plus calculer ses chances.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-observatoire_angles",
+    "texte": "Tu as rapporté la page des Étoiles ! Elle a repris sa place dans la Grande Chronique. Toutes les pages de la région « Les Cimes Fractales » sont revenues. Malvrek doit trembler dans sa tour !",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-bibliotheque_langues",
+    "texte": "Au bord de la mer se dresse la Bibliothèque des Langues. On y parlait toutes les langues du monde. Le Bibliothécaire Muet a volé la page de l'Anglais : les livres sont devenus blancs. Reprends-lui chaque mot.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-bibliotheque_langues",
+    "texte": "Tu as rapporté la page de l'Anglais ! Elle a repris sa place dans la Grande Chronique. Toutes les pages de la région « La Bibliothèque des Langues » sont revenues. Malvrek doit trembler dans sa tour !",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-porte_origines",
+    "texte": "Au bord du royaume, un cercle de pierres garde les Portes du Temps. La première s'ouvre sur les origines : les premiers humains, les pharaons, les Grecs et les Romains. Dame Sablière y a tout mélangé, les pyramides côtoient les gladiateurs ! Rapporte la page de l'Histoire et remets les époques dans l'ordre.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-porte_origines",
+    "texte": "Tu as rapporté la page de l'Histoire ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « La Porte des Horizons » s'éclaire sur la carte.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-porte_horizons",
+    "texte": "La deuxième Porte du Temps ne s'ouvre pas sur une époque, mais sur le monde entier : des villes géantes, des déserts, des côtes. Le Brouille-Cartes, complice de Dame Sablière, a mélangé tous les atlas. Rapporte la page de la Géographie et remets chaque lieu à sa place.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-porte_horizons",
+    "texte": "Tu as rapporté la page de la Géographie ! Elle a repris sa place dans la Grande Chronique. Toutes les pages de la région « Les Portes du Temps » sont revenues. Malvrek doit trembler dans sa tour !",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-moulin_phrases",
+    "texte": "À l'orée du Bois des Mots tourne le Moulin des Phrases. Ses ailes broyaient les mots en jolies phrases bien rangées. Mais le Gobe-Lettres s'y est installé : il avale les accords et mélange les verbes. Rapporte la page de la Grammaire et remets le moulin en marche.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-moulin_phrases",
+    "texte": "Tu as rapporté la page de la Grammaire ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « Le Puits aux Contes » s'éclaire sur la carte.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-puits_contes",
+    "texte": "Au cœur du Bois des Mots se cache le Puits aux Contes. On raconte qu'au fond, toutes les histoires du monde dorment en attendant qu'on les lise. L'Ogre Oublieux y est descendu et a dévoré la fin de chaque conte. Va chercher la page des Contes : mythes, fables, théâtre, aventures et monstres t'attendent.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-puits_contes",
+    "texte": "Tu as rapporté la page des Contes ! Elle a repris sa place dans la Grande Chronique. Toutes les pages de la région « Le Bois des Mots » sont revenues. Malvrek doit trembler dans sa tour !",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-tour_experiences",
+    "texte": "Au Laboratoire des Inventeurs, la Tour des Expériences crépite d'étincelles. On y faisait fondre, bouillir, briller et rouler toutes sortes de choses. Mais le Professeur Court-Circuit a tout déréglé : les glaçons bouillent et les lampes refusent de s'allumer. Rapporte la page des Sciences et remets les expériences en ordre.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-tour_experiences",
+    "texte": "Tu as rapporté la page des Sciences ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « La Maison du Naturaliste » s'éclaire sur la carte.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-maison_naturaliste",
+    "texte": "Un peu plus loin, la Maison du Naturaliste déborde de plantes, de bocaux et de fossiles. Le Pétrificateur y est entré : il change en pierre tout ce qui vit et mélange les époques. Rapporte la page du Vivant pour que la maison reverdisse.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-maison_naturaliste",
+    "texte": "Tu as rapporté la page du Vivant ! Elle a repris sa place dans la Grande Chronique. Toutes les pages de la région « Le Laboratoire des Inventeurs » sont revenues. Malvrek doit trembler dans sa tour !",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-tribune_conseil",
+    "texte": "Sur le Forum des Citoyens se dresse la Tribune du Conseil. Les habitants y venaient débattre, voter et choisir ceux qui parlent en leur nom. Le Voleur de Voix a vidé les urnes : maintenant, il décide de tout, tout seul. Rapporte la page du Conseil pour que chacun retrouve sa voix.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-tribune_conseil",
+    "texte": "Tu as rapporté la page du Conseil ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « Le Palais des Libertés » s'éclaire sur la carte.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "seuil-palais_libertes",
+    "texte": "Un peu plus loin sur le Forum, le Palais des Libertés garde les textes qui protègent chacun : liberté de conscience, laïcité, vie privée. Le Fouineur s'y est glissé : il ouvre les tiroirs, lit les secrets et veut que tout le monde pense comme lui. Rapporte la page des Libertés.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "carte",
+    "id": "page-palais_libertes",
+    "texte": "Tu as rapporté la page des Libertés ! Elle a repris sa place dans la Grande Chronique. Toutes les pages de la région « Le Forum des Citoyens » sont revenues. Malvrek doit trembler dans sa tour !",
+    "voix": "ysaline"
+  }
+]

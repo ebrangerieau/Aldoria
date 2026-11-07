@@ -3,7 +3,10 @@ name: CI
 on:
   push:
     branches: [main]
+    # La v2 a sa propre CI (v2.yml) : une modification de v2/ seule ne redéploie pas la v1.
+    paths-ignore: ['v2/**', '.github/workflows/v2.yml']
   pull_request:
+    paths-ignore: ['v2/**', '.github/workflows/v2.yml']
   workflow_dispatch:
 
 env:

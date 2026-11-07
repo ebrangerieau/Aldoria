@@ -1,0 +1,5482 @@
+{
+ "source": "exporté du prototype v1 par v2/tools/export_v1_content.py ; ce fichier fait foi",
+ "levels": {
+  "6e": [
+   "tour_fractions",
+   "atelier_balances",
+   "observatoire_angles",
+   "bibliotheque_langues",
+   "porte_origines",
+   "porte_horizons",
+   "moulin_phrases",
+   "puits_contes",
+   "tour_experiences",
+   "maison_naturaliste",
+   "tribune_conseil",
+   "palais_libertes"
+  ],
+  "2nde": [
+   "labyrinthe_vecteurs",
+   "forge_algebre",
+   "citadelle_fonctions",
+   "theatre_verdure",
+   "bibliotheque_engloutie",
+   "port_couronnes",
+   "porte_empires",
+   "porte_transitions",
+   "alambic_elements",
+   "laboratoire_foudroye",
+   "pont_paquets",
+   "atelier_automates",
+   "moulin_mancha",
+   "conservatoire_vivant",
+   "puits_vallee",
+   "haute_cour",
+   "marche_forum",
+   "maison_commune"
+  ]
+ },
+ "dungeons": [
+  {
+   "code": "tour_fractions",
+   "level": "6e",
+   "subject": "maths",
+   "region": "maths",
+   "order": 0,
+   "title": "La Tour des Fractions",
+   "chapter_codes": [
+    "6e.maths.fractions"
+   ],
+   "chapter_title": "Fractions",
+   "intro": "Les squelettes ont mis la Tour sens dessus dessous. Monte jusqu'au sommet et rends ses fractions au royaume !",
+   "outro": "La Tour des Fractions brille à nouveau. Les Archives se souviennent de toi, Archiviste !",
+   "threshold": "La Tour des Fractions se dresse au-dessus des Cimes. Ses habitants savaient partager une tarte en parts égales. Depuis que le Grand Diviseur a volé leur page, ils coupent tout de travers. Rapporte la page des Fractions, et la Tour se souviendra.",
+   "page": "la page des Fractions",
+   "page_text": "Sur la page des Fractions, les parts se remettent en ordre : moitiés, tiers, quarts. Les habitants de la Tour savent de nouveau partager.",
+   "boss_intro": "Ha ! Encore un petit Archiviste ! Moi, je coupe tout en morceaux… et je ne recolle jamais rien. Ta page des Fractions, tu ne la reverras pas !",
+   "boss_defeat": "Non… mes morceaux se recollent tout seuls ! Malvrek va être furieux…",
+   "enigma": {
+    "generator": "6e.prealgebre.balance",
+    "mode": "balance",
+    "title": "Les Balances du Gardien",
+    "intro": "Une balance géante bloque la porte. Trois fois de suite, trouve ce que pèse une boîte : essaie une masse, regarde de quel côté penche la balance, et remets-la en équilibre.",
+    "xp": 40
+   },
+   "chest_xp": 100,
+   "rooms": [
+    {
+     "kind": "entree",
+     "title": "Le Hall d'entrée"
+    },
+    {
+     "kind": "combat",
+     "title": "La Salle des Moitiés",
+     "enemies": [
+      {
+       "model": "Mushnub",
+       "name": "Champignon des moitiés",
+       "hp": 60,
+       "tier": 1,
+       "xp": 30,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "combat",
+     "title": "Le Couloir des Quarts",
+     "enemies": [
+      {
+       "model": "Skeleton_Minion",
+       "name": "Squelette grognon",
+       "hp": 70,
+       "tier": 2,
+       "xp": 35,
+       "v1_at": [
+        8,
+        5
+       ],
+       "scale": 1.0
+      },
+      {
+       "model": "GreenBlob",
+       "name": "Gelée farceuse",
+       "hp": 80,
+       "tier": 2,
+       "xp": 35,
+       "v1_at": [
+        10.5,
+        14
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "enigme",
+     "title": "La Salle des Balances"
+    },
+    {
+     "kind": "combat",
+     "title": "La Galerie des Tiers",
+     "enemies": [
+      {
+       "model": "Skeleton_Warrior",
+       "name": "Gardien des os",
+       "hp": 110,
+       "tier": 3,
+       "xp": 50,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "boss",
+     "title": "Le Sommet de la Tour",
+     "enemies": [
+      {
+       "model": "MushnubEvolved",
+       "name": "Le Grand Diviseur",
+       "hp": 200,
+       "tier": 4,
+       "xp": 150,
+       "v1_at": [
+        11,
+        6
+       ],
+       "scale": 1.45
+      }
+     ]
+    }
+   ],
+   "v1_map_piece": "building_tower_A_blue",
+   "v1_decor": {}
+  },
+  {
+   "code": "atelier_balances",
+   "level": "6e",
+   "subject": "maths",
+   "region": "maths",
+   "order": 1,
+   "title": "L'Atelier des Balances",
+   "chapter_codes": [
+    "6e.maths.prealgebre",
+    "6e.maths.proportionnalite"
+   ],
+   "chapter_title": "Pré-algèbre, proportionnalité et échelles",
+   "intro": "Dans l'Atelier, plus rien n'est à la bonne mesure : les poids mentent et les cartes sont fausses. Remets de l'ordre !",
+   "outro": "Les balances sont justes et les cartes disent vrai. L'Atelier reprend son travail grâce à toi !",
+   "threshold": "Dans l'Atelier des Balances, on pesait tout au gramme près. Le Faux Peseur a volé la page des Mesures : les poids mentent et les cartes sont fausses. Retrouve-la, et l'Atelier saura de nouveau peser juste.",
+   "page": "la page des Mesures",
+   "page_text": "La page des Mesures retrouve ses poids et ses échelles. Dans l'Atelier, les balances disent vrai et les cartes montrent le bon chemin.",
+   "boss_intro": "Bienvenue dans mon atelier ! Ici, un kilo pèse ce que JE décide. Essaie donc de m'équilibrer, petit Archiviste !",
+   "boss_defeat": "Mes plateaux… ils sont justes à nouveau. Quelle horreur, la vérité !",
+   "enigma": {
+    "generator": "6e.proportionnalite.carte",
+    "mode": "",
+    "title": "La Carte du Cartographe",
+    "intro": "Trois cartes gardent la réserve. Compte les carreaux, lis l'échelle et trouve les vraies distances.",
+    "xp": 45
+   },
+   "chest_xp": 120,
+   "rooms": [
+    {
+     "kind": "entree",
+     "title": "La Cour de l'Atelier"
+    },
+    {
+     "kind": "combat",
+     "title": "L'Établi des Poids",
+     "enemies": [
+      {
+       "model": "Goleling",
+       "name": "Petit golem de poids",
+       "hp": 70,
+       "tier": 1,
+       "xp": 35,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "combat",
+     "title": "La Réserve des Barres",
+     "enemies": [
+      {
+       "model": "Skeleton_Rogue",
+       "name": "Chapardeur de poids",
+       "hp": 80,
+       "tier": 2,
+       "xp": 40,
+       "v1_at": [
+        8,
+        5
+       ],
+       "scale": 1.0
+      },
+      {
+       "model": "Cactoro",
+       "name": "Cactus mal mesuré",
+       "hp": 80,
+       "tier": 2,
+       "xp": 40,
+       "v1_at": [
+        10.5,
+        14
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "enigme",
+     "title": "La Salle des Cartes"
+    },
+    {
+     "kind": "combat",
+     "title": "Le Comptoir des Échelles",
+     "enemies": [
+      {
+       "model": "Skeleton_Mage",
+       "name": "Arpenteur maudit",
+       "hp": 120,
+       "tier": 3,
+       "xp": 55,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "boss",
+     "title": "La Grande Balance",
+     "enemies": [
+      {
+       "model": "GolelingEvolved",
+       "name": "Le Faux Peseur",
+       "hp": 220,
+       "tier": 4,
+       "xp": 160,
+       "v1_at": [
+        11,
+        6
+       ],
+       "scale": 1.45
+      }
+     ]
+    }
+   ],
+   "v1_map_piece": "building_blacksmith_blue",
+   "v1_decor": {
+    "floor": "floor_wood_large",
+    "floor_accent": "floor_wood_large_dark",
+    "banners": [
+     "banner_patternB_yellow",
+     "banner_patternB_green"
+    ],
+    "props": [
+     [
+      "table_long_decorated_A",
+      [
+       1.4,
+       0,
+       4.2
+      ],
+      90.0,
+      1.2
+     ],
+     [
+      "barrel_large",
+      [
+       3.2,
+       0,
+       1.4
+      ],
+      0.0,
+      0.8
+     ],
+     [
+      "barrel_large_decorated",
+      [
+       14.5,
+       0,
+       1.6
+      ],
+      0.0,
+      0.8
+     ],
+     [
+      "coin_stack_large",
+      [
+       13.0,
+       0,
+       1.1
+      ],
+      0.0,
+      0.5
+     ],
+     [
+      "crates_stacked",
+      [
+       14.6,
+       0,
+       5.2
+      ],
+      90.0,
+      0.9
+     ]
+    ],
+    "torch_color": [
+     1.0,
+     0.72,
+     0.38
+    ]
+   }
+  },
+  {
+   "code": "observatoire_angles",
+   "level": "6e",
+   "subject": "maths",
+   "region": "maths",
+   "order": 2,
+   "title": "L'Observatoire des Angles",
+   "chapter_codes": [
+    "6e.maths.angles",
+    "6e.maths.probabilites"
+   ],
+   "chapter_title": "Angles et probabilités",
+   "intro": "Là-haut, les automates de l'Observatoire visent les étoiles de travers. Redresse leurs angles et calcule leurs chances !",
+   "outro": "La lunette de l'Observatoire pointe de nouveau vers les étoiles. Les Archives brillent un peu plus !",
+   "threshold": "Tout en haut des Cimes, l'Observatoire visait les étoiles. Le Dragon des Constellations a emporté la page des Étoiles. Sans elle, les lunettes visent de travers et personne ne sait plus calculer ses chances.",
+   "page": "la page des Étoiles",
+   "page_text": "La page des Étoiles brille de nouveau : les angles se redressent, les chances se calculent. Les lunettes de l'Observatoire retrouvent le ciel.",
+   "boss_intro": "Grrr… Qui ose monter jusqu'à mes étoiles ? Ici, les angles sont tordus et le hasard m'obéit. Tu n'as aucune chance !",
+   "boss_defeat": "Aucune chance… C'est moi qui n'en avais aucune. Reprends ta page, Archiviste.",
+   "enigma": {
+    "generator": "6e.algorithmique.boucles",
+    "mode": "",
+    "title": "Les Automates de l'Observatoire",
+    "intro": "Trois automates attendent leur programme. Suis chaque instruction pour savoir où ils s'arrêteront.",
+    "xp": 50
+   },
+   "chest_xp": 140,
+   "rooms": [
+    {
+     "kind": "entree",
+     "title": "Le Parvis des Étoiles"
+    },
+    {
+     "kind": "combat",
+     "title": "La Galerie des Angles aigus",
+     "enemies": [
+      {
+       "model": "Armabee",
+       "name": "Abeille pointue",
+       "hp": 80,
+       "tier": 2,
+       "xp": 40,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "combat",
+     "title": "La Rotonde des Angles droits",
+     "enemies": [
+      {
+       "model": "Skeleton_Minion",
+       "name": "Squelette à l'équerre",
+       "hp": 90,
+       "tier": 2,
+       "xp": 45,
+       "v1_at": [
+        8,
+        5
+       ],
+       "scale": 1.0
+      },
+      {
+       "model": "Ghost",
+       "name": "Feu follet astral",
+       "hp": 90,
+       "tier": 3,
+       "xp": 45,
+       "v1_at": [
+        10.5,
+        14
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "enigme",
+     "title": "La Salle des Automates"
+    },
+    {
+     "kind": "combat",
+     "title": "Le Belvédère des Hasards",
+     "enemies": [
+      {
+       "model": "Skeleton_Warrior",
+       "name": "Gardien des dés",
+       "hp": 130,
+       "tier": 3,
+       "xp": 60,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "boss",
+     "title": "La Coupole",
+     "enemies": [
+      {
+       "model": "Dragon",
+       "name": "Le Dragon des Constellations",
+       "hp": 240,
+       "tier": 5,
+       "xp": 170,
+       "v1_at": [
+        11,
+        6
+       ],
+       "scale": 1.45
+      }
+     ]
+    }
+   ],
+   "v1_map_piece": "building_tower_B_blue",
+   "v1_decor": {
+    "walls": [
+     "wall_shelves",
+     "wall_arched"
+    ],
+    "banners": [
+     "banner_patternC_blue",
+     "banner_patternC_white"
+    ],
+    "props": [
+     [
+      "shelf_large",
+      [
+       1.4,
+       0,
+       4.0
+      ],
+      90.0,
+      0.9
+     ],
+     [
+      "shelf_small_candles",
+      [
+       3.2,
+       0,
+       1.0
+      ],
+      0.0,
+      0.6
+     ],
+     [
+      "trunk_large_A",
+      [
+       14.4,
+       0,
+       1.6
+      ],
+      -15.0,
+      0.9
+     ],
+     [
+      "candle_lit",
+      [
+       13.0,
+       0,
+       1.0
+      ],
+      0.0,
+      0.3
+     ],
+     [
+      "shelves",
+      [
+       14.9,
+       0,
+       5.2
+      ],
+      -90.0,
+      0.8
+     ]
+    ],
+    "torch_color": [
+     0.78,
+     0.82,
+     1.0
+    ]
+   }
+  },
+  {
+   "code": "bibliotheque_langues",
+   "level": "6e",
+   "subject": "anglais",
+   "region": "anglais",
+   "order": 3,
+   "title": "La Bibliothèque des Langues",
+   "chapter_codes": [
+    "6e.anglais.vocabulaire",
+    "6e.anglais.grammaire",
+    "6e.anglais.communication"
+   ],
+   "chapter_title": "Anglais : vocabulaire et grammaire",
+   "intro": "Le Bibliothécaire Muet a volé les mots anglais des livres : les pages sont blanches ! Reprends-lui chaque mot, salle après salle.",
+   "outro": "Les livres parlent de nouveau anglais. « Thank you, Archivist! » murmure la Bibliothèque.",
+   "threshold": "Au bord de la mer se dresse la Bibliothèque des Langues. On y parlait toutes les langues du monde. Le Bibliothécaire Muet a volé la page de l'Anglais : les livres sont devenus blancs. Reprends-lui chaque mot.",
+   "page": "la page de l'Anglais",
+   "page_text": "La page de l'Anglais se remplit de mots : colours, numbers, family… Les livres de la Bibliothèque parlent de nouveau.",
+   "boss_intro": "(Le Bibliothécaire Muet pose un doigt sur sa bouche et serre la page contre lui. Sur un parchemin, il griffonne : « SILENCE ! »)",
+   "boss_defeat": "(Le Bibliothécaire laisse tomber la page. Pour la première fois depuis longtemps, il murmure : « … thank you. »)",
+   "enigma": {
+    "generator": "6e.anglais.lettres",
+    "mode": "",
+    "title": "Les Livres en désordre",
+    "intro": "Trois livres ont perdu leur titre : les lettres sont tombées en vrac. Écoute chaque mot et remets ses lettres dans l'ordre.",
+    "xp": 45
+   },
+   "chest_xp": 120,
+   "rooms": [
+    {
+     "kind": "entree",
+     "title": "Le Hall des Langues"
+    },
+    {
+     "kind": "combat",
+     "title": "Le Rayon des Couleurs",
+     "enemies": [
+      {
+       "model": "Ghost",
+       "name": "Fantôme des pages",
+       "hp": 60,
+       "tier": 1,
+       "xp": 30,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "combat",
+     "title": "La Salle des Dictionnaires",
+     "enemies": [
+      {
+       "model": "Skeleton_Rogue",
+       "name": "Voleur de mots",
+       "hp": 75,
+       "tier": 2,
+       "xp": 35,
+       "v1_at": [
+        8,
+        5
+       ],
+       "scale": 1.0
+      },
+      {
+       "model": "GreenBlob",
+       "name": "Gelée d'encre",
+       "hp": 75,
+       "tier": 2,
+       "xp": 35,
+       "v1_at": [
+        10.5,
+        14
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "enigme",
+     "title": "La Salle des Livres en désordre"
+    },
+    {
+     "kind": "combat",
+     "title": "La Galerie des Grammaires",
+     "enemies": [
+      {
+       "model": "Skeleton_Mage",
+       "name": "Grammairien d'os",
+       "hp": 110,
+       "tier": 3,
+       "xp": 50,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "boss",
+     "title": "Le Bureau du Bibliothécaire",
+     "enemies": [
+      {
+       "model": "Skeleton_Mage",
+       "name": "Le Bibliothécaire Muet",
+       "hp": 210,
+       "tier": 4,
+       "xp": 155,
+       "v1_at": [
+        11,
+        6
+       ],
+       "scale": 1.45
+      }
+     ]
+    }
+   ],
+   "v1_map_piece": "building_church_blue",
+   "v1_decor": {
+    "floor": "floor_wood_large",
+    "floor_accent": "floor_wood_large_dark",
+    "walls": [
+     "wall_shelves",
+     "wall_window_open"
+    ],
+    "banners": [
+     "banner_patternA_blue",
+     "banner_patternC_white"
+    ],
+    "props": [
+     [
+      "shelf_large",
+      [
+       1.4,
+       0,
+       4.0
+      ],
+      90.0,
+      0.9
+     ],
+     [
+      "table_long_decorated_A",
+      [
+       2.4,
+       0,
+       1.4
+      ],
+      0.0,
+      1.0
+     ],
+     [
+      "candle_triple",
+      [
+       13.2,
+       0,
+       1.0
+      ],
+      0.0,
+      0.3
+     ],
+     [
+      "shelves",
+      [
+       14.9,
+       0,
+       5.2
+      ],
+      -90.0,
+      0.8
+     ],
+     [
+      "shelf_small_candles",
+      [
+       14.4,
+       0,
+       1.0
+      ],
+      0.0,
+      0.6
+     ]
+    ],
+    "torch_color": [
+     1.0,
+     0.86,
+     0.62
+    ]
+   }
+  },
+  {
+   "code": "porte_origines",
+   "level": "6e",
+   "subject": "histoire_geo",
+   "region": "histoire_geo",
+   "order": 4,
+   "title": "La Porte des Origines",
+   "chapter_codes": [
+    "6e.histoire_geo.reperes",
+    "6e.histoire_geo.humanite",
+    "6e.histoire_geo.antiquite",
+    "6e.histoire_geo.empire_romain"
+   ],
+   "chapter_title": "Les débuts de l'humanité, les Grecs et les Romains",
+   "intro": "Le sable du temps coule de travers ! Traverse les époques et retrouve Dame Sablière.",
+   "outro": "Les Portes du Temps se referment doucement : chaque époque est de nouveau à sa place.",
+   "threshold": "Au bord du royaume, un cercle de pierres garde les Portes du Temps. La première s'ouvre sur les origines : les premiers humains, les pharaons, les Grecs et les Romains. Dame Sablière y a tout mélangé, les pyramides côtoient les gladiateurs ! Rapporte la page de l'Histoire et remets les époques dans l'ordre.",
+   "page": "la page de l'Histoire",
+   "page_text": "Sur la page de l'Histoire, les époques se remettent en ordre : les premiers humains, l'écriture, les cités grecques, Rome. La frise du temps est réparée.",
+   "boss_intro": "Ha ha ! Je suis Dame Sablière ! J'ai envoyé les pharaons chez les Romains et Jules César à l'âge de pierre ! Ta page de l'Histoire ? Perdue au fond de mon sablier !",
+   "boss_defeat": "Mon sablier… le sable retombe dans le bon sens ! Chaque époque retrouve sa place. Malvrek ne va pas être content…",
+   "enigma": {
+    "generator": "6e.histoire_geo.frise",
+    "mode": "",
+    "title": "La Frise du Temps",
+    "intro": "Trois frises ont perdu leur ordre : les événements s'y bousculent. Remets-les du plus ancien au plus récent.",
+    "xp": 45
+   },
+   "chest_xp": 120,
+   "rooms": [
+    {
+     "kind": "entree",
+     "title": "Le Cercle de Pierres"
+    },
+    {
+     "kind": "combat",
+     "title": "La Grotte des Premiers Humains",
+     "enemies": [
+      {
+       "model": "Mushnub",
+       "name": "Champignon des cavernes",
+       "hp": 60,
+       "tier": 1,
+       "xp": 30,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "combat",
+     "title": "Les Rives du Nil",
+     "enemies": [
+      {
+       "model": "Skeleton_Warrior",
+       "name": "Garde du pharaon",
+       "hp": 75,
+       "tier": 2,
+       "xp": 35,
+       "v1_at": [
+        8,
+        5
+       ],
+       "scale": 1.0
+      },
+      {
+       "model": "Cactoro",
+       "name": "Cactus du désert",
+       "hp": 75,
+       "tier": 2,
+       "xp": 35,
+       "v1_at": [
+        10.5,
+        14
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "enigme",
+     "title": "La Salle de la Frise"
+    },
+    {
+     "kind": "combat",
+     "title": "Le Forum de Rome",
+     "enemies": [
+      {
+       "model": "Skeleton_Rogue",
+       "name": "Gladiateur d'os",
+       "hp": 110,
+       "tier": 3,
+       "xp": 50,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "boss",
+     "title": "Le Grand Sablier",
+     "enemies": [
+      {
+       "model": "Ghost",
+       "name": "Dame Sablière",
+       "hp": 210,
+       "tier": 4,
+       "xp": 155,
+       "v1_at": [
+        11,
+        6
+       ],
+       "scale": 1.4
+      }
+     ]
+    }
+   ],
+   "v1_map_piece": "building_destroyed",
+   "v1_decor": {
+    "floor": "floor_tile_large",
+    "floor_accent": "floor_dirt_large",
+    "banners": [
+     "banner_triple_yellow",
+     "banner_patternB_yellow"
+    ],
+    "props": [
+     [
+      "column",
+      [
+       1.4,
+       0,
+       4.0
+      ],
+      0.0,
+      0.6
+     ],
+     [
+      "rubble_half",
+      [
+       2.6,
+       0,
+       1.4
+      ],
+      0.0,
+      0.8
+     ],
+     [
+      "chest_gold",
+      [
+       13.4,
+       0,
+       1.4
+      ],
+      0.0,
+      0.8
+     ],
+     [
+      "trunk_large_A",
+      [
+       14.6,
+       0,
+       4.6
+      ],
+      -90.0,
+      0.8
+     ]
+    ],
+    "torch_color": [
+     1.0,
+     0.8,
+     0.45
+    ]
+   }
+  },
+  {
+   "code": "porte_horizons",
+   "level": "6e",
+   "subject": "histoire_geo",
+   "region": "histoire_geo",
+   "order": 5,
+   "title": "La Porte des Horizons",
+   "chapter_codes": [
+    "6e.histoire_geo.metropoles",
+    "6e.histoire_geo.faible_densite",
+    "6e.histoire_geo.littoraux",
+    "6e.histoire_geo.monde_habite"
+   ],
+   "chapter_title": "Habiter le monde : villes, déserts, littoraux",
+   "intro": "Les cartes du monde sont toutes mélangées ! Traverse les paysages et retrouve le Brouille-Cartes.",
+   "outro": "Les atlas sont rangés, les cartes disent vrai. Le monde retrouve ses horizons !",
+   "threshold": "La deuxième Porte du Temps ne s'ouvre pas sur une époque, mais sur le monde entier : des villes géantes, des déserts, des côtes. Le Brouille-Cartes, complice de Dame Sablière, a mélangé tous les atlas. Rapporte la page de la Géographie et remets chaque lieu à sa place.",
+   "page": "la page de la Géographie",
+   "page_text": "La page de la Géographie se déplie : métropoles, déserts, littoraux, foyers de peuplement. Chaque lieu retrouve sa place sur la carte du monde.",
+   "boss_intro": "Nord, sud, est, ouest… je mélange tout ! J'ai posé le Sahara au milieu de Paris et la mer dans le désert. Tu ne retrouveras jamais ton chemin !",
+   "boss_defeat": "Ma boussole… elle montre le nord à nouveau ! Les cartes se remettent en place. Zut, zut et zut !",
+   "enigma": {
+    "generator": "6e.histoire_geo.population",
+    "mode": "",
+    "title": "L'Atlas mélangé",
+    "intro": "Trois pages de l'atlas sont en désordre. Classe les pays du plus peuplé au moins peuplé pour les remettre en place.",
+    "xp": 45
+   },
+   "chest_xp": 120,
+   "rooms": [
+    {
+     "kind": "entree",
+     "title": "Le Seuil des Horizons"
+    },
+    {
+     "kind": "combat",
+     "title": "La Métropole",
+     "enemies": [
+      {
+       "model": "GreenBlob",
+       "name": "Gelée des embouteillages",
+       "hp": 60,
+       "tier": 1,
+       "xp": 30,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "combat",
+     "title": "Le Grand Désert",
+     "enemies": [
+      {
+       "model": "Cactoro",
+       "name": "Cactus des sables",
+       "hp": 75,
+       "tier": 2,
+       "xp": 35,
+       "v1_at": [
+        8,
+        5
+       ],
+       "scale": 1.0
+      },
+      {
+       "model": "Armabee",
+       "name": "Guêpe des oasis",
+       "hp": 75,
+       "tier": 2,
+       "xp": 35,
+       "v1_at": [
+        10.5,
+        14
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "enigme",
+     "title": "La Salle de l'Atlas"
+    },
+    {
+     "kind": "combat",
+     "title": "Le Port aux Conteneurs",
+     "enemies": [
+      {
+       "model": "Goleling",
+       "name": "Golem des conteneurs",
+       "hp": 110,
+       "tier": 3,
+       "xp": 50,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "boss",
+     "title": "La Rose des Vents",
+     "enemies": [
+      {
+       "model": "GolelingEvolved",
+       "name": "Le Brouille-Cartes",
+       "hp": 210,
+       "tier": 4,
+       "xp": 155,
+       "v1_at": [
+        11,
+        6
+       ],
+       "scale": 1.25
+      }
+     ]
+    }
+   ],
+   "v1_map_piece": "building_bridge_A",
+   "v1_decor": {
+    "floor": "floor_wood_large",
+    "floor_accent": "floor_tile_large_rocks",
+    "walls": [
+     "wall_shelves",
+     "wall_window_open"
+    ],
+    "banners": [
+     "banner_patternC_blue",
+     "banner_patternB_green"
+    ],
+    "props": [
+     [
+      "table_long_decorated_A",
+      [
+       2.4,
+       0,
+       1.4
+      ],
+      0.0,
+      1.0
+     ],
+     [
+      "shelf_large",
+      [
+       1.4,
+       0,
+       4.4
+      ],
+      90.0,
+      0.9
+     ],
+     [
+      "barrel_large",
+      [
+       13.6,
+       0,
+       1.4
+      ],
+      0.0,
+      0.8
+     ],
+     [
+      "crates_stacked",
+      [
+       14.6,
+       0,
+       4.4
+      ],
+      -20.0,
+      0.9
+     ]
+    ],
+    "torch_color": [
+     0.95,
+     0.9,
+     0.7
+    ]
+   }
+  },
+  {
+   "code": "moulin_phrases",
+   "level": "6e",
+   "subject": "francais",
+   "region": "francais",
+   "order": 6,
+   "title": "Le Moulin des Phrases",
+   "chapter_codes": [
+    "6e.francais.grammaire",
+    "6e.francais.conjugaison",
+    "6e.francais.orthographe",
+    "6e.francais.vocabulaire"
+   ],
+   "chapter_title": "Grammaire, conjugaison, orthographe et vocabulaire",
+   "intro": "Les ailes du moulin grincent : les phrases sortent en miettes ! Monte jusqu'au Gobe-Lettres.",
+   "outro": "Les ailes du moulin tournent de nouveau, et les phrases en sortent bien rangées.",
+   "threshold": "À l'orée du Bois des Mots tourne le Moulin des Phrases. Ses ailes broyaient les mots en jolies phrases bien rangées. Mais le Gobe-Lettres s'y est installé : il avale les accords et mélange les verbes. Rapporte la page de la Grammaire et remets le moulin en marche.",
+   "page": "la page de la Grammaire",
+   "page_text": "Sur la page de la Grammaire, chaque mot retrouve sa place : le sujet devant le verbe, les accords bien faits, les verbes conjugués au bon temps.",
+   "boss_intro": "Miam ! Je suis le Gobe-Lettres ! J'avale les accords, je croque les terminaisons et je recrache les phrases toutes de travers. Ta page de la Grammaire ? Elle a un goût de virgule !",
+   "boss_defeat": "Beurk… j'ai trop mangé de mots. Tiens, reprends-les, je ne digère pas les phrases bien construites !",
+   "enigma": {
+    "generator": "6e.francais.fables",
+    "mode": "",
+    "title": "Les Fables défaites",
+    "intro": "Le Gobe-Lettres a mâchouillé trois vers de La Fontaine. Remets leurs mots dans l'ordre pour rendre les fables entières.",
+    "xp": 45
+   },
+   "chest_xp": 120,
+   "rooms": [
+    {
+     "kind": "entree",
+     "title": "La Meule"
+    },
+    {
+     "kind": "combat",
+     "title": "Le Grenier des Mots",
+     "enemies": [
+      {
+       "model": "Mushnub",
+       "name": "Champignon des virgules",
+       "hp": 60,
+       "tier": 1,
+       "xp": 30,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "combat",
+     "title": "L'Escalier des Verbes",
+     "enemies": [
+      {
+       "model": "Armabee",
+       "name": "Abeille des accords",
+       "hp": 75,
+       "tier": 2,
+       "xp": 35,
+       "v1_at": [
+        8,
+        5
+       ],
+       "scale": 1.0
+      },
+      {
+       "model": "Goleling",
+       "name": "Golem des conjugaisons",
+       "hp": 75,
+       "tier": 2,
+       "xp": 35,
+       "v1_at": [
+        10.5,
+        14
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "enigme",
+     "title": "La Salle des Fables"
+    },
+    {
+     "kind": "combat",
+     "title": "Les Ailes du Moulin",
+     "enemies": [
+      {
+       "model": "GhostSkull",
+       "name": "Fantôme des fautes",
+       "hp": 110,
+       "tier": 3,
+       "xp": 50,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "boss",
+     "title": "Le Sommet du Moulin",
+     "enemies": [
+      {
+       "model": "GreenBlob",
+       "name": "Le Gobe-Lettres",
+       "hp": 210,
+       "tier": 4,
+       "xp": 155,
+       "v1_at": [
+        11,
+        6
+       ],
+       "scale": 1.7
+      }
+     ]
+    }
+   ],
+   "v1_map_piece": "building_windmill_yellow",
+   "v1_decor": {
+    "floor": "floor_wood_large",
+    "floor_accent": "floor_wood_large_dark",
+    "walls": [
+     "wall",
+     "wall_window_open"
+    ],
+    "banners": [
+     "banner_patternB_yellow",
+     "banner_shield_red"
+    ],
+    "props": [
+     [
+      "barrel_large",
+      [
+       1.6,
+       0,
+       4.0
+      ],
+      0.0,
+      0.8
+     ],
+     [
+      "crates_stacked",
+      [
+       2.6,
+       0,
+       1.4
+      ],
+      15.0,
+      0.9
+     ],
+     [
+      "table_medium_decorated_A",
+      [
+       12.0,
+       0,
+       1.6
+      ],
+      0.0,
+      0.9
+     ],
+     [
+      "shelf_small_candles",
+      [
+       14.4,
+       0,
+       1.0
+      ],
+      0.0,
+      0.6
+     ]
+    ],
+    "torch_color": [
+     1.0,
+     0.88,
+     0.6
+    ]
+   }
+  },
+  {
+   "code": "puits_contes",
+   "level": "6e",
+   "subject": "francais",
+   "region": "francais",
+   "order": 7,
+   "title": "Le Puits aux Contes",
+   "chapter_codes": [
+    "6e.francais.lectures"
+   ],
+   "chapter_title": "Récits des origines, poésie, théâtre, aventures et monstres",
+   "intro": "Au fond du puits, les histoires s'emmêlent. Descends jusqu'à l'Ogre Oublieux !",
+   "outro": "Une lumière douce remonte du puits : toutes les histoires ont retrouvé leur fin.",
+   "threshold": "Au cœur du Bois des Mots se cache le Puits aux Contes. On raconte qu'au fond, toutes les histoires du monde dorment en attendant qu'on les lise. L'Ogre Oublieux y est descendu et a dévoré la fin de chaque conte. Va chercher la page des Contes : mythes, fables, théâtre, aventures et monstres t'attendent.",
+   "page": "la page des Contes",
+   "page_text": "La page des Contes se remplit de nouveau : les dieux de l'Olympe, Ulysse et le Cyclope, les fables, Scapin et ses ruses, le Minotaure… Chaque histoire retrouve sa fin.",
+   "boss_intro": "Grrr… Qui ose descendre dans mon puits ? Je suis l'Ogre Oublieux ! J'ai mangé la fin de tous les contes : plus personne ne sait comment finissent les histoires. Et toi, je vais te manger aussi… enfin, si je m'en souviens !",
+   "boss_defeat": "Ah… je me souviens ! Il était une fois… un Archiviste très courageux. Reprends tes contes, ils me donnaient mal au ventre.",
+   "enigma": {
+    "generator": "6e.francais.conte",
+    "mode": "",
+    "title": "Le Conte en désordre",
+    "intro": "L'Ogre a mélangé les pages de trois histoires. Remets leurs étapes dans l'ordre, du début à la fin.",
+    "xp": 45
+   },
+   "chest_xp": 120,
+   "rooms": [
+    {
+     "kind": "entree",
+     "title": "La Margelle"
+    },
+    {
+     "kind": "combat",
+     "title": "La Grotte des Origines",
+     "enemies": [
+      {
+       "model": "Cactoro",
+       "name": "Cactus de l'Olympe",
+       "hp": 60,
+       "tier": 1,
+       "xp": 30,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "combat",
+     "title": "Le Labyrinthe",
+     "enemies": [
+      {
+       "model": "Yeti",
+       "name": "Minotaure des neiges",
+       "hp": 80,
+       "tier": 2,
+       "xp": 35,
+       "v1_at": [
+        8,
+        5
+       ],
+       "scale": 1.0
+      },
+      {
+       "model": "MushnubEvolved",
+       "name": "Champignon du Cyclope",
+       "hp": 75,
+       "tier": 2,
+       "xp": 35,
+       "v1_at": [
+        10.5,
+        14
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "enigme",
+     "title": "La Salle des Pages volantes"
+    },
+    {
+     "kind": "combat",
+     "title": "L'Antre du Dragon",
+     "enemies": [
+      {
+       "model": "Dragon",
+       "name": "Dragon des légendes",
+       "hp": 110,
+       "tier": 3,
+       "xp": 50,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "boss",
+     "title": "Le Fond du Puits",
+     "enemies": [
+      {
+       "model": "Orc",
+       "name": "L'Ogre Oublieux",
+       "hp": 210,
+       "tier": 4,
+       "xp": 155,
+       "v1_at": [
+        11,
+        6
+       ],
+       "scale": 1.4
+      }
+     ]
+    }
+   ],
+   "v1_map_piece": "building_well_yellow",
+   "v1_decor": {
+    "floor": "floor_tile_large",
+    "floor_accent": "floor_dirt_large",
+    "walls": [
+     "wall_arched",
+     "wall_shelves"
+    ],
+    "banners": [
+     "banner_patternB_green",
+     "banner_patternC_white"
+    ],
+    "props": [
+     [
+      "shelf_large",
+      [
+       1.4,
+       0,
+       4.0
+      ],
+      90.0,
+      0.9
+     ],
+     [
+      "trunk_large_A",
+      [
+       2.6,
+       0,
+       1.4
+      ],
+      0.0,
+      0.8
+     ],
+     [
+      "candle_triple",
+      [
+       13.2,
+       0,
+       1.0
+      ],
+      0.0,
+      0.3
+     ],
+     [
+      "chest_gold",
+      [
+       14.6,
+       0,
+       4.6
+      ],
+      -90.0,
+      0.8
+     ]
+    ],
+    "torch_color": [
+     0.75,
+     0.95,
+     0.7
+    ]
+   }
+  },
+  {
+   "code": "tour_experiences",
+   "level": "6e",
+   "subject": "sciences",
+   "region": "sciences",
+   "order": 8,
+   "title": "La Tour des Expériences",
+   "chapter_codes": [
+    "6e.sciences.matiere",
+    "6e.sciences.mouvement_energie"
+   ],
+   "chapter_title": "La matière, le mouvement, l'énergie, l'électricité et la lumière",
+   "intro": "Des étincelles jaillissent de partout ! Grimpe jusqu'au Professeur Court-Circuit.",
+   "outro": "Les étincelles s'éteignent doucement : chaque expérience a retrouvé ses règles.",
+   "threshold": "Au Laboratoire des Inventeurs, la Tour des Expériences crépite d'étincelles. On y faisait fondre, bouillir, briller et rouler toutes sortes de choses. Mais le Professeur Court-Circuit a tout déréglé : les glaçons bouillent et les lampes refusent de s'allumer. Rapporte la page des Sciences et remets les expériences en ordre.",
+   "page": "la page des Sciences",
+   "page_text": "Sur la page des Sciences, tout se remet à fonctionner : l'eau gèle et bout au bon moment, les lampes s'allument, les vitesses se calculent et la Terre tourne de nouveau autour du Soleil.",
+   "boss_intro": "Bzzzt ! Je suis le Professeur Court-Circuit ! J'ai fait fondre la glace à l'envers, inversé les fils et volé l'énergie de toutes les piles. Ta page des Sciences ? Elle a grillé avec mes fusibles !",
+   "boss_defeat": "Pfffiou… mes circuits fument. Tiens, reprends ta page : tes expériences marchent bien mieux que les miennes.",
+   "enigma": {
+    "generator": "6e.sciences.course",
+    "mode": "",
+    "title": "La Course des Inventions",
+    "intro": "Le Professeur a truqué trois courses d'engins. Calcule leurs vitesses et range-les du plus lent au plus rapide.",
+    "xp": 45
+   },
+   "chest_xp": 120,
+   "rooms": [
+    {
+     "kind": "entree",
+     "title": "Le Hall des Éprouvettes"
+    },
+    {
+     "kind": "combat",
+     "title": "La Salle des Glaçons",
+     "enemies": [
+      {
+       "model": "GreenBlob",
+       "name": "Gelée qui ne fond pas",
+       "hp": 60,
+       "tier": 1,
+       "xp": 30,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "combat",
+     "title": "L'Atelier des Circuits",
+     "enemies": [
+      {
+       "model": "Goleling",
+       "name": "Golem à piles",
+       "hp": 75,
+       "tier": 2,
+       "xp": 35,
+       "v1_at": [
+        8,
+        5
+       ],
+       "scale": 1.0
+      },
+      {
+       "model": "Armabee",
+       "name": "Guêpe électrique",
+       "hp": 75,
+       "tier": 2,
+       "xp": 35,
+       "v1_at": [
+        10.5,
+        14
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "enigme",
+     "title": "La Piste d'Essai"
+    },
+    {
+     "kind": "combat",
+     "title": "L'Observatoire du Soleil",
+     "enemies": [
+      {
+       "model": "GolelingEvolved",
+       "name": "Golem des engrenages",
+       "hp": 110,
+       "tier": 3,
+       "xp": 50,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "boss",
+     "title": "Le Grenier à Fusibles",
+     "enemies": [
+      {
+       "model": "BlueDemon",
+       "name": "Le Professeur Court-Circuit",
+       "hp": 210,
+       "tier": 4,
+       "xp": 155,
+       "v1_at": [
+        11,
+        6
+       ],
+       "scale": 1.1
+      }
+     ]
+    }
+   ],
+   "v1_map_piece": "building_tower_A_green",
+   "v1_decor": {
+    "floor": "floor_tile_large",
+    "floor_accent": "floor_wood_large",
+    "walls": [
+     "wall_shelves",
+     "wall_window_open"
+    ],
+    "banners": [
+     "banner_patternC_white",
+     "banner_patternB_green"
+    ],
+    "props": [
+     [
+      "table_long_decorated_A",
+      [
+       2.4,
+       0,
+       1.4
+      ],
+      0.0,
+      1.0
+     ],
+     [
+      "shelf_small_candles",
+      [
+       1.4,
+       0,
+       4.0
+      ],
+      90.0,
+      0.6
+     ],
+     [
+      "barrel_large",
+      [
+       13.6,
+       0,
+       1.4
+      ],
+      0.0,
+      0.8
+     ],
+     [
+      "crates_stacked",
+      [
+       14.6,
+       0,
+       4.4
+      ],
+      -20.0,
+      0.9
+     ]
+    ],
+    "torch_color": [
+     0.7,
+     0.95,
+     1.0
+    ]
+   }
+  },
+  {
+   "code": "maison_naturaliste",
+   "level": "6e",
+   "subject": "sciences",
+   "region": "sciences",
+   "order": 9,
+   "title": "La Maison du Naturaliste",
+   "chapter_codes": [
+    "6e.sciences.vivant",
+    "6e.sciences.nutrition",
+    "6e.sciences.terre"
+   ],
+   "chapter_title": "Le vivant, l'alimentation, la Terre et les écosystèmes",
+   "intro": "Les plantes deviennent des cailloux ! Traverse la maison jusqu'au Pétrificateur.",
+   "outro": "La Maison du Naturaliste reverdit : les bocaux bourdonnent et les fossiles sont rangés.",
+   "threshold": "Un peu plus loin, la Maison du Naturaliste déborde de plantes, de bocaux et de fossiles. Le Pétrificateur y est entré : il change en pierre tout ce qui vit et mélange les époques. Rapporte la page du Vivant pour que la maison reverdisse.",
+   "page": "la page du Vivant",
+   "page_text": "La page du Vivant reprend des couleurs : les cellules, les familles d'êtres vivants, les fossiles bien rangés dans le temps, les fleurs pollinisées et les chaînes alimentaires de la forêt.",
+   "boss_intro": "Halte ! Je suis le Pétrificateur ! Tout ce qui vit, je le change en caillou : les fleurs, les abeilles, les grenouilles… Et j'ai mélangé tous les fossiles du monde. Bientôt, plus rien ne poussera !",
+   "boss_defeat": "Non… mes cailloux se remettent à respirer ! Les graines germent, les abeilles bourdonnent. Je déteste quand ça repousse.",
+   "enigma": {
+    "generator": "6e.sciences.frise_vivant",
+    "mode": "",
+    "title": "La Frise du Vivant",
+    "intro": "Le Pétrificateur a mélangé les fossiles de trois vitrines. Remets l'histoire de la vie dans l'ordre, du plus ancien au plus récent.",
+    "xp": 45
+   },
+   "chest_xp": 120,
+   "rooms": [
+    {
+     "kind": "entree",
+     "title": "Le Vestibule aux Bocaux"
+    },
+    {
+     "kind": "combat",
+     "title": "La Serre",
+     "enemies": [
+      {
+       "model": "Mushnub",
+       "name": "Champignon trop poli",
+       "hp": 60,
+       "tier": 1,
+       "xp": 30,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "combat",
+     "title": "La Mare",
+     "enemies": [
+      {
+       "model": "Cactoro",
+       "name": "Cactus pétrifié",
+       "hp": 75,
+       "tier": 2,
+       "xp": 35,
+       "v1_at": [
+        8,
+        5
+       ],
+       "scale": 1.0
+      },
+      {
+       "model": "Armabee",
+       "name": "Abeille de pierre",
+       "hp": 75,
+       "tier": 2,
+       "xp": 35,
+       "v1_at": [
+        10.5,
+        14
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "enigme",
+     "title": "La Galerie des Fossiles"
+    },
+    {
+     "kind": "combat",
+     "title": "Le Cabinet des Squelettes",
+     "enemies": [
+      {
+       "model": "Dragon",
+       "name": "Dragon fossile",
+       "hp": 110,
+       "tier": 3,
+       "xp": 50,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "boss",
+     "title": "Le Grenier aux Herbiers",
+     "enemies": [
+      {
+       "model": "Yeti",
+       "name": "Le Pétrificateur",
+       "hp": 210,
+       "tier": 4,
+       "xp": 155,
+       "v1_at": [
+        11,
+        6
+       ],
+       "scale": 1.3
+      }
+     ]
+    }
+   ],
+   "v1_map_piece": "building_home_B_yellow",
+   "v1_decor": {
+    "floor": "floor_wood_large",
+    "floor_accent": "floor_dirt_large",
+    "walls": [
+     "wall_shelves",
+     "wall_arched"
+    ],
+    "banners": [
+     "banner_patternB_green",
+     "banner_patternB_yellow"
+    ],
+    "props": [
+     [
+      "shelf_large",
+      [
+       1.4,
+       0,
+       4.0
+      ],
+      90.0,
+      0.9
+     ],
+     [
+      "trunk_large_A",
+      [
+       2.6,
+       0,
+       1.4
+      ],
+      0.0,
+      0.8
+     ],
+     [
+      "candle_triple",
+      [
+       13.2,
+       0,
+       1.0
+      ],
+      0.0,
+      0.3
+     ],
+     [
+      "table_medium_decorated_A",
+      [
+       12.0,
+       0,
+       1.6
+      ],
+      0.0,
+      0.9
+     ]
+    ],
+    "torch_color": [
+     0.75,
+     1.0,
+     0.7
+    ]
+   }
+  },
+  {
+   "code": "tribune_conseil",
+   "level": "6e",
+   "subject": "emc",
+   "region": "emc",
+   "order": 10,
+   "title": "La Tribune du Conseil",
+   "chapter_codes": [
+    "6e.emc.representer"
+   ],
+   "chapter_title": "L'intérêt général, le vote et les représentants",
+   "intro": "Les urnes sont vides et les bancs déserts. Monte jusqu'au Voleur de Voix.",
+   "outro": "Les bancs de la Tribune se remplissent : on débat, on vote, on s'écoute.",
+   "threshold": "Sur le Forum des Citoyens se dresse la Tribune du Conseil. Les habitants y venaient débattre, voter et choisir ceux qui parlent en leur nom. Le Voleur de Voix a vidé les urnes : maintenant, il décide de tout, tout seul. Rapporte la page du Conseil pour que chacun retrouve sa voix.",
+   "page": "la page du Conseil",
+   "page_text": "La page du Conseil revient : on y lit pourquoi l'on vote, ce que fait un délégué, qui décide de la commune jusqu'à l'Europe, et que l'intérêt général pense à tous, même à ceux qui ne sont pas encore nés.",
+   "boss_intro": "Silence ! Je suis le Voleur de Voix. J'ai vidé les urnes et rangé tous les bulletins dans ma poche. Pourquoi voter ? Je décide tout seul, pour moi seul. Ta page du Conseil, je l'ai déjà votée : elle est à moi !",
+   "boss_defeat": "Mes poches se vident… Les bulletins s'envolent vers les urnes, et chacun retrouve sa voix. Bon, d'accord : vous êtes plus nombreux que moi.",
+   "enigma": {
+    "generator": "6e.emc.echelons",
+    "mode": "",
+    "title": "Les Échelons du Conseil",
+    "intro": "Le Voleur de Voix a mélangé les échelons du Conseil. Range-les, de la classe jusqu'à l'Europe.",
+    "xp": 45
+   },
+   "chest_xp": 120,
+   "rooms": [
+    {
+     "kind": "entree",
+     "title": "Le Parvis des Urnes"
+    },
+    {
+     "kind": "combat",
+     "title": "La Salle des Bulletins",
+     "enemies": [
+      {
+       "model": "GreenBlob",
+       "name": "Gelée qui vote deux fois",
+       "hp": 60,
+       "tier": 1,
+       "xp": 30,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "combat",
+     "title": "Les Bancs du Conseil",
+     "enemies": [
+      {
+       "model": "Mushnub",
+       "name": "Champignon qui coupe la parole",
+       "hp": 75,
+       "tier": 2,
+       "xp": 35,
+       "v1_at": [
+        8,
+        5
+       ],
+       "scale": 1.0
+      },
+      {
+       "model": "Armabee",
+       "name": "Bourdon braillard",
+       "hp": 75,
+       "tier": 2,
+       "xp": 35,
+       "v1_at": [
+        10.5,
+        14
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "enigme",
+     "title": "L'Escalier des Échelons"
+    },
+    {
+     "kind": "combat",
+     "title": "La Galerie des Élus",
+     "enemies": [
+      {
+       "model": "Goleling",
+       "name": "Golem sans écharpe",
+       "hp": 110,
+       "tier": 3,
+       "xp": 50,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "boss",
+     "title": "Le Balcon de la Tribune",
+     "enemies": [
+      {
+       "model": "Demon",
+       "name": "Le Voleur de Voix",
+       "hp": 210,
+       "tier": 4,
+       "xp": 155,
+       "v1_at": [
+        11,
+        6
+       ],
+       "scale": 1.1
+      }
+     ]
+    }
+   ],
+   "v1_map_piece": "building_stage_A",
+   "v1_decor": {
+    "floor": "floor_wood_large",
+    "floor_accent": "floor_tile_large",
+    "walls": [
+     "wall_arched",
+     "wall_window_open"
+    ],
+    "banners": [
+     "banner_patternA_blue",
+     "banner_patternC_white",
+     "banner_patternA_red"
+    ],
+    "props": [
+     [
+      "table_long_decorated_A",
+      [
+       2.4,
+       0,
+       1.4
+      ],
+      0.0,
+      1.0
+     ],
+     [
+      "crates_stacked",
+      [
+       1.4,
+       0,
+       4.0
+      ],
+      20.0,
+      0.8
+     ],
+     [
+      "barrel_large",
+      [
+       13.6,
+       0,
+       1.4
+      ],
+      0.0,
+      0.8
+     ],
+     [
+      "chest_gold",
+      [
+       14.6,
+       0,
+       4.6
+      ],
+      -90.0,
+      0.8
+     ]
+    ],
+    "torch_color": [
+     1.0,
+     0.9,
+     0.7
+    ]
+   }
+  },
+  {
+   "code": "palais_libertes",
+   "level": "6e",
+   "subject": "emc",
+   "region": "emc",
+   "order": 11,
+   "title": "Le Palais des Libertés",
+   "chapter_codes": [
+    "6e.emc.laicite",
+    "6e.emc.vie_privee"
+   ],
+   "chapter_title": "La laïcité à l'école, les droits et la vie privée",
+   "intro": "Les tiroirs sont ouverts, les secrets éparpillés. Traverse le palais jusqu'au Fouineur.",
+   "outro": "Les tiroirs se referment : chacun garde ses secrets et pense librement.",
+   "threshold": "Un peu plus loin sur le Forum, le Palais des Libertés garde les textes qui protègent chacun : liberté de conscience, laïcité, vie privée. Le Fouineur s'y est glissé : il ouvre les tiroirs, lit les secrets et veut que tout le monde pense comme lui. Rapporte la page des Libertés.",
+   "page": "la page des Libertés",
+   "page_text": "La page des Libertés se déplie : la liberté de croire ou de ne pas croire, la laïcité qui protège chacun à l'école, le droit à l'image, les données personnelles et le respect de la vie privée de tous.",
+   "boss_intro": "Hé hé… Je suis le Fouineur. Je lis les journaux intimes, je publie les photos sans demander, et je voudrais que tout le monde pense exactement comme moi. Tes secrets, ta page, tout m'appartient !",
+   "boss_defeat": "Aïe ! Toutes les portes se referment sur mon nez… Les secrets restent secrets, et chacun pense librement. Je n'ai plus rien à fouiller.",
+   "enigma": {
+    "generator": "6e.emc.frise",
+    "mode": "",
+    "title": "La Frise des Droits",
+    "intro": "Le Fouineur a mélangé les archives du palais. Remets ces textes et ces droits dans l'ordre, du plus ancien au plus récent.",
+    "xp": 45
+   },
+   "chest_xp": 120,
+   "rooms": [
+    {
+     "kind": "entree",
+     "title": "Le Vestibule des Chartes"
+    },
+    {
+     "kind": "combat",
+     "title": "La Salle des Croyances",
+     "enemies": [
+      {
+       "model": "Mushnub",
+       "name": "Champignon qui impose son avis",
+       "hp": 60,
+       "tier": 1,
+       "xp": 30,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "combat",
+     "title": "Le Couloir des Portraits",
+     "enemies": [
+      {
+       "model": "Armabee",
+       "name": "Abeille paparazzi",
+       "hp": 75,
+       "tier": 2,
+       "xp": 35,
+       "v1_at": [
+        8,
+        5
+       ],
+       "scale": 1.0
+      },
+      {
+       "model": "GreenBlob",
+       "name": "Gelée qui colle aux écrans",
+       "hp": 75,
+       "tier": 2,
+       "xp": 35,
+       "v1_at": [
+        10.5,
+        14
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "enigme",
+     "title": "La Salle des Archives"
+    },
+    {
+     "kind": "combat",
+     "title": "Le Cabinet des Secrets",
+     "enemies": [
+      {
+       "model": "GhostSkull",
+       "name": "Spectre des rumeurs",
+       "hp": 110,
+       "tier": 3,
+       "xp": 50,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "boss",
+     "title": "La Tour des Serrures",
+     "enemies": [
+      {
+       "model": "Ghost",
+       "name": "Le Fouineur",
+       "hp": 210,
+       "tier": 4,
+       "xp": 155,
+       "v1_at": [
+        11,
+        6
+       ],
+       "scale": 1.3
+      }
+     ]
+    }
+   ],
+   "v1_map_piece": "building_castle_red",
+   "v1_decor": {
+    "floor": "floor_tile_large",
+    "floor_accent": "floor_wood_large_dark",
+    "walls": [
+     "wall_shelves",
+     "wall_arched"
+    ],
+    "banners": [
+     "banner_patternC_blue",
+     "banner_shield_red"
+    ],
+    "props": [
+     [
+      "shelf_large",
+      [
+       1.4,
+       0,
+       4.0
+      ],
+      90.0,
+      0.9
+     ],
+     [
+      "trunk_large_A",
+      [
+       2.6,
+       0,
+       1.4
+      ],
+      0.0,
+      0.8
+     ],
+     [
+      "candle_triple",
+      [
+       13.2,
+       0,
+       1.0
+      ],
+      0.0,
+      0.3
+     ],
+     [
+      "table_medium_decorated_A",
+      [
+       12.0,
+       0,
+       1.6
+      ],
+      0.0,
+      0.9
+     ]
+    ],
+    "torch_color": [
+     0.95,
+     0.85,
+     1.0
+    ]
+   }
+  },
+  {
+   "code": "labyrinthe_vecteurs",
+   "level": "2nde",
+   "subject": "maths",
+   "region": "maths",
+   "order": 0,
+   "title": "Le Labyrinthe des Vecteurs",
+   "chapter_codes": [
+    "2nde.maths.vecteurs"
+   ],
+   "chapter_title": "Vecteurs",
+   "intro": "Le Brouillard a figé les couloirs du Labyrinthe. Traverse-le et rallume le phare du centre.",
+   "outro": "Le phare du Labyrinthe perce le Brouillard. Une archive de plus restaurée.",
+   "threshold": "Au cœur des Cimes, le Labyrinthe guidait les voyageurs grâce à ses flèches de lumière. L'Architecte du Brouillard a volé la page des Vecteurs : les couloirs se sont figés. Rallume le phare du centre.",
+   "page": "la page des Vecteurs",
+   "page_text": "La page des Vecteurs retrouve ses flèches : direction, sens, longueur. Le phare du Labyrinthe perce le Brouillard.",
+   "boss_intro": "Tu crois sortir de mon Labyrinthe ? Chaque couloir est une flèche qui ne mène nulle part. Ton phare restera éteint.",
+   "boss_defeat": "Mes flèches… elles indiquent toutes le centre. Le phare se rallume. Malvrek ne va pas aimer ça.",
+   "enigma": {
+    "generator": "2nde.vecteurs.rayon",
+    "mode": "",
+    "title": "La Salle des Miroirs",
+    "intro": "Trois cristaux éteints. Donne à chaque rayon le bon vecteur pour les rallumer.",
+    "xp": 40
+   },
+   "chest_xp": 100,
+   "rooms": [
+    {
+     "kind": "entree",
+     "title": "L'Entrée du Labyrinthe"
+    },
+    {
+     "kind": "combat",
+     "title": "Le Couloir des Coordonnées",
+     "enemies": [
+      {
+       "model": "Skeleton_Warrior",
+       "name": "Sentinelle du Brouillard",
+       "hp": 70,
+       "tier": 2,
+       "xp": 35,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "combat",
+     "title": "La Salle des Translations",
+     "enemies": [
+      {
+       "model": "Skeleton_Minion",
+       "name": "Spectre d'os",
+       "hp": 80,
+       "tier": 2,
+       "xp": 40,
+       "v1_at": [
+        8,
+        5
+       ],
+       "scale": 1.0
+      },
+      {
+       "model": "Skeleton_Warrior",
+       "name": "Gardien oublié",
+       "hp": 90,
+       "tier": 3,
+       "xp": 40,
+       "v1_at": [
+        10.5,
+        14
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "enigme",
+     "title": "La Salle des Miroirs"
+    },
+    {
+     "kind": "combat",
+     "title": "La Galerie Colinéaire",
+     "enemies": [
+      {
+       "model": "GhostSkull",
+       "name": "Héraut du Brouillard",
+       "hp": 120,
+       "tier": 3,
+       "xp": 55,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "boss",
+     "title": "Le Cœur du Labyrinthe",
+     "enemies": [
+      {
+       "model": "BlueDemon",
+       "name": "L'Architecte du Brouillard",
+       "hp": 220,
+       "tier": 5,
+       "xp": 150,
+       "v1_at": [
+        11,
+        6
+       ],
+       "scale": 1.45
+      }
+     ]
+    }
+   ],
+   "v1_map_piece": "building_tower_A_green",
+   "v1_decor": {}
+  },
+  {
+   "code": "forge_algebre",
+   "level": "2nde",
+   "subject": "maths",
+   "region": "maths",
+   "order": 1,
+   "title": "La Forge de l'Algèbre",
+   "chapter_codes": [
+    "2nde.maths.calcul_litteral",
+    "2nde.maths.equations",
+    "2nde.maths.valeur_absolue"
+   ],
+   "chapter_title": "Calcul littéral, équations, valeur absolue",
+   "intro": "Les forgerons d'os ont tordu toutes les formules du royaume. Descends dans la Forge et redresse-les.",
+   "outro": "Le feu de la Forge reprend, clair et régulier. Les formules sortent droites de l'enclume.",
+   "threshold": "La Forge de l'Algèbre façonnait les formules du royaume. Le Maître de Forge, un démon de feu, a volé la page du Calcul : tout sort tordu de l'enclume. Reprends-la et redresse les formules.",
+   "page": "la page du Calcul",
+   "page_text": "La page du Calcul est reforgée : développer, factoriser, résoudre. Les formules sortent droites de l'enclume.",
+   "boss_intro": "Approche, Archiviste. Dans ma forge, les formules sortent tordues, et j'aime ça. Voyons si tu sais redresser le métal.",
+   "boss_defeat": "L'enclume refroidit… et tes formules sont droites. Bien joué. Pour cette fois.",
+   "enigma": {
+    "generator": "2nde.equations.signe",
+    "mode": "",
+    "title": "Les Sceaux de la Forge",
+    "intro": "Trois sceaux verrouillent la fonderie. Chacun ne s'ouvre qu'avec un tableau de signes exact.",
+    "xp": 50
+   },
+   "chest_xp": 130,
+   "rooms": [
+    {
+     "kind": "entree",
+     "title": "Les Portes de la Forge"
+    },
+    {
+     "kind": "combat",
+     "title": "La Salle des Identités",
+     "enemies": [
+      {
+       "model": "Skeleton_Rogue",
+       "name": "Faussaire de formules",
+       "hp": 80,
+       "tier": 2,
+       "xp": 40,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "combat",
+     "title": "Le Hall des Équations",
+     "enemies": [
+      {
+       "model": "Orc",
+       "name": "Marteleur d'inconnues",
+       "hp": 90,
+       "tier": 3,
+       "xp": 45,
+       "v1_at": [
+        8,
+        5
+       ],
+       "scale": 1.0
+      },
+      {
+       "model": "Skeleton_Minion",
+       "name": "Soufflet hargneux",
+       "hp": 85,
+       "tier": 2,
+       "xp": 45,
+       "v1_at": [
+        10.5,
+        14
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "enigme",
+     "title": "La Salle des Sceaux"
+    },
+    {
+     "kind": "combat",
+     "title": "La Fonderie des Inéquations",
+     "enemies": [
+      {
+       "model": "Skeleton_Mage",
+       "name": "Fondeur de l'ombre",
+       "hp": 130,
+       "tier": 4,
+       "xp": 60,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "boss",
+     "title": "L'Enclume",
+     "enemies": [
+      {
+       "model": "Demon",
+       "name": "Le Maître de Forge",
+       "hp": 240,
+       "tier": 5,
+       "xp": 170,
+       "v1_at": [
+        11,
+        6
+       ],
+       "scale": 1.45
+      }
+     ]
+    }
+   ],
+   "v1_map_piece": "building_blacksmith_blue",
+   "v1_decor": {
+    "floor_accent": "floor_dirt_large",
+    "banners": [
+     "banner_shield_red",
+     "banner_patternA_red"
+    ],
+    "props": [
+     [
+      "sword_shield",
+      [
+       1.2,
+       0,
+       4.0
+      ],
+      90.0,
+      0.6
+     ],
+     [
+      "barrel_large_decorated",
+      [
+       1.6,
+       0,
+       1.6
+      ],
+      0.0,
+      0.8
+     ],
+     [
+      "barrel_small_stack",
+      [
+       3.3,
+       0,
+       1.1
+      ],
+      0.0,
+      0.7
+     ],
+     [
+      "crates_stacked",
+      [
+       14.4,
+       0,
+       1.8
+      ],
+      -20.0,
+      0.9
+     ],
+     [
+      "keg_decorated",
+      [
+       14.9,
+       0,
+       5.0
+      ],
+      90.0,
+      0.7
+     ]
+    ],
+    "torch_color": [
+     1.0,
+     0.5,
+     0.2
+    ]
+   }
+  },
+  {
+   "code": "citadelle_fonctions",
+   "level": "2nde",
+   "subject": "maths",
+   "region": "maths",
+   "order": 2,
+   "title": "La Citadelle des Fonctions",
+   "chapter_codes": [
+    "2nde.maths.fonctions",
+    "2nde.maths.geometrie_reperee"
+   ],
+   "chapter_title": "Fonctions, droites et repères",
+   "intro": "Au sommet de la Citadelle, le Veilleur lisait l'avenir dans les courbes. Le Brouillard les a brouillées : rends-lui la vue.",
+   "outro": "Le Veilleur relit ses courbes, et le Brouillard recule jusqu'aux montagnes. Belle victoire, Archiviste.",
+   "threshold": "Le Veilleur de la Citadelle lisait l'avenir dans les courbes. Le Seigneur des Courbes, un dragon, a volé la page des Courbes, et le Veilleur ne voit plus rien. Rends-lui la vue.",
+   "page": "la page des Courbes",
+   "page_text": "La page des Courbes se dessine à nouveau : images, antécédents, variations. Le Veilleur relit l'avenir dans ses courbes.",
+   "boss_intro": "Le Veilleur ne voit plus rien, et c'est très bien ainsi. Mes courbes montent et descendent quand je veux. Lis-les donc, si tu peux.",
+   "boss_defeat": "Tu lis mes courbes mieux que moi… Le Veilleur rouvre les yeux. Je me retire.",
+   "enigma": {
+    "generator": "2nde.automatismes.lecture_graphique",
+    "mode": "",
+    "title": "Les Courbes du Veilleur",
+    "intro": "Trois courbes gravées sur les piliers. Lis chacune avec soin pour réveiller les vigies.",
+    "xp": 55
+   },
+   "chest_xp": 150,
+   "rooms": [
+    {
+     "kind": "entree",
+     "title": "Le Pont-levis"
+    },
+    {
+     "kind": "combat",
+     "title": "La Cour des Images",
+     "enemies": [
+      {
+       "model": "Skeleton_Warrior",
+       "name": "Vigie sans visage",
+       "hp": 90,
+       "tier": 3,
+       "xp": 45,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "combat",
+     "title": "Le Chemin de ronde",
+     "enemies": [
+      {
+       "model": "Skeleton_Rogue",
+       "name": "Archer des pentes",
+       "hp": 90,
+       "tier": 3,
+       "xp": 50,
+       "v1_at": [
+        8,
+        5
+       ],
+       "scale": 1.0
+      },
+      {
+       "model": "GhostSkull",
+       "name": "Liseur d'ombres",
+       "hp": 95,
+       "tier": 3,
+       "xp": 50,
+       "v1_at": [
+        10.5,
+        14
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "enigme",
+     "title": "La Salle des Vigies"
+    },
+    {
+     "kind": "combat",
+     "title": "La Tour des Variations",
+     "enemies": [
+      {
+       "model": "Yeti",
+       "name": "Capitaine décroissant",
+       "hp": 140,
+       "tier": 4,
+       "xp": 65,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "boss",
+     "title": "Le Donjon du Veilleur",
+     "enemies": [
+      {
+       "model": "Dragon",
+       "name": "Le Seigneur des Courbes",
+       "hp": 260,
+       "tier": 5,
+       "xp": 180,
+       "v1_at": [
+        11,
+        6
+       ],
+       "scale": 1.45
+      }
+     ]
+    }
+   ],
+   "v1_map_piece": "building_tower_B_blue",
+   "v1_decor": {
+    "walls": [
+     "wall_window_open",
+     "wall_arched"
+    ],
+    "banners": [
+     "banner_triple_yellow",
+     "banner_patternC_white"
+    ],
+    "props": [
+     [
+      "shelves",
+      [
+       1.3,
+       0,
+       4.2
+      ],
+      90.0,
+      0.8
+     ],
+     [
+      "trunk_large_A",
+      [
+       1.8,
+       0,
+       1.6
+      ],
+      15.0,
+      0.9
+     ],
+     [
+      "barrel_small_stack",
+      [
+       3.4,
+       0,
+       1.1
+      ],
+      0.0,
+      0.7
+     ],
+     [
+      "shelf_small_candles",
+      [
+       14.5,
+       0,
+       1.0
+      ],
+      0.0,
+      0.6
+     ],
+     [
+      "sword_shield",
+      [
+       14.8,
+       0,
+       5.0
+      ],
+      -90.0,
+      0.6
+     ]
+    ],
+    "torch_color": [
+     0.6,
+     0.78,
+     1.0
+    ]
+   }
+  },
+  {
+   "code": "theatre_verdure",
+   "level": "2nde",
+   "subject": "francais",
+   "region": "francais",
+   "order": 3,
+   "title": "Le Théâtre de Verdure",
+   "chapter_codes": [
+    "2nde.francais.langue",
+    "2nde.francais.figures",
+    "2nde.francais.poesie",
+    "2nde.francais.idees",
+    "2nde.francais.recit",
+    "2nde.francais.theatre"
+   ],
+   "chapter_title": "Langue, figures de style, poésie, récit et théâtre",
+   "intro": "Les feuilles du Bois sont couvertes de ratures. Traverse le Théâtre et rends ses mots au royaume.",
+   "outro": "Le rideau de feuilles se lève. Le Théâtre de Verdure parle de nouveau.",
+   "threshold": "Au cœur du Bois des Mots, le Théâtre de Verdure donnait la parole aux arbres : chaque feuille portait un vers. Le Ratureur a volé la page du Français. Il barre chaque mot d'un trait d'encre, et le théâtre s'est tu. Reprends-lui la page, scène après scène.",
+   "page": "la page du Français",
+   "page_text": "La page du Français se relit sans rature : règles d'accord, figures de style, vers et répliques. Les arbres du Bois murmurent de nouveau.",
+   "boss_intro": "Un mot de trop, Archiviste, et je te rature. Ici, j'efface tout ce qui a du sens : les vers, les figures, les règles.",
+   "boss_defeat": "Mon encre… pâlit. Les mots reviennent sous les ratures. Malvrek saura que tu lis entre les lignes.",
+   "enigma": {
+    "generator": "2nde.francais.vers",
+    "mode": "",
+    "title": "Les Vers défaits",
+    "intro": "Trois vers célèbres gisent en morceaux sur la scène. Remets leurs mots dans l'ordre pour rendre la voix aux acteurs.",
+    "xp": 50
+   },
+   "chest_xp": 130,
+   "rooms": [
+    {
+     "kind": "entree",
+     "title": "L'Allée des Chênes"
+    },
+    {
+     "kind": "combat",
+     "title": "La Clairière des Accords",
+     "enemies": [
+      {
+       "model": "GhostSkull",
+       "name": "Spectre des ratures",
+       "hp": 80,
+       "tier": 2,
+       "xp": 40,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "combat",
+     "title": "Le Sentier des Figures",
+     "enemies": [
+      {
+       "model": "Goleling",
+       "name": "Golem de grimoire",
+       "hp": 90,
+       "tier": 3,
+       "xp": 45,
+       "v1_at": [
+        8,
+        5
+       ],
+       "scale": 1.0
+      },
+      {
+       "model": "Armabee",
+       "name": "Guêpe d'encre",
+       "hp": 85,
+       "tier": 2,
+       "xp": 45,
+       "v1_at": [
+        10.5,
+        14
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "enigme",
+     "title": "La Scène des Vers défaits"
+    },
+    {
+     "kind": "combat",
+     "title": "Les Coulisses",
+     "enemies": [
+      {
+       "model": "MushnubEvolved",
+       "name": "Souffleur d'ombre",
+       "hp": 130,
+       "tier": 4,
+       "xp": 60,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "boss",
+     "title": "La Grande Scène",
+     "enemies": [
+      {
+       "model": "BlueDemon",
+       "name": "Le Ratureur",
+       "hp": 240,
+       "tier": 5,
+       "xp": 170,
+       "v1_at": [
+        11,
+        6
+       ],
+       "scale": 1.2
+      }
+     ]
+    }
+   ],
+   "v1_map_piece": "building_stage_A",
+   "v1_decor": {
+    "floor": "floor_dirt_large",
+    "floor_accent": "floor_wood_large_dark",
+    "walls": [
+     "wall_arched",
+     "wall"
+    ],
+    "banners": [
+     "banner_patternB_green",
+     "banner_patternC_white"
+    ],
+    "props": [
+     [
+      "column",
+      [
+       1.4,
+       0,
+       4.0
+      ],
+      0.0,
+      0.6
+     ],
+     [
+      "rubble_half",
+      [
+       2.6,
+       0,
+       1.4
+      ],
+      0.0,
+      0.8
+     ],
+     [
+      "candle_triple",
+      [
+       13.2,
+       0,
+       1.0
+      ],
+      0.0,
+      0.3
+     ],
+     [
+      "trunk_large_A",
+      [
+       14.6,
+       0,
+       4.6
+      ],
+      -90.0,
+      0.8
+     ],
+     [
+      "table_medium_decorated_A",
+      [
+       12.0,
+       0,
+       1.6
+      ],
+      0.0,
+      0.9
+     ]
+    ],
+    "torch_color": [
+     0.62,
+     0.95,
+     0.72
+    ]
+   }
+  },
+  {
+   "code": "bibliotheque_engloutie",
+   "level": "2nde",
+   "subject": "anglais",
+   "region": "anglais",
+   "order": 4,
+   "title": "La Bibliothèque engloutie",
+   "chapter_codes": [
+    "2nde.anglais.verbe",
+    "2nde.anglais.modalite",
+    "2nde.anglais.phrase",
+    "2nde.anglais.nom"
+   ],
+   "chapter_title": "Temps, modaux, construction de la phrase et groupe nominal en anglais",
+   "intro": "L'eau monte dans les archives : les verbes y ont perdu leurs temps. Trouve Sir Tense avant que tout soit noyé.",
+   "outro": "L'eau se retire des archives. Les grammaires anglaises reprennent leur place sur les étagères.",
+   "threshold": "Sous la Bibliothèque des Langues, la marée a envahi les salles d'archives. Les grammaires y flottent page contre page, et les temps se mélangent : hier devient demain. Sir Tense, un Effaceur qui ne supporte aucune règle, a volé la page de la Grammaire anglaise. Descends la reprendre.",
+   "page": "la page de la Grammaire anglaise",
+   "page_text": "La page de la Grammaire anglaise sèche à la lumière : prétérit, present perfect, modaux et relatives retrouvent leur place. La Bibliothèque respire de nouveau.",
+   "boss_intro": "Passé, présent, futur… je les mélange tous ! Ici, hier sera demain et demain était hier. Ta page de Grammaire ? Elle dort au fond de l'eau, Archiviste. Tu vas l'y rejoindre.",
+   "boss_defeat": "Non… les temps se remettent en ligne : “I was, I am, I will be.” Malvrek m'avait promis un monde sans règles…",
+   "enigma": {
+    "generator": "2nde.anglais.phrases",
+    "mode": "",
+    "title": "Les Phrases en miettes",
+    "intro": "Trois phrases flottent en morceaux à la surface. Lis leur traduction, puis remets les mots anglais dans l'ordre.",
+    "xp": 50
+   },
+   "chest_xp": 130,
+   "rooms": [
+    {
+     "kind": "entree",
+     "title": "Le Quai des Archives"
+    },
+    {
+     "kind": "combat",
+     "title": "La Salle du Prétérit",
+     "enemies": [
+      {
+       "model": "Ghost",
+       "name": "Écho du passé",
+       "hp": 80,
+       "tier": 2,
+       "xp": 40,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "combat",
+     "title": "La Galerie des Modaux",
+     "enemies": [
+      {
+       "model": "Skeleton_Rogue",
+       "name": "Pilleur de modaux",
+       "hp": 90,
+       "tier": 3,
+       "xp": 45,
+       "v1_at": [
+        8,
+        5
+       ],
+       "scale": 1.0
+      },
+      {
+       "model": "GreenBlob",
+       "name": "Flaque d'encre",
+       "hp": 85,
+       "tier": 2,
+       "xp": 45,
+       "v1_at": [
+        10.5,
+        14
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "enigme",
+     "title": "La Salle des Miettes"
+    },
+    {
+     "kind": "combat",
+     "title": "Le Couloir des Relatives",
+     "enemies": [
+      {
+       "model": "Yeti",
+       "name": "Gardien des relatives",
+       "hp": 130,
+       "tier": 4,
+       "xp": 60,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "boss",
+     "title": "La Salle du Temps noyé",
+     "enemies": [
+      {
+       "model": "Skeleton_Warrior",
+       "name": "Sir Tense",
+       "hp": 240,
+       "tier": 5,
+       "xp": 170,
+       "v1_at": [
+        11,
+        6
+       ],
+       "scale": 1.5
+      }
+     ]
+    }
+   ],
+   "v1_map_piece": "building_church_blue",
+   "v1_decor": {
+    "floor": "floor_wood_large_dark",
+    "floor_accent": "floor_tile_large_rocks",
+    "walls": [
+     "wall_shelves",
+     "wall_arched"
+    ],
+    "banners": [
+     "banner_patternC_blue",
+     "banner_patternA_blue"
+    ],
+    "props": [
+     [
+      "shelf_large",
+      [
+       1.4,
+       0,
+       4.0
+      ],
+      90.0,
+      0.9
+     ],
+     [
+      "table_long_decorated_A",
+      [
+       2.4,
+       0,
+       1.4
+      ],
+      0.0,
+      1.0
+     ],
+     [
+      "candle_triple",
+      [
+       13.2,
+       0,
+       1.0
+      ],
+      0.0,
+      0.3
+     ],
+     [
+      "barrel_small_stack",
+      [
+       14.6,
+       0,
+       4.6
+      ],
+      -90.0,
+      0.8
+     ],
+     [
+      "shelf_small_candles",
+      [
+       14.4,
+       0,
+       1.0
+      ],
+      0.0,
+      0.6
+     ]
+    ],
+    "torch_color": [
+     0.6,
+     0.82,
+     1.0
+    ]
+   }
+  },
+  {
+   "code": "port_couronnes",
+   "level": "2nde",
+   "subject": "anglais",
+   "region": "anglais",
+   "order": 5,
+   "title": "Le Port des Couronnes",
+   "chapter_codes": [
+    "2nde.anglais.lexique",
+    "2nde.anglais.culture"
+   ],
+   "chapter_title": "Le lexique des axes culturels et le Commonwealth",
+   "intro": "Une brume grise couvre les quais : les noms, les dates et les mots s'effacent. Suis la piste de Lady Oblivion.",
+   "outro": "La brume se lève sur le port. Les navires du Commonwealth repartent, chargés de leurs histoires.",
+   "threshold": "Au pied de la Bibliothèque, le Port des Couronnes accueillait les navires de tout le Commonwealth : Inde, Canada, Ghana, Australie, Jamaïque… Chaque bateau apportait ses récits. Lady Oblivion, l'Effaceuse aux voiles grises, a déchiré la chronique du port. Rends aux mondes anglophones leur mémoire.",
+   "page": "la page des Mondes anglophones",
+   "page_text": "La page des Mondes anglophones se déplie comme une carte : Commonwealth, indépendances, mots de la famille et de la mémoire. Les navires reprennent la mer.",
+   "boss_intro": "Indépendances, couronnes, empires… À quoi bon s'en souvenir ? J'efface les dates, Archiviste, et les peuples oublient d'où ils viennent. Ta page sera la prochaine.",
+   "boss_defeat": "Les dates… reviennent. 1947, 1957, 1994… Je ne peux pas effacer ce que tant de gens racontent encore.",
+   "enigma": {
+    "generator": "2nde.anglais.frise",
+    "mode": "",
+    "title": "La Chronique déchirée",
+    "intro": "La chronique du port est en lambeaux. Remets les événements dans l'ordre, du plus ancien au plus récent, pour la recoudre.",
+    "xp": 50
+   },
+   "chest_xp": 130,
+   "rooms": [
+    {
+     "kind": "entree",
+     "title": "Le Quai des Navires"
+    },
+    {
+     "kind": "combat",
+     "title": "L'Entrepôt des Mots",
+     "enemies": [
+      {
+       "model": "GhostSkull",
+       "name": "Spectre des quais",
+       "hp": 90,
+       "tier": 3,
+       "xp": 45,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "combat",
+     "title": "Le Marché aux Épices",
+     "enemies": [
+      {
+       "model": "Cactoro",
+       "name": "Cactus des tropiques",
+       "hp": 95,
+       "tier": 3,
+       "xp": 45,
+       "v1_at": [
+        8,
+        5
+       ],
+       "scale": 1.0
+      },
+      {
+       "model": "Armabee",
+       "name": "Guêpe des docks",
+       "hp": 95,
+       "tier": 3,
+       "xp": 45,
+       "v1_at": [
+        10.5,
+        14
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "enigme",
+     "title": "La Capitainerie"
+    },
+    {
+     "kind": "combat",
+     "title": "La Salle du Trône vide",
+     "enemies": [
+      {
+       "model": "Orc",
+       "name": "Garde de la Couronne",
+       "hp": 140,
+       "tier": 4,
+       "xp": 65,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "boss",
+     "title": "Le Phare d'Oblivion",
+     "enemies": [
+      {
+       "model": "Ghost",
+       "name": "Lady Oblivion",
+       "hp": 250,
+       "tier": 5,
+       "xp": 180,
+       "v1_at": [
+        11,
+        6
+       ],
+       "scale": 1.5
+      }
+     ]
+    }
+   ],
+   "v1_map_piece": "building_castle_red",
+   "v1_decor": {
+    "floor": "floor_wood_large",
+    "floor_accent": "floor_tile_large_rocks",
+    "walls": [
+     "wall_window_open",
+     "wall"
+    ],
+    "banners": [
+     "banner_patternA_red",
+     "banner_shield_red"
+    ],
+    "props": [
+     [
+      "barrel_large",
+      [
+       1.4,
+       0,
+       4.4
+      ],
+      0.0,
+      0.8
+     ],
+     [
+      "crates_stacked",
+      [
+       2.6,
+       0,
+       1.4
+      ],
+      20.0,
+      0.9
+     ],
+     [
+      "keg_decorated",
+      [
+       13.4,
+       0,
+       1.4
+      ],
+      0.0,
+      0.8
+     ],
+     [
+      "barrel_large_decorated",
+      [
+       14.6,
+       0,
+       4.6
+      ],
+      -90.0,
+      0.8
+     ],
+     [
+      "chest_gold",
+      [
+       12.0,
+       0,
+       1.2
+      ],
+      0.0,
+      0.8
+     ]
+    ],
+    "torch_color": [
+     1.0,
+     0.72,
+     0.5
+    ]
+   }
+  },
+  {
+   "code": "porte_empires",
+   "level": "2nde",
+   "subject": "histoire_geo",
+   "region": "histoire_geo",
+   "order": 6,
+   "title": "La Porte des Empires",
+   "chapter_codes": [
+    "2nde.histoire_geo.reperes",
+    "2nde.histoire_geo.mediterranee",
+    "2nde.histoire_geo.monde_xvie",
+    "2nde.histoire_geo.etat_moderne",
+    "2nde.histoire_geo.societes"
+   ],
+   "chapter_title": "De la Méditerranée antique aux Lumières",
+   "intro": "Les registres brûlent au fond des couloirs. Traverse les siècles jusqu'au Grand Censeur.",
+   "outro": "Les registres se referment, intacts. Les siècles se suivent de nouveau dans le bon ordre.",
+   "threshold": "Une porte de pierre, plus haute que les autres, ouvre sur vingt siècles d'histoire : la Méditerranée antique, l'Atlantique de 1492, les cours royales, les salons des Lumières. Le Grand Censeur y raye les noms et brûle les registres. Rapporte la page de l'Histoire moderne avant que tout soit effacé.",
+   "page": "la page de l'Histoire moderne",
+   "page_text": "La page de l'Histoire moderne se remet en ordre : Athènes et Rome, Venise et les croisades, 1492, la Renaissance et les réformes, l'État royal, les Lumières. Chaque siècle retrouve sa place.",
+   "boss_intro": "Je suis le Grand Censeur. Ce qui n'est pas autorisé n'a jamais existé : ni Luther, ni Galilée, ni le Bill of Rights. J'ai rayé leurs noms des registres. Tu ne liras rien que je n'aie approuvé.",
+   "boss_defeat": "Mes registres… les noms reviennent, un à un. On n'efface pas une idée imprimée à mille exemplaires. Malvrek l'apprendra à ses dépens.",
+   "enigma": {
+    "generator": "2nde.histoire_geo.frise",
+    "mode": "",
+    "title": "La Frise des Siècles",
+    "intro": "Trois frises ont été brouillées par le Censeur. Rends à chaque événement sa place, du plus ancien au plus récent.",
+    "xp": 50
+   },
+   "chest_xp": 130,
+   "rooms": [
+    {
+     "kind": "entree",
+     "title": "Le Portique"
+    },
+    {
+     "kind": "combat",
+     "title": "L'Agora",
+     "enemies": [
+      {
+       "model": "Skeleton_Warrior",
+       "name": "Hoplite d'os",
+       "hp": 85,
+       "tier": 2,
+       "xp": 40,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "combat",
+     "title": "Le Quai de Séville",
+     "enemies": [
+      {
+       "model": "Skeleton_Rogue",
+       "name": "Conquistador d'os",
+       "hp": 90,
+       "tier": 3,
+       "xp": 45,
+       "v1_at": [
+        8,
+        5
+       ],
+       "scale": 1.0
+      },
+      {
+       "model": "GhostSkull",
+       "name": "Spectre des galions",
+       "hp": 85,
+       "tier": 2,
+       "xp": 45,
+       "v1_at": [
+        10.5,
+        14
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "enigme",
+     "title": "La Salle des Registres"
+    },
+    {
+     "kind": "combat",
+     "title": "La Galerie des Glaces",
+     "enemies": [
+      {
+       "model": "GolelingEvolved",
+       "name": "Golem de cour",
+       "hp": 130,
+       "tier": 4,
+       "xp": 60,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "boss",
+     "title": "Le Cabinet du Censeur",
+     "enemies": [
+      {
+       "model": "Demon",
+       "name": "Le Grand Censeur",
+       "hp": 240,
+       "tier": 5,
+       "xp": 170,
+       "v1_at": [
+        11,
+        6
+       ],
+       "scale": 1.2
+      }
+     ]
+    }
+   ],
+   "v1_map_piece": "building_castle_blue",
+   "v1_decor": {
+    "floor": "floor_tile_large",
+    "floor_accent": "floor_wood_large_dark",
+    "walls": [
+     "wall_shelves",
+     "wall_arched"
+    ],
+    "banners": [
+     "banner_patternC_blue",
+     "banner_patternA_blue"
+    ],
+    "props": [
+     [
+      "column",
+      [
+       1.4,
+       0,
+       4.0
+      ],
+      0.0,
+      0.6
+     ],
+     [
+      "shelf_large",
+      [
+       2.4,
+       0,
+       1.4
+      ],
+      0.0,
+      0.9
+     ],
+     [
+      "candle_triple",
+      [
+       13.2,
+       0,
+       1.0
+      ],
+      0.0,
+      0.3
+     ],
+     [
+      "table_long_decorated_A",
+      [
+       14.4,
+       0,
+       4.4
+      ],
+      90.0,
+      0.9
+     ]
+    ],
+    "torch_color": [
+     0.7,
+     0.8,
+     1.0
+    ]
+   }
+  },
+  {
+   "code": "porte_transitions",
+   "level": "2nde",
+   "subject": "histoire_geo",
+   "region": "histoire_geo",
+   "order": 7,
+   "title": "La Porte des Transitions",
+   "chapter_codes": [
+    "2nde.histoire_geo.environnements",
+    "2nde.histoire_geo.developpement",
+    "2nde.histoire_geo.mobilites",
+    "2nde.histoire_geo.afrique_australe"
+   ],
+   "chapter_title": "Environnements, développement, mobilités, Afrique australe",
+   "intro": "Les cartes sont vierges, les boussoles affolées. Traverse ce monde en transition jusqu'à l'Arpenteur.",
+   "outro": "Sur chaque carte, les contrastes du monde réapparaissent. La porte se referme sans bruit.",
+   "threshold": "La porte suivante ne s'ouvre pas sur le passé, mais sur le monde d'aujourd'hui : des littoraux menacés, des villes qui grandissent, des routes de migrants, des parcs de safari. L'Arpenteur Aveugle a effacé les écarts et les flux de toutes les cartes. Rapporte la page de la Géographie du monde.",
+   "page": "la page de la Géographie du monde",
+   "page_text": "La page de la Géographie du monde se redessine : risques et ressources, populations et inégalités, migrations et tourisme, l'Afrique australe en mutation. Le monde en transition retrouve ses contrastes.",
+   "boss_intro": "Je suis l'Arpenteur Aveugle. Je mesure le monde sans le voir : un désert vaut une métropole, un pays riche un pays pauvre. Tes cartes, je les ai effacées. Dis-moi donc où tu vas.",
+   "boss_defeat": "Mes instruments… se règlent à nouveau. Les écarts, les flux, les risques réapparaissent sur la carte. Elle n'était pas si simple, finalement.",
+   "enigma": {
+    "generator": "2nde.histoire_geo.idh",
+    "mode": "",
+    "title": "L'Échelle du développement",
+    "intro": "Trois échelles ont été renversées. Classe chaque groupe de pays de l'IDH le plus élevé au plus faible.",
+    "xp": 50
+   },
+   "chest_xp": 130,
+   "rooms": [
+    {
+     "kind": "entree",
+     "title": "Le Seuil du Monde"
+    },
+    {
+     "kind": "combat",
+     "title": "Le Delta inondé",
+     "enemies": [
+      {
+       "model": "GreenBlob",
+       "name": "Gelée des crues",
+       "hp": 85,
+       "tier": 2,
+       "xp": 40,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "combat",
+     "title": "La Mégapole",
+     "enemies": [
+      {
+       "model": "Goleling",
+       "name": "Golem de béton",
+       "hp": 95,
+       "tier": 3,
+       "xp": 45,
+       "v1_at": [
+        8,
+        5
+       ],
+       "scale": 1.0
+      },
+      {
+       "model": "Armabee",
+       "name": "Guêpe des embouteillages",
+       "hp": 90,
+       "tier": 3,
+       "xp": 45,
+       "v1_at": [
+        10.5,
+        14
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "enigme",
+     "title": "La Salle des Échelles"
+    },
+    {
+     "kind": "combat",
+     "title": "La Savane du Kalahari",
+     "enemies": [
+      {
+       "model": "Cactoro",
+       "name": "Cactus du Kalahari",
+       "hp": 130,
+       "tier": 4,
+       "xp": 60,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "boss",
+     "title": "L'Observatoire",
+     "enemies": [
+      {
+       "model": "Yeti",
+       "name": "L'Arpenteur Aveugle",
+       "hp": 240,
+       "tier": 5,
+       "xp": 170,
+       "v1_at": [
+        11,
+        6
+       ],
+       "scale": 1.3
+      }
+     ]
+    }
+   ],
+   "v1_map_piece": "building_market_yellow",
+   "v1_decor": {
+    "floor": "floor_dirt_large",
+    "floor_accent": "floor_tile_large_rocks",
+    "walls": [
+     "wall_window_open",
+     "wall"
+    ],
+    "banners": [
+     "banner_patternB_yellow",
+     "banner_patternB_green"
+    ],
+    "props": [
+     [
+      "barrel_large",
+      [
+       1.6,
+       0,
+       4.0
+      ],
+      0.0,
+      0.8
+     ],
+     [
+      "crates_stacked",
+      [
+       2.6,
+       0,
+       1.4
+      ],
+      -15.0,
+      0.9
+     ],
+     [
+      "table_medium_decorated_A",
+      [
+       12.0,
+       0,
+       1.6
+      ],
+      0.0,
+      0.9
+     ],
+     [
+      "trunk_large_A",
+      [
+       14.6,
+       0,
+       4.6
+      ],
+      -90.0,
+      0.8
+     ]
+    ],
+    "torch_color": [
+     1.0,
+     0.85,
+     0.55
+    ]
+   }
+  },
+  {
+   "code": "alambic_elements",
+   "level": "2nde",
+   "subject": "physique_chimie",
+   "region": "sciences",
+   "order": 8,
+   "title": "L'Alambic des Éléments",
+   "chapter_codes": [
+    "2nde.physique_chimie.matiere",
+    "2nde.physique_chimie.atome",
+    "2nde.physique_chimie.transformations"
+   ],
+   "chapter_title": "La matière, l'atome et les transformations",
+   "intro": "Des vapeurs colorées montent des fioles. Grimpe jusqu'au creuset du Dissolveur.",
+   "outro": "Les fioles se referment, étiquetées. La matière a retrouvé ses règles.",
+   "threshold": "Au Laboratoire des Inventeurs, une tour de verre bleu bouillonne jour et nuit : l'Alambic des Éléments. On y pesait, dissolvait et transformait la matière avec soin. Le Dissolveur a tout fait fondre dans son creuset. Rapporte la page de la Matière avant qu'il ne reste plus qu'une flaque.",
+   "page": "la page de la Matière",
+   "page_text": "La page de la Matière se recompose : corps purs et solutions, atomes et noyaux, ions et molécules, équations bien ajustées. Chaque élément a retrouvé sa case.",
+   "boss_intro": "Je suis le Dissolveur. Tout se dissout dans mon creuset : les atomes perdent leurs électrons, les équations leurs coefficients, les noyaux leurs neutrons. Ta page de la Matière ? Une flaque, rien de plus.",
+   "boss_defeat": "Mon creuset… refroidit. Les éléments se reforment, chacun à sa place dans le tableau. Rien ne se perd, rien ne se crée : même pas ma défaite.",
+   "enigma": {
+    "generator": "2nde.physique_chimie.echelles",
+    "mode": "",
+    "title": "Les Échelles du monde",
+    "intro": "Le Dissolveur a brouillé trois étagères de spécimens. Range chaque série du plus petit au plus grand, du noyau d'atome aux galaxies.",
+    "xp": 50
+   },
+   "chest_xp": 130,
+   "rooms": [
+    {
+     "kind": "entree",
+     "title": "Le Vestibule des Fioles"
+    },
+    {
+     "kind": "combat",
+     "title": "La Salle des Mélanges",
+     "enemies": [
+      {
+       "model": "GreenBlob",
+       "name": "Gelée de soluté",
+       "hp": 85,
+       "tier": 2,
+       "xp": 40,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "combat",
+     "title": "Le Cabinet des Atomes",
+     "enemies": [
+      {
+       "model": "Ghost",
+       "name": "Électron égaré",
+       "hp": 85,
+       "tier": 2,
+       "xp": 45,
+       "v1_at": [
+        8,
+        5
+       ],
+       "scale": 1.0
+      },
+      {
+       "model": "Mushnub",
+       "name": "Spore isotope",
+       "hp": 90,
+       "tier": 3,
+       "xp": 45,
+       "v1_at": [
+        10.5,
+        14
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "enigme",
+     "title": "La Salle des Échelles"
+    },
+    {
+     "kind": "combat",
+     "title": "La Distillerie",
+     "enemies": [
+      {
+       "model": "GolelingEvolved",
+       "name": "Golem de cristal",
+       "hp": 130,
+       "tier": 4,
+       "xp": 60,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "boss",
+     "title": "Le Creuset",
+     "enemies": [
+      {
+       "model": "GreenBlob",
+       "name": "Le Dissolveur",
+       "hp": 240,
+       "tier": 5,
+       "xp": 170,
+       "v1_at": [
+        11,
+        6
+       ],
+       "scale": 1.8
+      }
+     ]
+    }
+   ],
+   "v1_map_piece": "building_tower_A_blue",
+   "v1_decor": {
+    "floor": "floor_tile_large",
+    "floor_accent": "floor_wood_large_dark",
+    "walls": [
+     "wall_shelves",
+     "wall_arched"
+    ],
+    "banners": [
+     "banner_patternA_blue",
+     "banner_patternC_white"
+    ],
+    "props": [
+     [
+      "table_long_decorated_A",
+      [
+       2.4,
+       0,
+       1.4
+      ],
+      0.0,
+      1.0
+     ],
+     [
+      "shelf_small_candles",
+      [
+       1.4,
+       0,
+       4.0
+      ],
+      90.0,
+      0.6
+     ],
+     [
+      "candle_triple",
+      [
+       13.2,
+       0,
+       1.0
+      ],
+      0.0,
+      0.3
+     ],
+     [
+      "barrel_large",
+      [
+       14.4,
+       0,
+       4.4
+      ],
+      0.0,
+      0.8
+     ]
+    ],
+    "torch_color": [
+     0.6,
+     0.85,
+     1.0
+    ]
+   }
+  },
+  {
+   "code": "laboratoire_foudroye",
+   "level": "2nde",
+   "subject": "physique_chimie",
+   "region": "sciences",
+   "order": 9,
+   "title": "Le Laboratoire foudroyé",
+   "chapter_codes": [
+    "2nde.physique_chimie.mouvement",
+    "2nde.physique_chimie.interactions",
+    "2nde.physique_chimie.son",
+    "2nde.physique_chimie.lumiere",
+    "2nde.physique_chimie.circuits"
+   ],
+   "chapter_title": "Mouvements, forces, son, lumière et circuits",
+   "intro": "Des étincelles courent sur les murs, un bourdonnement emplit l'air. Monte jusqu'au tableau électrique du Brouilleur.",
+   "outro": "Le bourdonnement s'apaise. Chaque instrument du laboratoire mesure de nouveau juste.",
+   "threshold": "Plus loin, le Laboratoire foudroyé fume encore. Ici, on étudiait les mouvements, les forces, le son, la lumière et l'électricité. Le Brouilleur l'a frappé d'un éclair : les instruments mentent, les diapasons sonnent faux. Rapporte la page des Ondes et des Forces.",
+   "page": "la page des Ondes et des Forces",
+   "page_text": "La page des Ondes et des Forces se rallume : mouvements et vitesses, forces et inertie, sons et lumière, circuits et capteurs. Le laboratoire bourdonne de nouveau, juste et précis.",
+   "boss_intro": "Je suis le Brouilleur. J'ai mis du bruit dans tes signaux, du flou dans tes lentilles et du désordre dans tes forces. Ici, plus rien n'avance droit, plus rien ne sonne juste. Écoute bien… si tu peux.",
+   "boss_defeat": "Le silence… puis un son pur. Mes parasites s'éteignent un à un. Tes ondes et tes forces obéissent de nouveau aux lois. Je n'aurais jamais dû défier un Archiviste qui calcule.",
+   "enigma": {
+    "generator": "2nde.physique_chimie.sons",
+    "mode": "",
+    "title": "La Salle des Diapasons",
+    "intro": "Le Brouilleur a mélangé trois séries de diapasons. Calcule leurs fréquences et range chaque série du plus grave au plus aigu.",
+    "xp": 50
+   },
+   "chest_xp": 130,
+   "rooms": [
+    {
+     "kind": "entree",
+     "title": "Le Hall foudroyé"
+    },
+    {
+     "kind": "combat",
+     "title": "La Piste des Chronophotographies",
+     "enemies": [
+      {
+       "model": "Armabee",
+       "name": "Guêpe-chrono",
+       "hp": 85,
+       "tier": 2,
+       "xp": 40,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "combat",
+     "title": "La Salle des Forces",
+     "enemies": [
+      {
+       "model": "Goleling",
+       "name": "Golem d'inertie",
+       "hp": 95,
+       "tier": 3,
+       "xp": 45,
+       "v1_at": [
+        8,
+        5
+       ],
+       "scale": 1.0
+      },
+      {
+       "model": "Cactoro",
+       "name": "Cactus à ressort",
+       "hp": 90,
+       "tier": 3,
+       "xp": 45,
+       "v1_at": [
+        10.5,
+        14
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "enigme",
+     "title": "La Salle des Diapasons"
+    },
+    {
+     "kind": "combat",
+     "title": "La Chambre noire",
+     "enemies": [
+      {
+       "model": "GhostSkull",
+       "name": "Spectre des rayons",
+       "hp": 130,
+       "tier": 4,
+       "xp": 60,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "boss",
+     "title": "Le Tableau électrique",
+     "enemies": [
+      {
+       "model": "Skeleton_Mage",
+       "name": "Le Brouilleur",
+       "hp": 240,
+       "tier": 5,
+       "xp": 170,
+       "v1_at": [
+        11,
+        6
+       ],
+       "scale": 1.45
+      }
+     ]
+    }
+   ],
+   "v1_map_piece": "building_destroyed",
+   "v1_decor": {
+    "floor": "floor_dirt_large",
+    "floor_accent": "floor_tile_large_rocks",
+    "walls": [
+     "wall_window_open",
+     "wall"
+    ],
+    "banners": [
+     "banner_patternB_yellow",
+     "banner_patternA_blue"
+    ],
+    "props": [
+     [
+      "crates_stacked",
+      [
+       2.6,
+       0,
+       1.4
+      ],
+      -15.0,
+      0.9
+     ],
+     [
+      "table_medium_decorated_A",
+      [
+       1.6,
+       0,
+       4.0
+      ],
+      90.0,
+      0.9
+     ],
+     [
+      "trunk_large_A",
+      [
+       13.6,
+       0,
+       1.4
+      ],
+      0.0,
+      0.8
+     ],
+     [
+      "barrel_large",
+      [
+       14.6,
+       0,
+       4.6
+      ],
+      0.0,
+      0.8
+     ]
+    ],
+    "torch_color": [
+     0.85,
+     0.9,
+     1.0
+    ]
+   }
+  },
+  {
+   "code": "pont_paquets",
+   "level": "2nde",
+   "subject": "snt",
+   "region": "snt",
+   "order": 10,
+   "title": "Le Pont des Paquets",
+   "chapter_codes": [
+    "2nde.snt.internet",
+    "2nde.snt.web",
+    "2nde.snt.reseaux_sociaux",
+    "2nde.snt.donnees"
+   ],
+   "chapter_title": "Internet, le Web, les réseaux sociaux et les données",
+   "intro": "Des messages perdus volent dans les couloirs. Remonte jusqu'à la tour du Crieur Menteur.",
+   "outro": "Les relais se rallument un à un : chaque message suit de nouveau son chemin.",
+   "threshold": "Sur la côte sud, au Carrefour des Messagers, un pont relie les relais où passent tous les messages du royaume. Le Crieur Menteur s'y est installé : les paquets s'égarent, les liens mènent nulle part, les rumeurs courent. Rapporte la page des Messages et remets le réseau en ordre.",
+   "page": "la page des Messages",
+   "page_text": "La page des Messages se recompose : paquets et routeurs, adresses et noms de domaine, pages et liens, réseaux d'amis et tables de données. Chaque message arrive enfin à bon port.",
+   "boss_intro": "Je suis le Crieur Menteur ! Je mélange les paquets, j'envoie les messages au mauvais destinataire et je répands des rumeurs plus vite que la vérité. Ta page des Messages ? Je l'ai partagée… à l'envers.",
+   "boss_defeat": "Mes rumeurs… plus personne ne les relaie. Chaque paquet retrouve son adresse, chaque page son lien. La vérité arrive toujours, même par un chemin plus long.",
+   "enigma": {
+    "generator": "2nde.snt.requete",
+    "mode": "",
+    "title": "Les Étapes du message",
+    "intro": "Le Crieur Menteur a mélangé trois parcours de messages. Remets chaque étape à sa place, de la première à la dernière.",
+    "xp": 50
+   },
+   "chest_xp": 130,
+   "rooms": [
+    {
+     "kind": "entree",
+     "title": "Le Relais du Pont"
+    },
+    {
+     "kind": "combat",
+     "title": "La Salle des Routeurs",
+     "enemies": [
+      {
+       "model": "Armabee",
+       "name": "Paquet égaré",
+       "hp": 85,
+       "tier": 2,
+       "xp": 40,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "combat",
+     "title": "La Galerie des Liens",
+     "enemies": [
+      {
+       "model": "Ghost",
+       "name": "Lien brisé",
+       "hp": 85,
+       "tier": 2,
+       "xp": 45,
+       "v1_at": [
+        8,
+        5
+       ],
+       "scale": 1.0
+      },
+      {
+       "model": "Mushnub",
+       "name": "Rumeur rampante",
+       "hp": 90,
+       "tier": 3,
+       "xp": 45,
+       "v1_at": [
+        10.5,
+        14
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "enigme",
+     "title": "La Salle des Étapes"
+    },
+    {
+     "kind": "combat",
+     "title": "Les Archives des Données",
+     "enemies": [
+      {
+       "model": "GolelingEvolved",
+       "name": "Golem des tables",
+       "hp": 130,
+       "tier": 4,
+       "xp": 60,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "boss",
+     "title": "La Tour du Crieur",
+     "enemies": [
+      {
+       "model": "Orc",
+       "name": "Le Crieur Menteur",
+       "hp": 240,
+       "tier": 5,
+       "xp": 170,
+       "v1_at": [
+        11,
+        6
+       ],
+       "scale": 1.4
+      }
+     ]
+    }
+   ],
+   "v1_map_piece": "building_bridge_A",
+   "v1_decor": {
+    "floor": "floor_wood_large",
+    "floor_accent": "floor_tile_large",
+    "walls": [
+     "wall_window_open",
+     "wall_shelves"
+    ],
+    "banners": [
+     "banner_patternA_blue",
+     "banner_patternB_yellow"
+    ],
+    "props": [
+     [
+      "crates_stacked",
+      [
+       2.6,
+       0,
+       1.4
+      ],
+      -15.0,
+      0.9
+     ],
+     [
+      "table_long_decorated_A",
+      [
+       1.6,
+       0,
+       4.2
+      ],
+      90.0,
+      0.9
+     ],
+     [
+      "barrel_large",
+      [
+       13.6,
+       0,
+       1.4
+      ],
+      0.0,
+      0.8
+     ],
+     [
+      "candle_triple",
+      [
+       14.6,
+       0,
+       4.4
+      ],
+      0.0,
+      0.3
+     ]
+    ],
+    "torch_color": [
+     1.0,
+     0.85,
+     0.6
+    ]
+   }
+  },
+  {
+   "code": "atelier_automates",
+   "level": "2nde",
+   "subject": "snt",
+   "region": "snt",
+   "order": 11,
+   "title": "L'Atelier des Automates",
+   "chapter_codes": [
+    "2nde.snt.localisation",
+    "2nde.snt.photo",
+    "2nde.snt.objets",
+    "2nde.snt.programmation"
+   ],
+   "chapter_title": "Cartes, photos, objets connectés et programmation",
+   "intro": "Les automates s'agitent sans but. Traverse l'atelier jusqu'à l'établi du Détraqueur.",
+   "outro": "Le cliquetis s'apaise : chaque automate a retrouvé son programme.",
+   "threshold": "Un peu plus loin sur la côte, l'Atelier des Automates cliquette jour et nuit : on y dessine les cartes, on y développe les images et on y programme des machines. Le Détraqueur a tout déréglé. Rapporte la page des Automates.",
+   "page": "la page des Automates",
+   "page_text": "La page des Automates se rallume : satellites et cartes, itinéraires, pixels et couleurs, capteurs et actionneurs, programmes bien écrits. Les machines de l'atelier obéissent de nouveau.",
+   "boss_intro": "Je suis le Détraqueur. J'ai embrouillé les cartes, faussé les capteurs, mélangé les pixels et glissé des erreurs dans chaque programme. Tes automates tournent en rond. Et toi, sauras-tu retrouver ton chemin ?",
+   "boss_defeat": "Mes rouages… se remettent à tourner rond. Les cartes indiquent le bon chemin, les capteurs mesurent juste, les programmes s'exécutent sans erreur. Bien calculé, Archiviste.",
+   "enigma": {
+    "generator": "2nde.snt.destinations",
+    "mode": "",
+    "title": "Les Panneaux de l'Atelier",
+    "intro": "Le Détraqueur a mélangé les panneaux de trois carrefours. Calcule les plus courts chemins et range les villes de la plus proche à la plus lointaine.",
+    "xp": 50
+   },
+   "chest_xp": 130,
+   "rooms": [
+    {
+     "kind": "entree",
+     "title": "L'Établi d'entrée"
+    },
+    {
+     "kind": "combat",
+     "title": "La Salle des Cartes",
+     "enemies": [
+      {
+       "model": "Goleling",
+       "name": "Golem boussole",
+       "hp": 85,
+       "tier": 2,
+       "xp": 40,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "combat",
+     "title": "Le Laboratoire photo",
+     "enemies": [
+      {
+       "model": "GhostSkull",
+       "name": "Spectre pixelisé",
+       "hp": 90,
+       "tier": 3,
+       "xp": 45,
+       "v1_at": [
+        8,
+        5
+       ],
+       "scale": 1.0
+      },
+      {
+       "model": "Cactoro",
+       "name": "Cactus à capteurs",
+       "hp": 90,
+       "tier": 3,
+       "xp": 45,
+       "v1_at": [
+        10.5,
+        14
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "enigme",
+     "title": "La Salle des Panneaux"
+    },
+    {
+     "kind": "combat",
+     "title": "L'Atelier des Programmes",
+     "enemies": [
+      {
+       "model": "MushnubEvolved",
+       "name": "Champignon en boucle",
+       "hp": 130,
+       "tier": 4,
+       "xp": 60,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "boss",
+     "title": "L'Établi du Détraqueur",
+     "enemies": [
+      {
+       "model": "GolelingEvolved",
+       "name": "Le Détraqueur",
+       "hp": 240,
+       "tier": 5,
+       "xp": 170,
+       "v1_at": [
+        11,
+        6
+       ],
+       "scale": 1.45
+      }
+     ]
+    }
+   ],
+   "v1_map_piece": "building_home_B_yellow",
+   "v1_decor": {
+    "floor": "floor_wood_large_dark",
+    "floor_accent": "floor_tile_large",
+    "walls": [
+     "wall_shelves",
+     "wall"
+    ],
+    "banners": [
+     "banner_patternC_white",
+     "banner_patternB_green"
+    ],
+    "props": [
+     [
+      "table_medium_decorated_A",
+      [
+       2.4,
+       0,
+       1.4
+      ],
+      0.0,
+      0.9
+     ],
+     [
+      "shelf_small_candles",
+      [
+       1.4,
+       0,
+       4.0
+      ],
+      90.0,
+      0.6
+     ],
+     [
+      "trunk_large_A",
+      [
+       13.6,
+       0,
+       1.4
+      ],
+      0.0,
+      0.8
+     ],
+     [
+      "crates_stacked",
+      [
+       14.6,
+       0,
+       4.4
+      ],
+      -20.0,
+      0.9
+     ]
+    ],
+    "torch_color": [
+     1.0,
+     0.9,
+     0.7
+    ]
+   }
+  },
+  {
+   "code": "moulin_mancha",
+   "level": "2nde",
+   "subject": "espagnol",
+   "region": "anglais",
+   "order": 12,
+   "title": "Le Moulin de la Mancha",
+   "chapter_codes": [
+    "2nde.espagnol.verbe",
+    "2nde.espagnol.phrase",
+    "2nde.espagnol.nom",
+    "2nde.espagnol.lexique",
+    "2nde.espagnol.culture"
+   ],
+   "chapter_title": "Verbes, phrases, vocabulaire et monde hispanique",
+   "intro": "Les ailes du moulin grincent, les mots s'emmêlent. Monte jusqu'à l'Enredador.",
+   "outro": "Les ailes du moulin tournent de nouveau en rythme. ¡Muy bien!",
+   "threshold": "Au bord de la Bibliothèque des Langues tourne un moulin venu de la Mancha, comme ceux que Don Quichotte prenait pour des géants. On y apprenait l'espagnol en écoutant chanter les ailes. L'Enredador y a emmêlé tous les mots. Rapporte la page d'espagnol.",
+   "page": "la page d'espagnol",
+   "page_text": "La page d'espagnol se démêle : verbes au présent, au passé et au futur, ser et estar, gustar, les mots des voyages et des fêtes, l'Espagne et le monde hispanique. Chaque mot retrouve sa place.",
+   "boss_intro": "¡Hola, Archivista! Je suis l'Enredador, celui qui emmêle. J'ai noué les verbes, retourné les points d'interrogation et brouillé les accents. Ta page d'espagnol ? Un nœud de mots que personne ne défera.",
+   "boss_defeat": "¡Ay, ay, ay! Mes nœuds se défont… Les verbes retrouvent leurs terminaisons, les phrases leur ordre. Hasta luego, Archivista : tu parles mieux que moi.",
+   "enigma": {
+    "generator": "2nde.espagnol.frase",
+    "mode": "",
+    "title": "Les Phrases emmêlées",
+    "intro": "L'Enredador a emmêlé trois phrases espagnoles. Remets chaque mot à sa place.",
+    "xp": 50
+   },
+   "chest_xp": 130,
+   "rooms": [
+    {
+     "kind": "entree",
+     "title": "La Cour du moulin"
+    },
+    {
+     "kind": "combat",
+     "title": "La Salle des Verbes",
+     "enemies": [
+      {
+       "model": "Mushnub",
+       "name": "Champignon conjugueur",
+       "hp": 85,
+       "tier": 2,
+       "xp": 40,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "combat",
+     "title": "Le Grenier à farine",
+     "enemies": [
+      {
+       "model": "Armabee",
+       "name": "Abeille de la Mancha",
+       "hp": 90,
+       "tier": 3,
+       "xp": 45,
+       "v1_at": [
+        8,
+        5
+       ],
+       "scale": 1.0
+      },
+      {
+       "model": "Cactoro",
+       "name": "Cactus du désert d'Almería",
+       "hp": 90,
+       "tier": 3,
+       "xp": 45,
+       "v1_at": [
+        10.5,
+        14
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "enigme",
+     "title": "La Salle des Phrases"
+    },
+    {
+     "kind": "combat",
+     "title": "La Meule",
+     "enemies": [
+      {
+       "model": "GolelingEvolved",
+       "name": "Géant à ailes de moulin",
+       "hp": 130,
+       "tier": 4,
+       "xp": 60,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "boss",
+     "title": "Le Sommet des Ailes",
+     "enemies": [
+      {
+       "model": "Dragon",
+       "name": "L'Enredador",
+       "hp": 240,
+       "tier": 5,
+       "xp": 170,
+       "v1_at": [
+        11,
+        6
+       ],
+       "scale": 1.3
+      }
+     ]
+    }
+   ],
+   "v1_map_piece": "building_windmill_yellow",
+   "v1_decor": {
+    "floor": "floor_wood_large",
+    "floor_accent": "floor_tile_large",
+    "walls": [
+     "wall_window_open",
+     "wall"
+    ],
+    "banners": [
+     "banner_patternB_yellow",
+     "banner_patternA_red"
+    ],
+    "props": [
+     [
+      "barrel_large",
+      [
+       1.6,
+       0,
+       4.0
+      ],
+      0.0,
+      0.8
+     ],
+     [
+      "crates_stacked",
+      [
+       2.6,
+       0,
+       1.4
+      ],
+      -15.0,
+      0.9
+     ],
+     [
+      "table_medium_decorated_A",
+      [
+       13.2,
+       0,
+       1.6
+      ],
+      0.0,
+      0.9
+     ],
+     [
+      "trunk_large_A",
+      [
+       14.6,
+       0,
+       4.6
+      ],
+      -90.0,
+      0.8
+     ]
+    ],
+    "torch_color": [
+     1.0,
+     0.8,
+     0.5
+    ]
+   }
+  },
+  {
+   "code": "conservatoire_vivant",
+   "level": "2nde",
+   "subject": "svt",
+   "region": "svt",
+   "order": 13,
+   "title": "Le Conservatoire du Vivant",
+   "chapter_codes": [
+    "2nde.svt.organisation",
+    "2nde.svt.biodiversite",
+    "2nde.svt.procreation",
+    "2nde.svt.microorganismes"
+   ],
+   "chapter_title": "Cellules, ADN, biodiversité, évolution, corps humain et santé",
+   "intro": "Les bocaux bouillonnent et les étiquettes ont glissé. Monte jusqu'au Brouille-Gènes.",
+   "outro": "Le Conservatoire respire de nouveau : chaque bocal a retrouvé son étiquette.",
+   "threshold": "Au fond de la Vallée du Vivant, le Conservatoire garde des milliers de bocaux, de graines et de lames de microscope. Le Brouille-Gènes y a tout mélangé : l'ADN, les espèces, et jusqu'aux hormones et aux microbes du corps humain. Rapporte la page du Vivant.",
+   "page": "la page du Vivant",
+   "page_text": "La page du Vivant se déroule comme une double hélice : cellules et organites, ADN et allèles, biodiversité et forces de l'évolution, hormones, microbes et microbiote. Tout ce qui vit y retrouve son ordre.",
+   "boss_intro": "Bienvenue dans ma collection, Archiviste. Je suis le Brouille-Gènes. J'ai mélangé l'ADN de chaque bocal, déréglé les hormones et lâché les microbes. Ta page du Vivant ? Une séquence illisible, et je suis le seul à l'avoir écrite.",
+   "boss_defeat": "Mes séquences… se recollent, A en face de T, C en face de G. Les cellules se remettent au travail, les microbes retournent à leur place. Tu lis le vivant mieux que moi.",
+   "enigma": {
+    "generator": "2nde.svt.tailles",
+    "mode": "",
+    "title": "Les Lames du Microscope",
+    "intro": "Le Brouille-Gènes a mélangé les lames et les étagères. Range le vivant, du plus petit au plus grand.",
+    "xp": 50
+   },
+   "chest_xp": 130,
+   "rooms": [
+    {
+     "kind": "entree",
+     "title": "La Salle des Bocaux"
+    },
+    {
+     "kind": "combat",
+     "title": "Le Laboratoire des Cellules",
+     "enemies": [
+      {
+       "model": "GreenBlob",
+       "name": "Cellule sans membrane",
+       "hp": 85,
+       "tier": 2,
+       "xp": 40,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "combat",
+     "title": "La Galerie des Espèces",
+     "enemies": [
+      {
+       "model": "Armabee",
+       "name": "Abeille mutante",
+       "hp": 90,
+       "tier": 3,
+       "xp": 45,
+       "v1_at": [
+        8,
+        5
+       ],
+       "scale": 1.0
+      },
+      {
+       "model": "Mushnub",
+       "name": "Champignon pathogène",
+       "hp": 90,
+       "tier": 3,
+       "xp": 45,
+       "v1_at": [
+        10.5,
+        14
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "enigme",
+     "title": "La Salle des Microscopes"
+    },
+    {
+     "kind": "combat",
+     "title": "La Serre aux Microbes",
+     "enemies": [
+      {
+       "model": "MushnubEvolved",
+       "name": "Moisissure géante",
+       "hp": 130,
+       "tier": 4,
+       "xp": 60,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "boss",
+     "title": "Le Grenier des Collections",
+     "enemies": [
+      {
+       "model": "BlueDemon",
+       "name": "Le Brouille-Gènes",
+       "hp": 240,
+       "tier": 5,
+       "xp": 170,
+       "v1_at": [
+        11,
+        6
+       ],
+       "scale": 1.1
+      }
+     ]
+    }
+   ],
+   "v1_map_piece": "building_tower_A_green",
+   "v1_decor": {
+    "floor": "floor_tile_large",
+    "floor_accent": "floor_wood_large",
+    "walls": [
+     "wall_shelves",
+     "wall_window_open"
+    ],
+    "banners": [
+     "banner_patternB_green",
+     "banner_patternC_white"
+    ],
+    "props": [
+     [
+      "shelf_large",
+      [
+       1.4,
+       0,
+       4.0
+      ],
+      90.0,
+      0.9
+     ],
+     [
+      "table_long_decorated_A",
+      [
+       2.4,
+       0,
+       1.4
+      ],
+      0.0,
+      1.0
+     ],
+     [
+      "shelf_small_candles",
+      [
+       13.6,
+       0,
+       1.2
+      ],
+      0.0,
+      0.6
+     ],
+     [
+      "trunk_large_A",
+      [
+       14.6,
+       0,
+       4.6
+      ],
+      -90.0,
+      0.8
+     ]
+    ],
+    "torch_color": [
+     0.7,
+     1.0,
+     0.75
+    ]
+   }
+  },
+  {
+   "code": "puits_vallee",
+   "level": "2nde",
+   "subject": "svt",
+   "region": "svt",
+   "order": 14,
+   "title": "Le Puits de la Vallée",
+   "chapter_codes": [
+    "2nde.svt.geosciences",
+    "2nde.svt.agrosystemes"
+   ],
+   "chapter_title": "Érosion, sédiments, sols et agrosystèmes",
+   "intro": "La terre glisse sous tes pas. Descends jusqu'au Rongeur.",
+   "outro": "La terre ne glisse plus : les champs reverdissent autour du puits.",
+   "threshold": "Plus loin dans la Vallée du Vivant, le Puits de la Vallée descend jusqu'aux couches de roches les plus anciennes. Autour, les champs nourrissaient tout le royaume. Le Rongeur y ronge les sols et emporte la terre vers la mer. Rapporte la page de la Terre.",
+   "page": "la page de la Terre",
+   "page_text": "La page de la Terre se dépose couche après couche : l'érosion et ses débris, la sédimentation et les roches qu'elle forme, les sols vivants, les champs et ce qu'il faut pour les cultiver sans les épuiser.",
+   "boss_intro": "Crrr… crrr… Je suis le Rongeur. Je ronge les roches, j'emporte les sols, j'épuise les champs. Bientôt, la Vallée ne sera plus qu'une boue stérile, et ta page de la Terre finira au fond de mon puits.",
+   "boss_defeat": "Mes dents s'émoussent… Les haies retiennent la terre, les champs reprennent des forces, la rivière dépose ses sables en ordre. Garde ta page : je n'ai plus rien à ronger.",
+   "enigma": {
+    "generator": "2nde.svt.sediments",
+    "mode": "",
+    "title": "Le Voyage des Sédiments",
+    "intro": "Le Rongeur a brouillé l'histoire des roches et des rivières. Remets chaque voyage dans l'ordre.",
+    "xp": 50
+   },
+   "chest_xp": 130,
+   "rooms": [
+    {
+     "kind": "entree",
+     "title": "La Margelle"
+    },
+    {
+     "kind": "combat",
+     "title": "La Galerie des Galets",
+     "enemies": [
+      {
+       "model": "Goleling",
+       "name": "Golem d'argile",
+       "hp": 85,
+       "tier": 2,
+       "xp": 40,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "combat",
+     "title": "Le Champ Épuisé",
+     "enemies": [
+      {
+       "model": "Cactoro",
+       "name": "Cactus de la sécheresse",
+       "hp": 90,
+       "tier": 3,
+       "xp": 45,
+       "v1_at": [
+        8,
+        5
+       ],
+       "scale": 1.0
+      },
+      {
+       "model": "Armabee",
+       "name": "Ravageur des cultures",
+       "hp": 90,
+       "tier": 3,
+       "xp": 45,
+       "v1_at": [
+        10.5,
+        14
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "enigme",
+     "title": "La Salle des Strates"
+    },
+    {
+     "kind": "combat",
+     "title": "La Rivière Souterraine",
+     "enemies": [
+      {
+       "model": "GolelingEvolved",
+       "name": "Golem de boue",
+       "hp": 130,
+       "tier": 4,
+       "xp": 60,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "boss",
+     "title": "Le Fond du Puits",
+     "enemies": [
+      {
+       "model": "Yeti",
+       "name": "Le Rongeur",
+       "hp": 240,
+       "tier": 5,
+       "xp": 170,
+       "v1_at": [
+        11,
+        6
+       ],
+       "scale": 1.2
+      }
+     ]
+    }
+   ],
+   "v1_map_piece": "building_well_yellow",
+   "v1_decor": {
+    "floor": "floor_dirt_large",
+    "floor_accent": "floor_tile_large_rocks",
+    "walls": [
+     "wall_arched",
+     "wall"
+    ],
+    "banners": [
+     "banner_patternB_yellow",
+     "banner_patternB_green"
+    ],
+    "props": [
+     [
+      "barrel_large",
+      [
+       1.6,
+       0,
+       4.0
+      ],
+      0.0,
+      0.8
+     ],
+     [
+      "crates_stacked",
+      [
+       2.6,
+       0,
+       1.4
+      ],
+      -15.0,
+      0.9
+     ],
+     [
+      "table_medium_decorated_A",
+      [
+       13.2,
+       0,
+       1.6
+      ],
+      0.0,
+      0.9
+     ],
+     [
+      "chest_gold",
+      [
+       14.6,
+       0,
+       4.6
+      ],
+      -90.0,
+      0.8
+     ]
+    ],
+    "torch_color": [
+     0.9,
+     0.85,
+     0.6
+    ]
+   }
+  },
+  {
+   "code": "haute_cour",
+   "level": "2nde",
+   "subject": "emc",
+   "region": "emc",
+   "order": 15,
+   "title": "La Haute Cour",
+   "chapter_codes": [
+    "2nde.emc.etat_droit",
+    "2nde.emc.information",
+    "2nde.emc.environnement"
+   ],
+   "chapter_title": "État de droit, information, environnement",
+   "intro": "Les balances de la justice penchent toutes du même côté. Monte jusqu'à l'Arbitraire.",
+   "outro": "Les balances de la Haute Cour retrouvent leur équilibre : le droit s'applique à tous.",
+   "threshold": "Au cœur du Forum des Citoyens se dresse la Haute Cour, où l'on rendait la justice selon le droit, et non selon l'humeur des puissants. L'Arbitraire s'y est installé : il juge seul, censure les journaux et méprise la nature. Rapporte la page des Droits.",
+   "page": "la page des Droits",
+   "page_text": "La page des Droits revient : l'État de droit et la hiérarchie des normes, la laïcité qui protège le pluralisme, la liberté de la presse et ses limites, et le devoir de chacun envers l'environnement et le vivant.",
+   "boss_intro": "Silence dans la Cour ! Je suis l'Arbitraire. Ici, la loi, c'est moi : je juge sans juges, je fais taire les journaux et je signe des permis de polluer. Ta page des Droits ? Je l'ai déclarée illégale.",
+   "boss_defeat": "Objection… rejetée. Les juges reprennent leur siège, la presse imprime de nouveau, la Charte de l'environnement est remise au mur. Même moi, je dois obéir à la loi.",
+   "enigma": {
+    "generator": "2nde.emc.normes",
+    "mode": "",
+    "title": "La Pyramide des Normes",
+    "intro": "L'Arbitraire a renversé la pyramide des normes et mélangé les portes de la justice. Remets chaque règle à sa place.",
+    "xp": 50
+   },
+   "chest_xp": 130,
+   "rooms": [
+    {
+     "kind": "entree",
+     "title": "La Salle des Pas Perdus"
+    },
+    {
+     "kind": "combat",
+     "title": "Le Greffe",
+     "enemies": [
+      {
+       "model": "GreenBlob",
+       "name": "Gelée du faux témoignage",
+       "hp": 85,
+       "tier": 2,
+       "xp": 40,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "combat",
+     "title": "L'Imprimerie Muselée",
+     "enemies": [
+      {
+       "model": "Armabee",
+       "name": "Frelon de la rumeur",
+       "hp": 90,
+       "tier": 3,
+       "xp": 45,
+       "v1_at": [
+        8,
+        5
+       ],
+       "scale": 1.0
+      },
+      {
+       "model": "Mushnub",
+       "name": "Champignon censeur",
+       "hp": 90,
+       "tier": 3,
+       "xp": 45,
+       "v1_at": [
+        10.5,
+        14
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "enigme",
+     "title": "La Salle des Normes"
+    },
+    {
+     "kind": "combat",
+     "title": "Le Jardin Saccagé",
+     "enemies": [
+      {
+       "model": "Cactoro",
+       "name": "Cactus pollueur",
+       "hp": 130,
+       "tier": 4,
+       "xp": 60,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "boss",
+     "title": "La Grande Chambre",
+     "enemies": [
+      {
+       "model": "Demon",
+       "name": "L'Arbitraire",
+       "hp": 240,
+       "tier": 5,
+       "xp": 170,
+       "v1_at": [
+        11,
+        6
+       ],
+       "scale": 1.1
+      }
+     ]
+    }
+   ],
+   "v1_map_piece": "building_tower_B_blue",
+   "v1_decor": {
+    "floor": "floor_tile_large",
+    "floor_accent": "floor_wood_large_dark",
+    "walls": [
+     "wall_arched",
+     "wall_shelves"
+    ],
+    "banners": [
+     "banner_patternA_blue",
+     "banner_patternC_white",
+     "banner_patternA_red"
+    ],
+    "props": [
+     [
+      "table_long_decorated_A",
+      [
+       2.4,
+       0,
+       1.4
+      ],
+      0.0,
+      1.0
+     ],
+     [
+      "shelf_large",
+      [
+       1.4,
+       0,
+       4.0
+      ],
+      90.0,
+      0.9
+     ],
+     [
+      "candle_triple",
+      [
+       13.2,
+       0,
+       1.0
+      ],
+      0.0,
+      0.3
+     ],
+     [
+      "trunk_large_A",
+      [
+       14.6,
+       0,
+       4.6
+      ],
+      -90.0,
+      0.8
+     ]
+    ],
+    "torch_color": [
+     0.85,
+     0.9,
+     1.0
+    ]
+   }
+  },
+  {
+   "code": "marche_forum",
+   "level": "2nde",
+   "subject": "ses",
+   "region": "emc",
+   "order": 16,
+   "title": "Le Marché du Forum",
+   "chapter_codes": [
+    "2nde.ses.demarche",
+    "2nde.ses.richesses",
+    "2nde.ses.marche"
+   ],
+   "chapter_title": "Richesses, prix et marchés",
+   "intro": "Les étals débordent, les prix s'affolent. Traverse le marché jusqu'au Spéculateur.",
+   "outro": "Les balances du Marché sont de nouveau justes : chaque prix dit vrai.",
+   "threshold": "Sur le Forum des Citoyens, le Marché réunissait marchands et acheteurs : chacun y trouvait un prix juste. Le Spéculateur y a truqué les balances et gonflé les comptes ; plus personne ne sait ce qui vaut quoi. Rapporte la page de l'Économie.",
+   "page": "la page de l'Économie",
+   "page_text": "La page de l'Économie se remet en ordre : ce que l'on produit et comment on le mesure, la valeur ajoutée et le PIB, l'offre, la demande et le prix d'équilibre, et ce que changent une taxe ou une subvention.",
+   "boss_intro": "Approchez, approchez ! Je suis le Spéculateur. J'ai truqué les balances, caché les stocks et gonflé les comptes : ici, plus personne ne sait ce qui vaut quoi. Ta page de l'Économie ? Je te la revends au double.",
+   "boss_defeat": "Mes prix s'effondrent… L'offre et la demande se retrouvent, les comptes redeviennent justes. Personne n'achète plus mes promesses en l'air.",
+   "enigma": {
+    "generator": "2nde.ses.classement_va",
+    "mode": "",
+    "title": "Les Registres du Marché",
+    "intro": "Le Spéculateur a mélangé les registres. Calcule ce que chaque entreprise crée vraiment, et range-les.",
+    "xp": 50
+   },
+   "chest_xp": 130,
+   "rooms": [
+    {
+     "kind": "entree",
+     "title": "Les Étals"
+    },
+    {
+     "kind": "combat",
+     "title": "La Halle aux Grains",
+     "enemies": [
+      {
+       "model": "Goleling",
+       "name": "Golem des stocks cachés",
+       "hp": 85,
+       "tier": 2,
+       "xp": 40,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "combat",
+     "title": "Le Comptoir des Changes",
+     "enemies": [
+      {
+       "model": "Armabee",
+       "name": "Frelon de la surenchère",
+       "hp": 90,
+       "tier": 3,
+       "xp": 45,
+       "v1_at": [
+        8,
+        5
+       ],
+       "scale": 1.0
+      },
+      {
+       "model": "GreenBlob",
+       "name": "Bulle spéculative",
+       "hp": 90,
+       "tier": 3,
+       "xp": 45,
+       "v1_at": [
+        10.5,
+        14
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "enigme",
+     "title": "La Salle des Registres"
+    },
+    {
+     "kind": "combat",
+     "title": "L'Entrepôt",
+     "enemies": [
+      {
+       "model": "GolelingEvolved",
+       "name": "Golem de la pénurie",
+       "hp": 130,
+       "tier": 4,
+       "xp": 60,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "boss",
+     "title": "La Tour des Enchères",
+     "enemies": [
+      {
+       "model": "MushnubEvolved",
+       "name": "Le Spéculateur",
+       "hp": 240,
+       "tier": 5,
+       "xp": 170,
+       "v1_at": [
+        11,
+        6
+       ],
+       "scale": 1.1
+      }
+     ]
+    }
+   ],
+   "v1_map_piece": "building_market_yellow",
+   "v1_decor": {
+    "floor": "floor_wood_large",
+    "floor_accent": "floor_tile_large",
+    "walls": [
+     "wall",
+     "wall_window_open"
+    ],
+    "banners": [
+     "banner_triple_yellow",
+     "banner_patternB_yellow"
+    ],
+    "props": [
+     [
+      "barrel_large",
+      [
+       1.6,
+       0,
+       4.0
+      ],
+      0.0,
+      0.8
+     ],
+     [
+      "crates_stacked",
+      [
+       2.6,
+       0,
+       1.4
+      ],
+      -15.0,
+      0.9
+     ],
+     [
+      "table_medium_decorated_A",
+      [
+       13.2,
+       0,
+       1.6
+      ],
+      0.0,
+      0.9
+     ],
+     [
+      "chest_gold",
+      [
+       14.6,
+       0,
+       4.6
+      ],
+      -90.0,
+      0.8
+     ]
+    ],
+    "torch_color": [
+     1.0,
+     0.85,
+     0.55
+    ]
+   }
+  },
+  {
+   "code": "maison_commune",
+   "level": "2nde",
+   "subject": "ses",
+   "region": "emc",
+   "order": 17,
+   "title": "La Maison Commune",
+   "chapter_codes": [
+    "2nde.ses.socialisation",
+    "2nde.ses.politique",
+    "2nde.ses.diplome"
+   ],
+   "chapter_title": "Socialisation, vie politique, diplôme et emploi",
+   "intro": "Les bancs sont vides, les urnes poussiéreuses. Monte jusqu'au Fataliste.",
+   "outro": "La Maison Commune se remplit de voix : on y débat, on y vote, on y apprend.",
+   "threshold": "Au bout du Forum, la Maison Commune accueillait les assemblées, les fêtes et les débats. Le Fataliste s'y est installé : il répète que chacun restera à sa place, que voter et étudier ne servent à rien. Rapporte la page de la Société.",
+   "page": "la page de la Société",
+   "page_text": "La page de la Société revient : comment on apprend les normes et les valeurs, comment s'organise le pouvoir et comment on y participe, et ce que le diplôme change pour l'emploi et le salaire.",
+   "boss_intro": "À quoi bon, Archiviste ? Je suis le Fataliste. Chacun restera à la place où il est né. Voter ne change rien, étudier ne sert à rien. Ta page de la Société ? Elle était écrite d'avance, et pas pour toi.",
+   "boss_defeat": "Tiens… les règles s'apprennent, les votes comptent, les diplômes ouvrent des portes. Rien n'était écrit d'avance. Je déteste quand on me prouve le contraire.",
+   "enigma": {
+    "generator": "2nde.ses.classement_chomage",
+    "mode": "",
+    "title": "Le Registre des Actifs",
+    "intro": "Le Fataliste a brouillé le registre des actifs. Calcule chaque taux de chômage et range les groupes.",
+    "xp": 50
+   },
+   "chest_xp": 130,
+   "rooms": [
+    {
+     "kind": "entree",
+     "title": "Le Vestibule des Habitudes"
+    },
+    {
+     "kind": "combat",
+     "title": "La Salle de Classe",
+     "enemies": [
+      {
+       "model": "Mushnub",
+       "name": "Champignon du « c'est comme ça »",
+       "hp": 85,
+       "tier": 2,
+       "xp": 40,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "combat",
+     "title": "La Salle des Votes",
+     "enemies": [
+      {
+       "model": "Armabee",
+       "name": "Abeille abstentionniste",
+       "hp": 90,
+       "tier": 3,
+       "xp": 45,
+       "v1_at": [
+        8,
+        5
+       ],
+       "scale": 1.0
+      },
+      {
+       "model": "Cactoro",
+       "name": "Cactus des préjugés",
+       "hp": 90,
+       "tier": 3,
+       "xp": 45,
+       "v1_at": [
+        10.5,
+        14
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "enigme",
+     "title": "Le Bureau du Registre"
+    },
+    {
+     "kind": "combat",
+     "title": "La Bourse du Travail",
+     "enemies": [
+      {
+       "model": "GhostSkull",
+       "name": "Spectre du découragement",
+       "hp": 130,
+       "tier": 4,
+       "xp": 60,
+       "v1_at": [
+        11,
+        7
+       ],
+       "scale": 1.0
+      }
+     ]
+    },
+    {
+     "kind": "boss",
+     "title": "Le Grenier des Destins",
+     "enemies": [
+      {
+       "model": "Ghost",
+       "name": "Le Fataliste",
+       "hp": 240,
+       "tier": 5,
+       "xp": 170,
+       "v1_at": [
+        11,
+        6
+       ],
+       "scale": 1.3
+      }
+     ]
+    }
+   ],
+   "v1_map_piece": "building_home_A_yellow",
+   "v1_decor": {
+    "floor": "floor_wood_large_dark",
+    "floor_accent": "floor_wood_large",
+    "walls": [
+     "wall_window_open",
+     "wall_shelves"
+    ],
+    "banners": [
+     "banner_patternA_blue",
+     "banner_patternC_white"
+    ],
+    "props": [
+     [
+      "table_long_decorated_A",
+      [
+       2.4,
+       0,
+       1.4
+      ],
+      0.0,
+      1.0
+     ],
+     [
+      "shelf_large",
+      [
+       1.4,
+       0,
+       4.0
+      ],
+      90.0,
+      0.9
+     ],
+     [
+      "candle_triple",
+      [
+       13.2,
+       0,
+       1.0
+      ],
+      0.0,
+      0.3
+     ],
+     [
+      "trunk_large_A",
+      [
+       14.6,
+       0,
+       4.6
+      ],
+      -90.0,
+      0.8
+     ]
+    ],
+    "torch_color": [
+     1.0,
+     0.9,
+     0.75
+    ]
+   }
+  }
+ ]
+}

@@ -1,0 +1,46 @@
+{
+  "level": "2nde",
+  "subject": {"code": "histoire_geo", "label": "Histoire-géographie"},
+  "source": "Programme d'histoire-géographie de seconde générale et technologique (arrêté du 17 janvier 2019, BO spécial n° 1 du 22 janvier 2019), toujours en vigueur en 2026-2027 : histoire « Grandes étapes de la formation du monde moderne » (4 thèmes, points de passage et d'ouverture), géographie « Environnement, développement, mobilité : les défis d'un monde en transition » (4 thèmes, une question sur la France par thème). Questions : générateurs (api/app/engine/generators/histoire_geo_2nde.py), complétés par la banque.",
+  "chapters": [
+    {"code": "2nde.histoire_geo.reperes", "title": "Se repérer dans le temps, de l'Antiquité au XVIIIe siècle", "notions": [
+      {"code": "2nde.histoire_geo.reperes.siecles", "label": "Situer une date dans son siècle"},
+      {"code": "2nde.histoire_geo.reperes.frise", "label": "Ordonner les grands repères du programme"}
+    ]},
+    {"code": "2nde.histoire_geo.mediterranee", "title": "Le monde méditerranéen : empreintes de l'Antiquité et du Moyen Âge", "notions": [
+      {"code": "2nde.histoire_geo.mediterranee.antiquite", "label": "La Méditerranée antique : Athènes et Rome (Périclès, Auguste, Constantin)"},
+      {"code": "2nde.histoire_geo.mediterranee.medievale", "label": "La Méditerranée médiévale : chrétienté, Byzance, Islam (croisades, Venise)"}
+    ]},
+    {"code": "2nde.histoire_geo.monde_xvie", "title": "XVe-XVIe siècles : un nouveau rapport au monde", "notions": [
+      {"code": "2nde.histoire_geo.monde_xvie.atlantique", "label": "L'ouverture atlantique et le « Nouveau Monde »"},
+      {"code": "2nde.histoire_geo.monde_xvie.renaissance", "label": "Renaissance, humanisme et réformes religieuses"}
+    ]},
+    {"code": "2nde.histoire_geo.etat_moderne", "title": "L'État à l'époque moderne : France et Angleterre", "notions": [
+      {"code": "2nde.histoire_geo.etat_moderne.france", "label": "L'affirmation de l'État dans le royaume de France"},
+      {"code": "2nde.histoire_geo.etat_moderne.britannique", "label": "Le modèle britannique et son influence (jusqu'aux États-Unis)"}
+    ]},
+    {"code": "2nde.histoire_geo.societes", "title": "Dynamiques et ruptures dans les sociétés des XVIIe et XVIIIe siècles", "notions": [
+      {"code": "2nde.histoire_geo.societes.lumieres", "label": "Les Lumières et le développement des sciences"},
+      {"code": "2nde.histoire_geo.societes.ordres", "label": "Tensions et mutations de la société d'ordres"}
+    ]},
+    {"code": "2nde.histoire_geo.environnements", "title": "Sociétés et environnements : des équilibres fragiles", "notions": [
+      {"code": "2nde.histoire_geo.environnements.risques", "label": "Les sociétés face aux risques"},
+      {"code": "2nde.histoire_geo.environnements.ressources", "label": "Des ressources majeures sous pression (eau, énergie)"},
+      {"code": "2nde.histoire_geo.environnements.france", "label": "La France : milieux métropolitains et ultramarins, valorisation et protection"}
+    ]},
+    {"code": "2nde.histoire_geo.developpement", "title": "Territoires, populations et développement : quels défis ?", "notions": [
+      {"code": "2nde.histoire_geo.developpement.demographie", "label": "Trajectoires démographiques : le nombre et le vieillissement"},
+      {"code": "2nde.histoire_geo.developpement.inegalites", "label": "Développement et inégalités"},
+      {"code": "2nde.histoire_geo.developpement.france", "label": "La France : dynamiques démographiques, inégalités socio-économiques"}
+    ]},
+    {"code": "2nde.histoire_geo.mobilites", "title": "Des mobilités généralisées", "notions": [
+      {"code": "2nde.histoire_geo.mobilites.migrations", "label": "Les migrations internationales"},
+      {"code": "2nde.histoire_geo.mobilites.tourisme", "label": "Les mobilités touristiques internationales"},
+      {"code": "2nde.histoire_geo.mobilites.france", "label": "La France : mobilités, transports et enjeux d'aménagement"}
+    ]},
+    {"code": "2nde.histoire_geo.afrique_australe", "title": "L'Afrique australe : un espace en profonde mutation", "notions": [
+      {"code": "2nde.histoire_geo.afrique_australe.milieux", "label": "Des milieux à valoriser et à ménager"},
+      {"code": "2nde.histoire_geo.afrique_australe.societes", "label": "Transition, développement et mobilités"}
+    ]}
+  ]
+}

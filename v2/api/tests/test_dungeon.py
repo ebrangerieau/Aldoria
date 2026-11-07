@@ -1,0 +1,612 @@
+"""Phase 2, tranche verticale : paquet d'un donjon (chapitre ciblé, énigme) et
+sauvegarde de partie versionnée."""
+
+import pytest
+
+from app.engine import answers
+
+API = "/api/v1/play"
+
+
+async def test_dungeon_pack_focuses_its_chapter(client, login, curriculum):
+    headers = await login("jules", "1234")
+    response = await client.post(
+        f"{API}/session/start",
+        json={"focus_chapter": "6e.maths.fractions"},
+        headers=headers,
+    )
+    assert response.status_code == 200
+    chapter_items = [i for i in response.json()["items"] if i["category"] == "chapitre"]
+    assert chapter_items
+    # Les questions « chapitre » viennent toutes du chapitre du donjon.
+    assert all(i["notions"][0].startswith("6e.maths.fractions.") for i in chapter_items)
+
+
+async def test_dungeon_pack_has_enigma_items(client, login, curriculum):
+    headers = await login("tom", "9876")
+    response = await client.post(
+        f"{API}/session/start",
+        json={
+            "focus_chapter": "2nde.maths.vecteurs",
+            "enigma": {"generator": "2nde.vecteurs.rayon", "count": 4},
+        },
+        headers=headers,
+    )
+    assert response.status_code == 200
+    items = response.json()["items"]
+    enigma = [i for i in items if i["role"] == "enigme"]
+    assert len(enigma) == 4
+    assert all(i["generator"] == "2nde.vecteurs.rayon" for i in enigma)
+    assert all(i["visual"]["kind"] == "grid" and "meta" not in i for i in enigma)
+    # Difficulté croissante : du plus facile au plus difficile.
+    difficulties = [i["difficulty"] for i in enigma]
+    assert difficulties == sorted(difficulties)
+    for i in enigma:
+        assert answers.check(i["answer"], i["answer"]["value"])
+    # Les énigmes ne se mélangent pas aux questions de combat.
+    assert all(i["generator"] != "2nde.vecteurs.rayon" for i in items if i["role"] != "enigme")
+
+
+async def test_balance_enigma_for_jules(client, login, curriculum):
+    headers = await login("jules", "1234")
+    body = (
+        await client.post(
+            f"{API}/session/start",
+            json={"enigma": {"generator": "6e.prealgebre.balance"}},
+            headers=headers,
+        )
+    ).json()
+    enigma = [i for i in body["items"] if i["role"] == "enigme"]
+    assert len(enigma) == 3
+    assert all(i["visual"]["kind"] == "balance" for i in enigma)
+
+
+async def test_dungeon_parameters_must_match_level(client, login, curriculum):
+    headers = await login("jules", "1234")
+    for payload, code in (
+        ({"enigma": {"generator": "2nde.vecteurs.rayon"}}, "unknown_generator"),
+        ({"enigma": {"generator": "inconnu"}}, "unknown_generator"),
+        ({"focus_chapter": "2nde.maths.vecteurs"}, "unknown_chapter"),
+        ({"focus_chapter": "6e.maths.inexistant"}, "unknown_chapter"),
+    ):
+        response = await client.post(f"{API}/session/start", json=payload, headers=headers)
+        assert response.status_code == 422, payload
+        assert response.json()["error"]["code"] == code
+
+
+async def test_session_start_without_body_still_works(client, login, curriculum):
+    headers = await login("jules", "1234")
+    response = await client.post(f"{API}/session/start", headers=headers)
+    assert response.status_code == 200
+    assert all(i["role"] != "enigme" for i in response.json()["items"])
+
+
+# --- Sauvegarde -----------------------------------------------------------------------
+
+
+def _save(base: int, xp: int, **extra) -> dict:
+    return {"base_revision": base, "schema_version": 1, "data": {"xp": xp, **extra}}
+
+
+async def test_save_round_trip(client, login):
+    headers = await login("jules", "1234")
+    empty = (await client.get(f"{API}/save", headers=headers)).json()
+    assert empty == {
+        "revision": 0,
+        "epoch": 0,
+        "schema_version": None,
+        "data": None,
+        "saved_at": None,
+    }
+
+    response = await client.put(f"{API}/save", json=_save(0, 120, level=2), headers=headers)
+    assert response.status_code == 200
+    assert response.json()["revision"] == 1
+    response = await client.put(f"{API}/save", json=_save(1, 150), headers=headers)
+    assert response.json()["revision"] == 2
+
+    current = (await client.get(f"{API}/save", headers=headers)).json()
+    assert current["revision"] == 2 and current["data"] == {"xp": 150}
+
+
+async def test_v1_and_v2_saves_are_independent(client, login):
+    """Les jeux v1 et v2 cohabitent : chaque emplacement a ses propres révisions."""
+    headers = await login("jules", "1234")
+    await client.put(f"{API}/save", json=_save(0, 800), headers=headers)  # v1 par défaut
+    v2_empty = (await client.get(f"{API}/save", params={"slot": "v2"}, headers=headers)).json()
+    assert v2_empty["revision"] == 0
+
+    # Une partie v2 moins avancée que la v1 est acceptée : pas de conflit entre emplacements.
+    response = await client.put(f"{API}/save", json={**_save(0, 10), "slot": "v2"}, headers=headers)
+    assert response.status_code == 200 and response.json()["revision"] == 1
+    v1 = (await client.get(f"{API}/save", headers=headers)).json()
+    v2 = (await client.get(f"{API}/save", params={"slot": "v2"}, headers=headers)).json()
+    assert (v1["revision"], v1["data"]["xp"]) == (1, 800)
+    assert (v2["revision"], v2["data"]["xp"]) == (1, 10)
+
+    bad = await client.put(f"{API}/save", json={**_save(0, 1), "slot": "v3"}, headers=headers)
+    assert bad.status_code == 422
+
+
+async def test_saves_are_private(client, login):
+    jules = await login("jules", "1234")
+    tom = await login("tom", "9876")
+    await client.put(f"{API}/save", json=_save(0, 500), headers=jules)
+    assert (await client.get(f"{API}/save", headers=tom)).json()["revision"] == 0
+    assert (await client.get(f"{API}/save")).status_code == 401
+
+
+async def test_conflict_most_advanced_progress_wins(client, login):
+    headers = await login("tom", "9876")
+    await client.put(f"{API}/save", json=_save(0, 100), headers=headers)  # révision 1
+    # La tablette sauvegarde plus loin (révision 2).
+    await client.put(f"{API}/save", json=_save(1, 400), headers=headers)
+
+    # Le PC, resté sur la révision 1 et moins avancé : refusé, il reçoit la partie du serveur.
+    response = await client.put(f"{API}/save", json=_save(1, 250), headers=headers)
+    assert response.status_code == 409
+    error = response.json()["error"]
+    assert error["code"] == "save_conflict"
+    assert error["details"]["current"]["revision"] == 2
+    assert error["details"]["current"]["data"]["xp"] == 400
+
+    # Plus avancé que le serveur malgré une base ancienne : accepté.
+    response = await client.put(f"{API}/save", json=_save(1, 900), headers=headers)
+    assert response.status_code == 200
+    assert response.json()["revision"] == 3
+
+
+async def test_only_last_20_revisions_are_kept(client, login, sessionmaker):
+    from sqlalchemy import func, select
+
+    from app.models import SaveRevision
+
+    headers = await login("jules", "1234")
+    for revision in range(25):
+        response = await client.put(f"{API}/save", json=_save(revision, revision), headers=headers)
+        assert response.status_code == 200
+    async with sessionmaker() as db:
+        kept = await db.scalar(select(func.count()).select_from(SaveRevision))
+        oldest = await db.scalar(select(func.min(SaveRevision.revision)))
+    assert kept == 20
+    assert oldest == 6
+
+
+async def test_oversized_save_is_rejected(client, login):
+    headers = await login("jules", "1234")
+    response = await client.put(f"{API}/save", json=_save(0, 1, blob="x" * 70_000), headers=headers)
+    assert response.status_code == 413
+    assert response.json()["error"]["code"] == "save_too_large"
+
+
+async def test_dungeon_pack_with_several_chapters(client, login, curriculum):
+    headers = await login("jules", "1234")
+    chapters = ["6e.maths.prealgebre", "6e.maths.proportionnalite"]
+    body = (
+        await client.post(
+            f"{API}/session/start",
+            json={
+                "mode": "donjon",
+                "focus_chapters": chapters,
+                "enigma": {"generator": "6e.proportionnalite.carte", "count": 6},
+            },
+            headers=headers,
+        )
+    ).json()
+    chapter_items = [i for i in body["items"] if i["category"] == "chapitre"]
+    assert {i["notions"][0].rsplit(".", 1)[0] for i in chapter_items} == set(chapters)
+    enigma = [i for i in body["items"] if i["role"] == "enigme"]
+    assert len(enigma) == 6 and all(i["visual"]["kind"] == "map" for i in enigma)
+    # La carte n'a de sens qu'avec son dessin : jamais tirée pour un combat.
+    assert all(i["generator"] != "6e.proportionnalite.carte" for i in chapter_items)
+
+
+async def test_unknown_chapter_among_several_is_refused(client, login, curriculum):
+    headers = await login("tom", "9876")
+    response = await client.post(
+        f"{API}/session/start",
+        json={"focus_chapters": ["2nde.maths.fonctions", "6e.maths.fractions"]},
+        headers=headers,
+    )
+    assert response.status_code == 422
+    assert response.json()["error"]["code"] == "unknown_chapter"
+
+
+async def test_daily_challenge_pack_is_automatisms_only(client, login, curriculum):
+    headers = await login("tom", "9876")
+    body = (
+        await client.post(f"{API}/session/start", json={"mode": "defi"}, headers=headers)
+    ).json()
+    assert len(body["items"]) >= 10
+    assert all(i["role"] == "automatisme" for i in body["items"])
+
+
+async def test_session_end_keeps_mode_and_rating(client, login, curriculum, sessionmaker):
+    from app.models import GameSession
+
+    headers = await login("jules", "1234")
+    started = (
+        await client.post(f"{API}/session/start", json={"mode": "donjon"}, headers=headers)
+    ).json()
+    for rating, status in ((6, 422), (4, 200)):
+        response = await client.post(
+            f"{API}/session/end",
+            json={"session_id": started["session_id"], "active_seconds": 300, "rating": rating},
+            headers=headers,
+        )
+        assert response.status_code == status
+    async with sessionmaker() as db:
+        session = await db.get(GameSession, started["session_id"])
+    assert (session.mode, session.rating) == ("donjon", 4)
+
+
+def test_game_dungeons_match_curriculum_and_generators():
+    """Les lieux du jeu (content/monde/lieux.json) visent des chapitres du programme qui ont
+    des questions, et une énigme du bon niveau."""
+    import json
+    from pathlib import Path
+
+    from app.engine.generators import REGISTRY, playable_notions
+
+    root = Path(__file__).resolve().parents[2]
+    world = json.loads((root / "content/monde/lieux.json").read_text("utf-8"))
+    chapters = {}
+    for path in (root / "content/seed").glob("*/*.json"):
+        seed = json.loads(path.read_text("utf-8"))
+        chapters |= {c["code"]: seed["level"] for c in seed["chapters"]}
+    playable = {n.rsplit(".", 1)[0] for n in playable_notions()}
+    dungeons = world["dungeons"]
+    assert dungeons
+    # Chaque lieu figure une fois dans la liste de sa classe, et seulement là.
+    listed = sorted((level, code) for level, codes in world["levels"].items() for code in codes)
+    assert listed == sorted((d["level"], d["code"]) for d in dungeons), "lieu absent ou en double"
+    for d in dungeons:
+        codes = d["chapter_codes"]
+        levels = {chapters[c] for c in codes}  # KeyError : chapitre absent du programme
+        assert levels == {d["level"]}, d["code"]
+        # Un chapitre sans générateur se nourrit de la banque ; au moins un a un générateur.
+        assert any(c in playable for c in codes), d["code"]
+        assert REGISTRY[d["enigma"]["generator"]].level == d["level"], d["code"]
+
+
+async def test_english_dungeon_stays_in_english(client, login, curriculum):
+    """Bibliothèque des Langues : sorts, frappes et révisions en anglais seulement (aucune
+    question de maths), énigme des lettres mélangées."""
+    headers = await login("jules", "1234")
+    body = (
+        await client.post(
+            f"{API}/session/start",
+            json={
+                "mode": "donjon",
+                "focus_chapters": [
+                    "6e.anglais.vocabulaire",
+                    "6e.anglais.grammaire",
+                    "6e.anglais.communication",
+                ],
+                "enigma": {"generator": "6e.anglais.lettres", "count": 6},
+            },
+            headers=headers,
+        )
+    ).json()
+    items = body["items"]
+    assert items
+    assert all(i["notions"][0].startswith("6e.anglais.") for i in items)
+    enigma = [i for i in items if i["role"] == "enigme"]
+    assert len(enigma) == 6
+    for i in enigma:
+        assert i["type"] == "order" and i["listen"]["lang"] == "en-GB"
+        word = "".join(i["choices"][k] for k in i["answer"]["value"])
+        assert word.isalpha() and len(set(word)) == len(word), "lettres toutes différentes"
+        assert i["choices"] != list(word), "présenté mélangé"
+        assert answers.check(i["answer"], i["answer"]["value"])
+
+
+async def test_maths_dungeon_has_no_english(client, login, curriculum):
+    headers = await login("jules", "1234")
+    items = (
+        await client.post(
+            f"{API}/session/start",
+            json={"mode": "donjon", "focus_chapters": ["6e.maths.fractions"]},
+            headers=headers,
+        )
+    ).json()["items"]
+    assert all(i["notions"][0].startswith("6e.maths.") for i in items)
+
+
+async def test_french_dungeon_stays_in_french(client, login, curriculum):
+    """Théâtre de Verdure (Bois des Mots) : questions de français seulement, énigme des vers."""
+    headers = await login("tom", "9876")
+    names = ("langue", "figures", "poesie", "idees", "recit", "theatre")
+    chapters = [f"2nde.francais.{c}" for c in names]
+    body = (
+        await client.post(
+            f"{API}/session/start",
+            json={
+                "mode": "donjon",
+                "focus_chapters": chapters,
+                "enigma": {"generator": "2nde.francais.vers", "count": 6},
+            },
+            headers=headers,
+        )
+    ).json()
+    items = body["items"]
+    assert len(items) > 20
+    assert all(i["notions"][0].startswith("2nde.francais.") for i in items)
+    enigma = [i for i in items if i["role"] == "enigme"]
+    assert len(enigma) == 6 and all(i["type"] == "order" for i in enigma)
+    # Plusieurs chapitres représentés, pas seulement l'étude de la langue.
+    assert len({i["notions"][0].split(".")[2] for i in items}) >= 4
+
+
+@pytest.mark.parametrize(
+    ("chapters", "enigma_code"),
+    [
+        (["grammaire", "conjugaison", "orthographe", "vocabulaire"], "6e.francais.fables"),
+        (["lectures"], "6e.francais.conte"),
+    ],
+)
+async def test_jules_french_dungeons_stay_in_french(
+    client, login, curriculum, chapters, enigma_code
+):
+    """Moulin des Phrases et Puits aux Contes : français de 6e seulement, énigme en ordre."""
+    headers = await login("jules", "1234")
+    body = (
+        await client.post(
+            f"{API}/session/start",
+            json={
+                "mode": "donjon",
+                "focus_chapters": [f"6e.francais.{c}" for c in chapters],
+                "enigma": {"generator": enigma_code, "count": 6},
+            },
+            headers=headers,
+        )
+    ).json()
+    items = body["items"]
+    assert len(items) > 20
+    assert all(i["notions"][0].startswith("6e.francais.") for i in items)
+    enigma = [i for i in items if i["role"] == "enigme"]
+    assert len(enigma) == 6 and all(i["type"] == "order" for i in enigma)
+
+
+@pytest.mark.parametrize(
+    ("chapters", "enigma_code"),
+    [
+        (
+            ["reperes", "mediterranee", "monde_xvie", "etat_moderne", "societes"],
+            "2nde.histoire_geo.frise",
+        ),
+        (
+            ["environnements", "developpement", "mobilites", "afrique_australe"],
+            "2nde.histoire_geo.idh",
+        ),
+    ],
+)
+async def test_tom_history_geography_dungeons(client, login, curriculum, chapters, enigma_code):
+    """Porte des Empires et Porte des Transitions : histoire-géographie de seconde seulement."""
+    headers = await login("tom", "9876")
+    body = (
+        await client.post(
+            f"{API}/session/start",
+            json={
+                "mode": "donjon",
+                "focus_chapters": [f"2nde.histoire_geo.{c}" for c in chapters],
+                "enigma": {"generator": enigma_code, "count": 6},
+            },
+            headers=headers,
+        )
+    ).json()
+    items = body["items"]
+    assert len(items) > 20
+    assert all(i["notions"][0].startswith("2nde.histoire_geo.") for i in items)
+    enigma = [i for i in items if i["role"] == "enigme"]
+    assert len(enigma) == 6 and all(i["type"] == "order" for i in enigma)
+
+
+@pytest.mark.parametrize(
+    ("chapters", "enigma_code"),
+    [
+        (["matiere", "mouvement_energie"], "6e.sciences.course"),
+        (["vivant", "nutrition", "terre"], "6e.sciences.frise_vivant"),
+    ],
+)
+async def test_jules_science_dungeons(client, login, curriculum, chapters, enigma_code):
+    """Tour des Expériences et Maison du Naturaliste : sciences de 6e seulement."""
+    headers = await login("jules", "1234")
+    body = (
+        await client.post(
+            f"{API}/session/start",
+            json={
+                "mode": "donjon",
+                "focus_chapters": [f"6e.sciences.{c}" for c in chapters],
+                "enigma": {"generator": enigma_code, "count": 6},
+            },
+            headers=headers,
+        )
+    ).json()
+    items = body["items"]
+    assert len(items) > 20
+    assert all(i["notions"][0].startswith("6e.sciences.") for i in items)
+    enigma = [i for i in items if i["role"] == "enigme"]
+    assert len(enigma) == 6 and all(i["type"] == "order" for i in enigma)
+
+
+@pytest.mark.parametrize(
+    ("chapters", "enigma_code"),
+    [
+        (["matiere", "atome", "transformations"], "2nde.physique_chimie.echelles"),
+        (["mouvement", "interactions", "son", "lumiere", "circuits"], "2nde.physique_chimie.sons"),
+    ],
+)
+async def test_tom_physics_chemistry_dungeons(client, login, curriculum, chapters, enigma_code):
+    """Alambic des Éléments et Laboratoire foudroyé : physique-chimie de seconde seulement."""
+    headers = await login("tom", "9876")
+    body = (
+        await client.post(
+            f"{API}/session/start",
+            json={
+                "mode": "donjon",
+                "focus_chapters": [f"2nde.physique_chimie.{c}" for c in chapters],
+                "enigma": {"generator": enigma_code, "count": 6},
+            },
+            headers=headers,
+        )
+    ).json()
+    items = body["items"]
+    assert len(items) > 20
+    assert all(i["notions"][0].startswith("2nde.physique_chimie.") for i in items)
+    enigma = [i for i in items if i["role"] == "enigme"]
+    assert len(enigma) == 6 and all(i["type"] == "order" for i in enigma)
+
+
+@pytest.mark.parametrize(
+    ("chapters", "enigma_code"),
+    [
+        (["internet", "web", "reseaux_sociaux", "donnees"], "2nde.snt.requete"),
+        (["localisation", "photo", "objets", "programmation"], "2nde.snt.destinations"),
+    ],
+)
+async def test_tom_snt_dungeons(client, login, curriculum, chapters, enigma_code):
+    """Pont des Paquets et Atelier des Automates : SNT de seconde seulement."""
+    headers = await login("tom", "9876")
+    body = (
+        await client.post(
+            f"{API}/session/start",
+            json={
+                "mode": "donjon",
+                "focus_chapters": [f"2nde.snt.{c}" for c in chapters],
+                "enigma": {"generator": enigma_code, "count": 6},
+            },
+            headers=headers,
+        )
+    ).json()
+    items = body["items"]
+    assert len(items) > 20
+    assert all(i["notions"][0].startswith("2nde.snt.") for i in items)
+    enigma = [i for i in items if i["role"] == "enigme"]
+    assert len(enigma) == 6 and all(i["type"] == "order" for i in enigma)
+
+
+async def test_tom_spanish_dungeon(client, login, curriculum):
+    """Moulin de la Mancha : espagnol de seconde seulement, énigme des phrases emmêlées."""
+    headers = await login("tom", "9876")
+    chapters = ["verbe", "phrase", "nom", "lexique", "culture"]
+    body = (
+        await client.post(
+            f"{API}/session/start",
+            json={
+                "mode": "donjon",
+                "focus_chapters": [f"2nde.espagnol.{c}" for c in chapters],
+                "enigma": {"generator": "2nde.espagnol.frase", "count": 6},
+            },
+            headers=headers,
+        )
+    ).json()
+    items = body["items"]
+    assert len(items) > 20
+    assert all(i["notions"][0].startswith("2nde.espagnol.") for i in items)
+    enigma = [i for i in items if i["role"] == "enigme"]
+    assert len(enigma) == 6 and all(i["type"] == "order" for i in enigma)
+
+
+@pytest.mark.parametrize(
+    ("chapters", "enigma_code"),
+    [(["representer"], "6e.emc.echelons"), (["laicite", "vie_privee"], "6e.emc.frise")],
+)
+async def test_jules_civics_dungeons(client, login, curriculum, chapters, enigma_code):
+    """Tribune du Conseil et Palais des Libertés : EMC de 6e seulement."""
+    headers = await login("jules", "1234")
+    body = (
+        await client.post(
+            f"{API}/session/start",
+            json={
+                "mode": "donjon",
+                "focus_chapters": [f"6e.emc.{c}" for c in chapters],
+                "enigma": {"generator": enigma_code, "count": 6},
+            },
+            headers=headers,
+        )
+    ).json()
+    items = body["items"]
+    assert len(items) > 20
+    assert all(i["notions"][0].startswith("6e.emc.") for i in items)
+    enigma = [i for i in items if i["role"] == "enigme"]
+    assert len(enigma) == 6 and all(i["type"] == "order" for i in enigma)
+
+
+@pytest.mark.parametrize(
+    ("chapters", "enigma_code"),
+    [
+        (["organisation", "biodiversite", "procreation", "microorganismes"], "2nde.svt.tailles"),
+        (["geosciences", "agrosystemes"], "2nde.svt.sediments"),
+    ],
+)
+async def test_tom_life_sciences_dungeons(client, login, curriculum, chapters, enigma_code):
+    """Conservatoire du Vivant et Puits de la Vallée : SVT de seconde seulement."""
+    headers = await login("tom", "9876")
+    body = (
+        await client.post(
+            f"{API}/session/start",
+            json={
+                "mode": "donjon",
+                "focus_chapters": [f"2nde.svt.{c}" for c in chapters],
+                "enigma": {"generator": enigma_code, "count": 6},
+            },
+            headers=headers,
+        )
+    ).json()
+    items = body["items"]
+    assert len(items) > 20
+    assert all(i["notions"][0].startswith("2nde.svt.") for i in items)
+    enigma = [i for i in items if i["role"] == "enigme"]
+    assert len(enigma) == 6 and all(i["type"] == "order" for i in enigma)
+
+
+async def test_tom_civics_dungeon(client, login, curriculum):
+    """Haute Cour : EMC de seconde seulement, énigme de la pyramide des normes."""
+    headers = await login("tom", "9876")
+    body = (
+        await client.post(
+            f"{API}/session/start",
+            json={
+                "mode": "donjon",
+                "focus_chapters": [
+                    f"2nde.emc.{c}" for c in ("etat_droit", "information", "environnement")
+                ],
+                "enigma": {"generator": "2nde.emc.normes", "count": 6},
+            },
+            headers=headers,
+        )
+    ).json()
+    items = body["items"]
+    assert len(items) > 20
+    assert all(i["notions"][0].startswith("2nde.emc.") for i in items)
+    enigma = [i for i in items if i["role"] == "enigme"]
+    assert len(enigma) == 6 and all(i["type"] == "order" for i in enigma)
+
+
+@pytest.mark.parametrize(
+    ("chapters", "enigma_code"),
+    [
+        (["demarche", "richesses", "marche"], "2nde.ses.classement_va"),
+        (["socialisation", "politique", "diplome"], "2nde.ses.classement_chomage"),
+    ],
+)
+async def test_tom_social_sciences_dungeons(client, login, curriculum, chapters, enigma_code):
+    """Marché du Forum et Maison Commune : SES de seconde seulement."""
+    headers = await login("tom", "9876")
+    body = (
+        await client.post(
+            f"{API}/session/start",
+            json={
+                "mode": "donjon",
+                "focus_chapters": [f"2nde.ses.{c}" for c in chapters],
+                "enigma": {"generator": enigma_code, "count": 6},
+            },
+            headers=headers,
+        )
+    ).json()
+    items = body["items"]
+    assert len(items) > 20
+    assert all(i["notions"][0].startswith("2nde.ses.") for i in items)
+    enigma = [i for i in items if i["role"] == "enigme"]
+    assert len(enigma) == 6 and all(i["type"] == "order" for i in enigma)

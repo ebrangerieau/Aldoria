@@ -1,0 +1,516 @@
+"""API côté joueur (TRD §3.2) : liaison de l'appareil à une famille, profils de cette
+famille, connexion, session, tentatives, progression."""
+
+from __future__ import annotations
+
+import json
+import random
+import uuid
+from datetime import UTC, datetime, timedelta
+from typing import Annotated, Any, Literal
+
+from fastapi import APIRouter, Depends
+from pydantic import BaseModel, Field
+from sqlalchemy import Integer, cast, func, select
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app import accounts, client_errors, play_time
+from app.accounts import CurrentDevice, aware, utcnow
+from app.auth import CurrentProfile, create_token, verify_pin
+from app.config import get_settings
+from app.db import get_db
+from app.engine import accommodations, levels, tracking
+from app.engine.generators import REGISTRY
+from app.errors import ApiError
+from app.models import (
+    Attempt,
+    Chapter,
+    Device,
+    Family,
+    GameSession,
+    Notion,
+    NotionAside,
+    PairingCode,
+    Profile,
+    Report,
+)
+
+router = APIRouter(prefix="/play", tags=["play"])
+Db = Annotated[AsyncSession, Depends(get_db)]
+
+
+# --- Schémas ----------------------------------------------------------------------
+
+
+class ProfileOut(BaseModel):
+    id: int
+    name: str
+    avatar: str
+    level: str
+    level_label: str
+    world: str
+
+
+class PairIn(BaseModel):
+    code: str = Field(pattern=r"^[0-9]{8}$")
+
+
+class PairOut(BaseModel):
+    device_token: str
+    family: str
+    device: str
+
+
+class LoginIn(BaseModel):
+    profile_id: int
+    pin: str = Field(min_length=4, max_length=4, pattern=r"^\d{4}$")
+
+
+class LoginOut(BaseModel):
+    token: str
+    expires_at: datetime
+    profile: ProfileOut
+    # Aménagements (accessibilité) réglés par le parent : engine/accommodations.py.
+    accommodations: dict[str, Any] = Field(default_factory=dict)
+    # Temps de jeu de la séance en cours (play_time.info) : limite fixée par le parent.
+    play_time: dict[str, Any] = Field(default_factory=dict)
+
+
+class EnigmaIn(BaseModel):
+    generator: str = Field(max_length=80)
+    count: int = Field(default=3, ge=1, le=12)
+
+
+class SessionStartIn(BaseModel):
+    """Mode de jeu et paramètres d'un donjon (tous facultatifs : l'arène s'en passe).
+    `defi` : défi quotidien, paquet d'automatismes seulement. `village` : quêtes des
+    habitants (révision espacée, veille de contrôle) ; `enigmas` : leurs enquêtes.
+    `sphinx` : île des jeux de logique, sans question ; la session compte le temps de jeu."""
+
+    # « monde » : rencontres et énigmes de l'île ouverte du jeu v2 (paquet comme l'arène).
+    mode: Literal["arene", "donjon", "defi", "village", "sphinx", "monde"] = "arene"
+    focus_chapters: list[Annotated[str, Field(max_length=80)]] = Field(
+        default_factory=list, max_length=8
+    )
+    # Ancien client (un seul chapitre) : encore accepté le temps des mises à jour.
+    focus_chapter: str | None = Field(default=None, max_length=80)
+    enigma: EnigmaIn | None = None
+    enigmas: list[EnigmaIn] = Field(default_factory=list, max_length=3)
+
+
+class SessionStartOut(BaseModel):
+    session_id: str
+    items: list[dict[str, Any]]
+    formulas: dict[str, str]
+    start_levels: dict[str, int]
+    settings: dict[str, Any]
+    # Chapitres en classe et en « contrôle bientôt » (quête de veille de contrôle du village).
+    context: dict[str, Any] = Field(default_factory=dict)
+
+
+class AttemptIn(BaseModel):
+    id: uuid.UUID
+    session_id: uuid.UUID | None = None
+    item_id: str = Field(max_length=120)
+    generator: str | None = Field(default=None, max_length=80)
+    difficulty: int = Field(ge=1, le=5)
+    notion_ids: list[str] = Field(max_length=10)
+    correct: bool
+    time_ms: int = Field(ge=0, le=3_600_000)
+    time_target_ms: int | None = Field(default=None, ge=1000, le=600_000)
+    hint_used: bool = False
+    game_mode: str = Field(default="combat", max_length=20)
+    answered_at: datetime
+
+
+class AttemptsIn(BaseModel):
+    attempts: list[AttemptIn] = Field(max_length=500)
+
+
+class AttemptsOut(BaseModel):
+    accepted: int
+    duplicates: int
+
+
+SaveSlot = Literal["v1", "v2"]
+
+
+class SaveIn(BaseModel):
+    # Partie du jeu v1 (Godot) ou v2 (Babylon.js) : deux emplacements indépendants.
+    slot: SaveSlot = "v1"
+    base_revision: int = Field(ge=0)
+    # Époque du profil (réinitialisation par le parent) sur laquelle s'appuie le client.
+    epoch: int = Field(default=0, ge=0)
+    schema_version: int = Field(ge=1, le=1000)
+    data: dict[str, Any]
+
+
+class SaveOut(BaseModel):
+    revision: int
+    epoch: int = 0
+    schema_version: int | None = None
+    data: dict[str, Any] | None = None
+    saved_at: datetime | None = None
+
+
+MAX_SAVE_BYTES = 64 * 1024
+
+
+class ReportIn(BaseModel):
+    """Signalement d'une question par l'enfant (« il y a une erreur »)."""
+
+    item: dict[str, Any]
+    user_input: str | None = Field(default=None, max_length=200)
+    reason: Literal["enonce", "reponse", "incomprehensible", "autre"] = "autre"
+
+
+MAX_REPORT_ITEM_BYTES = 20 * 1024
+
+
+class SessionEndIn(BaseModel):
+    session_id: uuid.UUID
+    active_seconds: int = Field(ge=0, le=24 * 3600)
+    # Note de plaisir donnée par l'enfant en fin de donjon (PRD §2), facultative.
+    rating: int | None = Field(default=None, ge=1, le=5)
+
+
+# --- Routes -----------------------------------------------------------------------
+
+
+def _profile_out(p: Profile) -> ProfileOut:
+    return ProfileOut(
+        id=p.id,
+        name=p.name,
+        avatar=p.avatar,
+        level=p.level,
+        level_label=levels.label(p.level),
+        world=p.world,
+    )
+
+
+@router.post("/devices/pair", response_model=PairOut)
+async def pair_device(body: PairIn, db: Db) -> PairOut:
+    """Relie l'appareil à une famille avec le code à 8 chiffres créé par un parent
+    (30 min, usage unique ; Traefik limite le débit de cette route)."""
+    pairing = await db.get(PairingCode, accounts.digest(body.code))
+    if pairing is None or pairing.used_at is not None or aware(pairing.expires_at) <= utcnow():
+        raise ApiError(404, "pairing_invalid", "Code inconnu ou expiré : demande-en un nouveau.")
+    token = accounts.new_token()
+    device = Device(
+        family_id=pairing.family_id,
+        token_hash=accounts.digest(token),
+        name=pairing.device_name,
+        last_seen_at=utcnow(),
+    )
+    db.add(device)
+    pairing.used_at = utcnow()
+    family = await db.get(Family, pairing.family_id)
+    await db.commit()
+    return PairOut(device_token=token, family=family.name, device=device.name)
+
+
+@router.get("/profiles", response_model=list[ProfileOut])
+async def list_profiles(device: CurrentDevice, db: Db) -> list[ProfileOut]:
+    """Enfants de la famille de l'appareil (aucun profil sans appareil relié)."""
+    rows = await db.scalars(
+        select(Profile).where(Profile.family_id == device.family_id).order_by(Profile.id)
+    )
+    return [_profile_out(p) for p in rows]
+
+
+@router.post("/login", response_model=LoginOut)
+async def login(body: LoginIn, device: CurrentDevice, db: Db) -> LoginOut:
+    settings = get_settings()
+    profile = await db.get(Profile, body.profile_id)
+    if profile is None or profile.family_id != device.family_id:
+        raise ApiError(404, "unknown_profile", "Profil inconnu.")
+    now = datetime.now(UTC)
+    locked_until = _aware(profile.locked_until)
+    if locked_until and locked_until > now:
+        raise ApiError(
+            423,
+            "locked",
+            "Trop d'essais. Attends un peu avant de réessayer.",
+            retry_after_s=int((locked_until - now).total_seconds()) + 1,
+        )
+    if not verify_pin(profile.pin_hash, body.pin):
+        profile.failed_logins += 1
+        remaining = settings.max_failed_logins - profile.failed_logins
+        if remaining <= 0:
+            profile.failed_logins = 0
+            profile.locked_until = now + timedelta(minutes=settings.lock_minutes)
+            await db.commit()
+            raise ApiError(
+                423,
+                "locked",
+                "Trop d'essais. Attends un peu avant de réessayer.",
+                retry_after_s=settings.lock_minutes * 60,
+            )
+        await db.commit()
+        raise ApiError(401, "wrong_pin", "Code incorrect.", remaining_attempts=remaining)
+    profile.failed_logins = 0
+    profile.locked_until = None
+    await db.commit()
+    token, expires = create_token(profile.id, device.id)
+    return LoginOut(
+        token=token,
+        expires_at=expires,
+        profile=_profile_out(profile),
+        accommodations=accommodations.of(profile.accommodations).model_dump(),
+        play_time=await play_time.info(db, profile),
+    )
+
+
+@router.get("/me")
+async def me(profile: CurrentProfile, db: Db) -> dict[str, Any]:
+    """Profil connecté, aménagements et temps de jeu (relus par le jeu au retour au camp)."""
+    return {
+        "profile": _profile_out(profile).model_dump(),
+        "accommodations": accommodations.of(profile.accommodations).model_dump(),
+        "play_time": await play_time.info(db, profile),
+    }
+
+
+@router.post("/session/start", response_model=SessionStartOut)
+async def start_session(
+    profile: CurrentProfile, db: Db, body: SessionStartIn | None = None
+) -> SessionStartOut:
+    body = body or SessionStartIn()
+    enigmas = []
+    for requested in [*filter(None, [body.enigma]), *body.enigmas]:
+        generator = REGISTRY.get(requested.generator)
+        if generator is None or generator.level != profile.level:
+            raise ApiError(422, "unknown_generator", "Énigme inconnue pour ce niveau.")
+        enigmas.append((generator, requested.count))
+    focus = list(dict.fromkeys([*body.focus_chapters, *filter(None, [body.focus_chapter])]))
+    if focus:
+        known = set(
+            await db.scalars(
+                select(Chapter.code).where(Chapter.code.in_(focus), Chapter.level == profile.level)
+            )
+        )
+        if known != set(focus):
+            raise ApiError(422, "unknown_chapter", "Chapitre inconnu pour ce niveau.")
+    played = await play_time.info(db, profile)
+    session = GameSession(id=str(uuid.uuid4()), profile_id=profile.id, mode=body.mode)
+    db.add(session)
+    await db.commit()
+    if body.mode == "sphinx":
+        pack: dict[str, Any] = {"items": [], "formulas": {}, "start_levels": {}}
+    else:
+        pack = await tracking.build_pack(
+            db, profile, random.Random(), focus, enigmas, daily=body.mode == "defi"
+        )
+    return SessionStartOut(
+        session_id=session.id,
+        items=pack["items"],
+        formulas=pack["formulas"],
+        start_levels=pack["start_levels"],
+        settings={
+            "session_max_minutes": profile.session_max_minutes,
+            "play_time": played,
+            "accommodations": accommodations.of(profile.accommodations).model_dump(),
+        },
+        context=pack.get("context", {}),
+    )
+
+
+@router.post("/attempts", response_model=AttemptsOut)
+async def post_attempts(body: AttemptsIn, profile: CurrentProfile, db: Db) -> AttemptsOut:
+    """Idempotent : une tentative déjà reçue (même UUID) est ignorée (TRD §2.7)."""
+    ids = [str(a.id) for a in body.attempts]
+    existing = set(await db.scalars(select(Attempt.id).where(Attempt.id.in_(ids))))
+    session_ids = {str(a.session_id) for a in body.attempts if a.session_id}
+    if session_ids:
+        owned = set(
+            await db.scalars(
+                select(GameSession.id).where(
+                    GameSession.id.in_(session_ids), GameSession.profile_id == profile.id
+                )
+            )
+        )
+        if session_ids - owned:
+            raise ApiError(403, "foreign_session", "Session inconnue pour ce profil.")
+    accepted = 0
+    seen: set[str] = set()
+    new_attempts: list[dict[str, Any]] = []
+    for a in body.attempts:
+        key = str(a.id)
+        if key in existing or key in seen:
+            continue
+        seen.add(key)
+        db.add(
+            Attempt(
+                id=key,
+                profile_id=profile.id,
+                session_id=str(a.session_id) if a.session_id else None,
+                item_id=a.item_id,
+                generator=a.generator,
+                difficulty=a.difficulty,
+                notion_ids=a.notion_ids,
+                correct=a.correct,
+                time_ms=a.time_ms,
+                hint_used=a.hint_used,
+                game_mode=a.game_mode,
+                answered_at=a.answered_at,
+            )
+        )
+        new_attempts.append(a.model_dump())
+        accepted += 1
+    # Leitner + maîtrise, une seule fois par tentative (les doublons sont écartés plus haut).
+    await tracking.apply_attempts(db, profile.id, new_attempts)
+    await db.commit()
+    return AttemptsOut(accepted=accepted, duplicates=len(body.attempts) - accepted)
+
+
+@router.get("/progress")
+async def get_progress(profile: CurrentProfile, db: Db) -> dict[str, Any]:
+    """Maîtrise par notion, groupée par chapitre (étoiles d'Archives)."""
+    return {"chapters": await tracking.progress(db, profile)}
+
+
+@router.get("/save", response_model=SaveOut)
+async def get_save(profile: CurrentProfile, db: Db, slot: SaveSlot = "v1") -> SaveOut:
+    current = await tracking.latest_save(db, profile.id, slot)
+    if current is None:
+        return SaveOut(revision=0, epoch=profile.save_epoch)
+    return _save_out(current, profile.save_epoch)
+
+
+@router.put("/save", response_model=SaveOut)
+async def put_save(body: SaveIn, profile: CurrentProfile, db: Db) -> SaveOut:
+    """Sauvegarde versionnée : `base_revision` = révision sur laquelle s'appuie le client.
+    Conflit (un autre appareil a sauvegardé une partie plus avancée) : 409, avec la
+    sauvegarde du serveur dans `details.current`, que le client adopte."""
+    if len(json.dumps(body.data)) > MAX_SAVE_BYTES:
+        raise ApiError(413, "save_too_large", "Sauvegarde trop volumineuse.")
+    if body.epoch != profile.save_epoch:
+        # Partie d'avant une réinitialisation par le parent : jamais restaurée.
+        current = await tracking.latest_save(db, profile.id, body.slot)
+        out = (
+            SaveOut(revision=0, epoch=profile.save_epoch)
+            if current is None
+            else _save_out(current, profile.save_epoch)
+        )
+        raise ApiError(
+            409, "save_reset", "La partie a été réinitialisée.", current=out.model_dump(mode="json")
+        )
+    accepted, saved = await tracking.store_save(
+        db, profile.id, body.base_revision, body.schema_version, body.data, body.slot
+    )
+    if not accepted:
+        raise ApiError(
+            409,
+            "save_conflict",
+            "Une partie plus avancée existe sur un autre appareil.",
+            current=_save_out(saved, profile.save_epoch).model_dump(mode="json"),
+        )
+    return _save_out(saved, profile.save_epoch)
+
+
+class SetAsideIn(BaseModel):
+    notion: str = Field(min_length=1, max_length=80)
+
+
+@router.post("/notions/set-aside")
+async def set_notion_aside(body: SetAsideIn, profile: CurrentProfile, db: Db) -> dict[str, Any]:
+    """« Pas encore vu en classe » : l'enfant met une notion de côté ; elle ne lui est plus
+    posée et le parent la retrouve dans l'espace parent (il confirme ou la réactive)."""
+    found = (
+        await db.execute(
+            select(Notion, Chapter)
+            .join(Chapter, Notion.chapter_id == Chapter.id)
+            .where(Notion.code == body.notion)
+        )
+    ).first()
+    if found is None or found[1].level != profile.level:
+        raise ApiError(404, "unknown_notion", "Notion inconnue pour ta classe.")
+    notion = found[0]
+    if await db.get(NotionAside, (profile.id, notion.id)) is None:
+        db.add(NotionAside(profile_id=profile.id, notion_id=notion.id, source="enfant"))
+        await db.commit()
+    return {"code": notion.code, "set_aside": True}
+
+
+@router.post("/client-errors")
+async def post_client_errors(
+    body: client_errors.ErrorsIn, device: CurrentDevice, db: Db
+) -> dict[str, int]:
+    """Erreurs du jeu sur cet appareil (autoload ErrorReport), sans donnée d'enfant."""
+    return {"created": await client_errors.record(db, device, body)}
+
+
+@router.post("/reports", status_code=201)
+async def post_report(body: ReportIn, profile: CurrentProfile, db: Db) -> dict[str, int]:
+    """L'enfant signale une question qu'il pense fausse ; le parent la retrouve dans
+    l'espace parent avec la réponse donnée."""
+    if len(json.dumps(body.item)) > MAX_REPORT_ITEM_BYTES:
+        raise ApiError(413, "report_too_large", "Signalement trop volumineux.")
+    item_id = str(body.item.get("id", ""))[:120] or "inconnu"
+    item = {k: body.item.get(k) for k in REPORT_FIELDS if k in body.item}
+    report = Report(
+        profile_id=profile.id,
+        item_id=item_id,
+        item=item,
+        user_input=body.user_input,
+        reason=body.reason,
+    )
+    db.add(report)
+    await db.commit()
+    return {"id": report.id}
+
+
+# Champs de la question gardés avec un signalement (ce que l'enfant a vu et la réponse).
+REPORT_FIELDS = (
+    "id",
+    "type",
+    "difficulty",
+    "notions",
+    "prompt",
+    "latex",
+    "choices",
+    "answer",
+    "hint",
+    "explanation",
+    "visual",
+    "generator",
+)
+
+
+def _save_out(saved: Any, epoch: int) -> SaveOut:
+    return SaveOut(
+        revision=saved.revision,
+        epoch=epoch,
+        schema_version=saved.schema_version,
+        data=saved.data,
+        saved_at=saved.saved_at,
+    )
+
+
+@router.post("/session/end")
+async def end_session(body: SessionEndIn, profile: CurrentProfile, db: Db) -> dict[str, int]:
+    session = await db.get(GameSession, str(body.session_id))
+    if session is None or session.profile_id != profile.id:
+        raise ApiError(404, "unknown_session", "Session inconnue.")
+    total, correct = (
+        await db.execute(
+            select(func.count(), func.coalesce(func.sum(cast(Attempt.correct, Integer)), 0)).where(
+                Attempt.session_id == session.id
+            )
+        )
+    ).one()
+    session.ended_at = datetime.now(UTC)
+    session.active_seconds = body.active_seconds
+    session.nb_questions = int(total)
+    session.nb_correct = int(correct)
+    if body.rating is not None:
+        session.rating = body.rating
+    await db.commit()
+    return {"nb_questions": session.nb_questions, "nb_correct": session.nb_correct}
+
+
+def _aware(value: datetime | None) -> datetime | None:
+    """SQLite rend des dates sans fuseau : on les considère en UTC."""
+    if value is not None and value.tzinfo is None:
+        return value.replace(tzinfo=UTC)
+    return value

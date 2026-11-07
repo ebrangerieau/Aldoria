@@ -8,3 +8,5 @@ Jeu d'aventure 2.5D jouable dans le navigateur, où chaque combat et chaque éni
 - Commandes de développement : [CLAUDE.md](CLAUDE.md)
 
 Assets 3D : [KayKit](https://kaylousberg.itch.io/) par Kay Lousberg (CC0). Détail dans [game/assets/LICENSES.md](game/assets/LICENSES.md).
+
+**Version 2 en préparation** : [v2/README.md](v2/README.md) (île ouverte en 3D, dans le navigateur du PC).

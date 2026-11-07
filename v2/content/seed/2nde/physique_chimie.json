@@ -1,0 +1,81 @@
+{
+  "level": "2nde",
+  "subject": {"code": "physique_chimie", "label": "Physique-chimie"},
+  "source": "Programme de physique-chimie de seconde générale et technologique (arrêté du 17 janvier 2019, BO spécial n° 1 du 22 janvier 2019), toujours en vigueur en 2026-2027 : « Constitution et transformations de la matière », « Mouvement et interactions », « Ondes et signaux ».",
+  "chapters": [
+    {
+      "code": "2nde.physique_chimie.matiere",
+      "title": "Corps purs, mélanges et solutions",
+      "notions": [
+        {"code": "2nde.physique_chimie.matiere.corps_purs", "label": "Corps purs, mélanges et tests chimiques"},
+        {"code": "2nde.physique_chimie.matiere.masse_volumique", "label": "Masse volumique"},
+        {"code": "2nde.physique_chimie.matiere.solutions", "label": "Solutions : concentration en masse et dilution"}
+      ]
+    },
+    {
+      "code": "2nde.physique_chimie.atome",
+      "title": "De l'atome aux entités chimiques",
+      "notions": [
+        {"code": "2nde.physique_chimie.atome.noyau", "label": "Le noyau de l'atome et les ordres de grandeur"},
+        {"code": "2nde.physique_chimie.atome.configuration", "label": "Configuration électronique et tableau périodique"},
+        {"code": "2nde.physique_chimie.atome.ions_molecules", "label": "Ions monoatomiques et molécules (schéma de Lewis)"},
+        {"code": "2nde.physique_chimie.atome.mole", "label": "Quantité de matière et constante d'Avogadro"}
+      ]
+    },
+    {
+      "code": "2nde.physique_chimie.transformations",
+      "title": "Transformations physiques, chimiques et nucléaires",
+      "notions": [
+        {"code": "2nde.physique_chimie.transformations.physique", "label": "Changements d'état et énergie"},
+        {"code": "2nde.physique_chimie.transformations.chimique", "label": "Équation de réaction et réactif limitant"},
+        {"code": "2nde.physique_chimie.transformations.synthese", "label": "Synthèse d'une espèce chimique"},
+        {"code": "2nde.physique_chimie.transformations.nucleaire", "label": "Transformations nucléaires"}
+      ]
+    },
+    {
+      "code": "2nde.physique_chimie.mouvement",
+      "title": "Décrire un mouvement",
+      "notions": [
+        {"code": "2nde.physique_chimie.mouvement.referentiel", "label": "Système, référentiel et trajectoire"},
+        {"code": "2nde.physique_chimie.mouvement.vitesse", "label": "Vitesse moyenne"},
+        {"code": "2nde.physique_chimie.mouvement.variation_vitesse", "label": "Variation du vecteur vitesse"}
+      ]
+    },
+    {
+      "code": "2nde.physique_chimie.interactions",
+      "title": "Forces et principe d'inertie",
+      "notions": [
+        {"code": "2nde.physique_chimie.interactions.forces", "label": "Actions mécaniques et forces"},
+        {"code": "2nde.physique_chimie.interactions.gravitation", "label": "Gravitation et poids"},
+        {"code": "2nde.physique_chimie.interactions.inertie", "label": "Principe d'inertie"}
+      ]
+    },
+    {
+      "code": "2nde.physique_chimie.son",
+      "title": "Émission et perception d'un son",
+      "notions": [
+        {"code": "2nde.physique_chimie.son.propagation", "label": "Émission et propagation d'un son"},
+        {"code": "2nde.physique_chimie.son.frequence", "label": "Période, fréquence et hauteur"},
+        {"code": "2nde.physique_chimie.son.niveau_sonore", "label": "Niveau d'intensité sonore"}
+      ]
+    },
+    {
+      "code": "2nde.physique_chimie.lumiere",
+      "title": "Vision et image",
+      "notions": [
+        {"code": "2nde.physique_chimie.lumiere.spectres", "label": "Propagation de la lumière et spectres"},
+        {"code": "2nde.physique_chimie.lumiere.refraction", "label": "Réflexion et réfraction"},
+        {"code": "2nde.physique_chimie.lumiere.lentilles", "label": "Lentilles minces convergentes et œil"}
+      ]
+    },
+    {
+      "code": "2nde.physique_chimie.circuits",
+      "title": "Signaux et capteurs",
+      "notions": [
+        {"code": "2nde.physique_chimie.circuits.lois", "label": "Loi des nœuds et loi des mailles"},
+        {"code": "2nde.physique_chimie.circuits.ohm", "label": "Loi d'Ohm et caractéristique d'un dipôle"},
+        {"code": "2nde.physique_chimie.circuits.capteurs", "label": "Capteurs électriques"}
+      ]
+    }
+  ]
+}

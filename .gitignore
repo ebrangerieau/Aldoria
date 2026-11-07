@@ -32,3 +32,6 @@ Thumbs.db
 
 # Sauvegardes (docker compose lancé depuis deploy/)
 deploy/backups/
+
+# v2 : captures des tests dans le navigateur
+v2/client/e2e/captures/
