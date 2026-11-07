@@ -137,8 +137,9 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
       - name: Construction et publication des images
+        # L'image de l'API est publiée par v2.yml, depuis v2/api (une seule API pour les deux jeux).
         run: |
-          for svc in web api voice; do
+          for svc in web voice; do
             docker build -f deploy/${svc}.Dockerfile --build-arg GIT_SHA=${GITHUB_SHA} \
               -t ${IMAGE_PREFIX}-${svc}:${GITHUB_SHA} \
               -t ${IMAGE_PREFIX}-${svc}:latest .
@@ -150,6 +151,10 @@ jobs:
     needs: images
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment: production
+    # Un seul déploiement à la fois sur le VPS (v2.yml utilise le même groupe).
+    concurrency:
+      group: deploiement-vps
+      cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
         with:
@@ -169,40 +174,26 @@ jobs:
           # Le scan de clé échoue parfois (réseau) : 3 essais.
           for i in 1 2 3; do ssh-keyscan -T 15 -H "$VPS_HOST" >> ~/.ssh/known_hosts && break; sleep 10; done
           ssh -i ~/key "$VPS_USER@$VPS_HOST" "mkdir -p /docker/aldoria/backup"
-          # Sauvegarde de la base avant toute nouvelle migration (l'image API l'applique au démarrage) :
-          # quand une migration a changé depuis le commit en service, ou si ce commit est inconnu.
-          # Dump complet vérifié (sinon le déploiement s'arrête) ; les 10 plus récents sont gardés.
-          live=$(curl -fsS "$PROD_URL/api/v1/health" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("version",""))' || true)
-          if [ -z "$live" ] || ! git cat-file -e "${live}^{commit}" 2>/dev/null \
-             || [ -n "$(git diff --name-only "$live" "$GITHUB_SHA" -- api/alembic/versions)" ]; then
-            dump="avant-deploiement-$(echo "$GITHUB_SHA" | cut -c1-7)-$(date -u +%Y%m%dT%H%M%SZ).sql.gz"
-            ssh -i ~/key "$VPS_USER@$VPS_HOST" "cd /docker/aldoria && mkdir -p backups \
-              && docker compose exec -T db sh -c 'pg_dump -U \$POSTGRES_USER \$POSTGRES_DB' | gzip > backups/$dump \
-              && chmod 600 backups/$dump \
-              && gzip -dc backups/$dump | tail -c 300 | grep -q 'PostgreSQL database dump complete' \
-              && (ls -1t backups/avant-deploiement-*.sql.gz | tail -n +11 | xargs -r rm --) \
-              && ls -l backups/$dump"
-            echo "Sauvegarde avant migration : backups/$dump (version en service : ${live:-inconnue})" >> "$GITHUB_STEP_SUMMARY"
-          fi
+          # Pas de sauvegarde avant migration ici : cette CI ne recrée plus l'API (v2.yml s'en charge,
+          # avec la sauvegarde avant toute nouvelle migration de v2/api).
           scp -i ~/key deploy/docker-compose.yml "$VPS_USER@$VPS_HOST:/docker/aldoria/docker-compose.yml"
           scp -i ~/key deploy/backup/*.sh "$VPS_USER@$VPS_HOST:/docker/aldoria/backup/"
           # Le service backup est relancé pour lire la nouvelle version de son script
           # (il rattrape la sauvegarde du jour si elle manque, sinon il attend la suivante).
           ssh -i ~/key "$VPS_USER@$VPS_HOST" \
-            "cd /docker/aldoria && sed -i 's/^ALDORIA_TAG=.*/ALDORIA_TAG=${GITHUB_SHA}/' .env && docker compose pull && docker compose up -d --remove-orphans && docker compose restart backup"
+            "cd /docker/aldoria && sed -i 's/^ALDORIA_TAG=.*/ALDORIA_TAG=${GITHUB_SHA}/' .env && docker compose pull web voice && docker compose up -d --no-deps web voice backup && docker compose restart backup"
       - name: Contrôle en production (nouvelle version en service)
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
         run: |
           [ -z "$VPS_HOST" ] && exit 0  # pas de déploiement (secrets absents)
-          # L'API (base joignable, migrations appliquées au démarrage) et le jeu doivent servir ce commit
-          # dans les 5 minutes.
+          # Le jeu v1 doit servir ce commit dans les 5 minutes, et l'API répondre. La version de l'API est
+          # celle de v2.yml (elle se construit depuis v2/api) : elle n'est pas comparée ici.
           for i in $(seq 1 30); do
             health=$(curl -fsS "$PROD_URL/api/v1/health" || true)
             web=$(curl -fsS "$PROD_URL/version.txt?n=$i" || true)
-            if echo "$health" | grep -q "\"version\":\"$GITHUB_SHA\"" && echo "$health" | grep -q '"status":"ok"' \
-               && [ "$web" = "$GITHUB_SHA" ]; then
-              echo "En production : $health" | tee -a "$GITHUB_STEP_SUMMARY"
+            if echo "$health" | grep -q '"status":"ok"' && [ "$web" = "$GITHUB_SHA" ]; then
+              echo "En production : jeu v1 $web ; API $health" | tee -a "$GITHUB_STEP_SUMMARY"
               exit 0
             fi
             sleep 10

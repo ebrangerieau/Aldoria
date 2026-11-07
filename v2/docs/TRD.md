@@ -14,6 +14,7 @@ sont repris sans changement de fond ; ce document décrit ce qui est nouveau ou 
 | Monde | une île continue, troisième personne ; lieux de quête en intérieurs | D4 |
 | Style | low-poly enrichi (KayKit, Quaternius, sol en facettes, lumière soignée) | D5 |
 | Données | même API, même base ; partie v2 dans son propre emplacement | D6 |
+| Production | une seule API (construite depuis `v2/api`) et une seule base pour les deux jeux ; le jeu v2 sur `aldoria2.bandtrack.fr` | D11 |
 | Contenu du monde | JSON dans `content/monde/`, jamais dans le code | D7 |
 | Déplacement | règles pures (eau, pentes, cercles d'obstacles) sans moteur physique | D8 |
 | Rendu | WebGL 2 par défaut ; WebGPU évalué en phase 0 | D9 |
@@ -63,12 +64,12 @@ client/
 ├── public/ressources/      # servi tel quel : modèles 3D, polices, sons, interface (reprise de la v1)
 ├── src/
 │   ├── main.tsx            # services + interface
-│   ├── app/services.ts     # API, stockage, session, questions, voix
+│   ├── app/                # services.ts (API, stockage, session, questions, voix, erreurs), errors.ts, buildInfo.ts
 │   ├── core/               # TypeScript pur, testé sans navigateur
 │   │   ├── answers.ts, mathExpr.ts      # validation (même verdict que l'API)
 │   │   ├── questionService.ts           # choix adaptatif des questions
 │   │   ├── session.ts, api.ts, storage.ts, save.ts
-│   │   ├── accessibility.ts, voice.ts, answerText.ts, events.ts, items.ts
+│   │   ├── accessibility.ts, voice.ts, answerText.ts, events.ts, items.ts, errorReport.ts
 │   │   └── world/          # terrain.ts (relief), heightGrid.ts, movement.ts, obstacles.ts, places.ts
 │   ├── game/               # Babylon.js seulement
 │   │   ├── GameWorld.ts    # orchestre l'île, le héros, la caméra, les interactions
@@ -89,7 +90,7 @@ client/
 | Lumière | soleil directionnel + lumière d'ambiance ; ombres en cascades (1 à 3) jusqu'à 180 m | relief lisible, profondeur |
 | Post-traitement | rendu HDR, tonalité ACES, vignette, halo (bloom), halo des objets lumineux (glow), occlusion ambiante (SSAO2, profil `haut`) | ce que la v1 ne pouvait pas faire |
 | Décor | un modèle chargé une fois ; forêts, rochers et nuages en *thin instances* (un appel de dessin par modèle) | quelques milliers d'arbres pour moins de 300 appels |
-| Personnages | `.glb` KayKit avec leurs 76 animations, fondu entre animations ; pièces d'équipement cachées par nom de nœud | même apparence que la v1 |
+| Personnages | `.glb` KayKit avec leurs 76 animations, fondu entre animations ; pièces d'équipement cachées par nom de nœud ; racine de squelette recalculée au chargement (`alwaysComputeSkeletonRootNode`) | même apparence que la v1 ; certains fichiers (renard Quaternius) déclarent une racine fausse |
 
 Profils (`?qualite=`, `game/quality.ts`) : `haut` (défaut), `moyen`, `bas`. Ils ne changent que des réglages (taille des
 ombres, cascades, MSAA, SSAO, halo, densité de végétation, résolution), jamais le code d'une scène.
@@ -130,11 +131,21 @@ puis choisir le moteur par défaut. Tout le code de rendu passe par l'API commun
 - `core/save.ts` : partie v2 (`slot: "v2"`, `schema_version` 1) : XP, lieux terminés, pierres éveillées (par jour), étapes
   de l'histoire vues, apparence. La maîtrise des notions n'y est pas : le serveur la calcule depuis les réponses.
 
-### 2.7 Le crochet de test
+### 2.7 Erreurs du jeu
 
-Avec `?e2e`, `window.__aldoria` expose le monde (`heroPosition`, `teleport`, `frame`, `scene`, `camera`) et la question
-affichée. C'est le seul mécanisme de test et de capture (la v1 en avait une quinzaine). `?decouverte` ouvre l'île sans
-compte, `?classe=2nde`, `?monde=brouillard`, `?qualite=`, `?perf` (compteur), `?interface=0` (captures sans interface).
+`core/errorReport.ts` (logique, testée) et `app/errors.ts` (branchement) : exceptions non rattrapées, promesses rejetées et
+`console.error` vont, dédoublonnées et par lots de 20, à `POST /play/client-errors` (route reprise de la v1, appareil relié
+exigé, jamais de donnée d'enfant). Chaque erreur porte son endroit dans le code (premier appel de la pile, sans l'adresse du
+site ; les fichiers `.map` du build permettent de remonter au source), l'écran (`titre`, `profils`, `ile`…), la version du build
+(`VITE_VERSION`, le commit) et le navigateur. Active dans le jeu construit seulement (`?erreurs=0|1`) ; sans appareil relié
+rien ne part (mode découverte, tests). L'exploitant les lit dans Exploitation → Erreurs du jeu.
+
+### 2.8 Le crochet de test
+
+Avec `?e2e`, `window.__aldoria` expose le monde (`heroPosition`, `teleport`, `frame`, `scene`, `camera`, `fox`), les services
+(dont `errors.list()`) et la question affichée. C'est le seul mécanisme de test et de capture (la v1 en avait une quinzaine).
+`?decouverte` ouvre l'île sans compte, `?classe=2nde`, `?monde=brouillard`, `?qualite=`, `?perf` (compteur), `?interface=0`
+(captures sans interface), `?renard=0`, `?erreurs=0|1`, `?erreur_test=1`.
 
 ## 3. Données du monde (`v2/content/monde/`)
 
@@ -167,22 +178,38 @@ Reprise entière de la v1 (FastAPI, SQLAlchemy, Alembic, 1 876 tests). Changemen
 | Niveau | Outil | Ce qui est couvert |
 | --- | --- | --- |
 | API | pytest (`uv run pytest -q`) | inchangé (1 876 tests), plus les emplacements de sauvegarde |
-| Logique du client | Vitest (`npm test`) | 81 vecteurs de réponses partagés avec l'API, expressions, choix adaptatif des questions, notion ratée qui revient, mise de côté, file hors connexion, refus définitifs, paquet gardé, mode découverte, sauvegarde et conflits, relief déterministe, régions, pose des 30 lieux, déplacement (eau, falaise, obstacles) |
+| Logique du client | Vitest (`npm test`) | 81 vecteurs de réponses partagés avec l'API, expressions, choix adaptatif des questions, notion ratée qui revient, mise de côté, file hors connexion, refus définitifs, paquet gardé, mode découverte, sauvegarde et conflits, relief déterministe, régions, pose des 30 lieux, déplacement (eau, falaise, obstacles), remontée des erreurs (dédoublonnage, lots, appareil relié, refus, réseau) |
 | Types | `tsc` strict | tout le client |
-| Navigateur | `e2e/smoke.mjs` (Chromium, WebGL logiciel, CSP de production) | titre → île → le héros avance → pierre → question → bonne réponse → XP ; échoue sur toute erreur de la page ou de la console et toute ressource introuvable |
+| Navigateur | `e2e/smoke.mjs` (Chromium, WebGL logiciel, CSP de production) | titre → île → erreur d'essai captée → renard entier et sur le sol → le héros avance → pierre → question → bonne réponse → XP ; échoue sur toute autre erreur de la page ou de la console et toute ressource introuvable |
 | Visuel | `e2e/captures.mjs` | huit vues de l'île (départ, panorama, Cimes, lieu, forêt, côte, Sphinx, Brouillard) |
 
 Règle : une logique nouvelle va dans `core/` avec son test ; une scène Babylon.js reste mince.
 
 ## 6. Intégration continue et déploiement
 
-- `.github/workflows/v2.yml` (chemins `v2/**`) : API (ruff, pytest), espace parent (build), client (types, Vitest, build,
-  parcours navigateur ; captures en artefact). La CI de la v1 ignore désormais `v2/**`.
-- Images (contexte `v2/`) : `deploy/web.Dockerfile` (build Vite + espace parent + voix enregistrées + musique),
-  `deploy/api.Dockerfile`, `deploy/voice.Dockerfile`, nommées `ghcr.io/ebrangerieau/aldoria2-*`.
-- Pendant le développement : projet Compose `aldoria2` (`aldoria2.bandtrack.fr`, `aldoria2-admin.bandtrack.fr`) avec **sa
-  propre base**, restaurée depuis une sauvegarde de la v1 (`tools/test_restauration.ps1` montre la marche). La publication et le
-  déploiement automatiques s'ajoutent à l'étape 0.6 du plan.
+En production, **une seule API et une seule base servent les deux jeux** (D11). Le fichier Compose de production reste
+`deploy/docker-compose.yml` à la racine du dépôt (dossier `/docker/aldoria` sur le VPS) :
+
+| Service | Image | Publiée et déployée par | Rôle |
+| --- | --- | --- | --- |
+| `web` | `aldoria-web` (`ALDORIA_TAG`) | `.github/workflows/ci.yml` | jeu v1 sur `aldoria.bandtrack.fr`, espace parent sur `aldoria-admin.bandtrack.fr` |
+| `web2` | `aldoria-web2` (`ALDORIA2_TAG`) | `.github/workflows/v2.yml` | jeu v2 sur `aldoria2.bandtrack.fr` (contient aussi l'espace parent de `v2/admin`, servi à l'étape 0.8) |
+| `api` | `aldoria-api` (`ALDORIA2_TAG`) | `.github/workflows/v2.yml`, depuis `v2/api` | API des deux jeux ; `/api` est routé vers elle sur `aldoria.*` et `aldoria2.*` |
+| `voice`, `db`, `backup` | inchangés | `ci.yml` (voix, sauvegardes) | inchangés |
+
+- `v2.yml` (chemins `v2/**`, son fichier, `deploy/docker-compose.yml`) : API (ruff, pytest), espace parent (build), client
+  (types, Vitest, build, parcours navigateur). Sur `main` : publication des deux images (contexte `v2/`), puis déploiement.
+- **Déploiement v2** (job `deploy`, mêmes secrets SSH que la v1, environnement `production`) : sauvegarde vérifiée de la base
+  si la migration appliquée en base (donnée par `/health`) n'est pas la dernière de `v2/api`, ou si l'API ne répond pas ; copie
+  du Compose ;
+  `ALDORIA2_TAG` écrit dans `.env` ; `docker compose pull api web2` puis `up -d --no-deps api web2` ; l'API en service et
+  `aldoria2.bandtrack.fr/version.txt` doivent donner ce commit dans les 5 minutes ; puis le parcours navigateur (mode découverte,
+  rien n'est enregistré) tourne contre `aldoria2.bandtrack.fr`.
+- **Déploiement v1** (`ci.yml`) : ne publie plus l'API ; ne recrée que `web`, `voice` et `backup` ; ne contrôle que la version
+  de son jeu. Son parcours navigateur construit l'API depuis `v2/api` : le jeu v1 est testé contre l'API de la production.
+- Les deux déploiements partagent un groupe de concurrence (`deploiement-vps`) : jamais deux à la fois sur le VPS.
+- `api/` à la racine est gelé : toute évolution de l'API se fait dans `v2/api`, qui garde les tests de la v1 (le contrat du jeu
+  v1) et y ajoute les siens.
 
 ## 7. Sécurité
 
@@ -207,10 +234,15 @@ textures et animations des personnages allégées (une seule copie des animation
 
 ## 9. Bascule de la v1 vers la v2
 
-1. La v2 tourne à part (`aldoria2`) sur une copie de la base ; les enfants l'essaient (journal des tests).
-2. Quand elle couvre ce que les enfants utilisent dans la v1 (critère de la phase 4 du plan), on sauvegarde la base de
-   production, on applique la migration 0013 (sans effet sur la v1 : ses parties deviennent `slot = 'v1'`), puis l'image `web` de
-   la v2 remplace celle de la v1 sur `aldoria.bandtrack.fr`. L'API v2 sert les deux jeux pendant la transition.
-3. La progression pédagogique (réponses, maîtrise, notions mises de côté), la banque de questions, les comptes et les
-   appareils reliés sont conservés ; la partie v2 repart de zéro pour l'XP et l'apparence, ou reprend les données de la partie
-   v1 par une conversion à écrire à ce moment-là (décision à prendre avec les enfants).
+1. **Dès l'étape 0.6** : l'API de `v2/api` remplace celle de la v1 en production (migration 0013, sauvegarde automatique
+   avant) et le jeu v2 s'ouvre sur `aldoria2.bandtrack.fr`. Les deux jeux écrivent dans la même base : les réponses données dans
+   la v2 comptent dans le suivi et dans l'espace parent. Un PC se relie une fois à `aldoria2` (l'appareil est mémorisé par site).
+2. **Étape 0.8** : l'espace parent est servi par le conteneur `web2` (code de `v2/admin`) ; `admin/` à la racine est gelé à son
+   tour.
+3. **Phase 4** : quand la v2 couvre ce que les enfants utilisent dans la v1 (critère du plan), le jeu v2 est servi aussi sur
+   `aldoria.bandtrack.fr` ; la v1 reste quelques semaines sur une autre adresse, puis `game/` est archivé et `v2/` remonte à
+   la racine (le Compose de production avec lui).
+4. La progression pédagogique (réponses, maîtrise, notions mises de côté), la banque de questions, les comptes et les
+   appareils reliés ne bougent jamais : ils sont dans la base commune. Seule la partie de jeu (XP, apparence, lieux terminés)
+   a deux emplacements ; la partie v2 repart de zéro, ou reprend celle de la v1 par une conversion à écrire au moment de la
+   phase 4 (décision à prendre avec les enfants).

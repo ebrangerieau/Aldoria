@@ -1,4 +1,4 @@
-# Image du service `web` de la v2 : client Babylon.js (build Vite) et espace parent (React),
+# Image du service `web2` (aldoria-web2) : jeu v2 (build Vite) et espace parent de v2/admin,
 # servis par nginx selon l'hôte. Contexte de build : le dossier v2/ (le client importe content/).
 #   docker build -f deploy/web.Dockerfile --build-arg GIT_SHA=$(git rev-parse HEAD) .
 

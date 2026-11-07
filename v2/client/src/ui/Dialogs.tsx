@@ -1,3 +1,4 @@
+import { VERSION } from '../app/buildInfo'
 import type { Accommodations } from '../core/accessibility'
 
 export function Dialog({ title, text, actions }: {
@@ -54,6 +55,7 @@ export function Options({ accommodations, textSize, onTextSize, onClose }: {
           Modèles 3D : Kay Lousberg (KayKit) et Quaternius, CC0. Icônes : game-icons.net, CC BY 3.0. Polices : Cinzel et
           Atkinson Hyperlegible, SIL OFL. Voix du serveur : Piper (Rhasspy), CC BY 4.0.
         </p>
+        <p className="credits">Version du jeu : {VERSION.slice(0, 7)}</p>
         <div className="actions">
           <button type="button" className="primary" autoFocus onClick={onClose}>Fermer</button>
         </div>

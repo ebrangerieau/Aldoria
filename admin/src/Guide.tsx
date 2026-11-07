@@ -136,7 +136,7 @@ export function Guide({ child, onOpen }: { child?: Profile; onOpen: (page: Guide
             C'est la liste à regarder avant un contrôle.
           </li>
           <li>
-            <strong>Dernières sessions</strong> : date, activité (arène, donjon, village, défi du jour), durée, réponses justes et la note de 1 à 5
+            <strong>Dernières sessions</strong> : date, activité (arène, donjon, village, défi du jour, ou exploration de l'île dans la nouvelle version du jeu), durée, réponses justes et la note de 1 à 5
             que l'enfant donne à la fin d'un donjon.
           </li>
           <li>

@@ -26,6 +26,11 @@ export function App({ services }: { services: Services }) {
   useEffect(() => {
     applyToDocument(fromServer(services.session.profile?.accommodations))
   }, [screen, services.session.profile])
+  // Écran en cours, joint aux erreurs remontées (jamais le prénom ni le profil).
+  useEffect(() => {
+    const names = { title: 'titre', pair: 'liaison', profiles: 'profils', pin: 'code', game: 'ile' } as const
+    services.errors.scene = screen.name === 'game' && screen.demo ? 'ile (decouverte)' : names[screen.name]
+  }, [screen, services])
   useEffect(() => {
     if (params.get('interface') === '0') document.documentElement.classList.add('sans-interface')
   }, [])

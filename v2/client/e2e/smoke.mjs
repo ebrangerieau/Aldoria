@@ -27,8 +27,10 @@ const browser = await chromium.launch({
   args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'],
 })
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } })
-page.on('pageerror', (e) => problems.push(`erreur de la page : ${e.message}`))
-page.on('console', (m) => { if (m.type() === 'error') problems.push(`console : ${m.text()}`) })
+// Seule tolérée : l'erreur d'essai levée exprès par `?erreur_test=1` (remontée des erreurs).
+const TEST_ERROR = "Erreur d'essai (erreur_test=1)"
+page.on('pageerror', (e) => { if (!e.message.includes(TEST_ERROR)) problems.push(`erreur de la page : ${e.message}`) })
+page.on('console', (m) => { if (m.type() === 'error' && !m.text().includes(TEST_ERROR)) problems.push(`console : ${m.text()}`) })
 page.on('response', (r) => { if (r.status() >= 400) problems.push(`${r.status()} ${r.url()}`) })
 
 const step = async (label, fn) => {
@@ -45,10 +47,46 @@ try {
   })
 
   await step("chargement de l'île", async () => {
-    await page.goto(`${BASE}/?decouverte&e2e&qualite=${QUALITY}`)
+    await page.goto(`${BASE}/?decouverte&e2e&erreur_test=1&qualite=${QUALITY}`)
     await page.waitForFunction(() => window.__aldoria?.world, null, { timeout: 180_000 * SLOW })
     await page.waitForTimeout(2500 * SLOW)
     await page.screenshot({ path: `${OUT}/02-depart.png` })
+  })
+
+  await step('une erreur du jeu est captée pour l’exploitant (sans appareil relié : rien ne part)', async () => {
+    const caught = await page.evaluate(() => window.__aldoria.services.errors.list())
+    const test = caught.find((e) => e.message.includes("Erreur d'essai"))
+    if (!test) throw new Error(`erreur d'essai non captée : ${JSON.stringify(caught)}`)
+    if (!test.location) throw new Error("erreur d'essai sans endroit du code")
+  })
+
+  await step('le renard a des proportions normales et touche le sol', async () => {
+    // Sommets avec le squelette appliqué, dans le repère du monde : tous à moins de 1,5 m du renard
+    // (avant le correctif de la racine du squelette, certains partaient à des dizaines de mètres), et
+    // le plus bas à moins de 8 cm du sol.
+    const fox = await page.evaluate(() => {
+      const f = window.__aldoria.world.fox
+      if (!f) return null
+      const o = f.root.getAbsolutePosition()
+      let far = 0
+      let lowest = Infinity
+      for (const m of f.meshes) {
+        if (!m.getTotalVertices()) continue
+        const p = m.getPositionData(true, false)
+        const w = m.getWorldMatrix().m
+        for (let i = 0; i < p.length; i += 3) {
+          const x = p[i] * w[0] + p[i + 1] * w[4] + p[i + 2] * w[8] + w[12]
+          const y = p[i] * w[1] + p[i + 1] * w[5] + p[i + 2] * w[9] + w[13]
+          const z = p[i] * w[2] + p[i + 1] * w[6] + p[i + 2] * w[10] + w[14]
+          far = Math.max(far, Math.hypot(x - o.x, y - o.y, z - o.z))
+          lowest = Math.min(lowest, y)
+        }
+      }
+      return { far, gap: lowest - o.y }
+    })
+    if (!fox) throw new Error('pas de renard dans le monde lumineux')
+    if (fox.far > 1.5) throw new Error(`un sommet du renard est à ${fox.far.toFixed(1)} m de lui`)
+    if (Math.abs(fox.gap) > 0.08) throw new Error(`le renard est à ${(fox.gap * 100).toFixed(0)} cm du sol`)
   })
 
   await step('le héros avance (touche Z/W)', async () => {

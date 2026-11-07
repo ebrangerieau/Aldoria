@@ -141,5 +141,4 @@ ambiances de la v1 deviennent deux heures et deux météos de la même île.
 | Mal des transports, caméra difficile pour un enfant dyspraxique | caméra qui revient seule derrière le héros, déplacement au clic, vitesse réglable ; à observer en séance |
 | Combat au tour par tour dans un monde en temps réel | le monde se fige pendant la question ; **à trancher avec les enfants** : rencontres visibles qui approchent, ou combat déclenché au contact |
 | Poids du premier chargement | budget de `docs/TRD.md` §8 suivi dans `docs/perf-log.md` ; imports ciblés de Babylon.js si besoin |
-| Le renard de Jules s'affiche mal | modèle à réexporter ou à remplacer (phase 1) |
 | Abandon de la tablette | Jules jouait sur la tablette : **à confirmer avec lui** qu'il a accès au PC assez souvent |

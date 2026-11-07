@@ -24,7 +24,13 @@ const containers = new Map<string, Promise<AssetContainer>>()
 export function loadContainer(scene: Scene, path: string): Promise<AssetContainer> {
   let promise = containers.get(path)
   if (!promise) {
-    promise = LoadAssetContainerAsync(`${MODELS}/${path}`, scene)
+    promise = LoadAssetContainerAsync(`${MODELS}/${path}`, scene, {
+      // Racine du squelette recalculée (ancêtre commun des os) au lieu de `skin.skeleton` : le
+      // renard Quaternius déclare `Body` alors que ses os de cinématique inverse (IKBackLeg.R…)
+      // n'en descendent pas ; Babylon.js étirait alors pattes, oreilles et yeux en pointes.
+      // Sans effet sur un fichier valide (KayKit).
+      pluginOptions: { gltf: { alwaysComputeSkeletonRootNode: true } },
+    })
     containers.set(path, promise)
   }
   return promise

@@ -17,7 +17,8 @@ docker network create aldoria-test >/dev/null
 docker run -d --name aldoria-pg --network aldoria-test -e POSTGRES_USER=aldoria -e POSTGRES_PASSWORD=test \
   -e POSTGRES_DB=aldoria postgres:16-alpine >/dev/null
 docker build -q -f deploy/web.Dockerfile -t aldoria-web:local . >/dev/null
-docker build -q -f deploy/api.Dockerfile -t aldoria-api:local . >/dev/null
+# API construite depuis v2/api : celle que sert la production pour les deux jeux (v2/docs/decisions.md, D11).
+docker build -q -f v2/deploy/api.Dockerfile -t aldoria-api:local v2 >/dev/null
 until docker exec aldoria-pg pg_isready -U aldoria -d aldoria >/dev/null 2>&1; do sleep 1; done
 
 # Service de sauvegarde réel : son état est lu par l'API (Exploitation → Sauvegardes).

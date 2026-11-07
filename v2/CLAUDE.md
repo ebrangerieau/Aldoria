@@ -12,7 +12,12 @@ est), `docs/BILAN-V1.md` (les erreurs à ne pas refaire). Histoire : `docs/histo
   `src/game/` Babylon.js seulement, `src/ui/` React seulement. Fichiers statiques dans `public/ressources/`.
 - `api/` : FastAPI reprise de la v1 (Python 3.12, `uv`) ; `admin/` : espace parent (React).
 - `content/` : programmes (`seed/`), vecteurs de réponses partagés (`test-vectors/`), données du monde (`monde/*.json`).
-- `deploy/` : Compose (projet `aldoria2`), nginx (CSP), Dockerfiles (contexte : ce dossier) ; `tools/` : scripts.
+- `deploy/` : nginx (CSP), Dockerfiles (contexte : ce dossier) ; `tools/` : scripts. Le Compose de production est celui de la
+  racine (`deploy/docker-compose.yml`) : une seule API (celle de `v2/api`) et une seule base pour les deux jeux (D11).
+
+Mise en ligne : un push sur `main` qui touche `v2/` fait publier par `.github/workflows/v2.yml` l'API et le jeu v2, puis les
+déployer (sauvegarde de la base avant toute migration, contrôle de version, parcours navigateur sur `aldoria2.bandtrack.fr`).
+`api/` à la racine est gelé : l'API évolue ici, sans jamais casser le jeu v1 (ses tests sont dans `api/tests/`).
 
 ## Commandes
 
@@ -31,7 +36,9 @@ npm --prefix admin run build
 
 Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&classe=2nde`, `&monde=brouillard`,
 `&qualite=haut|moyen|bas`, `&perf` (compteur), `&e2e` (crochet `window.__aldoria` : `world.teleport(x, z, versX, versZ)`,
-`world.frame(alpha, beta, distance)`, `world.heroPosition()`, `question`), `&interface=0`, `&moteur=webgpu`, `&renard=1`.
+`world.frame(alpha, beta, distance)`, `world.heroPosition()`, `question`, `services`), `&interface=0`, `&moteur=webgpu`,
+`&renard=0` (sans le renard), `&erreurs=0|1` (remontée des erreurs ; active par défaut dans le jeu construit seulement),
+`&erreur_test=1` (erreur d'essai au démarrage).
 
 ## Règles
 
@@ -52,6 +59,9 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
 - **Sauvegarde** : partie v2 dans l'emplacement `v2` (`core/save.ts`). La maîtrise des notions n'est jamais calculée par le
   client. Aucune migration ne doit casser la v1 tant qu'elle est en service.
 - **Textes visibles par les enfants en français**, tutoiement ; aucune donnée personnelle hors du serveur d'Aldoria.
+- **Erreurs du jeu** : tout ce qui passe par une exception, une promesse rejetée ou `console.error` remonte à l'exploitant
+  (`core/errorReport.ts`, `app/errors.ts`). Ne jamais mettre de prénom, de question ni de réponse dans un message d'erreur ;
+  un `console.error` volontaire est une vraie erreur (sinon `console.warn`).
 - L'API, l'espace parent, les générateurs et la lecture à voix haute suivent les règles du `CLAUDE.md` de la v1 (racine du
   dépôt), sections « Conventions » sur les matières, la voix, les familles et la banque de questions.
 
@@ -59,8 +69,11 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
 
 - `camera.target = …` sur une `ArcRotateCamera` recalcule alpha et beta depuis l'ancienne position : modifier la cible en
   place (`camera.target.copyFrom(…)`), sinon la souris ne fait plus tourner la caméra.
+- Un `.glb` peut déclarer une racine de squelette fausse (`skin.skeleton`) : Babylon.js la suit et étire les sommets en
+  pointes (renard Quaternius). Tous les modèles se chargent avec `alwaysComputeSkeletonRootNode` (`game/assets.ts`) : ne pas
+  l'enlever.
 - Un modèle Quaternius a une armature tournée de -90° et à l'échelle 100 ; sa boîte englobante au repos ne dit rien de sa
-  taille réelle (renard : échelle fixe, `game/characters.ts`).
+  taille réelle : échelle fixe, puis `settleOnGround` après la première image (`game/characters.ts`).
 - Un matériau PBR métallique sans carte d'environnement paraît noir : `characters.ts` rend les personnages mats.
 - `SceneLoaderFlags.ShowLoadingScreen` doit rester à `false` (style injecté, refusé par la CSP).
 - Vite intègre les petits fichiers en `data:` : `assetsInlineLimit: 0` (polices de KaTeX).

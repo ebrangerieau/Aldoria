@@ -1,6 +1,13 @@
 # Les Chroniques d'Aldoria – déploiement sur le VPS bandtrack.fr, derrière Traefik.
 # Sur le VPS : /docker/aldoria/{docker-compose.yml,.env}
 # Vérifier l'interpolation : docker compose config | grep "rule="
+#
+# Deux jeux, une seule API et une seule base (v2/docs/decisions.md, D11) :
+# - jeu v1 (Godot) sur aldoria.*, espace parent sur aldoria-admin.*, voix et sauvegardes :
+#   images publiées par .github/workflows/ci.yml (ALDORIA_TAG) ;
+# - jeu v2 (Babylon.js, v2/) sur aldoria2.* et API (construite depuis v2/api, compatible avec la
+#   v1) : images publiées par .github/workflows/v2.yml (ALDORIA2_TAG).
+# Chaque CI ne recrée que ses services (`docker compose up -d --no-deps …`).
 
 services:
   web:
@@ -24,8 +31,27 @@ services:
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-admin.priority=1"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-admin.service=${COMPOSE_PROJECT_NAME}"
 
+  # Jeu v2 (client Babylon.js, v2/client) sur aldoria2.* ; ses appels /api vont à l'API ci-dessous
+  # (routeurs de l'API). L'image contient aussi l'espace parent de v2/admin, qui prendra le relais de
+  # celui du service web à l'étape 0.8 du plan de la v2.
+  web2:
+    image: ghcr.io/ebrangerieau/aldoria-web2:${ALDORIA2_TAG:-latest}
+    restart: unless-stopped
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=web"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}2.rule=Host(`${COMPOSE_PROJECT_NAME}2.${TRAEFIK_HOST}`)"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}2.entrypoints=websecure"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}2.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}2.priority=1"
+      - "traefik.http.services.${COMPOSE_PROJECT_NAME}2.loadbalancer.server.port=80"
+
+  # API commune aux deux jeux, construite depuis v2/api (même code que api/, plus l'emplacement de
+  # sauvegarde v2 et le mode « monde ») ; api/ à la racine n'évolue plus.
   api:
-    image: ghcr.io/ebrangerieau/aldoria-api:${ALDORIA_TAG:-latest}
+    image: ghcr.io/ebrangerieau/aldoria-api:${ALDORIA2_TAG:-latest}
     restart: unless-stopped
     environment:
       ALDORIA_ENVIRONMENT: prod
@@ -56,15 +82,15 @@ services:
       - "traefik.enable=true"
       - "traefik.docker.network=web"
       # API joueur : tout /api sauf l'API parent, qui ne sera servie que sur l'hôte admin
-      # (IMPLEMENTATION_PLAN §1.3 et chantier « plusieurs familles »).
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-api.rule=Host(`${COMPOSE_PROJECT_NAME}.${TRAEFIK_HOST}`) && PathPrefix(`/api`) && !PathPrefix(`/api/v1/admin`)"
+      # (IMPLEMENTATION_PLAN §1.3 et chantier « plusieurs familles ») ; pour les deux jeux.
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-api.rule=(Host(`${COMPOSE_PROJECT_NAME}.${TRAEFIK_HOST}`) || Host(`${COMPOSE_PROJECT_NAME}2.${TRAEFIK_HOST}`)) && PathPrefix(`/api`) && !PathPrefix(`/api/v1/admin`)"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-api.entrypoints=websecure"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-api.tls.certresolver=letsencrypt"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-api.priority=10"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-api.middlewares=${COMPOSE_PROJECT_NAME}-strip-identity"
       - "traefik.http.services.${COMPOSE_PROJECT_NAME}-api.loadbalancer.server.port=8000"
       # Connexion d'un enfant et liaison d'un appareil : débit limité (essais de codes).
-      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-play-auth.rule=Host(`${COMPOSE_PROJECT_NAME}.${TRAEFIK_HOST}`) && (Path(`/api/v1/play/login`) || Path(`/api/v1/play/devices/pair`))"
+      - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-play-auth.rule=(Host(`${COMPOSE_PROJECT_NAME}.${TRAEFIK_HOST}`) || Host(`${COMPOSE_PROJECT_NAME}2.${TRAEFIK_HOST}`)) && (Path(`/api/v1/play/login`) || Path(`/api/v1/play/devices/pair`))"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-play-auth.entrypoints=websecure"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-play-auth.tls.certresolver=letsencrypt"
       - "traefik.http.routers.${COMPOSE_PROJECT_NAME}-play-auth.priority=15"

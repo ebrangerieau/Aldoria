@@ -1,15 +1,21 @@
 name: v2
 
-# Les Chroniques d'Aldoria v2 (dossier v2/) : API reprise de la v1, espace parent, client
-# Babylon.js. Ne publie rien pour l'instant : la mise en ligne sur aldoria2.bandtrack.fr
-# s'ajoute à la fin de la phase 0 (v2/IMPLEMENTATION_PLAN.md, étape 0.6).
+# Les Chroniques d'Aldoria v2 (dossier v2/) : API commune aux deux jeux, espace parent, client
+# Babylon.js. Sur main : publie l'API (construite depuis v2/api) et le jeu v2, puis les met en
+# service sur le VPS, à côté du jeu v1 (deploy/docker-compose.yml, v2/docs/decisions.md D11).
 on:
   push:
     branches: [main]
-    paths: ['v2/**', '.github/workflows/v2.yml']
+    paths: ['v2/**', '.github/workflows/v2.yml', 'deploy/docker-compose.yml']
   pull_request:
-    paths: ['v2/**', '.github/workflows/v2.yml']
+    paths: ['v2/**', '.github/workflows/v2.yml', 'deploy/docker-compose.yml']
   workflow_dispatch:
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_PREFIX: ghcr.io/ebrangerieau/aldoria
+  PROD_URL: https://aldoria.bandtrack.fr
+  V2_URL: https://aldoria2.bandtrack.fr
 
 jobs:
   api:
@@ -83,3 +89,134 @@ jobs:
           name: v2-e2e-captures
           path: ${{ runner.temp }}/aldoria2-e2e
           retention-days: 7
+
+  images:
+    # API (aldoria-api, depuis v2/api) et jeu v2 (aldoria-web2 : client, espace parent de v2/admin,
+    # voix enregistrées, musique). Contexte de construction : v2/.
+    runs-on: ubuntu-latest
+    needs: [api, admin, client]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      packages: write
+    defaults:
+      run:
+        working-directory: v2
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/login-action@v3
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Construction et publication des images
+        run: |
+          for pair in api:api web:web2; do
+            file=${pair%%:*}; name=${pair##*:}
+            docker build -f deploy/${file}.Dockerfile --build-arg GIT_SHA=${GITHUB_SHA} \
+              -t ${IMAGE_PREFIX}-${name}:${GITHUB_SHA} -t ${IMAGE_PREFIX}-${name}:latest .
+            docker push --all-tags ${IMAGE_PREFIX}-${name}
+          done
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: images
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment: production
+    # Un seul déploiement à la fois sur le VPS (ci.yml utilise le même groupe).
+    concurrency:
+      group: deploiement-vps
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+      - name: Images lisibles sans compte (le VPS les tire sans se connecter à GHCR)
+        run: |
+          # Un nouveau paquet GHCR est privé : avant de toucher au VPS, vérifier que les deux images de ce
+          # commit se lisent sans compte. Sinon : le rendre public, puis relancer ce job.
+          for name in api web2; do
+            repo="ebrangerieau/aldoria-${name}"
+            token=$(curl -sS "https://ghcr.io/token?scope=repository:${repo}:pull" \
+              | python3 -c 'import json,sys; print(json.load(sys.stdin).get("token",""))' 2>/dev/null || true)
+            code=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer ${token}" \
+              -H 'Accept: application/vnd.oci.image.index.v1+json, application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.docker.distribution.manifest.v2+json' \
+              "https://ghcr.io/v2/${repo}/manifests/${GITHUB_SHA}")
+            if [ "$code" != "200" ]; then
+              msg="Image ghcr.io/${repo}:${GITHUB_SHA} illisible sans compte (HTTP ${code}). Rendre le paquet aldoria-${name} public (GitHub, Packages, aldoria-${name}, Package settings, Change visibility), puis relancer ce job. Rien n'a été touché sur le VPS."
+              echo "::error::$msg"; echo "$msg" >> "$GITHUB_STEP_SUMMARY"
+              exit 1
+            fi
+          done
+      - name: Déploiement sur le VPS (API et jeu v2)
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          VPS_USER: ${{ secrets.VPS_USER }}
+        run: |
+          if [ -z "$SSH_KEY" ] || [ -z "$VPS_HOST" ]; then
+            echo "Secrets VPS absents : déploiement ignoré." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          install -m 600 /dev/null ~/key && printf '%s\n' "$SSH_KEY" > ~/key
+          mkdir -p ~/.ssh
+          for i in 1 2 3; do ssh-keyscan -T 15 -H "$VPS_HOST" >> ~/.ssh/known_hosts && break; sleep 10; done
+          # Sauvegarde vérifiée de la base avant toute nouvelle migration (l'image de l'API l'applique au
+          # démarrage) : quand la migration appliquée en base (donnée par /health) n'est pas la dernière de
+          # v2/api, ou si l'API ne répond pas. Au premier déploiement, la base est à 0012 (API de api/).
+          applied=$(curl -fsS "$PROD_URL/api/v1/health" | python3 -c 'import json,sys; print(json.load(sys.stdin).get("migration",""))' || true)
+          head=$(grep -ho '^revision = "[0-9]*"' v2/api/alembic/versions/*.py | grep -o '[0-9]\+' | sort | tail -1)
+          if [ -z "$applied" ] || [ "$applied" != "$head" ]; then
+            dump="avant-deploiement-$(echo "$GITHUB_SHA" | cut -c1-7)-$(date -u +%Y%m%dT%H%M%SZ).sql.gz"
+            ssh -i ~/key "$VPS_USER@$VPS_HOST" "cd /docker/aldoria && mkdir -p backups \
+              && docker compose exec -T db sh -c 'pg_dump -U \$POSTGRES_USER \$POSTGRES_DB' | gzip > backups/$dump \
+              && chmod 600 backups/$dump \
+              && gzip -dc backups/$dump | tail -c 300 | grep -q 'PostgreSQL database dump complete' \
+              && (ls -1t backups/avant-deploiement-*.sql.gz | tail -n +11 | xargs -r rm --) \
+              && ls -l backups/$dump"
+            echo "Sauvegarde avant migration : backups/$dump (base à ${applied:-inconnue}, migration visée $head)" >> "$GITHUB_STEP_SUMMARY"
+          fi
+          scp -i ~/key deploy/docker-compose.yml "$VPS_USER@$VPS_HOST:/docker/aldoria/docker-compose.yml"
+          # ALDORIA2_TAG : ajouté au .env au premier déploiement, puis mis au commit déployé.
+          ssh -i ~/key "$VPS_USER@$VPS_HOST" \
+            "cd /docker/aldoria && (grep -q '^ALDORIA2_TAG=' .env || echo 'ALDORIA2_TAG=latest' >> .env) \
+             && sed -i 's/^ALDORIA2_TAG=.*/ALDORIA2_TAG=${GITHUB_SHA}/' .env \
+             && docker compose pull api web2 && docker compose up -d --no-deps api web2"
+      - name: Contrôle en production (API et jeu v2 de ce commit)
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: |
+          [ -z "$VPS_HOST" ] && exit 0  # pas de déploiement (secrets absents)
+          for i in $(seq 1 30); do
+            health=$(curl -fsS "$PROD_URL/api/v1/health" || true)
+            web=$(curl -fsS "$V2_URL/version.txt?n=$i" || true)
+            if echo "$health" | grep -q "\"version\":\"$GITHUB_SHA\"" && echo "$health" | grep -q '"status":"ok"' \
+               && [ "$web" = "$GITHUB_SHA" ]; then
+              echo "En production : API $health ; jeu v2 $web" | tee -a "$GITHUB_STEP_SUMMARY"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "La production ne sert pas ce commit : API $health ; jeu v2 ${web:-?}" | tee -a "$GITHUB_STEP_SUMMARY"
+          exit 1
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Parcours dans le navigateur sur aldoria2 (mode découverte, rien n'est enregistré)
+        env:
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+          E2E_URL: ${{ env.V2_URL }}
+          E2E_SLOW: '3'
+          E2E_OUT: ${{ runner.temp }}/aldoria2-prod
+        working-directory: v2/client
+        run: |
+          [ -z "$VPS_HOST" ] && exit 0
+          npm ci --prefix e2e --no-audit --no-fund
+          node e2e/node_modules/playwright-core/cli.js install --with-deps chromium > /dev/null
+          node e2e/smoke.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v2-production-captures
+          path: ${{ runner.temp }}/aldoria2-prod
+          retention-days: 7
+          if-no-files-found: ignore
+
