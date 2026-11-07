@@ -1,0 +1,197 @@
+/*
+ * Interface « grimoire enluminé » de la v1, en CSS : parchemin et filet doré. Aucun style en
+ * ligne (CSP `style-src 'self'`). Les aménagements (taille du texte, police lisible,
+ * espacement, cibles agrandies, mode calme, couleurs) sont des attributs posés sur <html>
+ * par core/accessibility.ts. Contraste du texte sur un panneau : 4,5:1 au moins.
+ */
+@font-face {
+  font-family: 'Cinzel';
+  src: url('/ressources/fonts/Cinzel.ttf') format('truetype');
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Atkinson Hyperlegible';
+  src: url('/ressources/fonts/AtkinsonHyperlegible-Regular.ttf') format('truetype');
+  font-display: swap;
+}
+
+:root {
+  --ink: #2b2118;
+  --ink-soft: #5a4a3a;
+  --parchment: #f4e9d2;
+  --parchment-dark: #e6d5b0;
+  --gold: #b88a2e;
+  --gold-light: #e3c27a;
+  --good-ink: #1f6b3a;
+  --bad-ink: #9b3b12;
+  --accent: #6b3fa0;
+  --title-font: 'Cinzel', Georgia, serif;
+  --text-font: Georgia, 'Times New Roman', serif;
+  --target: 48px;
+  font-size: 17px;
+  color: var(--ink);
+}
+
+html[data-text-size='1'] { font-size: 20px; }
+html[data-text-size='2'] { font-size: 23px; }
+html[data-readable-font='true'] {
+  --title-font: 'Atkinson Hyperlegible', Verdana, sans-serif;
+  --text-font: 'Atkinson Hyperlegible', Verdana, sans-serif;
+}
+html[data-spacing='true'] body { letter-spacing: 0.06em; word-spacing: 0.16em; line-height: 1.8; }
+html[data-big-targets='true'] { --target: 64px; }
+html[data-colorblind='true'] { --good-ink: #1d4fa8; --bad-ink: #a5520a; }
+html[data-calm='true'] *, html[data-calm='true'] *::before, html[data-calm='true'] *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+* { box-sizing: border-box; }
+html, body, #app { margin: 0; height: 100%; overflow: hidden; }
+body { font-family: var(--text-font); line-height: 1.5; background: #1c1a24; }
+
+h1, h2, h3, .game-title, .kicker { font-family: var(--title-font); font-weight: 600; }
+h2 { margin: 0 0 0.6rem; font-size: 1.35rem; color: var(--ink); }
+p { margin: 0 0 0.6rem; }
+kbd {
+  display: inline-block; min-width: 1.6em; padding: 0 0.35em; margin: 0 0.1em; border-radius: 4px;
+  border: 1px solid var(--gold); background: var(--parchment); color: var(--ink); font-family: inherit; text-align: center;
+}
+
+/* --- Panneaux et boutons -------------------------------------------------------------- */
+.panel {
+  background: radial-gradient(ellipse at top, var(--parchment), var(--parchment-dark));
+  border: 3px double var(--gold);
+  border-radius: 14px;
+  box-shadow: 0 0 0 1px var(--gold-light) inset, 0 18px 50px rgb(0 0 0 / 45%);
+  padding: 1.4rem 1.6rem;
+  color: var(--ink);
+}
+.narrow { width: min(520px, 92vw); }
+
+button {
+  font: inherit;
+  min-height: var(--target);
+  padding: 0.4rem 1.1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  border: 2px solid var(--gold);
+  color: var(--ink);
+  background: #fbf4e4;
+}
+button:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+button:disabled { opacity: 0.55; cursor: default; }
+button.primary { background: linear-gradient(#f3d58b, #d9ab47); font-weight: 700; }
+button.primary:hover:not(:disabled) { background: linear-gradient(#f7df9f, #e1b552); }
+button.secondary:hover:not(:disabled) { background: #fff8e8; }
+button.warning { background: #fde3c8; border-color: var(--bad-ink); }
+button.big { font-size: 1.25rem; padding: 0.6rem 2rem; }
+button.small { min-height: 40px; padding: 0.2rem 0.8rem; font-size: 0.9rem; }
+.icon-button { min-height: 40px; padding: 0.2rem 0.7rem; }
+
+.actions { display: flex; gap: 0.7rem; flex-wrap: wrap; justify-content: flex-end; margin-top: 1rem; }
+.actions.column { flex-direction: column; align-items: stretch; }
+.error { color: var(--bad-ink); font-weight: 700; }
+.hint { color: var(--ink-soft); font-size: 0.9rem; }
+
+/* --- Écrans hors de l'île ------------------------------------------------------------- */
+.screen {
+  height: 100%;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(ellipse at 50% 120%, rgb(255 190 110 / 35%), transparent 60%),
+    linear-gradient(#2a2440, #151320);
+}
+.title-panel { width: min(560px, 92vw); text-align: center; }
+.kicker { margin: 0; letter-spacing: 0.3em; text-transform: uppercase; color: var(--ink-soft); }
+.game-title { margin: 0 0 0.6rem; font-size: 3.2rem; color: #6a4210; }
+.game-title.small { font-size: 2rem; color: var(--gold-light); }
+.subtitle { font-size: 1.1rem; }
+
+.code-input { width: 100%; font: inherit; font-size: 1.8rem; letter-spacing: 0.3em; text-align: center; padding: 0.4rem; border: 2px solid var(--gold); border-radius: 10px; }
+.profiles { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 0.8rem; }
+.profile-card { display: flex; flex-direction: column; padding: 1rem; }
+.profile-name { font-family: var(--title-font); font-size: 1.3rem; }
+.profile-level { color: var(--ink-soft); }
+.pin-dots { display: flex; gap: 0.8rem; justify-content: center; margin: 1rem 0; }
+.dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--gold); }
+.dot.full { background: var(--gold); }
+.keypad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; }
+.keypad button { font-size: 1.4rem; }
+
+/* --- L'île ---------------------------------------------------------------------------- */
+.game { position: relative; height: 100%; }
+.world-canvas { width: 100%; height: 100%; display: block; outline: none; touch-action: none; }
+
+.hud-top { position: absolute; top: 12px; left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none; }
+.hud-top > * { pointer-events: auto; }
+.hud-buttons { display: flex; gap: 0.5rem; }
+.badge { background: rgb(244 233 210 / 92%); border: 2px solid var(--gold); border-radius: 10px; padding: 0.35rem 0.9rem; }
+.offline { color: var(--bad-ink); }
+
+.region-banner {
+  position: absolute; top: 70px; left: 50%; transform: translateX(-50%);
+  font-family: var(--title-font); font-size: 1.9rem; color: #fff7e2;
+  text-shadow: 0 2px 6px rgb(0 0 0 / 85%), 0 0 18px rgb(0 0 0 / 50%);
+  pointer-events: none; animation: banner 4.5s ease forwards;
+}
+@keyframes banner {
+  0% { opacity: 0; transform: translate(-50%, -8px); }
+  15%, 70% { opacity: 1; transform: translate(-50%, 0); }
+  100% { opacity: 0; }
+}
+html[data-calm='true'] .region-banner { opacity: 1; }
+
+.prompt-bar {
+  position: absolute; bottom: 9vh; left: 50%; transform: translateX(-50%);
+  background: rgb(28 24 36 / 82%); color: #fff7e2; border: 2px solid var(--gold-light);
+  border-radius: 12px; padding: 0.5rem 1.2rem; font-size: 1.1rem;
+}
+.controls-help {
+  position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 1.2rem; flex-wrap: wrap; justify-content: center;
+  background: rgb(28 24 36 / 72%); color: #fff7e2; border-radius: 10px; padding: 0.4rem 1rem; font-size: 0.9rem;
+}
+.perf { position: absolute; bottom: 12px; right: 12px; background: rgb(0 0 0 / 65%); color: #c8ffb0; font: 13px monospace; padding: 0.3rem 0.6rem; border-radius: 6px; }
+
+.loading { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; gap: 0.6rem; background: linear-gradient(#2a2440, #151320); color: #fff7e2; }
+.loading.error { color: #ffd2b8; padding: 2rem; }
+.bar { width: min(420px, 70vw); height: 10px; border-radius: 6px; background: rgb(255 255 255 / 15%); overflow: hidden; }
+.bar-fill { height: 100%; width: 5%; background: linear-gradient(90deg, var(--gold), var(--gold-light)); transition: width 0.3s; }
+.bar-fill[data-ratio='1'] { width: 10%; } .bar-fill[data-ratio='2'] { width: 20%; } .bar-fill[data-ratio='3'] { width: 30%; }
+.bar-fill[data-ratio='4'] { width: 40%; } .bar-fill[data-ratio='5'] { width: 50%; } .bar-fill[data-ratio='6'] { width: 60%; }
+.bar-fill[data-ratio='7'] { width: 70%; } .bar-fill[data-ratio='8'] { width: 80%; } .bar-fill[data-ratio='9'] { width: 90%; }
+.bar-fill[data-ratio='10'] { width: 100%; }
+
+/* --- Questions et dialogues ----------------------------------------------------------- */
+.overlay { position: absolute; inset: 0; display: grid; place-items: center; background: rgb(10 8 16 / 35%); overflow-y: auto; padding: 2rem 1rem; }
+.question-panel, .dialog { width: min(760px, 94vw); max-height: calc(100vh - 4rem); overflow-y: auto; }
+.question-head { display: flex; justify-content: space-between; align-items: center; gap: 1rem; border-bottom: 1px solid var(--gold); margin-bottom: 0.8rem; }
+.prompt { font-size: 1.2rem; }
+.formula { font-size: 1.35rem; margin: 0.4rem 0 1rem; overflow-x: auto; }
+.formula-svg { display: block; margin: 0.4rem auto 1rem; max-width: 100%; filter: brightness(0); }
+
+.choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.6rem; margin: 0.8rem 0; }
+.choices.two { grid-template-columns: 1fr 1fr; }
+.choice { text-align: left; font-size: 1.1rem; }
+.choice-key { display: inline-block; min-width: 1.6em; color: var(--ink-soft); font-weight: 700; }
+
+.typed { display: grid; gap: 0.7rem; margin: 0.8rem 0; }
+.answer-input { font: inherit; font-size: 1.5rem; padding: 0.4rem 0.7rem; border: 2px solid var(--gold); border-radius: 10px; background: #fffaf0; color: var(--ink); }
+.keys { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+.keys button { min-width: 3rem; font-size: 1.15rem; }
+
+.order-picked { min-height: 2.5rem; margin: 0.4rem 0; padding-left: 1.6rem; }
+.order-picked li { padding: 0.2rem 0; font-weight: 700; }
+.step { font-weight: 700; }
+
+.question-tools { display: flex; gap: 0.6rem; flex-wrap: wrap; margin-top: 0.6rem; }
+.hint-text { margin-top: 0.8rem; padding: 0.6rem 0.8rem; border-left: 4px solid var(--gold); background: rgb(255 255 255 / 45%); }
+.feedback { margin-top: 0.8rem; padding: 0.8rem 1rem; border-radius: 10px; background: rgb(255 255 255 / 50%); }
+.feedback.good .verdict { color: var(--good-ink); font-weight: 700; font-size: 1.2rem; }
+.feedback.bad .verdict { color: var(--bad-ink); font-weight: 700; font-size: 1.2rem; }
+.explanation { font-size: 1.05rem; }
+.credits { font-size: 0.8rem; color: var(--ink-soft); }
+
+/* Captures sans interface (?interface=0, e2e/captures.mjs). */
+.sans-interface .hud-top, .sans-interface .controls-help, .sans-interface .region-banner, .sans-interface .prompt-bar { visibility: hidden; }

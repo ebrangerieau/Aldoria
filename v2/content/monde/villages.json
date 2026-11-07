@@ -1,0 +1,141 @@
+{
+ "source": "exporté du prototype v1 par v2/tools/export_v1_content.py ; ce fichier fait foi",
+ "quest_size": 3,
+ "quest_xp": 50,
+ "answer_xp": 10,
+ "villages": [
+  {
+   "code": "clairval",
+   "level": "6e",
+   "title": "Clairval",
+   "intro": "Les habitants de Clairval sentent le Brouillard leur grignoter la mémoire. Parle-leur : chacun a besoin d'un coup de main aujourd'hui.",
+   "v1_rooms": [
+    {
+     "title": "La Halle de Clairval"
+    },
+    {
+     "title": "La Rue des Artisans"
+    }
+   ],
+   "npcs": [
+    {
+     "code": "barnabe",
+     "name": "Barnabé le forgeron",
+     "model": "Barbarian",
+     "room": 0,
+     "quest": "revision",
+     "title": "Les souvenirs du forgeron",
+     "ask": "Ah, Archiviste ! Le Brouillard m'a embrouillé la tête : j'ai oublié des choses que tu as apprises il y a quelque temps. Tu m'aides à m'en souvenir ?",
+     "thanks": "Tout me revient ! Tu as une sacrée mémoire. Tiens, pour ta peine.",
+     "v1_at": [
+      6,
+      6
+     ]
+    },
+    {
+     "code": "melisande",
+     "name": "Mélisande la cartographe",
+     "model": "Rogue",
+     "room": 0,
+     "quest": "enquete",
+     "generator": "6e.proportionnalite.carte",
+     "title": "Les cartes de Mélisande",
+     "ask": "Mes cartes sont justes, mais j'ai perdu toutes mes notes de distances ! Tu peux les retrouver avec l'échelle ?",
+     "thanks": "Parfait, mes voyageurs ne se perdront plus. Merci, Archiviste !",
+     "v1_at": [
+      11.5,
+      13
+     ]
+    },
+    {
+     "code": "oriel",
+     "name": "Maître Oriel",
+     "model": "Mage",
+     "room": 1,
+     "quest": "veille",
+     "title": "Les leçons de Maître Oriel",
+     "ask": "Approche, jeune Archiviste. Entraînons-nous sur ce que tu travailles en classe.",
+     "thanks": "Très bien. Ton esprit est clair : le Brouillard ne t'atteindra pas.",
+     "v1_at": [
+      9,
+      7
+     ]
+    }
+   ]
+  },
+  {
+   "code": "brumegarde",
+   "level": "2nde",
+   "title": "Brumegarde",
+   "intro": "Brumegarde tient bon face au Brouillard, mais ses habitants ont besoin d'un esprit vif. Écoute leurs demandes.",
+   "v1_rooms": [
+    {
+     "title": "Le Quartier de la Garde"
+    },
+    {
+     "title": "La Cour des Archives"
+    }
+   ],
+   "npcs": [
+    {
+     "code": "aldric",
+     "name": "Aldric, sergent de la garde",
+     "model": "Barbarian",
+     "room": 0,
+     "quest": "revision",
+     "title": "La mémoire du sergent",
+     "ask": "Le Brouillard ronge mes souvenirs, Archiviste. Rappelle-moi ce que tu as appris ces dernières semaines.",
+     "thanks": "Voilà qui est net. La garde te doit une fière chandelle.",
+     "v1_at": [
+      6,
+      6
+     ]
+    },
+    {
+     "code": "vesna",
+     "name": "Vesna l'inspectrice",
+     "model": "Rogue",
+     "room": 0,
+     "quest": "enquete",
+     "generator": "2nde.statistiques.enquete",
+     "title": "L'enquête de Vesna",
+     "ask": "J'ai fait un relevé auprès des habitants. Aide-moi à l'analyser : effectifs, fréquences, moyenne, médiane…",
+     "thanks": "Tes calculs confirment mes soupçons. Beau travail d'enquête.",
+     "v1_at": [
+      11.5,
+      13
+     ]
+    },
+    {
+     "code": "brann",
+     "name": "Le capitaine Brann",
+     "model": "Knight",
+     "room": 1,
+     "quest": "enquete",
+     "generator": "2nde.probabilites.enquete",
+     "title": "Le registre du capitaine",
+     "ask": "Mon registre croise deux informations sur chacun. Dis-moi quelles sont les chances de tomber sur tel ou tel profil.",
+     "thanks": "Avec ces probabilités, je saurai où poster mes hommes. Merci.",
+     "v1_at": [
+      5,
+      13
+     ]
+    },
+    {
+     "code": "isaure",
+     "name": "Isaure l'archiviste",
+     "model": "Mage",
+     "room": 1,
+     "quest": "veille",
+     "title": "Les révisions d'Isaure",
+     "ask": "Tu sembles préoccupé. Reprenons ensemble le chapitre que tu travailles en ce moment.",
+     "thanks": "Tu maîtrises. Garde cette rigueur, elle repousse le Brouillard.",
+     "v1_at": [
+      11,
+      6
+     ]
+    }
+   ]
+  }
+ ]
+}

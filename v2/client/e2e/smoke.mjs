@@ -1,0 +1,121 @@
+// Parcours de fumée dans un vrai navigateur : écran titre → île (mode découverte) → le héros
+// avance → pierre d'éveil → question → bonne réponse → la pierre s'éveille. Échoue sur toute
+// erreur de la page ou toute ressource introuvable. Captures dans $E2E_OUT (défaut : e2e/captures).
+//   npm run build && npm run preview &   puis   npm run e2e
+import { mkdirSync } from 'node:fs'
+import { createRequire } from 'node:module'
+
+// playwright-core d'e2e/package.json (CI), sinon un Playwright installé sur le poste.
+const require = createRequire(import.meta.url)
+const { chromium } = (() => {
+  try {
+    return require('playwright-core')
+  } catch {
+    return require('playwright')
+  }
+})()
+
+const BASE = process.env.E2E_URL ?? 'http://127.0.0.1:4173'
+const OUT = process.env.E2E_OUT ?? new URL('./captures/', import.meta.url).pathname
+const SLOW = Number(process.env.E2E_SLOW ?? 1) // rendu logiciel de la CI : attentes allongées
+const QUALITY = process.env.E2E_QUALITE ?? 'bas'
+mkdirSync(OUT, { recursive: true })
+
+const problems = []
+const browser = await chromium.launch({
+  executablePath: process.env.CHROMIUM_PATH || undefined,
+  args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'],
+})
+const page = await browser.newPage({ viewport: { width: 1280, height: 720 } })
+page.on('pageerror', (e) => problems.push(`erreur de la page : ${e.message}`))
+page.on('console', (m) => { if (m.type() === 'error') problems.push(`console : ${m.text()}`) })
+page.on('response', (r) => { if (r.status() >= 400) problems.push(`${r.status()} ${r.url()}`) })
+
+const step = async (label, fn) => {
+  const t = Date.now()
+  await fn()
+  console.log(`✓ ${label} (${((Date.now() - t) / 1000).toFixed(1)} s)`)
+}
+
+try {
+  await step('écran titre', async () => {
+    await page.goto(`${BASE}/`)
+    await page.getByTestId('decouvrir').waitFor()
+    await page.screenshot({ path: `${OUT}/01-titre.png` })
+  })
+
+  await step("chargement de l'île", async () => {
+    await page.goto(`${BASE}/?decouverte&e2e&qualite=${QUALITY}`)
+    await page.waitForFunction(() => window.__aldoria?.world, null, { timeout: 180_000 * SLOW })
+    await page.waitForTimeout(2500 * SLOW)
+    await page.screenshot({ path: `${OUT}/02-depart.png` })
+  })
+
+  await step('le héros avance (touche Z/W)', async () => {
+    const before = await page.evaluate(() => window.__aldoria.world.heroPosition())
+    await page.locator('canvas').click({ position: { x: 640, y: 120 } })
+    await page.keyboard.down('KeyW')
+    await page.waitForTimeout(1500 * SLOW)
+    await page.keyboard.up('KeyW')
+    const after = await page.evaluate(() => window.__aldoria.world.heroPosition())
+    const moved = Math.hypot(after.x - before.x, after.z - before.z)
+    if (moved < 1) throw new Error(`le héros n'a pas bougé (${moved.toFixed(2)} m)`)
+  })
+
+  await step("question de la pierre d'éveil", async () => {
+    await page.evaluate(() => window.__aldoria.world.teleport(9, -24.5, 9, -22))
+    await page.getByTestId('invite').waitFor({ timeout: 10_000 * SLOW })
+    await page.screenshot({ path: `${OUT}/03-pierre.png` })
+    await page.keyboard.press('KeyE')
+    await page.getByRole('dialog').waitFor()
+    await page.waitForTimeout(500)
+    await page.screenshot({ path: `${OUT}/04-question.png` })
+  })
+
+  await step('bonne réponse, la pierre s’éveille', async () => {
+    const item = await page.evaluate(() => window.__aldoria.question)
+    if (item.answer.kind === 'choice') {
+      await page.locator('.choice').nth(item.answer.index).click()
+    } else if (item.answer.kind === 'number' || item.answer.kind === 'fraction') {
+      await page.getByLabel('Ta réponse').fill(String(item.answer.value).replace('.', ','))
+      await page.getByRole('button', { name: 'Valider' }).click()
+    } else if (item.answer.kind === 'text') {
+      await page.getByLabel('Ta réponse').fill(item.answer.value[0])
+      await page.getByRole('button', { name: 'Valider' }).click()
+    } else if (item.answer.kind === 'order') {
+      for (const i of item.answer.value) await page.locator('.choices .choice').nth(i).click()
+      await page.getByRole('button', { name: 'Valider' }).click()
+    } else {
+      throw new Error(`type de réponse non géré par le test : ${item.answer.kind}`)
+    }
+    await page.locator('.feedback.good').waitFor({ timeout: 5000 })
+    await page.screenshot({ path: `${OUT}/05-juste.png` })
+    await page.getByRole('button', { name: 'Continuer' }).click()
+    await page.getByRole('dialog').waitFor({ state: 'detached' })
+    const xp = await page.locator('.badge').innerText()
+    if (!/15 XP/.test(xp)) throw new Error(`XP attendue après la pierre : ${xp}`)
+    await page.waitForTimeout(800 * SLOW)
+    await page.screenshot({ path: `${OUT}/06-eveillee.png` })
+  })
+
+  await step('vue de la Citadelle et des montagnes', async () => {
+    await page.evaluate(() => {
+      const w = window.__aldoria.world
+      w.teleport(0, -40, 0, 30)
+      w.frame(-Math.PI / 2 - 0.35, 1.28, 14)
+    })
+    await page.waitForTimeout(1500 * SLOW)
+    await page.screenshot({ path: `${OUT}/07-citadelle.png` })
+  })
+} catch (error) {
+  problems.push(String(error))
+  await page.screenshot({ path: `${OUT}/echec.png` }).catch(() => {})
+} finally {
+  await browser.close()
+}
+
+if (problems.length > 0) {
+  console.error('\n✗ Parcours en échec :\n  ' + problems.join('\n  '))
+  process.exit(1)
+}
+console.log(`\nParcours réussi. Captures : ${OUT}`)

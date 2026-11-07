@@ -1,0 +1,23 @@
+{
+  "level": "2nde",
+  "subject": {"code": "emc", "label": "Enseignement moral et civique"},
+  "source": "Programme d'enseignement moral et civique (arrêté du 29 mai 2024, BO n° 24 du 13 juin 2024), en vigueur en seconde depuis la rentrée 2024. Thème annuel : « Droits, libertés et responsabilité », en trois axes (l'État de droit ; liberté et responsabilité : l'information ; droits et responsabilité : l'environnement et la biodiversité). Questions : générateurs (api/app/engine/generators/emc_2nde.py), complétés par la banque.",
+  "chapters": [
+    {"code": "2nde.emc.etat_droit", "title": "L'État de droit garantit les droits, les libertés et le pluralisme", "notions": [
+      {"code": "2nde.emc.etat_droit.principes", "label": "L'État de droit : justice indépendante, égalité devant la loi, hiérarchie des normes"},
+      {"code": "2nde.emc.etat_droit.laicite", "label": "Sécularisation, laïcité et pluralisme : la loi de 1905"},
+      {"code": "2nde.emc.etat_droit.nouveaux_droits", "label": "De nouveaux droits ; ordre public et privation de liberté"},
+      {"code": "2nde.emc.etat_droit.europe", "label": "L'État de droit en Europe : Convention et Cour européennes des droits de l'homme, Charte de l'Union"}
+    ]},
+    {"code": "2nde.emc.information", "title": "Liberté et responsabilité : l'exemple de l'information", "notions": [
+      {"code": "2nde.emc.information.presse", "label": "Liberté de la presse, liberté de s'informer et pluralisme"},
+      {"code": "2nde.emc.information.expression", "label": "La liberté d'expression et ses limites fixées par la loi"},
+      {"code": "2nde.emc.information.desinformation", "label": "Sources, algorithmes, désinformation et régulation des réseaux sociaux"}
+    ]},
+    {"code": "2nde.emc.environnement", "title": "Droits et responsabilité : l'environnement et la biodiversité", "notions": [
+      {"code": "2nde.emc.environnement.charte", "label": "La Charte de l'environnement et le droit à un environnement sain"},
+      {"code": "2nde.emc.environnement.responsabilite", "label": "Responsabilité des États, des producteurs et des consommateurs ; développement durable"},
+      {"code": "2nde.emc.environnement.vivant", "label": "Le respect du vivant : l'animal et la biodiversité dans le droit"}
+    ]}
+  ]
+}

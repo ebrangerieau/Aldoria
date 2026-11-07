@@ -1,0 +1,155 @@
+{
+ "source": "exporté du prototype v1 par v2/tools/export_v1_content.py ; ce fichier fait foi",
+ "regions": {
+  "maths": {
+   "title": "Les Cimes Fractales",
+   "fog": "Les Cimes Fractales dorment sous le brouillard. Leurs pages t'attendront quand ta classe y montera.",
+   "v1_slots": [
+    [
+     12,
+     3
+    ],
+    [
+     14,
+     1
+    ],
+    [
+     18,
+     1
+    ]
+   ]
+  },
+  "anglais": {
+   "title": "La Bibliothèque des Langues",
+   "fog": "Au bord de la mer, la Bibliothèque des Langues est encore noyée de brume. Ses portes s'ouvriront quand l'anglais entrera dans ta quête.",
+   "v1_slots": [
+    [
+     2,
+     5
+    ],
+    [
+     4,
+     7
+    ],
+    [
+     2,
+     9
+    ]
+   ]
+  },
+  "francais": {
+   "title": "Le Bois des Mots",
+   "fog": "Le Bois des Mots est perdu dans le brouillard. On raconte que les arbres y murmurent des histoires. Un jour, un Archiviste y entrera.",
+   "v1_slots": [
+    [
+     10,
+     9
+    ],
+    [
+     8,
+     11
+    ],
+    [
+     12,
+     11
+    ]
+   ]
+  },
+  "sciences": {
+   "title": "Le Laboratoire des Inventeurs",
+   "fog": "Derrière ses vitres embuées, le Laboratoire des Inventeurs garde ses expériences et ses spécimens. Il s'ouvrira quand les sciences entreront dans ta quête.",
+   "v1_slots": [
+    [
+     8,
+     3
+    ],
+    [
+     6,
+     1
+    ],
+    [
+     4,
+     3
+    ]
+   ]
+  },
+  "histoire_geo": {
+   "title": "Les Portes du Temps",
+   "fog": "Dans ce cercle de pierres, chaque porte ouvre sur une autre époque ou un autre lieu du monde. Dame Sablière y a tout mélangé. Ces portes s'ouvriront quand l'histoire-géographie entrera dans ta quête.",
+   "v1_slots": [
+    [
+     16,
+     7
+    ],
+    [
+     18,
+     5
+    ],
+    [
+     16,
+     3
+    ]
+   ]
+  },
+  "emc": {
+   "title": "Le Forum des Citoyens",
+   "fog": "Près de la Citadelle, le Forum des Citoyens attend ses débats. On y vote, on y défend ses droits et ceux des autres. Il s'ouvrira quand l'enseignement moral et civique entrera dans ta quête.",
+   "v1_slots": [
+    [
+     8,
+     7
+    ],
+    [
+     12,
+     7
+    ],
+    [
+     14,
+     5
+    ]
+   ]
+  },
+  "svt": {
+   "title": "La Vallée du Vivant",
+   "fog": "Au sud-ouest, la Vallée du Vivant cache ses bocaux, ses fossiles et ses champs sous la brume. Elle s'ouvrira quand les sciences de la vie et de la Terre entreront dans ta quête.",
+   "v1_slots": [
+    [
+     4,
+     11
+    ],
+    [
+     6,
+     9
+    ]
+   ]
+  },
+  "snt": {
+   "title": "Le Carrefour des Messagers",
+   "fog": "Au Carrefour des Messagers, les nouvelles voyagent de relais en relais, et les automates dessinent les cartes. Il s'ouvrira quand les sciences numériques entreront dans ta quête.",
+   "v1_slots": [
+    [
+     14,
+     9
+    ],
+    [
+     16,
+     11
+    ]
+   ]
+  }
+ },
+ "region_of": {
+  "physique_chimie": "sciences",
+  "espagnol": "anglais",
+  "ses": "emc"
+ },
+ "secrets": {
+  "tour_oubli": {
+   "title": "La Tour de l'Oubli",
+   "text": "Là-bas se dresse la Tour de l'Oubli, le repaire de Malvrek, l'Archiviste déchu. Elle ne s'ouvrira que lorsque tu auras repris assez de pages et vraiment appris ce qu'elles contiennent.",
+   "v1_piece": "building_tower_B_red"
+  }
+ },
+ "citadel_text": "Voici la Citadelle des Archives, le cœur du royaume. Tu y retrouves la Grande Chronique, ta salle d'armes, la Lice pour t'entraîner et la Pierre du Jour, ton défi quotidien.",
+ "welcome": "Voici la carte du royaume. Touche un lieu : je te dirai ce qui t'y attend, et tu choisiras d'y aller ou non. La Citadelle, au centre, garde ta salle d'armes, la Lice et la Pierre du Jour."
+}

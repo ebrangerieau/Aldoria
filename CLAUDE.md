@@ -3,6 +3,10 @@
 Jeu éducatif 2.5D (Godot 4.7.2, export web) pour réviser les maths de 6ème (Jules) et de seconde (Tom).
 Documents de référence : `docs/PRD.md`, `docs/TRD.md`, `IMPLEMENTATION_PLAN.md` (phases, décisions, écarts au TRD).
 
+**v2 en préparation dans `v2/`** (île ouverte en 3D, Babylon.js, PC seulement) : elle a son propre `v2/CLAUDE.md`, sa CI
+(`.github/workflows/v2.yml`) et ses copies de l'API, de l'espace parent et des contenus. Une modification de la v1 ne touche pas
+`v2/`, et inversement ; l'API v2 garde la compatibilité avec la v1 (même base, emplacement de sauvegarde `v1`).
+
 ## Arborescence
 
 - `game/` : projet Godot (GDScript typé, renderer Compatibility, export web sans threads)

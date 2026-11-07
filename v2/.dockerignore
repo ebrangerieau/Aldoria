@@ -1,0 +1,11 @@
+**/node_modules
+**/dist
+**/__pycache__
+api/.venv
+api/.pytest_cache
+api/.ruff_cache
+client/e2e/captures
+docs/
+tools/
+*.md
+!client/public/**

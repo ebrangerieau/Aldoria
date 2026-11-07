@@ -11,3 +11,5 @@ content/*
 tools/
 *.md
 !build/web/**
+# La v2 a ses propres images (contexte v2/).
+v2/

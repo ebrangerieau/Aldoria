@@ -1,0 +1,8 @@
+{
+  "name": "aldoria-client-e2e",
+  "private": true,
+  "description": "Parcours dans le navigateur du client v2 (npm run e2e depuis client/)",
+  "dependencies": {
+    "playwright-core": "1.56.1"
+  }
+}

@@ -1,0 +1,70 @@
+{
+  "level": "2nde",
+  "subject": {"code": "maths", "label": "Mathématiques"},
+  "source": "Programme de seconde, arrêté du 26 février 2026 (BO n°14 du 02/04/2026). Notions « to_validate » : sources contradictoires, à confirmer dans l'annexe officielle (IMPLEMENTATION_PLAN §1.1).",
+  "chapters": [
+    {"code": "2nde.maths.reels", "title": "Nombres réels et intervalles", "notions": [
+      {"code": "2nde.maths.reels.ensembles", "label": "Ensembles de nombres (ℕ, ℤ, 𝔻, ℚ, ℝ)"},
+      {"code": "2nde.maths.reels.intervalles", "label": "Intervalles, réunion et intersection"}
+    ]},
+    {"code": "2nde.maths.valeur_absolue", "title": "Valeur absolue", "notions": [
+      {"code": "2nde.maths.valeur_absolue.distance", "label": "Valeur absolue et distance"},
+      {"code": "2nde.maths.valeur_absolue.intervalles", "label": "|x − a| ≤ r et intervalles"}
+    ]},
+    {"code": "2nde.maths.calcul_litteral", "title": "Calcul littéral", "notions": [
+      {"code": "2nde.maths.calcul_litteral.developpement", "label": "Développer et réduire"},
+      {"code": "2nde.maths.calcul_litteral.factorisation", "label": "Factoriser"},
+      {"code": "2nde.maths.calcul_litteral.puissances", "label": "Puissances"},
+      {"code": "2nde.maths.calcul_litteral.racines", "label": "Racines carrées"}
+    ]},
+    {"code": "2nde.maths.equations", "title": "Équations et inéquations", "notions": [
+      {"code": "2nde.maths.equations.premier_degre", "label": "Équations du premier degré"},
+      {"code": "2nde.maths.equations.quotients", "label": "Équations avec quotients"},
+      {"code": "2nde.maths.equations.produit_nul", "label": "Équation produit nul"},
+      {"code": "2nde.maths.equations.inequations", "label": "Inéquations du premier degré"},
+      {"code": "2nde.maths.equations.signe", "label": "Signe d'un produit ou d'un quotient"}
+    ]},
+    {"code": "2nde.maths.vecteurs", "title": "Vecteurs", "notions": [
+      {"code": "2nde.maths.vecteurs.coordonnees", "label": "Coordonnées et somme de vecteurs"},
+      {"code": "2nde.maths.vecteurs.colinearite", "label": "Colinéarité et déterminant"}
+    ]},
+    {"code": "2nde.maths.geometrie_reperee", "title": "Géométrie repérée et droites", "notions": [
+      {"code": "2nde.maths.geometrie_reperee.milieu_distance", "label": "Milieu et distance dans un repère orthonormé"},
+      {"code": "2nde.maths.geometrie_reperee.droites", "label": "Équations de droites"}
+    ]},
+    {"code": "2nde.maths.fonctions", "title": "Généralités sur les fonctions", "notions": [
+      {"code": "2nde.maths.fonctions.image_antecedent", "label": "Image et antécédent"},
+      {"code": "2nde.maths.fonctions.affine", "label": "Fonctions affines"},
+      {"code": "2nde.maths.fonctions.variations", "label": "Variations et extremums"}
+    ]},
+    {"code": "2nde.maths.fonctions_reference", "title": "Fonctions de référence", "notions": [
+      {"code": "2nde.maths.fonctions_reference.carre_inverse", "label": "Fonctions carré et inverse"},
+      {"code": "2nde.maths.fonctions_reference.valeur_absolue", "label": "Fonction valeur absolue"},
+      {"code": "2nde.maths.fonctions_reference.racine_cube", "label": "Fonctions racine carrée et cube", "to_validate": true}
+    ]},
+    {"code": "2nde.maths.statistiques", "title": "Statistiques", "notions": [
+      {"code": "2nde.maths.statistiques.indicateurs", "label": "Moyenne pondérée, médiane, écart type"},
+      {"code": "2nde.maths.statistiques.classes", "label": "Séries regroupées en classes"},
+      {"code": "2nde.maths.statistiques.echantillonnage", "label": "Échantillonnage", "to_validate": true}
+    ]},
+    {"code": "2nde.maths.probabilites", "title": "Probabilités conditionnelles", "notions": [
+      {"code": "2nde.maths.probabilites.conditionnelles", "label": "Probabilités conditionnelles"},
+      {"code": "2nde.maths.probabilites.arbres", "label": "Arbres pondérés et tableaux croisés"}
+    ]},
+    {"code": "2nde.maths.logique", "title": "Logique et ensembles", "notions": [
+      {"code": "2nde.maths.logique.ensembles", "label": "Appartenance, inclusion, réunion, intersection"},
+      {"code": "2nde.maths.logique.implication", "label": "Implication, réciproque, contre-exemple"}
+    ]},
+    {"code": "2nde.maths.python", "title": "Algorithmique et Python", "notions": [
+      {"code": "2nde.maths.python.variables", "label": "Variables et conditions"},
+      {"code": "2nde.maths.python.boucles", "label": "Boucles for et while"},
+      {"code": "2nde.maths.python.fonctions", "label": "Fonctions"}
+    ]},
+    {"code": "2nde.maths.automatismes", "title": "Automatismes (épreuve anticipée)", "notions": [
+      {"code": "2nde.maths.automatismes.evolutions", "label": "Coefficients multiplicateurs et évolutions", "automatism": true},
+      {"code": "2nde.maths.automatismes.fractions", "label": "Calcul fractionnaire sans calculatrice", "automatism": true},
+      {"code": "2nde.maths.automatismes.pythagore_thales", "label": "Pythagore, Thalès, trigonométrie", "automatism": true},
+      {"code": "2nde.maths.automatismes.lecture_graphique", "label": "Lecture graphique", "automatism": true}
+    ]}
+  ]
+}

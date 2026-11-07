@@ -1,0 +1,49 @@
+{
+  "level": "2nde",
+  "subject": {"code": "anglais", "label": "Anglais"},
+  "source": "Programme d'anglais du lycée général et technologique (arrêté du 5 mai 2025, BO n° 22 du 29 mai 2025), en vigueur en seconde depuis la rentrée 2025 : six axes culturels (dont l'axe 6, « Les pays du Commonwealth : héritages, unité, diversité », obligatoire), niveau visé A2+ à B1+ en LVA. Repères linguistiques (grammaire, lexique, phonologie) d'après le projet de programme de seconde (novembre 2024) ; objets d'étude d'après Eduscol, « Repères culturels : objets d'étude possibles » (2025). Questions : générateurs (api/app/engine/generators/anglais_2nde.py), complétés par la banque.",
+  "chapters": [
+    {"code": "2nde.anglais.verbe", "title": "Le verbe : temps et aspects", "notions": [
+      {"code": "2nde.anglais.verbe.irreguliers", "label": "Les verbes irréguliers (prétérit et participe passé)"},
+      {"code": "2nde.anglais.verbe.preterit", "label": "Le prétérit simple et le prétérit en be + -ing"},
+      {"code": "2nde.anglais.verbe.present_perfect", "label": "Le present perfect (for, since, already, yet, ever)"},
+      {"code": "2nde.anglais.verbe.futur", "label": "Exprimer le futur (will, be going to, présent en be + -ing)"},
+      {"code": "2nde.anglais.verbe.habitude", "label": "L'habitude dans le passé (used to, would) et le futur dans le passé"}
+    ]},
+    {"code": "2nde.anglais.modalite", "title": "Modalité, hypothèse et souhait", "notions": [
+      {"code": "2nde.anglais.modalite.probabilite", "label": "Les modaux de la probabilité (may, might, could, must, can't)"},
+      {"code": "2nde.anglais.modalite.obligation", "label": "Capacité, obligation et conseil (be able to, have to, must, should, ought to)"},
+      {"code": "2nde.anglais.modalite.hypothese", "label": "Les subordonnées hypothétiques (if, unless, would)"},
+      {"code": "2nde.anglais.modalite.souhait", "label": "Le souhait et le regret (wish, if only)"}
+    ]},
+    {"code": "2nde.anglais.phrase", "title": "Construire la phrase", "notions": [
+      {"code": "2nde.anglais.phrase.ordre", "label": "L'ordre des mots dans la phrase"},
+      {"code": "2nde.anglais.phrase.relatives", "label": "Les propositions relatives (who, which, that, whose, whom)"},
+      {"code": "2nde.anglais.phrase.discours_indirect", "label": "Le discours indirect"},
+      {"code": "2nde.anglais.phrase.connecteurs", "label": "Les connecteurs logiques et chronologiques"},
+      {"code": "2nde.anglais.phrase.tags", "label": "Les réponses courtes et les question tags"},
+      {"code": "2nde.anglais.phrase.causatif", "label": "Les structures causatives (make, let, have something done)"}
+    ]},
+    {"code": "2nde.anglais.nom", "title": "Le groupe nominal", "notions": [
+      {"code": "2nde.anglais.nom.quantifieurs", "label": "Les quantifieurs (much, many, few, a few, little, a little, less, fewer)"},
+      {"code": "2nde.anglais.nom.comparatifs", "label": "Comparatifs et superlatifs"},
+      {"code": "2nde.anglais.nom.groupe_nominal", "label": "Le groupe nominal complexe et le gérondif"},
+      {"code": "2nde.anglais.nom.pronoms", "label": "Pronoms réfléchis, réciproques et possessifs"}
+    ]},
+    {"code": "2nde.anglais.lexique", "title": "Lexique des axes culturels", "notions": [
+      {"code": "2nde.anglais.lexique.apparence", "label": "L'apparence et la mode (axe 1)"},
+      {"code": "2nde.anglais.lexique.generations", "label": "La famille et les générations (axe 2)"},
+      {"code": "2nde.anglais.lexique.heritage", "label": "Le patrimoine et la mémoire (axe 3)"},
+      {"code": "2nde.anglais.lexique.transitions", "label": "L'environnement et les transitions (axe 4)"},
+      {"code": "2nde.anglais.lexique.creation", "label": "La création et les récits (axe 5)"},
+      {"code": "2nde.anglais.lexique.commonwealth", "label": "La monarchie et le Commonwealth (axe 6)"},
+      {"code": "2nde.anglais.lexique.phrasal_verbs", "label": "Les phrasal verbs"},
+      {"code": "2nde.anglais.lexique.prononciation", "label": "Prononciation : lettres muettes, sons /θ/ et /ð/"}
+    ]},
+    {"code": "2nde.anglais.culture", "title": "Repères culturels du monde anglophone", "notions": [
+      {"code": "2nde.anglais.culture.commonwealth", "label": "Le Commonwealth : histoire et institutions"},
+      {"code": "2nde.anglais.culture.chronologie", "label": "La chronologie du Commonwealth"},
+      {"code": "2nde.anglais.culture.reperes", "label": "Figures et mouvements du monde anglophone"}
+    ]}
+  ]
+}
