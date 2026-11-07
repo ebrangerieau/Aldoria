@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -p tsconfig.json && vite build",
     "typecheck": "tsc -p tsconfig.json",
-    "preview": "vite preview --port 4173 --strictPort",
+    "preview": "vite preview",
     "test": "vitest run",
     "e2e": "node e2e/smoke.mjs",
     "captures": "node e2e/captures.mjs"

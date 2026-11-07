@@ -32,7 +32,9 @@ export default defineConfig({
   },
   // Prévisualisation du build avec la même CSP que nginx (deploy/nginx/web.conf) : les tests
   // dans le navigateur échouent si un module injecte un style ou appelle un serveur tiers.
-  preview: { headers: { 'Content-Security-Policy': CSP } },
+  // Adresse IPv4 explicite : sur les runners Ubuntu 24.04, « localhost » se résout en ::1 et le
+  // serveur n'écoutait pas sur 127.0.0.1, l'adresse attendue par la CI et e2e/smoke.mjs.
+  preview: { host: '127.0.0.1', port: 4173, strictPort: true, headers: { 'Content-Security-Policy': CSP } },
   build: {
     outDir: 'dist',
     // Fichiers produits par Vite (nommés par empreinte) : /assets/. Fichiers statiques

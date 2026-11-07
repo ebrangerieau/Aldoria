@@ -74,6 +74,9 @@ jobs:
           npm run preview > "$RUNNER_TEMP/preview.log" 2>&1 &
           npx --yes wait-on@8 -t 60000 http://127.0.0.1:4173/
           npm run e2e
+      - name: Journal du serveur de prévisualisation
+        if: failure()
+        run: cat "$RUNNER_TEMP/preview.log" || true
       - uses: actions/upload-artifact@v4
         if: always()
         with:
