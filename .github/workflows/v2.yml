@@ -129,6 +129,23 @@ jobs:
       cancel-in-progress: false
     steps:
       - uses: actions/checkout@v4
+      - name: Images lisibles sans compte (le VPS les tire sans se connecter à GHCR)
+        run: |
+          # Un nouveau paquet GHCR est privé : avant de toucher au VPS, vérifier que les deux images de ce
+          # commit se lisent sans compte. Sinon : le rendre public, puis relancer ce job.
+          for name in api web2; do
+            repo="ebrangerieau/aldoria-${name}"
+            token=$(curl -sS "https://ghcr.io/token?scope=repository:${repo}:pull" \
+              | python3 -c 'import json,sys; print(json.load(sys.stdin).get("token",""))' 2>/dev/null || true)
+            code=$(curl -s -o /dev/null -w '%{http_code}' -H "Authorization: Bearer ${token}" \
+              -H 'Accept: application/vnd.oci.image.index.v1+json, application/vnd.oci.image.manifest.v1+json, application/vnd.docker.distribution.manifest.list.v2+json, application/vnd.docker.distribution.manifest.v2+json' \
+              "https://ghcr.io/v2/${repo}/manifests/${GITHUB_SHA}")
+            if [ "$code" != "200" ]; then
+              msg="Image ghcr.io/${repo}:${GITHUB_SHA} illisible sans compte (HTTP ${code}). Rendre le paquet aldoria-${name} public (GitHub, Packages, aldoria-${name}, Package settings, Change visibility), puis relancer ce job. Rien n'a été touché sur le VPS."
+              echo "::error::$msg"; echo "$msg" >> "$GITHUB_STEP_SUMMARY"
+              exit 1
+            fi
+          done
       - name: Déploiement sur le VPS (API et jeu v2)
         env:
           SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
