@@ -27,8 +27,10 @@ const browser = await chromium.launch({
   args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'],
 })
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } })
-page.on('pageerror', (e) => problems.push(`erreur de la page : ${e.message}`))
-page.on('console', (m) => { if (m.type() === 'error') problems.push(`console : ${m.text()}`) })
+// Seule tolérée : l'erreur d'essai levée exprès par `?erreur_test=1` (remontée des erreurs).
+const TEST_ERROR = "Erreur d'essai (erreur_test=1)"
+page.on('pageerror', (e) => { if (!e.message.includes(TEST_ERROR)) problems.push(`erreur de la page : ${e.message}`) })
+page.on('console', (m) => { if (m.type() === 'error' && !m.text().includes(TEST_ERROR)) problems.push(`console : ${m.text()}`) })
 page.on('response', (r) => { if (r.status() >= 400) problems.push(`${r.status()} ${r.url()}`) })
 
 const step = async (label, fn) => {
@@ -45,10 +47,17 @@ try {
   })
 
   await step("chargement de l'île", async () => {
-    await page.goto(`${BASE}/?decouverte&e2e&qualite=${QUALITY}`)
+    await page.goto(`${BASE}/?decouverte&e2e&erreur_test=1&qualite=${QUALITY}`)
     await page.waitForFunction(() => window.__aldoria?.world, null, { timeout: 180_000 * SLOW })
     await page.waitForTimeout(2500 * SLOW)
     await page.screenshot({ path: `${OUT}/02-depart.png` })
+  })
+
+  await step('une erreur du jeu est captée pour l’exploitant (sans appareil relié : rien ne part)', async () => {
+    const caught = await page.evaluate(() => window.__aldoria.services.errors.list())
+    const test = caught.find((e) => e.message.includes("Erreur d'essai"))
+    if (!test) throw new Error(`erreur d'essai non captée : ${JSON.stringify(caught)}`)
+    if (!test.location) throw new Error("erreur d'essai sans endroit du code")
   })
 
   await step('le renard a des proportions normales et touche le sol', async () => {
