@@ -32,7 +32,7 @@ import { angleDelta, RUN_SPEED, step, WALK_SPEED } from '../core/world/movement'
 import { isOpen, type Place, placesFor, regionTitle } from '../core/world/places'
 import { type IslandLayout, Terrain } from '../core/world/terrain'
 import { type Atmosphere, createAtmosphere } from './atmosphere'
-import { type Character, loadFox, loadHero, loadNpc } from './characters'
+import { type Character, loadFox, loadHero, loadNpc, settleOnGround } from './characters'
 import { beacon, buildDecor } from './decor'
 import { createEngine, type EngineKind } from './engine'
 import { buildGround, buildSea } from './island'
@@ -156,12 +156,13 @@ export class GameWorld {
     this.hero.root.position.set(start.x, grid.heightAt(start.x, start.z), start.z)
     this.hero.yaw = (start.cap * Math.PI) / 180
     for (const m of this.hero.meshes) this.atmosphere.shadows.addShadowCaster(m, false)
-    // Renard de Jules : désactivé par défaut tant que son modèle s'affiche mal dans Babylon.js
-    // (pattes, oreilles et yeux étirés en pointes ; docs/IMPLEMENTATION_PLAN.md, phase 1).
-    if (this.options.world === 'lumineux' && this.params.get('renard') === '1') {
+    // Renard de Jules, dans le monde lumineux (`?renard=0` pour l'enlever, par exemple en capture).
+    if (this.options.world === 'lumineux' && this.params.get('renard') !== '0') {
       this.fox = await loadFox(scene)
       this.fox.root.position.set(start.x - 1.5, grid.heightAt(start.x - 1.5, start.z - 1.5), start.z - 1.5)
       for (const m of this.fox.meshes) this.atmosphere.shadows.addShadowCaster(m, false)
+      const fox = this.fox
+      scene.onAfterRenderObservable.addOnce(() => settleOnGround(fox))
     }
 
     this.progress('Maître Ysaline', 0.85)

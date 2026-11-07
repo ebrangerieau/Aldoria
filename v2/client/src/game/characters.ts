@@ -158,6 +158,26 @@ async function loadCharacter(
   return character
 }
 
+/** Pose un personnage animé sur le sol : sommet le plus bas, squelette appliqué, ramené au pied de
+ * `root`. Pour les modèles dont la boîte englobante au repos ne dit rien (renard Quaternius) ;
+ * à appeler après une première image, quand les os sont calculés. */
+export function settleOnGround(character: Character): void {
+  const inner = character.root.getChildren()[0] as TransformNode | undefined
+  if (!inner) return
+  const base = character.root.getAbsolutePosition().y
+  let lowest = Infinity
+  for (const m of character.meshes) {
+    if (m.getTotalVertices() === 0) continue
+    const p = m.getPositionData(true, false)
+    if (!p) continue
+    const w = m.getWorldMatrix().m
+    for (let i = 0; i < p.length; i += 3) {
+      lowest = Math.min(lowest, p[i]! * w[1]! + p[i + 1]! * w[5]! + p[i + 2]! * w[9]! + w[13]!)
+    }
+  }
+  if (Number.isFinite(lowest)) inner.position.y += base - lowest
+}
+
 /** Cache les pièces d'équipement non choisies (une arme par main, couvre-chef, cape). */
 export function dress(character: Character, model: string, look: { main: string; off: string; head?: boolean; cape?: boolean }): void {
   const parts = PARTS[model]

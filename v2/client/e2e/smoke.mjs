@@ -51,6 +51,35 @@ try {
     await page.screenshot({ path: `${OUT}/02-depart.png` })
   })
 
+  await step('le renard a des proportions normales et touche le sol', async () => {
+    // Sommets avec le squelette appliqué, dans le repère du monde : tous à moins de 1,5 m du renard
+    // (avant le correctif de la racine du squelette, certains partaient à des dizaines de mètres), et
+    // le plus bas à moins de 8 cm du sol.
+    const fox = await page.evaluate(() => {
+      const f = window.__aldoria.world.fox
+      if (!f) return null
+      const o = f.root.getAbsolutePosition()
+      let far = 0
+      let lowest = Infinity
+      for (const m of f.meshes) {
+        if (!m.getTotalVertices()) continue
+        const p = m.getPositionData(true, false)
+        const w = m.getWorldMatrix().m
+        for (let i = 0; i < p.length; i += 3) {
+          const x = p[i] * w[0] + p[i + 1] * w[4] + p[i + 2] * w[8] + w[12]
+          const y = p[i] * w[1] + p[i + 1] * w[5] + p[i + 2] * w[9] + w[13]
+          const z = p[i] * w[2] + p[i + 1] * w[6] + p[i + 2] * w[10] + w[14]
+          far = Math.max(far, Math.hypot(x - o.x, y - o.y, z - o.z))
+          lowest = Math.min(lowest, y)
+        }
+      }
+      return { far, gap: lowest - o.y }
+    })
+    if (!fox) throw new Error('pas de renard dans le monde lumineux')
+    if (fox.far > 1.5) throw new Error(`un sommet du renard est à ${fox.far.toFixed(1)} m de lui`)
+    if (Math.abs(fox.gap) > 0.08) throw new Error(`le renard est à ${(fox.gap * 100).toFixed(0)} cm du sol`)
+  })
+
   await step('le héros avance (touche Z/W)', async () => {
     const before = await page.evaluate(() => window.__aldoria.world.heroPosition())
     await page.locator('canvas').click({ position: { x: 640, y: 120 } })
