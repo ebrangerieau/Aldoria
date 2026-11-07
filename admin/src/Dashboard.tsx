@@ -119,7 +119,7 @@ function PlayTime({ days }: { days: DashboardData['days'] }) {
   )
 }
 
-const MODES = { arene: 'Arène', donjon: 'Donjon', defi: 'Défi du jour', village: 'Village' } as const
+const MODES = { arene: 'Arène', donjon: 'Donjon', defi: 'Défi du jour', village: 'Village', monde: 'Exploration' } as const
 
 function RecentSessions({ sessions }: { sessions: DashboardData['recent_sessions'] }) {
   if (sessions.length === 0) return <p className="muted">Aucune session.</p>

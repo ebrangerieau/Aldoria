@@ -1,7 +1,7 @@
 # Décisions de la v2
 
 Chaque décision : le contexte, le choix, la raison et ce qu'elle implique. On n'efface pas une décision : on en écrit une
-nouvelle qui la remplace, avec la date. D1 à D6 ont été prises avec Eric le 7 novembre 2026.
+nouvelle qui la remplace, avec la date. D1 à D6 et D11 ont été prises avec Eric le 7 novembre 2026.
 
 ## D1 : PC seulement (7 novembre 2026)
 
@@ -73,3 +73,14 @@ nouvelle qui la remplace, avec la date. D1 à D6 ont été prises avec Eric le 7
   toute violation.
 - **Implique** : aucun style ni fichier en ligne, aucun CDN ; deux problèmes déjà attrapés (polices KaTeX en `data:`, écran de
   chargement de Babylon.js).
+
+## D11 : une seule API et une seule base en production dès la phase 0 (7 novembre 2026)
+
+- **Contexte** : le TRD prévoyait une v2 à part (projet `aldoria2`) sur une copie de la base. Les réponses données dans la v2
+  n'auraient pas compté dans le vrai suivi des enfants, il y aurait eu deux API à faire évoluer, et deux piles sur un VPS à deux
+  cœurs.
+- **Choix** (option B, Eric) : l'API construite depuis `v2/api` remplace celle de la v1 en production ; les deux jeux
+  (`aldoria.*` et `aldoria2.*`) parlent à la même API et à la même base. Écarté : la pile à part (option A).
+- **Implique** : `api/` à la racine est gelé ; `v2/api` garde tous les tests de la v1, qui décrivent ce que le jeu v1 attend ;
+  le parcours navigateur de la v1 tourne contre `v2/api` ; toute migration est sauvegardée avant d'être appliquée (job `deploy`
+  de `v2.yml`) et ne doit jamais casser la v1. Remplace la partie « déploiement séparé » de D6 et du TRD.

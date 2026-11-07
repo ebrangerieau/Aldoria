@@ -244,7 +244,7 @@ export interface Dashboard {
     questions: number
     correct: number
     finished: boolean
-    mode: 'arene' | 'donjon' | 'defi' | 'village' | null
+    mode: 'arene' | 'donjon' | 'defi' | 'village' | 'monde' | null
     rating: number | null
   }[]
   weak_notions: (Notion & { chapter: string })[]
