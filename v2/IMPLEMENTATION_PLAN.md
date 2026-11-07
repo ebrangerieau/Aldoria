@@ -26,18 +26,29 @@
 >   connexion, sauvegarde v2, aménagements dys.
 > - Tests : 114 tests Vitest (dont les 81 vecteurs partagés), parcours navigateur sous la CSP de production, captures.
 > - CI `v2.yml` (sans publication) ; la CI de la v1 ignore `v2/`.
+>
+> ✅ **Fait le 7 novembre 2026 (suite)** :
+> - **0.2, le renard de Jules** : il revient par défaut dans le monde lumineux. Cause des pointes : le `Fox.glb` de
+>   Quaternius déclare `Body` comme racine du squelette (`skin.skeleton`) alors que ses os de cinématique inverse
+>   (`IKBackLeg.R`…) sont rattachés à `AnimalArmature` ; Babylon.js s'y fiait. Tous les modèles se chargent maintenant avec
+>   `alwaysComputeSkeletonRootNode` (`game/assets.ts`) et le renard se pose sur son sommet le plus bas
+>   (`settleOnGround`). Le parcours navigateur échoue si un sommet du renard s'éloigne de plus de 1,5 m ou s'il est à plus de
+>   8 cm du sol.
+> - **0.7, remontée des erreurs** : exceptions, promesses rejetées et `console.error` (Babylon.js, React) partent vers
+>   `POST /play/client-errors` avec l'appareil relié (endroit du code, écran, version du build, navigateur ; jamais de donnée
+>   d'enfant) ; dédoublonnées, par lots de 20, gardées sans réseau (`core/errorReport.ts`, `app/errors.ts`). Version du
+>   jeu dans les Options. 9 tests Vitest (123 en tout) ; le parcours navigateur vérifie la capture d'une erreur d'essai
+>   (`?erreur_test=1`). Reste à voir une vraie erreur dans Exploitation → Erreurs du jeu, une fois `aldoria2` en ligne.
 
 **Reste à faire pour terminer la phase 0**
 
 | Étape | Quoi | Comment vérifier |
 | --- | --- | --- |
 | 0.1 | Jouer la v2 avec un vrai profil (connexion, séance `monde`, réponses en base, sauvegarde `v2`) : se fait sur `aldoria2.bandtrack.fr` dès l'étape 0.6 | l'espace parent montre la séance « Exploration » et les réponses de la v2 |
-| 0.2 | Renard de Jules : réexporter `Fox.glb` (ou un autre renard CC0) pour que Babylon.js l'affiche sans pointes ; le remettre par défaut | capture `depart` avec le renard ; `?renard=1` retiré |
 | 0.3 | Commandes au clavier vérifiées sur AZERTY et QWERTY ; souris (orbite, molette) sur le PC familial | séance de 5 minutes avec Eric |
 | 0.4 | WebGPU : servir twgsl depuis le site, mesurer face à WebGL 2, décider du moteur par défaut (D9) | `docs/perf-log.md`, nouvelle décision si changement |
 | 0.5 | Mesures sur le PC familial (et le PC de Tom) : images par seconde par profil, chargement, mémoire | `docs/perf-log.md` ; profil par défaut choisi d'après les mesures |
 | 0.6 | Mise en ligne (D11) : la CI v2 publie l'API (depuis `v2/api`) et le jeu v2, sauvegarde la base, applique la migration 0013 et ouvre `aldoria2.bandtrack.fr` à côté du jeu v1. À faire par Eric une fois : l'entrée DNS `aldoria2`, et vérifier que le VPS peut tirer la nouvelle image `aldoria-web2` | job `deploy` de `v2.yml` vert : API et `version.txt` du commit, parcours navigateur contre le site |
-| 0.7 | Remontée des erreurs du jeu (reprise d'`ErrorReport` de la v1 : `window.onerror` vers `POST /play/client-errors`) | une erreur d'essai visible dans Exploitation → Erreurs du jeu |
 | 0.8 | Espace parent servi par `web2` (code de `v2/admin`) au lieu du conteneur de la v1 ; `admin/` à la racine gelé | `aldoria-admin.bandtrack.fr` sert le build de `v2/admin` (libellé « Exploration », guide à jour) |
 
 **Critère de passage** : Jules et Tom se promènent dix minutes dans l'île sans aide, trouvent et éveillent au moins trois

@@ -19,6 +19,7 @@ description: Prendre des captures d'écran de l'île d'Aldoria v2 (client Babylo
 ## Quoi vérifier
 
 - Le héros touche le sol (ni flottant ni enfoncé), son ombre est là, ses armes sont celles choisies (une par main).
+- Monde lumineux : le renard suit le héros, entier (aucune partie étirée), les pattes au sol.
 - Le ciel se fond dans le brouillard à l'horizon ; pas de bande noire, pas de surexposition (sable, pierre).
 - Les lieux de quête sont sur un replat, porte tournée vers le départ, seuil lumineux (doré : ouvert ; gris : fermé).
 - Aucun arbre dans un bâtiment, sur un seuil, sur la plage ou sur l'île du Sphinx.

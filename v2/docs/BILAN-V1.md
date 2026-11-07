@@ -66,6 +66,7 @@
 | Validation des réponses, analyse des expressions | `client/src/core/answers.ts`, `mathExpr.ts` | portés ligne à ligne, mêmes 81 vecteurs |
 | Choix des questions, file hors connexion, sauvegarde | `client/src/core/questionService.ts`, `session.ts`, `save.ts` | portés, testés |
 | Panneau de question | `client/src/ui/QuestionPanel.tsx` | QCM, nombre, expression, texte, ordre, vrai/faux ; indice, « Écouter », « Pas vu en classe » |
+| Remontée des erreurs du jeu (`ErrorReport`) | `client/src/core/errorReport.ts`, `app/errors.ts` | portée (étape 0.7) : exceptions, promesses rejetées, `console.error` |
 | Outils | `v2/tools/` | voix ElevenLabs, sons, niveaux du Sphinx, restauration, copie à la maison, paquets de test |
 
 ## 5. Ce qui reste à reprendre de la v1
@@ -81,12 +82,14 @@ Ces fonctions existent et marchent dans la v1 ; la v2 les reprendra une à une, 
 - prologue en cinq tableaux, voix enregistrées de Maître Ysaline, musique ;
 - Archives (étoiles par notion), bestiaire, héros qui parle entre deux lieux ;
 - widgets « vecteur », « droite graduée », « tableau de signes » et illustrations (courbe, carte, tableau, robot, balance) ;
-- erreurs du jeu remontées à l'exploitant (`ErrorReport`).
 
 ## 6. Ce que la construction de la base v2 a déjà appris
 
-- **Le renard de Jules** (Quaternius) s'affiche mal dans Babylon.js : ses pattes, oreilles et yeux s'étirent en pointes, alors que
-  les poids de ses os sont corrects. Désactivé par défaut (`?renard=1` pour le voir) ; à réexporter ou à remplacer en phase 1.
+- **Le renard de Jules** (Quaternius) s'affichait avec les pattes, les oreilles et les yeux étirés en pointes. Son fichier déclare
+  une racine de squelette (`skin.skeleton` = `Body`) dont ne descendent pas ses os de cinématique inverse : invalide au sens de
+  glTF, toléré par Godot, suivi à la lettre par Babylon.js. Corrigé sans toucher au fichier, par l'option de chargement
+  `alwaysComputeSkeletonRootNode` (étape 0.2). Leçon : un modèle qui marchait dans la v1 peut être invalide ; le parcours
+  navigateur vérifie maintenant les proportions du renard.
 - **La CSP stricte attrape de vrais problèmes** : Vite intégrait les petites polices de KaTeX en `data:` et l'écran de
   chargement de Babylon.js injectait une feuille de style. Les deux sont corrigés, et les tests dans le navigateur tournent
   avec la CSP de production.

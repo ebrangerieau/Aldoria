@@ -64,12 +64,12 @@ client/
 ├── public/ressources/      # servi tel quel : modèles 3D, polices, sons, interface (reprise de la v1)
 ├── src/
 │   ├── main.tsx            # services + interface
-│   ├── app/services.ts     # API, stockage, session, questions, voix
+│   ├── app/                # services.ts (API, stockage, session, questions, voix, erreurs), errors.ts, buildInfo.ts
 │   ├── core/               # TypeScript pur, testé sans navigateur
 │   │   ├── answers.ts, mathExpr.ts      # validation (même verdict que l'API)
 │   │   ├── questionService.ts           # choix adaptatif des questions
 │   │   ├── session.ts, api.ts, storage.ts, save.ts
-│   │   ├── accessibility.ts, voice.ts, answerText.ts, events.ts, items.ts
+│   │   ├── accessibility.ts, voice.ts, answerText.ts, events.ts, items.ts, errorReport.ts
 │   │   └── world/          # terrain.ts (relief), heightGrid.ts, movement.ts, obstacles.ts, places.ts
 │   ├── game/               # Babylon.js seulement
 │   │   ├── GameWorld.ts    # orchestre l'île, le héros, la caméra, les interactions
@@ -90,7 +90,7 @@ client/
 | Lumière | soleil directionnel + lumière d'ambiance ; ombres en cascades (1 à 3) jusqu'à 180 m | relief lisible, profondeur |
 | Post-traitement | rendu HDR, tonalité ACES, vignette, halo (bloom), halo des objets lumineux (glow), occlusion ambiante (SSAO2, profil `haut`) | ce que la v1 ne pouvait pas faire |
 | Décor | un modèle chargé une fois ; forêts, rochers et nuages en *thin instances* (un appel de dessin par modèle) | quelques milliers d'arbres pour moins de 300 appels |
-| Personnages | `.glb` KayKit avec leurs 76 animations, fondu entre animations ; pièces d'équipement cachées par nom de nœud | même apparence que la v1 |
+| Personnages | `.glb` KayKit avec leurs 76 animations, fondu entre animations ; pièces d'équipement cachées par nom de nœud ; racine de squelette recalculée au chargement (`alwaysComputeSkeletonRootNode`) | même apparence que la v1 ; certains fichiers (renard Quaternius) déclarent une racine fausse |
 
 Profils (`?qualite=`, `game/quality.ts`) : `haut` (défaut), `moyen`, `bas`. Ils ne changent que des réglages (taille des
 ombres, cascades, MSAA, SSAO, halo, densité de végétation, résolution), jamais le code d'une scène.
@@ -131,11 +131,21 @@ puis choisir le moteur par défaut. Tout le code de rendu passe par l'API commun
 - `core/save.ts` : partie v2 (`slot: "v2"`, `schema_version` 1) : XP, lieux terminés, pierres éveillées (par jour), étapes
   de l'histoire vues, apparence. La maîtrise des notions n'y est pas : le serveur la calcule depuis les réponses.
 
-### 2.7 Le crochet de test
+### 2.7 Erreurs du jeu
 
-Avec `?e2e`, `window.__aldoria` expose le monde (`heroPosition`, `teleport`, `frame`, `scene`, `camera`) et la question
-affichée. C'est le seul mécanisme de test et de capture (la v1 en avait une quinzaine). `?decouverte` ouvre l'île sans
-compte, `?classe=2nde`, `?monde=brouillard`, `?qualite=`, `?perf` (compteur), `?interface=0` (captures sans interface).
+`core/errorReport.ts` (logique, testée) et `app/errors.ts` (branchement) : exceptions non rattrapées, promesses rejetées et
+`console.error` vont, dédoublonnées et par lots de 20, à `POST /play/client-errors` (route reprise de la v1, appareil relié
+exigé, jamais de donnée d'enfant). Chaque erreur porte son endroit dans le code (premier appel de la pile, sans l'adresse du
+site ; les fichiers `.map` du build permettent de remonter au source), l'écran (`titre`, `profils`, `ile`…), la version du build
+(`VITE_VERSION`, le commit) et le navigateur. Active dans le jeu construit seulement (`?erreurs=0|1`) ; sans appareil relié
+rien ne part (mode découverte, tests). L'exploitant les lit dans Exploitation → Erreurs du jeu.
+
+### 2.8 Le crochet de test
+
+Avec `?e2e`, `window.__aldoria` expose le monde (`heroPosition`, `teleport`, `frame`, `scene`, `camera`, `fox`), les services
+(dont `errors.list()`) et la question affichée. C'est le seul mécanisme de test et de capture (la v1 en avait une quinzaine).
+`?decouverte` ouvre l'île sans compte, `?classe=2nde`, `?monde=brouillard`, `?qualite=`, `?perf` (compteur), `?interface=0`
+(captures sans interface), `?renard=0`, `?erreurs=0|1`, `?erreur_test=1`.
 
 ## 3. Données du monde (`v2/content/monde/`)
 
@@ -168,9 +178,9 @@ Reprise entière de la v1 (FastAPI, SQLAlchemy, Alembic, 1 876 tests). Changemen
 | Niveau | Outil | Ce qui est couvert |
 | --- | --- | --- |
 | API | pytest (`uv run pytest -q`) | inchangé (1 876 tests), plus les emplacements de sauvegarde |
-| Logique du client | Vitest (`npm test`) | 81 vecteurs de réponses partagés avec l'API, expressions, choix adaptatif des questions, notion ratée qui revient, mise de côté, file hors connexion, refus définitifs, paquet gardé, mode découverte, sauvegarde et conflits, relief déterministe, régions, pose des 30 lieux, déplacement (eau, falaise, obstacles) |
+| Logique du client | Vitest (`npm test`) | 81 vecteurs de réponses partagés avec l'API, expressions, choix adaptatif des questions, notion ratée qui revient, mise de côté, file hors connexion, refus définitifs, paquet gardé, mode découverte, sauvegarde et conflits, relief déterministe, régions, pose des 30 lieux, déplacement (eau, falaise, obstacles), remontée des erreurs (dédoublonnage, lots, appareil relié, refus, réseau) |
 | Types | `tsc` strict | tout le client |
-| Navigateur | `e2e/smoke.mjs` (Chromium, WebGL logiciel, CSP de production) | titre → île → le héros avance → pierre → question → bonne réponse → XP ; échoue sur toute erreur de la page ou de la console et toute ressource introuvable |
+| Navigateur | `e2e/smoke.mjs` (Chromium, WebGL logiciel, CSP de production) | titre → île → erreur d'essai captée → renard entier et sur le sol → le héros avance → pierre → question → bonne réponse → XP ; échoue sur toute autre erreur de la page ou de la console et toute ressource introuvable |
 | Visuel | `e2e/captures.mjs` | huit vues de l'île (départ, panorama, Cimes, lieu, forêt, côte, Sphinx, Brouillard) |
 
 Règle : une logique nouvelle va dans `core/` avec son test ; une scène Babylon.js reste mince.
