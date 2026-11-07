@@ -46,6 +46,9 @@ Vérifier que le fichier n'est pas vide. Restauration : `docs/exploitation.md`.
 - `git add` des fichiers concernés seulement (jamais `.env`, clés, captures).
 - `git push`, puis suivre : `gh run watch $(gh run list --limit 1 --json databaseId -q '.[0].databaseId') --exit-status`.
 - Échec : `gh run view --log-failed`, corriger, nouveau commit (pas de `--amend` sur un commit poussé).
+- Échec du déploiement sur « ssh: connect … Connection timed out » : le pare-feu Hostinger n'a pas été ouvert pour le
+  runner (secret `HOSTINGER_API_TOKEN` absent, refusé ou expiré ; résumé de l'étape « Port 22 ouvert pour ce runner »).
+  Voir `v2/docs/exploitation.md`, « Déploiement par la CI et pare-feu du VPS ».
 
 ## 4. Contrôle en production
 

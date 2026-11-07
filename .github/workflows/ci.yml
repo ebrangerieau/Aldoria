@@ -14,6 +14,9 @@ env:
   REGISTRY: ghcr.io
   IMAGE_PREFIX: ghcr.io/ebrangerieau/aldoria
   PROD_URL: https://aldoria.bandtrack.fr
+  # Pare-feu Hostinger du VPS (FW-bandtrack) : le port 22 n'y est ouvert qu'à quelques adresses ; le
+  # déploiement l'ouvre pour son runner, puis le referme (.github/scripts/vps-ssh.sh).
+  VPS_FIREWALL_ID: '125084'
 
 jobs:
   api-tests:
@@ -159,6 +162,11 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0  # historique complet : migrations ajoutées depuis la version en service
+      - name: Port 22 ouvert pour ce runner (pare-feu Hostinger, le temps du déploiement)
+        env:
+          HOSTINGER_API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
+          VPS_HOST: ${{ secrets.VPS_HOST }}
+        run: bash .github/scripts/vps-ssh.sh open
       - name: Déploiement sur le VPS
         env:
           SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
@@ -182,6 +190,11 @@ jobs:
           # (il rattrape la sauvegarde du jour si elle manque, sinon il attend la suivante).
           ssh -i ~/key "$VPS_USER@$VPS_HOST" \
             "cd /docker/aldoria && sed -i 's/^ALDORIA_TAG=.*/ALDORIA_TAG=${GITHUB_SHA}/' .env && docker compose pull web voice && docker compose up -d --no-deps web voice backup && docker compose restart backup"
+      - name: Port 22 refermé
+        if: always()
+        env:
+          HOSTINGER_API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
+        run: bash .github/scripts/vps-ssh.sh close
       - name: Contrôle en production (nouvelle version en service)
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
