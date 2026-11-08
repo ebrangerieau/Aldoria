@@ -11,9 +11,34 @@ Chaque phase se termine par une séance observée avec chaque enfant (`IMPLEMENT
 Environ 20 minutes par enfant, sur le PC familial. **Pendant les deux premières minutes, ne rien expliquer** : on regarde
 s'il comprend seul comment bouger et quoi faire.
 
-**Avant de commencer**
-- [ ] Ouvrir `aldoria2.bandtrack.fr` (ou le jeu local), relier le PC si besoin (espace parent → Famille → Appareils).
-- [ ] Ajouter `?perf` à l'adresse pour noter les images par seconde.
+**Avant les enfants : Eric seul, sur le PC familial (environ 20 minutes)**. Ce sont les étapes 0.1, 0.3, 0.5 et 0.7 du plan.
+
+- [ ] **Relier le PC** : ouvrir `aldoria2.bandtrack.fr`, puis entrer un code créé dans l'espace parent (Famille → Appareils).
+  L'appareil est mémorisé pour ce site.
+- [ ] **0.1, jouer avec un vrai profil** : se connecter avec le profil d'un enfant, éveiller une ou deux pierres de savoir,
+  répondre à quelques questions, puis quitter.
+- [ ] **0.1, vérifier dans l'espace parent** : le tableau de bord montre une séance « Exploration » avec ces réponses.
+- [ ] **0.7, erreurs du jeu** : regarder Exploitation → Erreurs du jeu. Noter s'il y en a, avec leur version (sept caractères).
+- [ ] **0.3, clavier et souris** : ZQSD et les flèches (clavier AZERTY ; QWERTY si un autre clavier est branché), E pour agir,
+  souris pour faire tourner la caméra, molette pour s'approcher. Noter tout ce qui gêne.
+- [ ] **0.5, mesures** : ajouter `?perf` à l'adresse (puis `&qualite=moyen`, `&qualite=bas`), attendre 20 s au point de départ,
+  puis 20 s en courant. Recommencer avec `&moteur=webgpu`. Le compteur en bas à droite affiche les images par seconde et le
+  moteur actif. Noter ci-dessous ; un à-coup visible compte autant que le chiffre.
+
+| Profil | Moteur | Images/s au départ | Images/s en courant | À-coups ? | Appels | Triangles |
+| --- | --- | --- | --- | --- | --- | --- |
+| haut | WebGL 2 | | | | | |
+| haut | WebGPU | | | | | |
+| moyen | WebGL 2 | | | | | |
+| moyen | WebGPU | | | | | |
+| bas | WebGL 2 | | | | | |
+| bas | WebGPU | | | | | |
+
+Ces notes vont dans `docs/perf-log.md`. Elles décident du profil et du moteur par défaut (D9).
+
+**Avant de commencer avec chaque enfant**
+- [ ] Rouvrir `aldoria2.bandtrack.fr` sans `?perf`. Si les mesures l'ont montré, ajouter le meilleur réglage à l'adresse :
+  `?qualite=moyen`, et/ou `&moteur=webgpu`. Le réglage par défaut changera ensuite dans le jeu.
 
 | Quoi | Ce qu'on regarde | Noté |
 | --- | --- | --- |
