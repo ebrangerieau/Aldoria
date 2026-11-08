@@ -1,5 +1,5 @@
 // Parcours de fumée dans un vrai navigateur : écran titre → île (mode découverte) → le héros
-// avance → pierre d'éveil → question → bonne réponse → la pierre s'éveille. Échoue sur toute
+// avance → la mini-carte le suit et se cache avec M → pierre d'éveil → question → bonne réponse → la pierre s'éveille. Échoue sur toute
 // erreur de la page ou toute ressource introuvable. Captures dans $E2E_OUT (défaut : e2e/captures).
 //   npm run build && npm run preview &   puis   npm run e2e
 import { mkdirSync } from 'node:fs'
@@ -91,7 +91,7 @@ try {
 
   await step('le héros avance (touche Z/W)', async () => {
     const before = await page.evaluate(() => window.__aldoria.world.heroPosition())
-    await page.locator('canvas').click({ position: { x: 640, y: 120 } })
+    await page.getByTestId('monde').click({ position: { x: 640, y: 120 } })
     await page.keyboard.down('KeyW')
     await page.waitForTimeout(1500 * SLOW)
     await page.keyboard.up('KeyW')
@@ -100,12 +100,36 @@ try {
     if (moved < 1) throw new Error(`le héros n'a pas bougé (${moved.toFixed(2)} m)`)
   })
 
+  await step('la carte suit le héros et se cache avec M', async () => {
+    const carte = page.getByTestId('carte')
+    await carte.waitFor()
+    const u = () => page.getByTestId('carte-heros').getAttribute('data-u').then(Number)
+    const before = await u()
+    // 70 m vers l'est : la flèche part vers la droite de la carte.
+    await page.evaluate(() => window.__aldoria.world.teleport(70, 60, 120, 105))
+    await page.waitForFunction(
+      (start) => Number(document.querySelector('[data-testid=carte-heros]')?.getAttribute('data-u')) > start + 15,
+      before,
+      { timeout: 5000 * SLOW },
+    )
+    await page.locator('.hud-right').screenshot({ path: `${OUT}/02b-carte.png` })
+    await page.keyboard.press('m')
+    await carte.waitFor({ state: 'detached' })
+    if ((await page.getByTestId('bouton-carte').getAttribute('aria-pressed')) !== 'false') throw new Error('bouton « Carte » pas relâché')
+    await page.keyboard.press('m')
+    await carte.waitFor()
+    if ((await u()) <= before) throw new Error('la carte rouverte ne montre plus le héros où il est')
+  })
+
   await step("question de la pierre d'éveil", async () => {
     await page.evaluate(() => window.__aldoria.world.teleport(9, -24.5, 9, -22))
     await page.getByTestId('invite').waitFor({ timeout: 10_000 * SLOW })
     await page.screenshot({ path: `${OUT}/03-pierre.png` })
     await page.keyboard.press('KeyE')
     await page.getByRole('dialog').waitFor()
+    // Pendant une question, M ne touche pas à la carte (ni à la réponse : elle est remplie plus bas).
+    await page.keyboard.press('m')
+    if ((await page.getByTestId('carte').count()) !== 1) throw new Error('la touche M a caché la carte pendant une question')
     await page.waitForTimeout(500)
     await page.screenshot({ path: `${OUT}/04-question.png` })
   })
@@ -132,6 +156,8 @@ try {
     await page.getByRole('dialog').waitFor({ state: 'detached' })
     const xp = await page.locator('.badge').innerText()
     if (!/15 XP/.test(xp)) throw new Error(`XP attendue après la pierre : ${xp}`)
+    // La carte montre la pierre éveillée (dorée).
+    await page.locator('[data-id="pierre-eveil"].mark-eveillee').waitFor({ state: 'attached', timeout: 3000 })
     await page.waitForTimeout(800 * SLOW)
     await page.screenshot({ path: `${OUT}/06-eveillee.png` })
   })

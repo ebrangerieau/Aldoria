@@ -1,6 +1,6 @@
 /**
  * L'île : le canevas 3D et, par-dessus, l'interface HTML (bandeau de la région, invite
- * « E : … », XP, questions, dialogues de Maître Ysaline et des seuils, options). Le monde
+ * « E : … », XP, mini-carte, questions, dialogues de Maître Ysaline et des seuils, options). Le monde
  * annonce ce qui se passe (WorldEvents), l'interface décide et lui rend la main.
  */
 import { useEffect, useRef, useState } from 'react'
@@ -14,8 +14,11 @@ import type { GameWorld, Interactable, WorldEvents } from '../game/GameWorld'
 import type { WorldName } from '../game/theme'
 import { QuestionPanel, type QuestionOutcome } from './QuestionPanel'
 import { Dialog, Options } from './Dialogs'
+import { Minimap } from './Minimap'
 
 const STONE_XP = 15
+/** Préférences gardées sur le poste, pour chaque enfant : taille du texte, carte affichée. */
+type ChildPrefs = { text_size?: number; map?: boolean }
 const today = (): string => new Date().toISOString().slice(0, 10)
 
 type Modal =
@@ -30,6 +33,7 @@ const WELCOME =
 export function GameScreen({ services, demo, onQuit }: { services: Services; demo: boolean; onQuit: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const worldRef = useRef<GameWorld | null>(null)
+  const [world, setWorld] = useState<GameWorld | null>(null)
   const saveRef = useRef<SaveGame | null>(null)
   const [data, setData] = useState<SaveData>(() => structuredClone(EMPTY_SAVE))
   const [loading, setLoading] = useState<{ label: string; ratio: number } | null>({ label: 'Préparation', ratio: 0 })
@@ -42,7 +46,8 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
   const [helpVisible, setHelpVisible] = useState(true)
   const profile = services.session.profile!
   const prefsKey = `prefs.${profile.id}`
-  const [prefs, setPrefs] = useState<{ text_size?: number }>(() => services.store.get(prefsKey, {}))
+  const [prefs, setPrefs] = useState<ChildPrefs>(() => services.store.get(prefsKey, {}))
+  const mapVisible = prefs.map !== false
   const accommodations: Accommodations = withChildPrefs(fromServer(profile.accommodations), prefs)
   const params = new URLSearchParams(location.search)
 
@@ -84,6 +89,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
           return
         }
         worldRef.current = world
+        setWorld(world)
         world.events.on('region', setRegion)
         world.events.on('focus', setFocus)
         world.events.on('stats', setStats)
@@ -100,6 +106,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
       cancelled = true
       created?.dispose()
       worldRef.current = null
+      setWorld(null)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
@@ -111,6 +118,34 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
     }, 1000)
     return () => window.clearInterval(timer)
   }, [services])
+
+  function savePrefs(next: ChildPrefs) {
+    setPrefs(next)
+    services.store.set(prefsKey, next)
+  }
+
+  /** Mini-carte affichée ou cachée (touche M, bouton « Carte ») : gardé pour chaque enfant. */
+  function toggleMap() {
+    savePrefs({ ...prefs, map: !mapVisible })
+  }
+
+  // Touche M : la lettre, pas la position (AZERTY et QWERTY) ; jamais pendant une question,
+  // un dialogue, ou quand on écrit dans un champ.
+  const toggleMapRef = useRef(toggleMap)
+  toggleMapRef.current = toggleMap
+  const modalOpenRef = useRef(false)
+  modalOpenRef.current = modal !== null
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.repeat || e.ctrlKey || e.altKey || e.metaKey || e.key.toLowerCase() !== 'm') return
+      const t = e.target
+      if (t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement || (t instanceof HTMLElement && t.isContentEditable)) return
+      if (modalOpenRef.current || !worldRef.current) return
+      toggleMapRef.current()
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [])
 
   function close() {
     setModal(null)
@@ -207,9 +242,25 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
           <strong>{profile.name}</strong> · {data.xp} XP{demo && ' · découverte'}
           {!online && <span className="offline" title="Les réponses partiront au retour du réseau"> · hors connexion</span>}
         </div>
-        <div className="hud-buttons">
-          <button type="button" className="secondary small" onClick={() => { worldRef.current?.setInputEnabled(false); setModal({ kind: 'options' }) }}>Options</button>
-          <button type="button" className="secondary small" onClick={onQuit}>Quitter</button>
+        <div className="hud-right">
+          <div className="hud-buttons">
+            <button
+              type="button"
+              className="secondary small"
+              aria-pressed={mapVisible}
+              title="Afficher ou cacher la carte (touche M)"
+              data-testid="bouton-carte"
+              onClick={() => {
+                toggleMap()
+                canvasRef.current?.focus() // Espace ou Entrée ne doivent pas rappuyer sur le bouton
+              }}
+            >
+              Carte
+            </button>
+            <button type="button" className="secondary small" onClick={() => { worldRef.current?.setInputEnabled(false); setModal({ kind: 'options' }) }}>Options</button>
+            <button type="button" className="secondary small" onClick={onQuit}>Quitter</button>
+          </div>
+          {world && mapVisible && !loading && <Minimap world={world} place={region?.title ?? ''} />}
         </div>
       </div>
 
@@ -226,6 +277,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
           <span><kbd>Z</kbd><kbd>Q</kbd><kbd>S</kbd><kbd>D</kbd> ou flèches : avancer</span>
           <span>Souris : regarder</span>
           <span><kbd>E</kbd> : agir</span>
+          <span><kbd>M</kbd> : carte</span>
           <span>Clic sur le sol : y aller</span>
         </div>
       )}
@@ -263,11 +315,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
         <Options
           accommodations={accommodations}
           textSize={prefs.text_size ?? 0}
-          onTextSize={(size) => {
-            const next = { ...prefs, text_size: size }
-            setPrefs(next)
-            services.store.set(prefsKey, next)
-          }}
+          onTextSize={(size) => savePrefs({ ...prefs, text_size: size })}
           onClose={close}
         />
       )}

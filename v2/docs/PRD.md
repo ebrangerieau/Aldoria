@@ -99,7 +99,7 @@ s'ouvre ; aucune esquive ni action rapide n'est demandée pour répondre.
 | ID | En tant que | Je veux | Afin de | Priorité |
 | --- | --- | --- | --- | --- |
 | V2-01 | Joueur | me déplacer librement dans l'île au clavier et à la souris, ou d'un clic sur le sol | me sentir dans le monde | P0 (fait) |
-| V2-02 | Joueur | savoir où je suis (nom de la région) et ce que je peux faire (« E : … ») | ne jamais être perdu | P0 (fait) |
+| V2-02 | Joueur | savoir où je suis (nom de la région, mini-carte qu'on cache avec M) et ce que je peux faire (« E : … ») | ne jamais être perdu | P0 (fait) |
 | V2-03 | Joueur | éveiller les pierres de savoir en répondant juste | réviser en chemin | P0 (fait) |
 | V2-04 | Joueur | entendre et lire Maître Ysaline au seuil d'un lieu | comprendre la quête avant d'entrer | P0 (fait) |
 | V2-05 | Joueur | entrer dans un lieu, y combattre, résoudre son énigme et vaincre son Effaceur | rapporter une page | P1 |

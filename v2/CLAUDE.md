@@ -53,6 +53,10 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   l'API : toute modification se fait des deux côtés et s'ajoute à `content/test-vectors/answers.json`.
 - **Données du monde en JSON** (`content/monde/`) : jamais de lieu, de texte d'histoire ou de position écrits dans le code.
   Un lieu ajouté doit passer `api/tests/test_dungeon.py` et `client/tests/world.test.ts`.
+- **Mini-carte** (`ui/Minimap.tsx`) : elle ne recalcule aucune position, elle lit les repères posés par le monde
+  (`GameWorld.mapInfo`, événements `hero` et `markers`). Un repère d'une sorte nouvelle (habitant, gardien…) passe par
+  `mapMarkers` (`core/world/minimap.ts`, avec son test) ; un lieu secret n'y figure jamais. Touche M : `event.key`, pas
+  `event.code`, et rien pendant une question.
 - **CSP stricte** : aucun style en ligne dans le HTML (classes et attributs `data-*` ; l'objet `style` de React est permis),
   aucun fichier en `data:` produit par Vite, aucune ressource hors du site (pas de CDN : décodeurs, polices, twgsl). La même
   CSP est posée par `vite preview` : le parcours navigateur échoue sur toute violation.

@@ -43,7 +43,7 @@ Ces notes vont dans `docs/perf-log.md`. Elles décident du profil et du moteur p
 | Quoi | Ce qu'on regarde | Noté |
 | --- | --- | --- |
 | ★ Se déplacer | Trouve-t-il ZQSD ou les flèches seul ? La souris pour regarder ? Le clic sur le sol ? Se sent-il mal (caméra) ? | |
-| ★ Se repérer | Lit-il le nom de la région ? Va-t-il vers la Citadelle, les montagnes, la mer ? Se perd-il ? | |
+| ★ Se repérer | Lit-il le nom de la région ? Va-t-il vers la Citadelle, les montagnes, la mer ? Se perd-il ? Regarde-t-il la mini-carte (en haut à droite) pour choisir où aller ? La cache-t-il (M) ou la rouvre-t-il ? | |
 | ★ Pierres de savoir | Les remarque-t-il ? Comprend-il « E : Toucher la pierre » ? Combien en éveille-t-il ? | |
 | Maître Ysaline | Lui parle-t-il ? Écoute-t-il ou lit-il ? | |
 | Seuils des lieux | Approche-t-il d'une tour qui brille ? Que dit-il quand le lieu n'est pas encore construit ? | |
