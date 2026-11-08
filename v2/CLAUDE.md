@@ -79,3 +79,6 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
 - Vite intègre les petits fichiers en `data:` : `assetsInlineLimit: 0` (polices de KaTeX).
 - En rendu logiciel (CI, conteneur sans carte graphique), le profil `haut` peut dépasser les délais de capture : `bas` pour
   le parcours, `moyen` pour les captures.
+- CI : Playwright 1.56 n'installe pas Chromium sur `ubuntu-latest` (passé en 26.04) ; tout job qui lance le navigateur
+  tourne sur `ubuntu-24.04`. Le VPS n'ouvre SSH qu'à quelques adresses : un job qui s'y connecte passe par
+  `.github/scripts/vps-ssh.sh open|close` (comme les deux jobs `deploy`).
