@@ -1,0 +1,433 @@
+/**
+ * Intérieur d'un lieu de quête : le donjon en enfilade de core/world/dungeon.ts, dressé dans une scène
+ * Babylon.js à part (même moteur, même canevas que l'île). L'île est mise en pause pendant qu'on est
+ * dedans (GameWorld.enterPlace) et reprend où elle en était au retour.
+ *
+ * Vue en coupe, comme dans la v1 : la caméra reste au sud, dans un arc devant le héros (la souris
+ * l'incline un peu, la molette rapproche) ; le côté sud des salles est ouvert, donc aucun mur ne la
+ * masque. Le héros marche sur la hauteur de core/world/dungeon.ts (escaliers compris) ; ses murs sont
+ * le « vide » que le déplacement refuse. Les modèles KayKit « dungeon » sont posés à leur taille
+ * d'origine (instances, un appel de dessin par modèle et par matériau).
+ *
+ * Cette étape (1.2) : traverser les six salles et en sortir. Les ennemis, le boss, l'énigme et le
+ * coffre arrivent aux étapes suivantes (IMPLEMENTATION_PLAN.md).
+ */
+import {
+  type AbstractEngine,
+  type AbstractMesh,
+  ArcRotateCamera,
+  CascadedShadowGenerator,
+  Color3,
+  Color4,
+  DefaultRenderingPipeline,
+  DirectionalLight,
+  HemisphericLight,
+  ImageProcessingConfiguration,
+  Light,
+  Matrix,
+  MeshBuilder,
+  PointLight,
+  Quaternion,
+  Scene,
+  ShadowGenerator,
+  StandardMaterial,
+  TransformNode,
+  Vector3,
+} from '@babylonjs/core'
+import { Emitter } from '../core/events'
+import type { SaveData } from '../core/save'
+import { Dungeon, type Piece } from '../core/world/dungeon'
+import { angleDelta, RUN_SPEED, step, WALK_SPEED } from '../core/world/movement'
+import { Obstacles } from '../core/world/obstacles'
+import type { Place } from '../core/world/places'
+import { loadContainer } from './assets'
+import { type Character, loadHero } from './characters'
+import type { Interactable } from './GameWorld'
+import type { Quality } from './quality'
+import { INTERIORS, type WorldName } from './theme'
+
+/** Cap (0 nord, sens des aiguilles d'une montre) de la face avant d'un modèle chargé, sans rotation : la face avant (+Z du
+ * fichier glTF, celle où monte un escalier, où saille une torche) regarde le nord. Mesuré sur l'escalier et les bannières. */
+const FRONT_HEADING = 0
+/** Le battant des portes s'ouvre de cet angle autour de sa charnière (radians), vers l'est : dans la salle de la porte, jamais
+ * sur l'escalier qui y mène. Signe mesuré sur la boîte du battant (la porte de la salle i doit tenir dans x ≥ 16·i). */
+const DOOR_OPEN_ANGLE = -1.75
+/** Torches allumées : celles de la salle du héros et de ses voisines. */
+const TORCH_REACH = 1
+/** Arc de la caméra autour du sud (radians de part et d'autre). */
+const ARC = 0.55
+
+export type InteriorEvents = {
+  focus: Interactable | null
+  interact: Interactable
+  room: { index: number; label: string }
+}
+
+export interface InteriorOptions {
+  place: Place
+  world: WorldName
+  look: SaveData['look']
+  quality: Quality
+  /** Aménagement « mode calme » : pas de flammes qui vacillent. */
+  calm: boolean
+  onProgress?: (label: string, ratio: number) => void
+}
+
+export class InteriorWorld {
+  readonly events = new Emitter<InteriorEvents>()
+  readonly scene: Scene
+  readonly dungeon: Dungeon
+  hero!: Character
+  camera!: ArcRotateCamera
+  private obstacles = new Obstacles()
+  private keys = new Set<string>()
+  private inputEnabled = true
+  private interactables: Interactable[] = []
+  private focused: Interactable | null = null
+  private room = -1
+  private torches: { light: PointLight; room: number }[] = []
+  private flames: AbstractMesh | null = null
+  private flameTime = 0
+  private pipeline: DefaultRenderingPipeline | null = null
+  private disposers: (() => void)[] = []
+  private loop: (() => void) | null = null
+  private last = 0
+
+  private constructor(
+    private readonly engine: AbstractEngine,
+    private readonly canvas: HTMLCanvasElement,
+    private readonly options: InteriorOptions,
+  ) {
+    this.scene = new Scene(engine)
+    this.dungeon = new Dungeon(options.place.dungeon.rooms.length, undefined, options.place.dungeon.v1_decor)
+  }
+
+  static async create(engine: AbstractEngine, canvas: HTMLCanvasElement, options: InteriorOptions): Promise<InteriorWorld> {
+    const interior = new InteriorWorld(engine, canvas, options)
+    await interior.build()
+    return interior
+  }
+
+  private progress(label: string, ratio: number): void {
+    this.options.onProgress?.(label, ratio)
+  }
+
+  private async build(): Promise<void> {
+    const { scene, dungeon } = this
+    const { quality, world, place } = this.options
+    const theme = INTERIORS[world]
+    const background = Color3.FromHexString(theme.background)
+    scene.clearColor = new Color4(background.r, background.g, background.b, 1)
+    scene.skipPointerMovePicking = true
+
+    const start = dungeon.entryPoint(0)
+    this.camera = new ArcRotateCamera('camera-interieur', -Math.PI / 2, 1.05, 11, new Vector3(start.x, start.y + 1.45, start.z), scene)
+    this.setupCamera()
+
+    // Lumière : ambiance douce, soleil rasant par le côté sud ouvert (ombres), torches contre le mur nord.
+    const hemi = new HemisphericLight('ambiance', new Vector3(0, 1, 0), scene)
+    hemi.diffuse = Color3.FromHexString(theme.ambient)
+    hemi.groundColor = background.scale(2.5)
+    hemi.specular = Color3.Black()
+    hemi.intensity = theme.ambientIntensity
+    const sun = new DirectionalLight('soleil-interieur', new Vector3(0.35, -0.8, 0.5).normalize(), scene)
+    sun.position = new Vector3(-30, 60, -60)
+    sun.diffuse = Color3.FromHexString(theme.sunColor)
+    sun.specular = Color3.Black()
+    sun.intensity = theme.sunIntensity
+    const shadows = new CascadedShadowGenerator(quality.shadowMapSize, sun, undefined, this.camera)
+    shadows.numCascades = Math.min(2, quality.shadowCascades)
+    shadows.shadowMaxZ = 45
+    shadows.lambda = 0.7
+    shadows.stabilizeCascades = true
+    shadows.depthClamp = true
+    shadows.usePercentageCloserFiltering = true
+    shadows.filteringQuality = ShadowGenerator.QUALITY_MEDIUM
+    shadows.bias = 0.004
+    shadows.normalBias = 0.02
+    shadows.darkness = 0.3
+
+    this.progress('Les salles', 0.1)
+    await this.buildPieces(shadows)
+    this.progress('Les torches', 0.7)
+    this.buildTorches()
+    for (const c of dungeon.obstacles()) this.obstacles.add(c)
+
+    this.progress('Le héros', 0.8)
+    this.hero = await loadHero(scene, this.options.look)
+    this.hero.root.position.set(start.x, start.y, start.z)
+    this.hero.yaw = Math.PI / 2 // vers l'est : la porte, puis l'escalier
+    for (const m of this.hero.meshes) shadows.addShadowCaster(m, false)
+
+    // La sortie : la porte du mur ouest de la première salle.
+    this.interactables.push({ id: 'sortie', kind: 'sortie', label: `Sortir : ${place.dungeon.title}`, x: 1, z: start.z, radius: 1.4 })
+    this.setupInput()
+    this.setupPipeline()
+    // Les matériaux des modèles ne lisent par défaut que quatre lumières : ambiance, soleil et six torches en demandent huit.
+    for (const material of scene.materials) {
+      if ('maxSimultaneousLights' in material) (material as { maxSimultaneousLights: number }).maxSimultaneousLights = 8
+    }
+    this.updateRoom(true)
+    this.progress("L'intérieur est prêt", 1)
+  }
+
+  // --- Décor ------------------------------------------------------------------------------
+
+  private async buildPieces(shadows: CascadedShadowGenerator): Promise<void> {
+    const { scene, dungeon } = this
+    const pieces = dungeon.pieces()
+    const models = [...new Set(pieces.map((p) => p.model))]
+    await Promise.all(models.map((m) => loadContainer(scene, `kaykit/dungeon/${m}.glb`)))
+    for (const piece of pieces) {
+      const placed = await this.place(piece)
+      for (const m of placed) {
+        m.receiveShadows = true
+        m.isPickable = false
+        if (piece.role !== 'sol') shadows.addShadowCaster(m, false)
+      }
+    }
+  }
+
+  /** Pose une pièce ; rend ses maillages. Une porte s'ouvre : son battant pivote sur sa charnière. */
+  private async place(piece: Piece): Promise<AbstractMesh[]> {
+    const container = await loadContainer(this.scene, `kaykit/dungeon/${piece.model}.glb`)
+    const entries = container.instantiateModelsToScene((name) => `${piece.role}-${piece.room}-${name}`, false)
+    const inner = entries.rootNodes[0] as TransformNode
+    const wrap = new TransformNode(`${piece.role}-${piece.room}`, this.scene)
+    inner.parent = wrap
+    wrap.position.set(piece.x, piece.y, piece.z)
+    wrap.rotation.y = ((piece.heading - FRONT_HEADING) * Math.PI) / 180
+    if (piece.scaleY !== undefined) wrap.scaling.y = piece.scaleY
+    const meshes = inner.getChildMeshes(false)
+    if (piece.role === 'porte') {
+      const leaf = meshes.find((m) => m.name.endsWith('wall_doorway_door'))
+      if (leaf) leaf.rotationQuaternion = Quaternion.RotationAxis(Vector3.Up(), DOOR_OPEN_ANGLE).multiply(leaf.rotationQuaternion ?? Quaternion.Identity())
+    }
+    wrap.computeWorldMatrix(true)
+    for (const m of meshes) {
+      m.computeWorldMatrix(true)
+      m.freezeWorldMatrix()
+    }
+    return meshes
+  }
+
+  private buildTorches(): void {
+    const color = this.dungeon.decor.torch_color ?? INTERIORS[this.options.world].torchColor
+    const torch = Color3.FromArray(color)
+    const lit = this.options.quality.name !== 'bas'
+    const flame = MeshBuilder.CreateSphere('flamme', { diameter: 0.28, segments: 6 }, this.scene)
+    const material = new StandardMaterial('flamme', this.scene)
+    material.disableLighting = true
+    material.emissiveColor = torch.scale(1.4)
+    material.diffuseColor = Color3.Black()
+    flame.material = material
+    flame.isPickable = false
+    const matrices: number[] = []
+    for (const t of this.dungeon.torches()) {
+      Matrix.Compose(new Vector3(1, 1.7, 1), Quaternion.Identity(), new Vector3(t.x, t.y - 0.3, t.z + 0.2)).copyToArray(matrices, matrices.length)
+      if (!lit) continue
+      const light = new PointLight(`torche-${t.room}-${t.x}`, new Vector3(t.x, t.y, t.z + 0.2), this.scene)
+      light.diffuse = torch
+      light.specular = Color3.Black()
+      light.intensity = 1.6
+      light.range = 11
+      light.falloffType = Light.FALLOFF_STANDARD
+      light.setEnabled(false)
+      this.torches.push({ light, room: t.room })
+    }
+    flame.thinInstanceSetBuffer('matrix', new Float32Array(matrices), 16)
+    flame.alwaysSelectAsActiveMesh = true
+    this.flames = flame
+  }
+
+  // --- Caméra, commandes ------------------------------------------------------------------
+
+  private setupCamera(): void {
+    const camera = this.camera
+    camera.lowerRadiusLimit = 7
+    camera.upperRadiusLimit = 16
+    camera.lowerAlphaLimit = -Math.PI / 2 - ARC
+    camera.upperAlphaLimit = -Math.PI / 2 + ARC
+    camera.lowerBetaLimit = 0.75
+    camera.upperBetaLimit = 1.35
+    camera.wheelDeltaPercentage = 0.01
+    camera.panningSensibility = 0
+    camera.angularSensibilityX = 1400
+    camera.angularSensibilityY = 1400
+    camera.minZ = 0.3
+    camera.maxZ = 400
+    camera.fov = 0.9
+    camera.inputs.removeByType('ArcRotateCameraKeyboardMoveInput')
+    camera.attachControl(this.canvas, true)
+    this.disposers.push(() => camera.detachControl())
+  }
+
+  private setupInput(): void {
+    const isTyping = (e: KeyboardEvent) => e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement
+    const down = (e: KeyboardEvent) => {
+      if (isTyping(e) || !this.inputEnabled) return
+      this.keys.add(e.code)
+      if ((e.code === 'KeyE' || e.code === 'Enter') && this.focused) {
+        e.preventDefault()
+        this.interact(this.focused)
+      }
+    }
+    const up = (e: KeyboardEvent) => this.keys.delete(e.code)
+    const blur = () => this.keys.clear()
+    window.addEventListener('keydown', down)
+    window.addEventListener('keyup', up)
+    window.addEventListener('blur', blur)
+    this.disposers.push(() => {
+      window.removeEventListener('keydown', down)
+      window.removeEventListener('keyup', up)
+      window.removeEventListener('blur', blur)
+    })
+  }
+
+  private setupPipeline(): void {
+    const { quality } = this.options
+    const pipeline = new DefaultRenderingPipeline('rendu-interieur', true, this.scene, [this.camera])
+    pipeline.samples = quality.msaa
+    pipeline.fxaaEnabled = quality.msaa <= 1
+    pipeline.bloomEnabled = quality.bloom
+    pipeline.bloomThreshold = 0.8
+    pipeline.bloomWeight = 0.3
+    pipeline.bloomKernel = 48
+    pipeline.bloomScale = 0.5
+    pipeline.imageProcessingEnabled = true
+    pipeline.imageProcessing.toneMappingEnabled = true
+    pipeline.imageProcessing.toneMappingType = ImageProcessingConfiguration.TONEMAPPING_ACES
+    pipeline.imageProcessing.exposure = 1.1
+    pipeline.imageProcessing.contrast = 1.1
+    pipeline.imageProcessing.vignetteEnabled = true
+    pipeline.imageProcessing.vignetteWeight = 1.8
+    pipeline.imageProcessing.vignetteColor = new Color4(0.04, 0.03, 0.06, 0)
+    this.pipeline = pipeline
+  }
+
+  /** L'interface prend la main (dialogue) : le héros s'arrête. */
+  setInputEnabled(enabled: boolean): void {
+    this.inputEnabled = enabled
+    if (!enabled) this.keys.clear()
+  }
+
+  private direction(): { x: number; z: number; walk: boolean } {
+    const k = this.keys
+    const f = (k.has('KeyW') || k.has('ArrowUp') ? 1 : 0) - (k.has('KeyS') || k.has('ArrowDown') ? 1 : 0)
+    const r = (k.has('KeyD') || k.has('ArrowRight') ? 1 : 0) - (k.has('KeyA') || k.has('ArrowLeft') ? 1 : 0)
+    const walk = k.has('ShiftLeft') || k.has('ShiftRight')
+    if (f === 0 && r === 0) return { x: 0, z: 0, walk }
+    // Avant = direction du regard de la caméra, à plat (le nord, la caméra étant au sud) ; droite = avant tourné d'un quart de tour.
+    const fx = -Math.cos(this.camera.alpha)
+    const fz = -Math.sin(this.camera.alpha)
+    return { x: fx * f + fz * r, z: fz * f - fx * r, walk }
+  }
+
+  // --- Boucle -----------------------------------------------------------------------------
+
+  /** Lance le rendu de cette scène (l'appelant a arrêté celui de l'île). */
+  start(): void {
+    this.updateRoom(true) // annonce la salle de départ à ceux qui viennent de s'abonner
+    this.last = performance.now()
+    this.loop = () => {
+      const now = performance.now()
+      const dt = Math.min(0.05, (now - this.last) / 1000)
+      this.last = now
+      this.update(dt)
+      this.scene.render()
+    }
+    this.engine.runRenderLoop(this.loop)
+  }
+
+  stop(): void {
+    if (this.loop) this.engine.stopRenderLoop(this.loop)
+    this.loop = null
+    this.keys.clear()
+  }
+
+  private update(dt: number): void {
+    const dir = this.inputEnabled ? this.direction() : { x: 0, z: 0, walk: false }
+    const p = this.hero.root.position
+    const s = step({ x: p.x, z: p.z }, dir, dir.walk ? WALK_SPEED : RUN_SPEED, dt, this.dungeon, this.obstacles)
+    const moving = s.moved > 0.001
+    p.x = s.x
+    p.z = s.z
+    p.y += (s.y - p.y) * Math.min(1, dt * 18)
+    if (moving) {
+      this.hero.yaw = this.hero.yaw + angleDelta(this.hero.yaw, Math.atan2(dir.x, dir.z)) * Math.min(1, dt * 12)
+      this.hero.play(dir.walk ? 'walk' : 'run')
+    } else {
+      this.hero.play('idle')
+    }
+    // La caméra suit en place (réaffecter `camera.target` annulerait le mouvement de la souris).
+    this.camera.target.copyFrom(Vector3.Lerp(this.camera.target, new Vector3(p.x, p.y + 1.45, p.z), 1 - Math.exp(-14 * dt)))
+    this.updateRoom(false)
+    this.updateFocus()
+    if (this.flames && !this.options.calm) {
+      this.flameTime += dt
+      this.flames.visibility = 0.9 + 0.1 * Math.sin(this.flameTime * 14)
+    }
+  }
+
+  /** Salle du héros : annoncée à l'interface ; seules les torches des salles voisines sont allumées. */
+  private updateRoom(force: boolean): void {
+    const index = this.dungeon.roomAt(this.hero.root.position.x)
+    if (index === this.room && !force) return
+    this.room = index
+    for (const t of this.torches) t.light.setEnabled(Math.abs(t.room - index) <= TORCH_REACH)
+    this.events.emit('room', { index, label: this.dungeon.floorLabel(index) })
+  }
+
+  private updateFocus(): void {
+    const p = this.hero.root.position
+    let best: Interactable | null = null
+    let bestD = Infinity
+    for (const it of this.interactables) {
+      const d = Math.hypot(p.x - it.x, p.z - it.z)
+      if (d < it.radius && d < bestD) {
+        best = it
+        bestD = d
+      }
+    }
+    if (best !== this.focused) {
+      this.focused = best
+      this.events.emit('focus', best)
+    }
+  }
+
+  private interact(target: Interactable): void {
+    this.setInputEnabled(false)
+    this.hero.yaw = Math.atan2(target.x - this.hero.root.position.x, target.z - this.hero.root.position.z)
+    this.hero.playOnce('interact')
+    this.events.emit('interact', target)
+  }
+
+  // --- Outils de test et de capture (?e2e) ------------------------------------------------
+
+  heroPosition(): { x: number; y: number; z: number } {
+    const p = this.hero.root.position
+    return { x: p.x, y: p.y, z: p.z }
+  }
+
+  teleport(x: number, z: number): void {
+    const y = this.dungeon.heightAt(x, z)
+    this.hero.root.position.set(x, y, z)
+    this.camera.target.set(x, y + 1.45, z)
+    this.updateRoom(false)
+  }
+
+  /** Cadre la caméra (captures) : écart au sud (radians), inclinaison, distance. */
+  frame(offset: number, beta: number, radius: number): void {
+    this.camera.alpha = -Math.PI / 2 + offset
+    this.camera.beta = beta
+    this.camera.radius = radius
+  }
+
+  dispose(): void {
+    this.stop()
+    for (const d of this.disposers) d()
+    this.pipeline?.dispose()
+    this.scene.dispose()
+  }
+}
+

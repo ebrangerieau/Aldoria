@@ -172,6 +172,11 @@ html[data-big-targets='true'] .minimap { width: 300px; }
 }
 html[data-calm='true'] .region-banner { opacity: 1; }
 
+.floor-label {
+  position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+  background: rgb(28 24 36 / 78%); color: #fff7e2; border: 2px solid var(--gold-light); border-radius: 10px;
+  padding: 0.25rem 1rem; font-family: var(--title-font); font-size: 1.05rem; pointer-events: none;
+}
 .prompt-bar {
   position: absolute; bottom: 9vh; left: 50%; transform: translateX(-50%);
   background: rgb(28 24 36 / 82%); color: #fff7e2; border: 2px solid var(--gold-light);
@@ -227,4 +232,4 @@ html[data-calm='true'] .region-banner { opacity: 1; }
 .music-volume output { min-width: 3.2em; text-align: right; font-weight: 700; }
 
 /* Captures sans interface (?interface=0, e2e/captures.mjs). */
-.sans-interface .hud-top, .sans-interface .controls-help, .sans-interface .region-banner, .sans-interface .prompt-bar { visibility: hidden; }
+.sans-interface .hud-top, .sans-interface .controls-help, .sans-interface .region-banner, .sans-interface .prompt-bar, .sans-interface .floor-label { visibility: hidden; }

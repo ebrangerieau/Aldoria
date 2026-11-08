@@ -1,6 +1,6 @@
 // Parcours de fumée dans un vrai navigateur : écran titre → île (mode découverte) → le héros
 // avance → la mini-carte le suit et se cache avec M → la musique joue, se coupe et se tait pendant
-// une question → pierre d'éveil → question → bonne réponse → la pierre s'éveille. Échoue sur toute
+// une question → l'intérieur d'un lieu (entrée par le seuil, étage 2 au clavier, sortie) → pierre d'éveil → question → bonne réponse → la pierre s'éveille. Échoue sur toute
 // erreur de la page ou toute ressource introuvable. Captures dans $E2E_OUT (défaut : e2e/captures).
 //   npm run build && npm run preview &   puis   npm run e2e
 import { mkdirSync } from 'node:fs'
@@ -171,6 +171,65 @@ try {
     }
     if ((await music()).track !== tracks[0]) throw new Error('après le dernier morceau, le premier devait revenir')
     await page.waitForFunction(() => window.__aldoria.services.music.audio.currentTime > 0.3, null, { timeout: 8000 * SLOW })
+  })
+
+  await step('un lieu de quête : on entre par le seuil, on monte à l’étage 2 au clavier, on sort', async () => {
+    // Devant la porte de la Tour des Fractions (le premier lieu de maths de la 6e), face à elle.
+    const door = await page.evaluate(() => {
+      const w = window.__aldoria.world
+      const it = w.interactables.find((i) => i.id === 'tour_fractions')
+      w.teleport(it.x, it.z - 1.5, it.x, it.z)
+      return { x: it.x, z: it.z }
+    })
+    await page.getByTestId('invite').waitFor({ timeout: 10_000 * SLOW })
+    await page.keyboard.press('KeyE')
+    await page.getByRole('dialog').waitFor()
+    await page.getByRole('button', { name: "J'y vais" }).click()
+    await page.getByTestId('etage').waitFor({ timeout: 60_000 * SLOW })
+    if ((await page.getByTestId('etage').innerText()).replace(/\s+/g, ' ').toLowerCase() !== 'étage 1 / 6') throw new Error('départ à l’étage 1 attendu')
+    if ((await page.getByTestId('carte').count()) !== 0) throw new Error('la mini-carte devrait être cachée dans un lieu')
+    await page.screenshot({ path: `${OUT}/03a-interieur.png` })
+    // Orientation des modèles (piège : un mur est symétrique et ne dit rien) : chaque escalier tient entre 12 et 16 m de sa salle,
+    // chaque battant de porte, ouvert, dans sa salle (x ≥ 16·i), jamais sur l'escalier qui y mène.
+    const bad = await page.evaluate(() => {
+      const boxes = (suffix) =>
+        window.__aldoria.world.interior.scene.meshes
+          .filter((m) => m.name.endsWith(suffix))
+          .map((m) => ({ room: Number(m.name.split('-')[1]), box: m.getBoundingInfo().boundingBox }))
+      const out = []
+      for (const { room, box } of boxes('-stairs')) {
+        if (box.minimumWorld.x < 16 * room + 11.9 || box.maximumWorld.x > 16 * room + 16.1) out.push(`escalier ${room} : x ${box.minimumWorld.x.toFixed(1)} à ${box.maximumWorld.x.toFixed(1)}`)
+      }
+      for (const { room, box } of boxes('wall_doorway_door')) {
+        if (box.minimumWorld.x < 16 * room - 0.3) out.push(`porte ${room} : battant à x ${box.minimumWorld.x.toFixed(1)}`)
+      }
+      return out
+    })
+    if (bad.length > 0) throw new Error(`modèles mal orientés : ${bad.join(' ; ')}`)
+    // Vers l'est (D) : la porte, puis l'escalier, jusqu'à la deuxième salle (4 m plus haut).
+    await page.getByTestId('monde').click({ position: { x: 640, y: 120 } })
+    await page.keyboard.down('KeyD')
+    await page.waitForFunction(() => document.querySelector('[data-testid=etage]')?.textContent?.includes('2 / 6'), null, { timeout: 30_000 * SLOW })
+    await page.keyboard.up('KeyD')
+    const up = await page.evaluate(() => window.__aldoria.world.interior.heroPosition())
+    if (up.y < 3.5) throw new Error(`le héros n'est pas monté (${up.y.toFixed(1)} m)`)
+    await page.screenshot({ path: `${OUT}/03b-etage2.png` })
+    // La sortie : la porte du mur ouest de la première salle.
+    await page.evaluate(() => window.__aldoria.world.interior.teleport(1.9, -10))
+    await page.getByTestId('invite').waitFor({ timeout: 10_000 * SLOW })
+    await page.keyboard.press('KeyE')
+    await page.getByRole('button', { name: 'Sortir' }).click()
+    await page.getByTestId('carte').waitFor({ timeout: 10_000 * SLOW })
+    const after = await page.evaluate(() => ({ inside: window.__aldoria.world.interior, pos: window.__aldoria.world.heroPosition() }))
+    if (after.inside !== null) throw new Error('l’intérieur devrait être fermé')
+    if (Math.hypot(after.pos.x - door.x, after.pos.z - door.z) > 4) throw new Error('le héros devrait être revenu devant la porte du lieu')
+    // L'île répond de nouveau aux touches.
+    const before = await page.evaluate(() => window.__aldoria.world.heroPosition())
+    await page.keyboard.down('KeyS')
+    await page.waitForTimeout(700 * SLOW)
+    await page.keyboard.up('KeyS')
+    const moved = await page.evaluate(() => window.__aldoria.world.heroPosition())
+    if (Math.hypot(moved.x - before.x, moved.z - before.z) < 0.5) throw new Error('le héros de l’île ne bouge plus après la sortie')
   })
 
   await step("question de la pierre d'éveil", async () => {

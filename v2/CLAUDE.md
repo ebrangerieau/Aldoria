@@ -57,6 +57,13 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   (`GameWorld.mapInfo`, événements `hero` et `markers`). Un repère d'une sorte nouvelle (habitant, gardien…) passe par
   `mapMarkers` (`core/world/minimap.ts`, avec son test) ; un lieu secret n'y figure jamais. Touche M : `event.key`, pas
   `event.code`, et rien pendant une question.
+- **Intérieur d'un lieu** (`core/world/dungeon.ts` décrit, `game/interior.ts` dresse) : six salles de 16 × 20 m en enfilade, 4 m plus
+  haut chacune, escalier contre le mur est ; repère x vers l'est, z vers le nord, mur nord en z = 0, **profondeur = -z** (c'est le
+  « z » de la v1 : les positions de `lieux.json` y sont valables telles quelles, salles impaires en miroir pour le décor). Les murs
+  sont du « vide » pour le déplacement (`heightAt` rend `VOID_HEIGHT`), pas des collisions du moteur. Scène à part, même moteur :
+  `GameWorld.enterPlace(code)` met l'île en pause, `leavePlace()` la reprend ; un modèle se charge par scène (`loadContainer`).
+  Un chiffre de géométrie change ici avec son test, jamais dans la scène. `&e2e` : `world.enterPlace(code)`, `world.interior`
+  (`teleport(x, z)`, `frame(écart, beta, distance)`, `heroPosition()`), `world.places`.
 - **Musique** (`app/music.ts` joue, `core/music.ts` décide du volume, testé) : morceaux de `deploy/musique/` listés dans
   `content/monde/musique.json` (ordre de lecture, crédit des Options), servis sous `/musique/` par nginx ; `npm run dev` et
   `vite preview` les servent depuis le même dossier (`vite.config.ts`, requêtes `Range` comprises). Elle démarre à l'entrée
@@ -100,6 +107,10 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
 - Mise en ligne pendant qu'un onglet est ouvert : chaque build renomme ses fichiers, l'ancienne page ne trouve plus
   `GameWorld-….js` à l'entrée dans l'île. nginx répond 404 sur `/assets/` (jamais la page d'accueil) et le jeu recharge la
   page une fois sur `vite:preloadError` (`app/staleBuild.ts`). Un fichier chargé à la demande (`import()`) en profite d'office.
+- Orientation d'un modèle posé à la main (`game/interior.ts`, `FRONT_HEADING = 0`) : sans rotation, la face avant d'un modèle KayKit
+  (+Z du fichier : où descend un escalier, où saille une torche) regarde le **nord** du monde. Un mur est symétrique et ne le dit
+  pas : vérifier sur l'escalier (sa boîte doit aller de 12 à 16 m, pas de 16 à 20) et sur les bannières (elles disparaissent
+  derrière le mur si l'orientation est inversée).
 - Musique : un `<audio>` dont on change `src` passe à « en lecture » (`paused` faux) dès l'appel à `play()`, avant que le début du
   morceau soit arrivé : sa durée vaut alors NaN et `currentTime = duration - 1.5` lève une erreur. Un test attend
   `music.state().duration` fini ; `E2E_RETARD_MUSIQUE=1500 npm run e2e` simule un réseau lent (la CI, chargée, l'a montré).

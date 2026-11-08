@@ -42,6 +42,9 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
   const [region, setRegion] = useState<WorldEvents['region'] | null>(null)
   const [focus, setFocus] = useState<Interactable | null>(null)
   const [modal, setModal] = useState<Modal>(null)
+  // Dans l'intérieur d'un lieu (l'île est en pause) : son nom et l'étage du héros.
+  const [inside, setInside] = useState<{ title: string } | null>(null)
+  const [floor, setFloor] = useState('')
   const [stats, setStats] = useState<WorldEvents['stats'] | null>(null)
   const [online, setOnline] = useState(services.api.online)
   const [helpVisible, setHelpVisible] = useState(true)
@@ -94,6 +97,8 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
         worldRef.current = world
         setWorld(world)
         world.events.on('region', setRegion)
+        world.events.on('interior', (entered) => setInside(entered ? { title: entered.place.dungeon.title } : null))
+        world.events.on('floor', (current) => setFloor(current.label))
         world.events.on('focus', setFocus)
         world.events.on('stats', setStats)
         world.events.on('interact', (target) => interactRef.current(target))
@@ -149,7 +154,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
       if (e.repeat || e.ctrlKey || e.altKey || e.metaKey || e.key.toLowerCase() !== 'm') return
       const t = e.target
       if (t instanceof HTMLInputElement || t instanceof HTMLTextAreaElement || (t instanceof HTMLElement && t.isContentEditable)) return
-      if (modalOpenRef.current || !worldRef.current) return
+      if (modalOpenRef.current || !worldRef.current || worldRef.current.interior) return
       toggleMapRef.current()
     }
     window.addEventListener('keydown', onKey)
@@ -186,7 +191,9 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
   }
 
   function onInteract(target: Interactable) {
-    if (target.kind === 'pierre') {
+    if (target.kind === 'sortie') {
+      onExit(target)
+    } else if (target.kind === 'pierre') {
       if (!target.open) {
         setModal({ kind: 'dialog', title: target.label, text: 'Cette pierre brille déjà. Elle se rendormira demain : reviens la réveiller !', actions: [{ label: 'D’accord', primary: true, run: close }] })
         return
@@ -225,18 +232,55 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
               {
                 label: "J'y vais",
                 primary: true,
-                run: () =>
-                  setModal({
-                    kind: 'dialog',
-                    title: place.dungeon.title,
-                    text: "L'intérieur de ce lieu se construit encore (phase 1 de la v2). Les pierres de savoir de l'île t'attendent en attendant !",
-                    actions: [{ label: 'D’accord', primary: true, run: close }],
-                  }),
+                run: () => void enterPlace(place),
               },
             ]
           : [{ label: 'D’accord', primary: true, run: close }],
       })
     }
+  }
+
+  /** « J'y vais » : l'intérieur se construit derrière l'écran de chargement, puis remplace l'île. */
+  async function enterPlace(place: NonNullable<Interactable['place']>) {
+    const world = worldRef.current
+    if (!world) return
+    setModal(null)
+    setLoading({ label: place.dungeon.title, ratio: 0 })
+    try {
+      await world.enterPlace(place.dungeon.code, (label, ratio) => setLoading({ label, ratio }))
+      setLoading(null)
+      world.setInputEnabled(true)
+    } catch (error) {
+      console.error(error)
+      setLoading(null)
+      world.setInputEnabled(false)
+      setModal({
+        kind: 'dialog',
+        title: place.dungeon.title,
+        text: "L'intérieur n'a pas pu s'ouvrir. Reviens sur l'île et réessaie.",
+        actions: [{ label: 'D’accord', primary: true, run: close }],
+      })
+    }
+  }
+
+  /** La porte de sortie : retour sur l'île, devant le lieu. */
+  function onExit(target: Interactable) {
+    setModal({
+      kind: 'dialog',
+      title: target.label,
+      text: 'Tu pourras y revenir quand tu voudras.',
+      actions: [
+        { label: 'Rester', run: close },
+        {
+          label: 'Sortir',
+          primary: true,
+          run: () => {
+            setModal(null)
+            worldRef.current?.leavePlace()
+          },
+        },
+      ],
+    })
   }
 
   // Le monde garde ce gestionnaire depuis sa création : on passe par une référence à jour.
@@ -268,19 +312,21 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
         </div>
         <div className="hud-right">
           <div className="hud-buttons">
-            <button
-              type="button"
-              className="secondary small"
-              aria-pressed={mapVisible}
-              title="Afficher ou cacher la carte (touche M)"
-              data-testid="bouton-carte"
-              onClick={() => {
-                toggleMap()
-                canvasRef.current?.focus() // Espace ou Entrée ne doivent pas rappuyer sur le bouton
-              }}
-            >
-              Carte
-            </button>
+            {!inside && (
+              <button
+                type="button"
+                className="secondary small"
+                aria-pressed={mapVisible}
+                title="Afficher ou cacher la carte (touche M)"
+                data-testid="bouton-carte"
+                onClick={() => {
+                  toggleMap()
+                  canvasRef.current?.focus() // Espace ou Entrée ne doivent pas rappuyer sur le bouton
+                }}
+              >
+                Carte
+              </button>
+            )}
             {services.music.enabled && (
               <button
                 type="button"
@@ -299,15 +345,23 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
             <button type="button" className="secondary small" onClick={() => { worldRef.current?.setInputEnabled(false); setModal({ kind: 'options' }) }}>Options</button>
             <button type="button" className="secondary small" onClick={onQuit}>Quitter</button>
           </div>
-          {world && mapVisible && !loading && <Minimap world={world} place={region?.title ?? ''} />}
+          {world && mapVisible && !loading && !inside && <Minimap world={world} place={region?.title ?? ''} />}
         </div>
       </div>
 
       {region?.title && <div key={region.title} className="region-banner" data-testid="region">{region.title}</div>}
+      {inside && floor && <div className="floor-label" data-testid="etage">{floor}</div>}
 
       {focus && !modal && (
         <div className="prompt-bar" data-testid="invite">
-          <kbd>E</kbd> {focus.kind === 'pierre' ? `Toucher ${focus.label.toLowerCase()}` : focus.kind === 'ysaline' ? 'Parler à Maître Ysaline' : `Approcher : ${focus.label}`}
+          <kbd>E</kbd>{' '}
+          {focus.kind === 'pierre'
+            ? `Toucher ${focus.label.toLowerCase()}`
+            : focus.kind === 'ysaline'
+              ? 'Parler à Maître Ysaline'
+              : focus.kind === 'sortie'
+                ? focus.label
+                : `Approcher : ${focus.label}`}
         </div>
       )}
 
@@ -316,8 +370,8 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
           <span><kbd>Z</kbd><kbd>Q</kbd><kbd>S</kbd><kbd>D</kbd> ou flèches : avancer</span>
           <span>Souris : regarder</span>
           <span><kbd>E</kbd> : agir</span>
-          <span><kbd>M</kbd> : carte</span>
-          <span>Clic sur le sol : y aller</span>
+          {!inside && <span><kbd>M</kbd> : carte</span>}
+          {!inside && <span>Clic sur le sol : y aller</span>}
         </div>
       )}
 

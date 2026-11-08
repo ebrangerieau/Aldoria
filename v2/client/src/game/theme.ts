@@ -28,6 +28,28 @@ export interface WorldTheme {
   vignette: number
 }
 
+/** Ambiance de l'intérieur d'un lieu : fond, lumière d'ambiance, soleil par l'ouverture sud, torches (couleurs de la v1). */
+export interface InteriorTheme {
+  background: string
+  ambient: string
+  ambientIntensity: number
+  sunColor: string
+  sunIntensity: number
+  /** Torches (si le lieu n'a pas la sienne). */
+  torchColor: [number, number, number]
+}
+
+export const INTERIORS: Record<WorldName, InteriorTheme> = {
+  lumineux: {
+    background: '#2a2140', ambient: '#a294c4', ambientIntensity: 0.85, sunColor: '#ffe2b0', sunIntensity: 1.5,
+    torchColor: [1, 0.68, 0.32],
+  },
+  brouillard: {
+    background: '#06080d', ambient: '#6b7da0', ambientIntensity: 0.95, sunColor: '#a9c4ff', sunIntensity: 1.15,
+    torchColor: [0.55, 0.75, 1],
+  },
+}
+
 export const THEMES: Record<WorldName, WorldTheme> = {
   lumineux: {
     sunElevation: 28, sunAzimuth: 225, sunColor: '#fff1d6', sunIntensity: 1.9,

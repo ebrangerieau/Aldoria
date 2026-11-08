@@ -92,6 +92,19 @@ et le Labyrinthe des Vecteurs (Tom), les premiers de la v1.
 
 - Intérieur chargé à part (scène Babylon.js par lieu, transition depuis le seuil), étages qui montent (souhait des enfants),
   décor repris de `lieux.json` (`v1_decor`).
+  **✅ Étape 1.2 faite (8 novembre 2026)** : « J'y vais » ouvre l'intérieur du lieu derrière l'écran de chargement. Six salles de
+  16 × 20 m en enfilade, chacune 4 m plus haut, reliées par une porte (battant ouvert) et un escalier ; vue en coupe, caméra au
+  sud dans un arc devant le héros ; décor KayKit de `v1_decor`, torches (lumières des salles voisines), ambiance par monde
+  (couleurs de la v1). Géométrie dans `core/world/dungeon.ts` (22 tests : sol, escaliers, murs, 30 lieux traversés du bas en
+  haut), scène dans `game/interior.ts` (même moteur et même canevas que l'île, qui est mise en pause : `GameWorld.enterPlace` /
+  `leavePlace`). Étage affiché en haut, mini-carte cachée, sortie par la porte du mur ouest de la première salle (E), retour
+  devant le seuil. Mesuré : 60 images/s aux trois profils, 0,6 à 1,7 s de chargement ; WebGPU
+  (`&moteur=webgpu`) identique, sans erreur ni requête hors du site. Les 30 lieux s'ouvrent sans erreur ; le parcours navigateur
+  vérifie aussi l'orientation des escaliers et des battants de porte. Pas encore (étapes suivantes) : ennemis, boss, énigme, coffre,
+  portes fermées tant que la salle n'est pas vaincue ; clic sur le sol (il faudra un chemin par les portes et l'escalier : au
+  clavier seulement pour l'instant) ; le renard de Jules reste dehors (dans la v1, le compagnon suivait dans un donjon qui monte) ;
+  la musique continue de jouer dans un lieu (dans la v1, silence en donjon) ; le mur de séparation cache le héros une fraction de
+  seconde quand il passe une porte (la caméra est au sud, dans l'axe du mur).
 - **Rencontres au tour par tour** : port de `Encounter` (v1) dans `core/combat/` (testé sans moteur) ; l'ennemi est dans le
   décor, le monde se fige pendant la question ; Frappe (automatisme), Sort (chapitre), Soin, Sac ; repli sans perte. Monstres
   Quaternius (`Fighter.MONSTERS` de la v1 à porter) et squelettes KayKit.

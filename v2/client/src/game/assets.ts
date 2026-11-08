@@ -19,10 +19,16 @@ import {
 
 export const MODELS = '/ressources/models'
 
-const containers = new Map<string, Promise<AssetContainer>>()
+/** Un modèle chargé appartient à sa scène : une scène de plus (l'intérieur d'un lieu) a ses propres conteneurs. */
+const containers = new WeakMap<Scene, Map<string, Promise<AssetContainer>>>()
 
 export function loadContainer(scene: Scene, path: string): Promise<AssetContainer> {
-  let promise = containers.get(path)
+  let loaded = containers.get(scene)
+  if (!loaded) {
+    loaded = new Map()
+    containers.set(scene, loaded)
+  }
+  let promise = loaded.get(path)
   if (!promise) {
     promise = LoadAssetContainerAsync(`${MODELS}/${path}`, scene, {
       // Racine du squelette recalculée (ancêtre commun des os) au lieu de `skin.skeleton` : le
@@ -31,7 +37,7 @@ export function loadContainer(scene: Scene, path: string): Promise<AssetContaine
       // Sans effet sur un fichier valide (KayKit).
       pluginOptions: { gltf: { alwaysComputeSkeletonRootNode: true } },
     })
-    containers.set(path, promise)
+    loaded.set(path, promise)
   }
   return promise
 }

@@ -8,7 +8,8 @@ description: Prendre des captures d'écran de l'île d'Aldoria v2 (client Babylo
 1. Construire et lancer la prévisualisation (même CSP que la production) :
    `npm --prefix v2/client run build`, puis `npm --prefix v2/client run preview` en arrière-plan (port 4173).
 2. Vues prêtes à l'emploi : `E2E_OUT=<scratchpad>/vues npm --prefix v2/client run captures [-- depart panorama cimes lieu
-   foret cote sphinx brouillard carte]` (`carte` garde l'interface : mini-carte, bandeau). Sans carte graphique (conteneur, CI) : `E2E_QUALITE=moyen` (le profil `haut` dépasse
+   foret cote sphinx brouillard carte interieur escalier interieur-brouillard]` (`carte` et les vues d'intérieur gardent l'interface :
+   mini-carte, bandeau, étage). Sans carte graphique (conteneur, CI) : `E2E_QUALITE=moyen` (le profil `haut` dépasse
    les délais en rendu logiciel). Sur le PC d'Eric : `haut`.
 3. Vue sur mesure : ajouter une entrée à `VIEWS` dans `v2/client/e2e/captures.mjs` (`at` : où poser le héros, `face` : vers
    où il regarde, `beta`, `radius`, `turn` : caméra), ou dans un script Playwright :
