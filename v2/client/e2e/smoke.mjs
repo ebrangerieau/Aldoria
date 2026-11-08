@@ -122,7 +122,7 @@ try {
     if ((await u()) <= before) throw new Error('la carte rouverte ne montre plus le héros où il est')
   })
 
-  await step('la musique joue (en boucle sur son morceau), se coupe avec le bouton et revient', async () => {
+  await step('la musique joue, se coupe avec le bouton et revient', async () => {
     const music = () => page.evaluate(() => window.__aldoria.services.music.state())
     // Le navigateur ne la lance qu'après un geste : le clic sur le monde, plus haut, en est un.
     await page.waitForFunction(() => window.__aldoria.services.music.state().playing, null, { timeout: 15_000 * SLOW })
@@ -138,6 +138,25 @@ try {
     if ((await button.getAttribute('aria-pressed')) !== 'false') throw new Error('bouton « Musique » pas relâché')
     await button.click()
     await page.waitForFunction(() => window.__aldoria.services.music.state().playing, null, { timeout: 8000 * SLOW })
+  })
+
+  await step('en fin de morceau, le suivant prend le relais, puis le thème revient après le dernier', async () => {
+    const music = () => page.evaluate(() => window.__aldoria.services.music.state())
+    const tracks = await page.evaluate(() => window.__aldoria.services.music.tracks.map((t) => t.file))
+    if (tracks.length < 2) return // un seul morceau : il boucle sur lui-même (vérifié à la main)
+    // On saute à une seconde et demie de la fin du morceau en cours, tant de fois qu'il y a de morceaux.
+    for (let k = 1; k <= tracks.length; k += 1) {
+      const before = await music()
+      const expected = tracks[(tracks.indexOf(before.track) + 1) % tracks.length]
+      await page.evaluate(() => {
+        const a = window.__aldoria.services.music.audio
+        a.currentTime = a.duration - 1.5
+      })
+      await page.waitForFunction((next) => window.__aldoria.services.music.state().track === next, expected, { timeout: 12_000 * SLOW })
+      await page.waitForFunction(() => window.__aldoria.services.music.state().playing, null, { timeout: 8000 * SLOW })
+    }
+    if ((await music()).track !== tracks[0]) throw new Error('après le dernier morceau, le premier devait revenir')
+    await page.waitForFunction(() => window.__aldoria.services.music.audio.currentTime > 0.3, null, { timeout: 8000 * SLOW })
   })
 
   await step("question de la pierre d'éveil", async () => {
