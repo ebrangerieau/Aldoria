@@ -17,7 +17,7 @@ sont repris sans changement de fond ; ce document décrit ce qui est nouveau ou 
 | Production | une seule API (construite depuis `v2/api`) et une seule base pour les deux jeux ; le jeu v2 sur `aldoria2.bandtrack.fr` | D11 |
 | Contenu du monde | JSON dans `content/monde/`, jamais dans le code | D7 |
 | Déplacement | règles pures (eau, pentes, cercles d'obstacles) sans moteur physique | D8 |
-| Rendu | WebGL 2 par défaut ; WebGPU évalué en phase 0 | D9 |
+| Rendu | WebGL 2 par défaut ; WebGPU par `?moteur=webgpu` (mesuré à l'étape 0.4, à revoir sur le PC familial) | D9 |
 | CSP | stricte (`style-src 'self'`, rien hors du site), vérifiée par les tests navigateur | D10 |
 
 ## 1. Architecture
@@ -97,9 +97,11 @@ ombres, cascades, MSAA, SSAO, halo, densité de végétation, résolution), jama
 
 ### 2.3 Moteur : WebGL 2 puis WebGPU
 
-`game/engine.ts` crée un moteur WebGL 2. `?moteur=webgpu` essaie WebGPU : Babylon.js a besoin de convertir certains shaders
-(twgsl), d'ordinaire chargé depuis un CDN que la CSP interdit. Étape 0.4 du plan : servir ces fichiers depuis le site, mesurer,
-puis choisir le moteur par défaut. Tout le code de rendu passe par l'API commune de Babylon.js et ne dépend pas du moteur.
+`game/engine.ts` crée un moteur WebGL 2. `?moteur=webgpu` essaie WebGPU (retour à WebGL 2 si le navigateur ne le propose pas).
+Babylon.js 9 a une version WGSL de tous les shaders de l'île : en WebGPU, il ne charge ni glslang ni twgsl (traduction des
+shaders GLSL, servis par un CDN que la CSP interdit). Étape 0.4 faite le 8 novembre : WebGL 2 reste le moteur par défaut, à revoir
+avec les mesures du PC familial (D9, `docs/perf-log.md`). Tout le code de rendu passe par l'API commune de Babylon.js et ne
+dépend pas du moteur ; un matériau ajouté doit exister en WGSL (vérifié avec `?moteur=webgpu`).
 
 ### 2.4 Déplacement et caméra
 

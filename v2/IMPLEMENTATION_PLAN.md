@@ -50,6 +50,11 @@
 >   racine est gelé (`admin/README.md`). Le parcours de l'espace parent (`admin/e2e/admin_flow.js`, repris de la v1) tourne
 >   dans la CI v2 contre la vraie image `web2`, avec base, API et sauvegarde jetables (`tools/e2e_admin.sh`) ; après chaque
 >   mise en ligne, la CI vérifie que l'espace parent sert le commit (`aldoria-admin…/version.txt`).
+> - **0.4, WebGPU** (8 novembre) : servir twgsl n'est pas nécessaire. Babylon.js 9 a une version WGSL de tous les shaders de
+>   l'île : en WebGPU, rien ne vient du CDN, aucune violation de la CSP, dans les deux mondes. Mesures sur le PC de
+>   développement (`client/e2e/perf.mjs`, `npm run perf`) : à 60 Hz au profil `haut`, WebGPU est plus régulier que WebGL 2 ;
+>   sans limite, WebGL 2 rend plus d'images ; aucune différence visible aux autres profils (`docs/perf-log.md`). WebGL 2 reste
+>   le moteur par défaut (D9 revue), à revoir avec les mesures du PC familial. Le compteur `?perf` affiche le moteur actif.
 
 **Reste à faire pour terminer la phase 0**
 
@@ -57,8 +62,7 @@
 | --- | --- | --- |
 | 0.1 | Jouer la v2 avec un vrai profil (connexion, séance `monde`, réponses en base, sauvegarde `v2`) : sur `aldoria2.bandtrack.fr`, après avoir relié le PC une fois (code de l'onglet Famille) | l'espace parent montre la séance « Exploration » et les réponses de la v2 |
 | 0.3 | Commandes au clavier vérifiées sur AZERTY et QWERTY ; souris (orbite, molette) sur le PC familial | séance de 5 minutes avec Eric |
-| 0.4 | WebGPU : servir twgsl depuis le site, mesurer face à WebGL 2, décider du moteur par défaut (D9) | `docs/perf-log.md`, nouvelle décision si changement |
-| 0.5 | Mesures sur le PC familial (et le PC de Tom) : images par seconde par profil, chargement, mémoire | `docs/perf-log.md` ; profil par défaut choisi d'après les mesures |
+| 0.5 | Mesures sur le PC familial (et le PC de Tom) : images par seconde par profil, chargement, mémoire, en WebGL 2 et avec `&moteur=webgpu` (protocole de `docs/perf-log.md`) | `docs/perf-log.md` ; profil et moteur par défaut choisis d'après les mesures (D9) |
 
 **Critère de passage** : Jules et Tom se promènent dix minutes dans l'île sans aide, trouvent et éveillent au moins trois
 pierres chacun, et disent ce qu'ils voudraient y trouver. On note où ils s'ennuient et où ils se perdent.

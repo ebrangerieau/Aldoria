@@ -1,8 +1,9 @@
 /**
- * Création du moteur. WebGL 2 par défaut ; WebGPU seulement sur demande (`?moteur=webgpu`)
- * tant que ses outils de traduction des shaders (twgsl) ne sont pas servis par le site
- * (la CSP interdit tout chargement depuis un CDN) : décision à prendre en phase 1, voir
- * docs/TRD.md §2.
+ * Création du moteur. WebGL 2 par défaut ; WebGPU sur demande (`?moteur=webgpu`), avec retour à WebGL 2 si le
+ * navigateur ne le propose pas (décision D9, revue à l'étape 0.4 : docs/decisions.md, mesures dans docs/perf-log.md).
+ * En WebGPU, Babylon.js 9 a une version WGSL de tous les shaders qu'utilise l'île : il ne charge pas glslang ni twgsl
+ * (traduction des shaders GLSL, servis par un CDN que la CSP refuse). Un matériau qui n'existe qu'en GLSL les
+ * demanderait : tout matériau ajouté se vérifie avec `?moteur=webgpu` (aucune requête vers cdn.babylonjs.com).
  */
 import { type AbstractEngine, Engine, SceneLoaderFlags, WebGPUEngine } from '@babylonjs/core'
 

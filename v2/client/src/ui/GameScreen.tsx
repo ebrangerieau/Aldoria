@@ -229,7 +229,10 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
       )}
 
       {params.has('perf') && stats && (
-        <div className="perf">{stats.fps} i/s · {stats.drawCalls} appels · {Math.round(stats.triangles / 1000)} k triangles · {worldRef.current?.quality.name}</div>
+        <div className="perf">
+          {stats.fps} i/s · {stats.drawCalls} appels · {Math.round(stats.triangles / 1000)} k triangles · {worldRef.current?.quality.name} ·{' '}
+          {worldRef.current?.engine.isWebGPU ? 'WebGPU' : 'WebGL 2'}
+        </div>
       )}
 
       {loading && (

@@ -31,6 +31,7 @@ npm --prefix client run typecheck
 npm --prefix client run build          # puis : npm --prefix client run preview (port 4173, CSP de production)
 npm --prefix client run e2e            # parcours dans Chromium contre la prévisualisation
 npm --prefix client run captures       # vues de l'île dans e2e/captures (E2E_QUALITE=moyen en rendu logiciel)
+npm --prefix client run perf           # WebGL 2 face à WebGPU, profil par profil (Edge du poste, docs/perf-log.md)
 uv run --directory api pytest -q
 uv run --directory api ruff check .
 npm --prefix admin run build
@@ -82,6 +83,9 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
 - Vite intègre les petits fichiers en `data:` : `assetsInlineLimit: 0` (polices de KaTeX).
 - En rendu logiciel (CI, conteneur sans carte graphique), le profil `haut` peut dépasser les délais de capture : `bas` pour
   le parcours, `moyen` pour les captures.
+- WebGPU (`?moteur=webgpu`) : Babylon.js 9 a une version WGSL de tous ses shaders de base, mais un matériau seulement GLSL
+  (ceux de `@babylonjs/materials`, un `ShaderMaterial` écrit en GLSL) lui ferait charger glslang et twgsl depuis son CDN,
+  refusé par la CSP. Tout matériau ajouté se vérifie en WebGPU (aucune requête vers cdn.babylonjs.com).
 - CI : Playwright 1.56 n'installe pas Chromium sur `ubuntu-latest` (passé en 26.04) ; tout job qui lance le navigateur
   tourne sur `ubuntu-24.04`. Le VPS n'ouvre SSH qu'à quelques adresses : un job qui s'y connecte passe par
   `.github/scripts/vps-ssh.sh open|close` (comme les deux jobs `deploy`).

@@ -66,6 +66,16 @@ nouvelle qui la remplace, avec la date. D1 à D6 et D11 ont été prises avec Er
 
 - **Choix** : moteur WebGL 2 par défaut ; WebGPU derrière `?moteur=webgpu` jusqu'à l'étape 0.4 du plan.
 - **Raison** : WebGPU demande de servir soi-même twgsl (traduction de shaders) sous notre CSP ; WebGL 2 fonctionne partout.
+- **Revu le 8 novembre (étape 0.4)** : twgsl n'est pas nécessaire. Babylon.js 9 a une version WGSL de tous les shaders de
+  l'île : en WebGPU, rien n'est demandé au CDN, aucune violation de la CSP. Mesures (`docs/perf-log.md`, PC de développement) :
+  au profil `haut` à 60 Hz, WebGPU est plus régulier (60 i/s, 95 % des images sous 18 ms) que WebGL 2 (55 à 60 i/s, à-coups
+  jusqu'à 28 ms) ; sans limite, WebGL 2 rend plus d'images ; aux profils `moyen` et `bas`, aucune différence visible.
+- **Choix maintenu** : WebGL 2 par défaut, WebGPU par `?moteur=webgpu`. L'écart est faible, mesuré sur un seul PC, et la CI ne
+  peut pas tester WebGPU (rendu logiciel) : une panne propre à WebGPU arriverait jusqu'aux enfants sans être vue.
+- **À revoir à l'étape 0.5**, sur le PC familial : si WebGL 2 n'y tient pas 60 i/s régulières au profil choisi et que WebGPU le
+  fait, passer WebGPU par défaut (retour automatique à WebGL 2 s'il manque), avec un parcours navigateur en WebGPU.
+- **Implique** : tout matériau ajouté doit exister en WGSL dans Babylon.js (pas de matériau seulement GLSL, comme ceux de
+  `@babylonjs/materials`, sans servir glslang et twgsl depuis le site) ; on le vérifie avec `?moteur=webgpu`.
 
 ## D10 : CSP stricte, vérifiée par les tests (7 novembre 2026)
 
