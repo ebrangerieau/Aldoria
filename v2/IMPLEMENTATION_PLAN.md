@@ -104,6 +104,19 @@ et le Labyrinthe des Vecteurs (Tom), les premiers de la v1.
 
 **Critère de passage** : chaque enfant termine son lieu, et **demande à en faire un autre**. Note de fin de lieu ≥ 4.
 
+**Découpage** (8 novembre 2026 : Eric a choisi de commencer la phase 1 avant la première séance ; les étapes 0.1, 0.3, 0.5 et la
+séance de la phase 0 restent à faire et passeront sur l'ensemble). Chaque étape est une PR qui laisse le jeu jouable ; on commence
+par ce qui se teste sans moteur.
+
+| Étape | Quoi | Fait |
+| --- | --- | --- |
+| 1.1 | **Règles du combat** : `core/combat/encounter.ts` (puissance, critique, boss et ses sceaux, soin, riposte, bouclier et potion, repli) et `core/progression.ts` (XP, niveaux, PV), portés de la v1 avec 32 tests ; aucune mise en scène | ✅ |
+| 1.2 | **Intérieur d'un lieu** : scène Babylon.js chargée à part, transition depuis le seuil (« J'y vais »), salles de `lieux.json`, étages qui montent, retour à l'île | |
+| 1.3 | **Rencontres dans le décor** : monstres Quaternius et squelettes KayKit, monde figé pendant la question, barre d'actions (Frappe, Sort, Soin, Sac) et panneau de question, repli sans perte | |
+| 1.4 | **Effaceur, coffre, page** : sceaux du boss, répliques d'entrée et de défaite, coffre et page rendue, lieu suivant qui s'ouvre, salut de Maître Ysaline au retour | |
+| 1.5 | **Énigme à trois piédestaux, héros qui parle, note de 1 à 5** (`session/end`, `rating`) | |
+| 1.6 | **Widgets** : vecteur, droite graduée, tableau de signes (Tom en a besoin dès le Labyrinthe des Vecteurs) | |
+
 ## Phase 2 : reprendre ce que les enfants aimaient dans la v1
 
 Dans l'ordre que les enfants choisiront à la séance de la phase 1 :
