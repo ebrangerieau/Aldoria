@@ -129,7 +129,7 @@ button.small { min-height: 40px; padding: 0.2rem 0.8rem; font-size: 0.9rem; }
 .hud-right { display: flex; flex-direction: column; align-items: flex-end; gap: 0.5rem; pointer-events: none; }
 .hud-right > * { pointer-events: auto; }
 .hud-buttons { display: flex; gap: 0.5rem; }
-.hud-buttons button[aria-pressed='true'] { background: var(--parchment-dark); box-shadow: inset 0 1px 3px rgb(0 0 0 / 25%); }
+.hud-buttons button[aria-pressed='true'], .hud-buttons button[aria-pressed='true']:hover:not(:disabled) { background: var(--parchment-dark); box-shadow: inset 0 1px 3px rgb(0 0 0 / 25%); }
 
 /* Mini-carte (ui/Minimap.tsx) : relief peint dans un canvas, repères en SVG. Formes distinctes
    par sorte de repère (couleurs aménagées ou non) ; aucun effet animé. */
@@ -222,6 +222,9 @@ html[data-calm='true'] .region-banner { opacity: 1; }
 .feedback.bad .verdict { color: var(--bad-ink); font-weight: 700; font-size: 1.2rem; }
 .explanation { font-size: 1.05rem; }
 .credits { font-size: 0.8rem; color: var(--ink-soft); }
+.music-volume { display: flex; align-items: center; gap: 0.8rem; margin: 0.2rem 0 0.8rem; }
+.music-volume input { flex: 1; min-height: var(--target); accent-color: var(--gold); }
+.music-volume output { min-width: 3.2em; text-align: right; font-weight: 700; }
 
 /* Captures sans interface (?interface=0, e2e/captures.mjs). */
 .sans-interface .hud-top, .sans-interface .controls-help, .sans-interface .region-banner, .sans-interface .prompt-bar { visibility: hidden; }

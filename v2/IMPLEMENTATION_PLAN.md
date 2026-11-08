@@ -64,6 +64,15 @@
 >   Tour de l'Oubli n'y figure pas. Le parcours navigateur vérifie que la carte suit le héros, se cache avec M, reste en
 >   place pendant une question et montre la pierre éveillée. Pas encore : aller quelque part en cliquant sur la carte, grande
 >   carte plein écran, brouillard des régions (phase 2) ; à décider d'après la séance.
+> - **0.10, musique de la v1** (8 novembre) : le thème (« Ritual of the Cursed », Suno) était déjà servi par `web2` mais
+>   rien ne le jouait. Lecteur `app/music.ts` (mélangeur de volume `core/music.ts`, 15 tests) : démarre à l'entrée dans l'île,
+>   boucle, fondu d'une seconde et demie, s'éteint pendant une question, baisse sous une voix, plus bas en mode calme ;
+>   bouton « Musique » et volume dans les Options (choix gardé pour chaque enfant), crédit dans les Options. Plusieurs
+>   morceaux : `content/monde/musique.json` (ordre de lecture), `tools/encode_musique.py` (même traitement que le thème,
+>   volume égalisé), procédure dans `docs/exploitation.md`. Trois morceaux à la suite, pour les deux enfants : le thème,
+>   « Enchanted Forest » (3 min 30) et « Fog-Shrouded Forest » (3 min 35), puis on recommence (le parcours navigateur saute
+>   à la fin de chacun et vérifie l'enchaînement). Pas encore : un morceau par monde ou par région (phase 3 ; « Enchanted
+>   Forest » irait à Jules et « Fog-Shrouded Forest » au Brouillard de Tom), sons d'ambiance.
 
 **Reste à faire pour terminer la phase 0**
 

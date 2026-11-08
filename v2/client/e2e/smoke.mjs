@@ -1,5 +1,6 @@
 // Parcours de fumée dans un vrai navigateur : écran titre → île (mode découverte) → le héros
-// avance → la mini-carte le suit et se cache avec M → pierre d'éveil → question → bonne réponse → la pierre s'éveille. Échoue sur toute
+// avance → la mini-carte le suit et se cache avec M → la musique joue, se coupe et se tait pendant
+// une question → pierre d'éveil → question → bonne réponse → la pierre s'éveille. Échoue sur toute
 // erreur de la page ou toute ressource introuvable. Captures dans $E2E_OUT (défaut : e2e/captures).
 //   npm run build && npm run preview &   puis   npm run e2e
 import { mkdirSync } from 'node:fs'
@@ -121,12 +122,51 @@ try {
     if ((await u()) <= before) throw new Error('la carte rouverte ne montre plus le héros où il est')
   })
 
+  await step('la musique joue, se coupe avec le bouton et revient', async () => {
+    const music = () => page.evaluate(() => window.__aldoria.services.music.state())
+    // Le navigateur ne la lance qu'après un geste : le clic sur le monde, plus haut, en est un.
+    await page.waitForFunction(() => window.__aldoria.services.music.state().playing, null, { timeout: 15_000 * SLOW })
+    const first = await music()
+    if (first.track !== 'theme.mp3') throw new Error(`premier morceau inattendu : ${first.track}`)
+    await page.waitForFunction(() => window.__aldoria.services.music.state().level > 0.05, null, { timeout: 10_000 * SLOW })
+    await page.waitForTimeout(800 * SLOW)
+    if ((await music()).time <= first.time) throw new Error('la musique n’avance pas')
+    const button = page.getByTestId('bouton-musique')
+    if ((await button.getAttribute('aria-pressed')) !== 'true') throw new Error('bouton « Musique » pas enfoncé alors qu’elle joue')
+    await button.click()
+    await page.waitForFunction(() => !window.__aldoria.services.music.state().playing, null, { timeout: 8000 * SLOW })
+    if ((await button.getAttribute('aria-pressed')) !== 'false') throw new Error('bouton « Musique » pas relâché')
+    await button.click()
+    await page.waitForFunction(() => window.__aldoria.services.music.state().playing, null, { timeout: 8000 * SLOW })
+  })
+
+  await step('en fin de morceau, le suivant prend le relais, puis le thème revient après le dernier', async () => {
+    const music = () => page.evaluate(() => window.__aldoria.services.music.state())
+    const tracks = await page.evaluate(() => window.__aldoria.services.music.tracks.map((t) => t.file))
+    if (tracks.length < 2) return // un seul morceau : il boucle sur lui-même (vérifié à la main)
+    // On saute à une seconde et demie de la fin du morceau en cours, tant de fois qu'il y a de morceaux.
+    for (let k = 1; k <= tracks.length; k += 1) {
+      const before = await music()
+      const expected = tracks[(tracks.indexOf(before.track) + 1) % tracks.length]
+      await page.evaluate(() => {
+        const a = window.__aldoria.services.music.audio
+        a.currentTime = a.duration - 1.5
+      })
+      await page.waitForFunction((next) => window.__aldoria.services.music.state().track === next, expected, { timeout: 12_000 * SLOW })
+      await page.waitForFunction(() => window.__aldoria.services.music.state().playing, null, { timeout: 8000 * SLOW })
+    }
+    if ((await music()).track !== tracks[0]) throw new Error('après le dernier morceau, le premier devait revenir')
+    await page.waitForFunction(() => window.__aldoria.services.music.audio.currentTime > 0.3, null, { timeout: 8000 * SLOW })
+  })
+
   await step("question de la pierre d'éveil", async () => {
     await page.evaluate(() => window.__aldoria.world.teleport(9, -24.5, 9, -22))
     await page.getByTestId('invite').waitFor({ timeout: 10_000 * SLOW })
     await page.screenshot({ path: `${OUT}/03-pierre.png` })
     await page.keyboard.press('KeyE')
     await page.getByRole('dialog').waitFor()
+    // Pendant une question, la musique s'éteint en fondu (l'enfant reste concentré) ; elle revient après.
+    await page.waitForFunction(() => !window.__aldoria.services.music.state().playing, null, { timeout: 8000 * SLOW })
     // Pendant une question, M ne touche pas à la carte (ni à la réponse : elle est remplie plus bas).
     await page.keyboard.press('m')
     if ((await page.getByTestId('carte').count()) !== 1) throw new Error('la touche M a caché la carte pendant une question')
@@ -154,6 +194,7 @@ try {
     await page.screenshot({ path: `${OUT}/05-juste.png` })
     await page.getByRole('button', { name: 'Continuer' }).click()
     await page.getByRole('dialog').waitFor({ state: 'detached' })
+    await page.waitForFunction(() => window.__aldoria.services.music.state().playing, null, { timeout: 8000 * SLOW })
     const xp = await page.locator('.badge').innerText()
     if (!/15 XP/.test(xp)) throw new Error(`XP attendue après la pierre : ${xp}`)
     // La carte montre la pierre éveillée (dorée).

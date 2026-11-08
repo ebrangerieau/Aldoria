@@ -46,6 +46,7 @@ Ces notes vont dans `docs/perf-log.md`. Elles décident du profil et du moteur p
 | ★ Se repérer | Lit-il le nom de la région ? Va-t-il vers la Citadelle, les montagnes, la mer ? Se perd-il ? Regarde-t-il la mini-carte (en haut à droite) pour choisir où aller ? La cache-t-il (M) ou la rouvre-t-il ? | |
 | ★ Pierres de savoir | Les remarque-t-il ? Comprend-il « E : Toucher la pierre » ? Combien en éveille-t-il ? | |
 | Maître Ysaline | Lui parle-t-il ? Écoute-t-il ou lit-il ? | |
+| Musique | Joue dès l'entrée dans l'île, se tait pendant une question | Plaît-elle ou gêne-t-elle ? Trouve-t-il seul le bouton « Musique » (en haut à droite) ? Le volume est-il bon sous la voix de Maître Ysaline ? | |
 | Seuils des lieux | Approche-t-il d'une tour qui brille ? Que dit-il quand le lieu n'est pas encore construit ? | |
 | Le monde | Que trouve-t-il beau, vide, ennuyeux ? Brouillard (Tom) : assez différent ? | |
 
