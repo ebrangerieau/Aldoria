@@ -1,10 +1,61 @@
+import { createReadStream, existsSync, statSync } from 'node:fs'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import { fileURLToPath } from 'node:url'
 import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vitest/config'
+import { defineConfig, type Plugin } from 'vitest/config'
 
 // Contenus partagés avec l'API (content/ : lieux, régions, vecteurs de test) : importés tels
 // quels, jamais recopiés dans le client.
 const content = fileURLToPath(new URL('../content', import.meta.url))
+
+/**
+ * La musique (deploy/musique/*.mp3) n'est pas dans le client : en production nginx la sert sous
+ * /musique/ (deploy/web.Dockerfile). Ici, le serveur de développement et la prévisualisation la
+ * servent depuis le même dossier, avec les requêtes par plages (Range) dont les lecteurs audio ont
+ * besoin pour boucler et reprendre.
+ */
+const musicDir = fileURLToPath(new URL('../deploy/musique/', import.meta.url))
+
+function serveMusic(req: IncomingMessage, res: ServerResponse, next: () => void): void {
+  let name = ''
+  try {
+    name = decodeURIComponent((req.url ?? '').split('?')[0]!.replace(/^\/musique\//, ''))
+  } catch {
+    return next() // adresse mal encodée : pas un de nos fichiers
+  }
+  if (!req.url?.startsWith('/musique/') || !/^[\w.-]+\.mp3$/.test(name) || !existsSync(musicDir + name)) return next()
+  const size = statSync(musicDir + name).size
+  const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range ?? '')
+  let start = 0
+  let end = size - 1
+  if (range) {
+    if (range[1] !== '') start = Number(range[1])
+    if (range[2] !== '') end = Math.min(end, Number(range[2]))
+    if (range[1] === '' && range[2] !== '') {
+      start = Math.max(0, size - Number(range[2]))
+      end = size - 1
+    }
+    if (start > end || start >= size) {
+      res.writeHead(416, { 'Content-Range': `bytes */${size}` }).end()
+      return
+    }
+  }
+  res.writeHead(range ? 206 : 200, {
+    'Content-Type': 'audio/mpeg',
+    'Accept-Ranges': 'bytes',
+    'Content-Length': end - start + 1,
+    'Cache-Control': 'no-cache',
+    ...(range ? { 'Content-Range': `bytes ${start}-${end}/${size}` } : {}),
+  })
+  if (req.method === 'HEAD') res.end()
+  else createReadStream(musicDir + name, { start, end }).pipe(res)
+}
+
+const music = (): Plugin => ({
+  name: 'aldoria-musique',
+  configureServer: (server) => void server.middlewares.use(serveMusic),
+  configurePreviewServer: (server) => void server.middlewares.use(serveMusic),
+})
 
 /** CSP du jeu, identique à celle de deploy/nginx/web.conf. */
 export const CSP = [
@@ -22,7 +73,7 @@ export const CSP = [
 ].join('; ')
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), music()],
   resolve: { alias: { '@content': content } },
   server: {
     port: 5173,

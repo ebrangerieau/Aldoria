@@ -14,11 +14,18 @@ export class Voice {
   private generation = 0
   private offUntil = 0
   private cache = new Map<string, string>()
+  private speaking = false
 
   constructor(private readonly api: ApiClient) {}
 
+  /** Une lecture est en cours : la musique se fait plus discrète. */
+  get isSpeaking(): boolean {
+    return this.speaking
+  }
+
   stop(): void {
     this.generation += 1
+    this.speaking = false
     this.audio?.pause()
     this.audio = null
     if ('speechSynthesis' in window) window.speechSynthesis.cancel()
@@ -27,10 +34,15 @@ export class Voice {
   async say(parts: string[], lang = 'fr-FR', rate = 0.95): Promise<void> {
     this.stop()
     const generation = this.generation
-    for (const text of parts.map((p) => p.trim()).filter(Boolean)) {
-      if (generation !== this.generation) return
-      const played = this.canUseServer(lang) ? await this.playServer(text, lang, rate, generation) : false
-      if (!played && generation === this.generation) await this.playDevice(text, lang, rate)
+    this.speaking = true
+    try {
+      for (const text of parts.map((p) => p.trim()).filter(Boolean)) {
+        if (generation !== this.generation) return
+        const played = this.canUseServer(lang) ? await this.playServer(text, lang, rate, generation) : false
+        if (!played && generation === this.generation) await this.playDevice(text, lang, rate)
+      }
+    } finally {
+      if (generation === this.generation) this.speaking = false // sinon, une lecture plus récente a pris le relais
     }
   }
 

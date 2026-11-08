@@ -8,6 +8,7 @@ import type { Services } from '../app/services'
 import { reloadPending } from '../app/staleBuild'
 import { type Accommodations, applyToDocument, fromServer, withChildPrefs } from '../core/accessibility'
 import type { Item } from '../core/items'
+import { DEFAULT_VOLUME, volumeOf } from '../core/music'
 import { EMPTY_SAVE, SaveGame, type SaveData } from '../core/save'
 import { regionTitle } from '../core/world/places'
 import type { GameWorld, Interactable, WorldEvents } from '../game/GameWorld'
@@ -17,8 +18,8 @@ import { Dialog, Options } from './Dialogs'
 import { Minimap } from './Minimap'
 
 const STONE_XP = 15
-/** Préférences gardées sur le poste, pour chaque enfant : taille du texte, carte affichée. */
-type ChildPrefs = { text_size?: number; map?: boolean }
+/** Préférences gardées sur le poste, pour chaque enfant : taille du texte, carte affichée, musique. */
+type ChildPrefs = { text_size?: number; map?: boolean; music?: number; music_off?: boolean }
 const today = (): string => new Date().toISOString().slice(0, 10)
 
 type Modal =
@@ -48,6 +49,8 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
   const prefsKey = `prefs.${profile.id}`
   const [prefs, setPrefs] = useState<ChildPrefs>(() => services.store.get(prefsKey, {}))
   const mapVisible = prefs.map !== false
+  const musicVolume = volumeOf(prefs.music)
+  const musicOn = prefs.music_off !== true && musicVolume > 0
   const accommodations: Accommodations = withChildPrefs(fromServer(profile.accommodations), prefs)
   const params = new URLSearchParams(location.search)
 
@@ -124,6 +127,12 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
     services.store.set(prefsKey, next)
   }
 
+  /** Musique coupée ou remise (bouton « Musique ») ; remise à zéro dans les Options, elle revient au volume par défaut. */
+  function toggleMusic() {
+    if (musicOn) savePrefs({ ...prefs, music_off: true })
+    else savePrefs({ ...prefs, music_off: false, music: musicVolume > 0 ? prefs.music : DEFAULT_VOLUME })
+  }
+
   /** Mini-carte affichée ou cachée (touche M, bouton « Carte ») : gardé pour chaque enfant. */
   function toggleMap() {
     savePrefs({ ...prefs, map: !mapVisible })
@@ -146,6 +155,21 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [])
+
+  // Musique : à l'écran quand l'île est prête, réglée par l'enfant, muette pendant une question.
+  const calm = accommodations.calm
+  const musicQuestion = modal?.kind === 'question'
+  useEffect(() => {
+    services.music.configure({ muted: !musicOn, volume: musicVolume, calm })
+  }, [services, musicOn, musicVolume, calm])
+  useEffect(() => {
+    services.music.setFocus(musicQuestion)
+  }, [services, musicQuestion])
+  useEffect(() => {
+    if (!world) return
+    services.music.start()
+    return () => services.music.stop()
+  }, [services, world])
 
   function close() {
     setModal(null)
@@ -257,6 +281,21 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
             >
               Carte
             </button>
+            {services.music.enabled && (
+              <button
+                type="button"
+                className="secondary small"
+                aria-pressed={musicOn}
+                title="Couper ou remettre la musique"
+                data-testid="bouton-musique"
+                onClick={() => {
+                  toggleMusic()
+                  canvasRef.current?.focus()
+                }}
+              >
+                Musique
+              </button>
+            )}
             <button type="button" className="secondary small" onClick={() => { worldRef.current?.setInputEnabled(false); setModal({ kind: 'options' }) }}>Options</button>
             <button type="button" className="secondary small" onClick={onQuit}>Quitter</button>
           </div>
@@ -316,6 +355,8 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
           accommodations={accommodations}
           textSize={prefs.text_size ?? 0}
           onTextSize={(size) => savePrefs({ ...prefs, text_size: size })}
+          musicVolume={services.music.enabled ? musicVolume : null}
+          onMusicVolume={(volume) => savePrefs({ ...prefs, music: volume, music_off: false })}
           onClose={close}
         />
       )}
