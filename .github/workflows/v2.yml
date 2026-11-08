@@ -122,7 +122,9 @@ jobs:
           done
 
   deploy:
-    runs-on: ubuntu-latest
+    # Ubuntu 24.04 fixé : le job finit par un parcours dans Chromium, que Playwright 1.56 n'installe pas
+    # sur ubuntu-latest passé en 26.04.
+    runs-on: ubuntu-24.04
     needs: images
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     environment: production

@@ -39,16 +39,21 @@
 >   d'enfant) ; dédoublonnées, par lots de 20, gardées sans réseau (`core/errorReport.ts`, `app/errors.ts`). Version du
 >   jeu dans les Options. 9 tests Vitest (123 en tout) ; le parcours navigateur vérifie la capture d'une erreur d'essai
 >   (`?erreur_test=1`). Reste à voir une vraie erreur dans Exploitation → Erreurs du jeu, une fois `aldoria2` en ligne.
+> - **0.6, mise en ligne** (D11) : la CI v2 publie l'API (depuis `v2/api`) et le jeu v2 ; la base a été sauvegardée puis
+>   est passée à la migration 0013 ; `aldoria2.bandtrack.fr` sert le jeu v2 à côté du jeu v1 (commit `24314b4`). Le job
+>   `deploy` vérifie d'abord que les images se lisent sans compte (le paquet `aldoria-web2` a été rendu public). Depuis le
+>   30 octobre, le pare-feu Hostinger n'ouvre le port 22 qu'à quelques adresses : chaque déploiement (v1 et v2) l'ouvre pour
+>   son runner par l'API Hostinger, puis le referme (`.github/scripts/vps-ssh.sh`, secret `HOSTINGER_API_TOKEN` ;
+>   `docs/exploitation.md`). Reste à voir le parcours navigateur de contrôle passer contre `aldoria2` (job sur Ubuntu 24.04).
 
 **Reste à faire pour terminer la phase 0**
 
 | Étape | Quoi | Comment vérifier |
 | --- | --- | --- |
-| 0.1 | Jouer la v2 avec un vrai profil (connexion, séance `monde`, réponses en base, sauvegarde `v2`) : se fait sur `aldoria2.bandtrack.fr` dès l'étape 0.6 | l'espace parent montre la séance « Exploration » et les réponses de la v2 |
+| 0.1 | Jouer la v2 avec un vrai profil (connexion, séance `monde`, réponses en base, sauvegarde `v2`) : sur `aldoria2.bandtrack.fr`, après avoir relié le PC une fois (code de l'onglet Famille) | l'espace parent montre la séance « Exploration » et les réponses de la v2 |
 | 0.3 | Commandes au clavier vérifiées sur AZERTY et QWERTY ; souris (orbite, molette) sur le PC familial | séance de 5 minutes avec Eric |
 | 0.4 | WebGPU : servir twgsl depuis le site, mesurer face à WebGL 2, décider du moteur par défaut (D9) | `docs/perf-log.md`, nouvelle décision si changement |
 | 0.5 | Mesures sur le PC familial (et le PC de Tom) : images par seconde par profil, chargement, mémoire | `docs/perf-log.md` ; profil par défaut choisi d'après les mesures |
-| 0.6 | Mise en ligne (D11) : la CI v2 publie l'API (depuis `v2/api`) et le jeu v2, sauvegarde la base, applique la migration 0013 et ouvre `aldoria2.bandtrack.fr` à côté du jeu v1. À faire par Eric une fois : l'entrée DNS `aldoria2`, et vérifier que le VPS peut tirer la nouvelle image `aldoria-web2` | job `deploy` de `v2.yml` vert : API et `version.txt` du commit, parcours navigateur contre le site |
 | 0.8 | Espace parent servi par `web2` (code de `v2/admin`) au lieu du conteneur de la v1 ; `admin/` à la racine gelé | `aldoria-admin.bandtrack.fr` sert le build de `v2/admin` (libellé « Exploration », guide à jour) |
 
 **Critère de passage** : Jules et Tom se promènent dix minutes dans l'île sans aide, trouvent et éveillent au moins trois
