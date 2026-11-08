@@ -25,6 +25,8 @@ export interface MusicState {
   playing: boolean
   track: string
   time: number
+  /** Durée du morceau en cours, tant que le navigateur n'a pas lu son début : NaN. */
+  duration: number
   /** Volume appliqué à l'élément audio (0 à 1). */
   level: number
   muted: boolean
@@ -86,6 +88,7 @@ export class MusicPlayer {
       playing: audio !== null && !audio.paused,
       track: this.tracks[this.index]?.file ?? '',
       time: audio?.currentTime ?? 0,
+      duration: audio?.duration ?? Number.NaN,
       level: audio?.volume ?? 0,
       muted: this.settings.muted,
       focus: this.focus,

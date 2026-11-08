@@ -23,6 +23,8 @@ const QUALITY = process.env.E2E_QUALITE ?? 'bas'
 mkdirSync(OUT, { recursive: true })
 
 const problems = []
+// E2E_RETARD_MUSIQUE=<ms> : chaque fichier de /musique/ arrive avec ce retard (réseau lent, CI chargée).
+const MUSIC_DELAY = Number(process.env.E2E_RETARD_MUSIQUE ?? 0)
 const browser = await chromium.launch({
   executablePath: process.env.CHROMIUM_PATH || undefined,
   args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'],
@@ -33,6 +35,12 @@ const TEST_ERROR = "Erreur d'essai (erreur_test=1)"
 page.on('pageerror', (e) => { if (!e.message.includes(TEST_ERROR)) problems.push(`erreur de la page : ${e.message}`) })
 page.on('console', (m) => { if (m.type() === 'error' && !m.text().includes(TEST_ERROR)) problems.push(`console : ${m.text()}`) })
 page.on('response', (r) => { if (r.status() >= 400) problems.push(`${r.status()} ${r.url()}`) })
+if (MUSIC_DELAY > 0) {
+  await page.route('**/musique/**', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, MUSIC_DELAY))
+    await route.continue()
+  })
+}
 
 const step = async (label, fn) => {
   const t = Date.now()
@@ -148,6 +156,12 @@ try {
     for (let k = 1; k <= tracks.length; k += 1) {
       const before = await music()
       const expected = tracks[(tracks.indexOf(before.track) + 1) % tracks.length]
+      // « Joue » dès l'appel à play() : le début du morceau peut ne pas être arrivé (sa durée est alors inconnue).
+      await page.waitForFunction(
+        () => Number.isFinite(window.__aldoria.services.music.state().duration) && window.__aldoria.services.music.state().duration > 10,
+        null,
+        { timeout: 30_000 * SLOW },
+      )
       await page.evaluate(() => {
         const a = window.__aldoria.services.music.audio
         a.currentTime = a.duration - 1.5
