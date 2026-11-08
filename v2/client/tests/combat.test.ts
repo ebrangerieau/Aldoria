@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
-  type Action, type Answer, BASE_POWER, BOSS_CRIT_MULT, BOSS_HITS, Combatant, CRIT_MULT, Encounter, type EncounterOptions, FAST_MULT,
-  FOE_DAMAGE, GUARD_MULT, HINT_MULT,
+  type Action, type Answer, BASE_POWER, BOSS_CRIT_MULT, BOSS_HITS, Combatant, CRIT_MULT, Encounter, type EncounterSettings, type Engagement,
+  FAST_MULT, FOE_DAMAGE, GUARD_MULT, HINT_MULT,
 } from '../src/core/combat/encounter'
 import { answerXp, heroMaxHp, levelForXp, levelProgress, MAX_LEVEL, xpForLevel } from '../src/core/progression'
 
@@ -9,10 +9,12 @@ const right = (over: Partial<Answer> = {}): Answer => ({ correct: true, speedRat
 const wrong = (over: Partial<Answer> = {}): Answer => ({ correct: false, speedRatio: 0.8, rewardFactor: 1, hintUsed: false, difficulty: 2, ...over })
 
 /** Un combat : héros à 100 PV, ennemi à `foeHp`, riposte au milieu de sa fourchette (random = 0,5). */
-function fight(over: Partial<EncounterOptions> = {}, foeHp = 100, heroHp = 100) {
+function fight(over: Partial<EncounterSettings & Engagement> = {}, foeHp = 100, heroHp = 100) {
+  const { world, noSpeed, random, ...engagement } = over
   const hero = new Combatant('Archiviste', 100, heroHp)
   const foe = new Combatant('Champignon', foeHp)
-  const encounter = new Encounter(hero, foe, { tier: 1, rewardXp: 30, world: 'lumineux', random: () => 0.5, ...over })
+  const encounter = new Encounter(hero, { world: world ?? 'lumineux', noSpeed, random: random ?? (() => 0.5) })
+  encounter.engage(foe, { tier: 1, rewardXp: 30, ...engagement })
   return { hero, foe, encounter }
 }
 
@@ -234,8 +236,47 @@ describe('Fin du combat', () => {
   })
 })
 
+describe('D’un ennemi au suivant (un Encounter par donjon, comme dans la v1)', () => {
+  it('le bouclier levé passe au combat suivant, il n’est perdu que sur un coup', () => {
+    const { encounter, hero } = fight({}, 10)
+    encounter.useShield()
+    expect(encounter.answer('automatisme', right({ speedRatio: 1.4 })).outcome).toBe('victory') // pas de riposte : le bouclier reste
+    expect(encounter.shieldUp).toBe(true)
+    encounter.engage(new Combatant('Squelette', 100), { tier: 2, rewardXp: 35 })
+    const turn = encounter.answer('automatisme', wrong())
+    expect(turn.events.at(-1)).toEqual({ kind: 'foe_attack', damage: 0, blocked: true })
+    expect(hero.hp).toBe(100)
+  })
+
+  it('la série du critique « sans vitesse » continue chez l’ennemi suivant', () => {
+    const { encounter } = fight({ noSpeed: true }, 20)
+    encounter.answer('automatisme', right()) // 18 : l'ennemi (20 PV) tient
+    expect(encounter.answer('automatisme', right()).outcome).toBe('victory') // deuxième bonne réponse d'affilée
+    encounter.engage(new Combatant('Gelée', 200), { tier: 2, rewardXp: 35 })
+    expect(strike(encounter.answer('automatisme', right()).events)!.crit).toBe(true) // la troisième
+  })
+
+  it('remet à zéro ce qui est propre au combat : questions posées, difficulté du boss, ennemi', () => {
+    const { encounter } = fight({ boss: true, baseLevels: { chapitre: 3 } }, 220)
+    for (let k = 0; k < 5; k += 1) encounter.answer('chapitre', wrong())
+    expect(encounter.questions).toBe(5)
+    expect(encounter.questionLevel('chapitre')).toBeGreaterThan(2)
+    const next = new Combatant('Autre', 80)
+    encounter.engage(next, { tier: 1, rewardXp: 20 })
+    expect(encounter.questions).toBe(0)
+    expect(encounter.foe).toBe(next)
+    expect(encounter.isBoss).toBe(false)
+    expect(encounter.questionLevel('chapitre')).toBe(0)
+  })
+
+  it('refuse de jouer sans combat ouvert', () => {
+    const lone = new Encounter(new Combatant('Archiviste', 100), { world: 'lumineux' })
+    expect(() => lone.answer('automatisme', right())).toThrow(/engage/)
+  })
+})
+
 describe('Boss de synthèse', () => {
-  const boss = (over: Partial<EncounterOptions> = {}, hp = 100) =>
+  const boss = (over: Partial<EncounterSettings & Engagement> = {}, hp = 100) =>
     fight({ boss: true, baseLevels: { automatisme: 3, chapitre: 3 }, ...over }, hp)
 
   it('chaque bonne réponse brise un sceau : 8 coups, quelle que soit l’action', () => {

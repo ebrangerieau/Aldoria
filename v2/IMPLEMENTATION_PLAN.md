@@ -110,9 +110,9 @@ par ce qui se teste sans moteur.
 
 | Étape | Quoi | Fait |
 | --- | --- | --- |
-| 1.1 | **Règles du combat** : `core/combat/encounter.ts` (puissance, critique, boss et ses sceaux, soin, riposte, bouclier et potion, repli) et `core/progression.ts` (XP, niveaux, PV), portés de la v1 avec 32 tests ; aucune mise en scène | ✅ |
+| 1.1 | **Règles du combat** : `core/combat/encounter.ts` (puissance, critique, boss et ses sceaux, soin, riposte, bouclier et potion, repli) et `core/progression.ts` (XP, niveaux, PV), portés de la v1 avec 36 tests (un `Encounter` par donjon, `engage` à chaque ennemi) ; aucune mise en scène | ✅ |
 | 1.2 | **Intérieur d'un lieu** : scène Babylon.js chargée à part, transition depuis le seuil (« J'y vais »), salles de `lieux.json`, étages qui montent, retour à l'île | |
-| 1.3 | **Rencontres dans le décor** : monstres Quaternius et squelettes KayKit, monde figé pendant la question, barre d'actions (Frappe, Sort, Soin, Sac) et panneau de question, repli sans perte | |
+| 1.3 | **Rencontres dans le décor** : monstres Quaternius et squelettes KayKit, monde figé pendant la question, barre d'actions (Frappe, Sort, Soin, Sac) et panneau de question, repli sans perte ; brancher l'aménagement `no_speed` (déjà dans `Accommodations`) sur `EncounterSettings.noSpeed`, et le sac d'objets (phase 2) sur `useShield` / `usePotion` | |
 | 1.4 | **Effaceur, coffre, page** : sceaux du boss, répliques d'entrée et de défaite, coffre et page rendue, lieu suivant qui s'ouvre, salut de Maître Ysaline au retour | |
 | 1.5 | **Énigme à trois piédestaux, héros qui parle, note de 1 à 5** (`session/end`, `rating`) | |
 | 1.6 | **Widgets** : vecteur, droite graduée, tableau de signes (Tom en a besoin dès le Labyrinthe des Vecteurs) | |

@@ -94,18 +94,23 @@ export type CombatEvent =
   | { kind: 'potion'; healed: number }
   | { kind: 'shield_up' }
 
-export interface EncounterOptions {
+/** Réglages qui valent pour tout le lieu (un `Encounter` sert à tous les combats d'un donjon ou de l'arène). */
+export interface EncounterSettings {
+  world: World
+  /** Aménagement « sans pénalité de lenteur » (Accessibility « no_speed ») : la vitesse ne compte pas. */
+  noSpeed?: boolean
+  random?: () => number
+}
+
+/** Un combat contre un ennemi. */
+export interface Engagement {
   /** Force de l'ennemi : s'ajoute à ses dégâts. */
   tier: number
   /** XP gagnée en le battant. */
   rewardXp: number
   boss?: boolean
-  world: World
-  /** Aménagement « sans pénalité de lenteur » (Accessibility « no_speed ») : la vitesse ne compte pas. */
-  noSpeed?: boolean
   /** Niveaux de départ des rôles (QuestionService.levelFor), pour la difficulté du boss. */
   baseLevels?: Partial<Record<QuestionRole, number>>
-  random?: () => number
 }
 
 export interface Turn {
@@ -113,27 +118,47 @@ export interface Turn {
   outcome: Outcome | null
 }
 
+/**
+ * Un `Encounter` par donjon (ou par arène), comme dans la v1 : `engage` ouvre chaque combat et ne
+ * remet à zéro que ce qui est propre à lui (questions posées, difficulté du boss). Le bouclier levé
+ * (un objet dépensé) et la série de bonnes réponses du critique « sans vitesse » passent d'un
+ * ennemi au suivant.
+ */
 export class Encounter {
-  /** Questions posées dans ce combat. */
+  /** Questions posées dans le combat en cours. */
   questions = 0
   private correctRun = 0
   private shield = false
+  private current: { foe: Combatant; engagement: Engagement } | null = null
   private readonly random: () => number
-  private readonly boss: boolean
   private readonly noSpeed: boolean
 
   constructor(
     readonly hero: Combatant,
-    readonly foe: Combatant,
-    private readonly options: EncounterOptions,
+    private readonly settings: EncounterSettings,
   ) {
-    this.random = options.random ?? Math.random
-    this.boss = options.boss ?? false
-    this.noSpeed = options.noSpeed ?? false
+    this.random = settings.random ?? Math.random
+    this.noSpeed = settings.noSpeed ?? false
+  }
+
+  /** Ouvre un combat contre `foe`. */
+  engage(foe: Combatant, engagement: Engagement): void {
+    this.current = { foe, engagement }
+    this.questions = 0
+  }
+
+  /** L'ennemi du combat en cours. */
+  get foe(): Combatant {
+    return this.fightNow().foe
   }
 
   get isBoss(): boolean {
-    return this.boss
+    return this.fightNow().engagement.boss ?? false
+  }
+
+  private fightNow(): { foe: Combatant; engagement: Engagement } {
+    if (!this.current) throw new Error('Aucun combat ouvert : appeler engage() avant.')
+    return this.current
   }
 
   get shieldUp(): boolean {
@@ -152,8 +177,9 @@ export class Encounter {
 
   /** Difficulté imposée à la question (boss : de un cran sous le niveau du joueur à un cran au-dessus) ; 0 : celle de QuestionService. */
   questionLevel(role: QuestionRole): number {
-    if (!this.boss) return 0
-    const base = this.options.baseLevels?.[role] ?? 1
+    const { engagement } = this.fightNow()
+    if (!engagement.boss) return 0
+    const base = engagement.baseLevels?.[role] ?? 1
     const low = Math.max(1, base - 1)
     const high = Math.min(5, base + 1)
     return low + Math.round((high - low) * Math.min(1, this.questions / (BOSS_HITS - 1)))
@@ -161,6 +187,7 @@ export class Encounter {
 
   /** Une question a reçu sa réponse : ce qu'elle fait au combat, puis la riposte, dans l'ordre. */
   answer(action: Action, answer: Answer): Turn {
+    const { foe, engagement } = this.fightNow()
     const events: CombatEvent[] = []
     this.questions += 1
     if (answer.correct) this.succeed(action, answer, events)
@@ -168,8 +195,8 @@ export class Encounter {
       this.correctRun = 0
       events.push({ kind: 'hero_stumble' })
     }
-    if (!this.foe.alive) {
-      events.push({ kind: 'foe_down' }, { kind: 'xp', amount: this.options.rewardXp })
+    if (!foe.alive) {
+      events.push({ kind: 'foe_down' }, { kind: 'xp', amount: engagement.rewardXp })
       return { events, outcome: 'victory' }
     }
     events.push(this.riposte(answer.correct))
@@ -201,9 +228,10 @@ export class Encounter {
       mult = crit ? CRIT_MULT : 1
       if (crit) this.correctRun = 0
     }
+    const { foe, engagement } = this.fightNow()
     let base = BASE_POWER[action]
-    if (this.boss && action !== 'soin') {
-      base = Math.ceil(this.foe.maxHp / BOSS_HITS)
+    if (engagement.boss && action !== 'soin') {
+      base = Math.ceil(foe.maxHp / BOSS_HITS)
       mult = crit ? BOSS_CRIT_MULT : 1
     }
     if (answer.hintUsed) mult *= HINT_MULT
@@ -213,7 +241,7 @@ export class Encounter {
       events.push({ kind: 'hero_heal', healed: this.hero.heal(power) })
       return
     }
-    this.foe.damage(power)
+    foe.damage(power)
     events.push({ kind: 'hero_strike', action, power, crit })
   }
 
@@ -222,9 +250,9 @@ export class Encounter {
       this.shield = false
       return { kind: 'foe_attack', damage: 0, blocked: true }
     }
-    const [low, high] = FOE_DAMAGE[this.options.world]
+    const [low, high] = FOE_DAMAGE[this.settings.world]
     const base = low + Math.floor(this.random() * (high - low + 1))
-    const damage = Math.round((base + this.options.tier) * (guarded ? GUARD_MULT : 1))
+    const damage = Math.round((base + this.fightNow().engagement.tier) * (guarded ? GUARD_MULT : 1))
     this.hero.damage(damage)
     return { kind: 'foe_attack', damage, blocked: false }
   }
