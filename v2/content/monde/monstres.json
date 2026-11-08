@@ -1,0 +1,83 @@
+{
+  "description": "Ennemis de l'intérieur d'un lieu. Monstres Quaternius : hauteur visée dans la v1 (hauteur_v1, en mètres, pour un héros de 2,5 m) et échelle à donner au modèle pour l'atteindre, mesurée une fois sur le squelette appliqué (v2/tools/mesurer_monstres.mjs : un modèle Quaternius a une armature à l'échelle 100 que sa boîte au repos ne dit pas). Hauteur dans le jeu = hauteur_v1 × hauteur_heros / hauteur_heros_v1. cap : quart de tour des monstres modélisés de profil (degrés). Squelettes KayKit : même rig que le héros, à sa hauteur.",
+  "hauteur_heros_v1": 2.5,
+  "hauteur_heros": 1.75,
+  "squelettes": [
+    "Skeleton_Minion",
+    "Skeleton_Warrior",
+    "Skeleton_Rogue",
+    "Skeleton_Mage"
+  ],
+  "monstres": {
+    "Mushnub": {
+      "hauteur_v1": 1.7,
+      "echelle": 0.3554,
+      "cap": 0
+    },
+    "MushnubEvolved": {
+      "hauteur_v1": 2.6,
+      "echelle": 0.4078,
+      "cap": 0
+    },
+    "GreenBlob": {
+      "hauteur_v1": 1.4,
+      "echelle": 0.515,
+      "cap": 0
+    },
+    "Goleling": {
+      "hauteur_v1": 2.2,
+      "echelle": 0.9236,
+      "cap": 0
+    },
+    "GolelingEvolved": {
+      "hauteur_v1": 2.8,
+      "echelle": 0.6802,
+      "cap": 0
+    },
+    "Cactoro": {
+      "hauteur_v1": 3.2,
+      "echelle": 0.5849,
+      "cap": 0
+    },
+    "Armabee": {
+      "hauteur_v1": 2.2,
+      "echelle": 0.6733,
+      "cap": 0
+    },
+    "Dragon": {
+      "hauteur_v1": 2.3,
+      "echelle": 0.4552,
+      "cap": 90
+    },
+    "Ghost": {
+      "hauteur_v1": 2.4,
+      "echelle": 0.5381,
+      "cap": 0
+    },
+    "GhostSkull": {
+      "hauteur_v1": 2.5,
+      "echelle": 0.5594,
+      "cap": 0
+    },
+    "BlueDemon": {
+      "hauteur_v1": 3.4,
+      "echelle": 0.8979,
+      "cap": 0
+    },
+    "Demon": {
+      "hauteur_v1": 2.9,
+      "echelle": 0.6904,
+      "cap": 0
+    },
+    "Orc": {
+      "hauteur_v1": 2.7,
+      "echelle": 0.6176,
+      "cap": 0
+    },
+    "Yeti": {
+      "hauteur_v1": 2.8,
+      "echelle": 0.7422,
+      "cap": 0
+    }
+  }
+}

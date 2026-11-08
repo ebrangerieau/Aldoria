@@ -1,6 +1,7 @@
 // Parcours de fumée dans un vrai navigateur : écran titre → île (mode découverte) → le héros
 // avance → la mini-carte le suit et se cache avec M → la musique joue, se coupe et se tait pendant
-// une question → l'intérieur d'un lieu (entrée par le seuil, étage 2 au clavier, sortie) → pierre d'éveil → question → bonne réponse → la pierre s'éveille. Échoue sur toute
+// une question → l'intérieur d'un lieu (entrée par le seuil, étage 2 au clavier, sortie) → un combat (repli sans perte,
+// victoire, porte qui s'ouvre) → pierre d'éveil → question → bonne réponse → la pierre s'éveille. Échoue sur toute
 // erreur de la page ou toute ressource introuvable. Captures dans $E2E_OUT (défaut : e2e/captures).
 //   npm run build && npm run preview &   puis   npm run e2e
 import { mkdirSync } from 'node:fs'
@@ -40,6 +41,35 @@ if (MUSIC_DELAY > 0) {
     await new Promise((resolve) => setTimeout(resolve, MUSIC_DELAY))
     await route.continue()
   })
+}
+
+/** Répond à la question ouverte (celle de `window.__aldoria.question`), juste ou faux, puis « Continuer ». */
+const answerQuestion = async (correct) => {
+  await page.getByRole('dialog').waitFor({ timeout: 10_000 * SLOW })
+  const item = await page.evaluate(() => window.__aldoria.question)
+  if (!correct) {
+    // Faux : un autre choix que le bon, ou un nombre absurde.
+    if (item.answer.kind === 'choice') await page.locator('.choice').nth((item.answer.index + 1) % (await page.locator('.choice').count())).click()
+    else {
+      await page.getByLabel('Ta réponse').fill('99999')
+      await page.getByRole('button', { name: 'Valider' }).click()
+    }
+    await page.locator('.feedback.bad').waitFor({ timeout: 5000 * SLOW })
+  } else {
+    if (item.answer.kind === 'choice') await page.locator('.choice').nth(item.answer.index).click()
+    else if (item.answer.kind === 'number' || item.answer.kind === 'fraction') {
+      await page.getByLabel('Ta réponse').fill(String(item.answer.value).replace('.', ','))
+      await page.getByRole('button', { name: 'Valider' }).click()
+    } else if (item.answer.kind === 'text') {
+      await page.getByLabel('Ta réponse').fill(item.answer.value[0])
+      await page.getByRole('button', { name: 'Valider' }).click()
+    } else if (item.answer.kind === 'order') {
+      for (const i of item.answer.value) await page.locator('.choices .choice').nth(i).click()
+      await page.getByRole('button', { name: 'Valider' }).click()
+    } else throw new Error(`type de réponse non géré par le test : ${item.answer.kind}`)
+    await page.locator('.feedback.good').waitFor({ timeout: 5000 * SLOW })
+  }
+  await page.getByRole('button', { name: 'Continuer' }).click()
 }
 
 const step = async (label, fn) => {
@@ -190,7 +220,7 @@ try {
     if ((await page.getByTestId('carte').count()) !== 0) throw new Error('la mini-carte devrait être cachée dans un lieu')
     await page.screenshot({ path: `${OUT}/03a-interieur.png` })
     // Orientation des modèles (piège : un mur est symétrique et ne dit rien) : chaque escalier tient entre 12 et 16 m de sa salle,
-    // chaque battant de porte, ouvert, dans sa salle (x ≥ 16·i), jamais sur l'escalier qui y mène.
+    // chaque battant de porte ouvert dans sa salle (x ≥ 16·i), jamais sur l'escalier qui y mène (un battant fermé occupe l'embrasure).
     const bad = await page.evaluate(() => {
       const boxes = (suffix) =>
         window.__aldoria.world.interior.scene.meshes
@@ -201,7 +231,8 @@ try {
         if (box.minimumWorld.x < 16 * room + 11.9 || box.maximumWorld.x > 16 * room + 16.1) out.push(`escalier ${room} : x ${box.minimumWorld.x.toFixed(1)} à ${box.maximumWorld.x.toFixed(1)}`)
       }
       for (const { room, box } of boxes('wall_doorway_door')) {
-        if (box.minimumWorld.x < 16 * room - 0.3) out.push(`porte ${room} : battant à x ${box.minimumWorld.x.toFixed(1)}`)
+        const open = room === 0 || window.__aldoria.world.interior.dungeon.isDoorOpen(room - 1)
+        if (open && box.minimumWorld.x < 16 * room - 0.3) out.push(`porte ${room} : battant ouvert à x ${box.minimumWorld.x.toFixed(1)}`)
       }
       return out
     })
@@ -232,7 +263,79 @@ try {
     if (Math.hypot(moved.x - before.x, moved.z - before.z) < 0.5) throw new Error('le héros de l’île ne bouge plus après la sortie')
   })
 
+  await step('un combat : repli sans perte, victoire, la porte s’ouvre, on monte à l’étage suivant', async () => {
+    await page.evaluate(() => {
+      const w = window.__aldoria.world
+      const it = w.interactables.find((i) => i.id === 'tour_fractions')
+      w.teleport(it.x, it.z - 1.5, it.x, it.z)
+    })
+    await page.getByTestId('invite').waitFor({ timeout: 10_000 * SLOW })
+    await page.keyboard.press('KeyE')
+    await page.getByRole('button', { name: "J'y vais" }).click()
+    await page.getByTestId('etage').waitFor({ timeout: 60_000 * SLOW })
+    const interior = () => page.evaluate(() => {
+      const i = window.__aldoria.world.interior
+      const foe = i.enemies.find((e) => e.room === 1)
+      return { door1: i.dungeon.isDoorOpen(1), foeHp: foe.combatant.hp, foeMax: foe.combatant.maxHp, heroHp: window.__aldoria.encounter.hero.hp, heroMax: window.__aldoria.encounter.hero.maxHp, x: i.heroPosition().x }
+    })
+    if ((await interior()).door1) throw new Error('la porte de la salle 1 devrait être fermée tant que l’ennemi vit')
+    // On approche l'ennemi de la salle 1 : le combat s'engage tout seul.
+    await page.evaluate(() => window.__aldoria.world.interior.teleport(19, -10))
+    await page.getByTestId('monde').click({ position: { x: 640, y: 120 } })
+    await page.keyboard.down('KeyD')
+    await page.getByTestId('actions').waitFor({ timeout: 20_000 * SLOW })
+    await page.keyboard.up('KeyD')
+    await page.screenshot({ path: `${OUT}/03c-combat.png` })
+    const turn = async (key, correct) => {
+      await page.getByTestId('actions').waitFor({ timeout: 30_000 * SLOW })
+      await page.keyboard.press(key)
+      await answerQuestion(correct)
+      await page.waitForFunction(() => !document.querySelector('[data-testid=pv-ennemi]') || document.querySelector('[data-testid=actions]') || document.querySelector('[role=dialog]'), null, { timeout: 30_000 * SLOW })
+    }
+    // Un coup porté, puis le héros n'a plus qu'un point de vie : une erreur le replie, l'ennemi garde ses blessures.
+    await turn('1', true)
+    const hurt = await interior()
+    if (hurt.foeHp >= hurt.foeMax) throw new Error('le coup n’a pas blessé l’ennemi')
+    await page.evaluate(() => { window.__aldoria.encounter.hero.hp = 1 })
+    await page.getByTestId('actions').waitFor({ timeout: 30_000 * SLOW })
+    await page.keyboard.press('2')
+    await answerQuestion(false)
+    await page.getByRole('button', { name: "Reprendre l'exploration" }).click({ timeout: 30_000 * SLOW })
+    await page.waitForFunction(() => !window.__aldoria.world.interior.fighting, null, { timeout: 15_000 * SLOW })
+    const retreat = await interior()
+    if (retreat.heroHp !== retreat.heroMax) throw new Error(`après le repli, le héros devrait avoir toute sa vie (${retreat.heroHp}/${retreat.heroMax})`)
+    if (retreat.foeHp !== hurt.foeHp) throw new Error(`l'ennemi devrait garder ses blessures (${retreat.foeHp} au lieu de ${hurt.foeHp})`)
+    if (retreat.x > 16 + 4) throw new Error('le héros devrait être revenu à l’entrée de la salle')
+    // On y retourne et on gagne.
+    await page.keyboard.down('KeyD')
+    await page.getByTestId('actions').waitFor({ timeout: 20_000 * SLOW })
+    await page.keyboard.up('KeyD')
+    for (let k = 0; k < 12 && (await page.getByTestId('pv-ennemi').count()) > 0; k += 1) await turn(k % 2 ? '1' : '2', true)
+    if ((await page.getByTestId('pv-ennemi').count()) > 0) throw new Error('l’ennemi ne tombe pas')
+    await page.waitForFunction(() => window.__aldoria.world.interior.dungeon.isDoorOpen(1), null, { timeout: 15_000 * SLOW })
+    const won = await page.locator('.badge').innerText()
+    if (/ 0 XP/.test(won)) throw new Error(`la victoire devrait rapporter de l'XP : ${won}`)
+    await page.screenshot({ path: `${OUT}/03d-victoire.png` })
+    // La porte est ouverte : on se place sur la ligne de l'escalier (le héros est resté là où il a combattu), puis cap à l'est.
+    await page.evaluate(() => {
+      const i = window.__aldoria.world.interior
+      i.teleport(i.heroPosition().x, -10)
+    })
+    await page.keyboard.down('KeyD')
+    await page.waitForFunction(() => document.querySelector('[data-testid=etage]')?.textContent?.includes('3 / 6'), null, { timeout: 30_000 * SLOW })
+    await page.keyboard.up('KeyD')
+    // Retour sur l'île, pour la suite du parcours.
+    await page.evaluate(() => window.__aldoria.world.interior.teleport(1.9, -10))
+    await page.getByTestId('invite').waitFor({ timeout: 10_000 * SLOW })
+    await page.keyboard.press('KeyE')
+    await page.getByRole('button', { name: 'Sortir' }).click()
+    await page.getByTestId('carte').waitFor({ timeout: 10_000 * SLOW })
+  })
+
+  let xpBefore = 0
+  const xpOf = async () => Number(((await page.locator('.badge').innerText()).match(/(\d+) XP/) ?? [])[1] ?? 0)
   await step("question de la pierre d'éveil", async () => {
+    xpBefore = await xpOf() // le combat d'avant a déjà rapporté de l'XP
     await page.evaluate(() => window.__aldoria.world.teleport(9, -24.5, 9, -22))
     await page.getByTestId('invite').waitFor({ timeout: 10_000 * SLOW })
     await page.screenshot({ path: `${OUT}/03-pierre.png` })
@@ -268,8 +371,8 @@ try {
     await page.getByRole('button', { name: 'Continuer' }).click()
     await page.getByRole('dialog').waitFor({ state: 'detached' })
     await page.waitForFunction(() => window.__aldoria.services.music.state().playing, null, { timeout: 8000 * SLOW })
-    const xp = await page.locator('.badge').innerText()
-    if (!/15 XP/.test(xp)) throw new Error(`XP attendue après la pierre : ${xp}`)
+    const gained = (await xpOf()) - xpBefore
+    if (gained !== 15) throw new Error(`la pierre devait rapporter 15 XP, elle en a rapporté ${gained}`)
     // La carte montre la pierre éveillée (dorée).
     await page.locator('[data-id="pierre-eveil"].mark-eveillee').waitFor({ state: 'attached', timeout: 3000 })
     await page.waitForTimeout(800 * SLOW)
@@ -286,7 +389,8 @@ try {
     await page.screenshot({ path: `${OUT}/07-citadelle.png` })
   })
 } catch (error) {
-  problems.push(String(error))
+  const where = error instanceof Error ? (error.stack ?? '').split('\n').find((l) => l.includes('smoke.mjs'))?.trim() ?? '?' : '?'
+  problems.push(error instanceof Error ? `${error.message.split('\n')[0]} (${where})` : String(error))
   await page.screenshot({ path: `${OUT}/echec.png` }).catch(() => {})
 } finally {
   await browser.close()

@@ -33,8 +33,8 @@ import { angleDelta, RUN_SPEED, step, WALK_SPEED } from '../core/world/movement'
 import { isOpen, type Place, placesFor, regionTitle } from '../core/world/places'
 import { type IslandLayout, Terrain } from '../core/world/terrain'
 import { type Atmosphere, createAtmosphere } from './atmosphere'
-import { type Character, loadFox, loadHero, loadNpc, settleOnGround } from './characters'
-import { InteriorWorld } from './interior'
+import { type Character, loadFox, loadHero, loadMonster, loadNpc, settleOnGround, skinnedHeights } from './characters'
+import { type Enemy, type FloatTone, InteriorWorld } from './interior'
 import { beacon, buildDecor } from './decor'
 import { createEngine, type EngineKind } from './engine'
 import { buildGround, buildSea } from './island'
@@ -68,6 +68,10 @@ export type WorldEvents = {
   interior: { place: Place } | null
   /** Salle du héros dans l'intérieur d'un lieu (« Étage 2 / 6 »). */
   floor: { index: number; label: string }
+  /** Le héros a approché un ennemi : l'interface mène le combat (ui/useFight.tsx). */
+  fight: Enemy
+  /** Nombre flottant d'un combat (dégâts, soin), en pixels de l'écran. */
+  float: { text: string; tone: FloatTone; x: number; y: number }
 }
 
 export interface HeroPose {
@@ -605,6 +609,18 @@ export class GameWorld {
     return { x: p.x, y: p.y, z: p.z }
   }
 
+  /** Hauteur d'un monstre à l'échelle 1, squelette appliqué (v2/tools/mesurer_monstres.mjs). */
+  async measureMonster(model: string): Promise<{ height: number }> {
+    const monster = await loadMonster(this.scene, model, `mesure-${model}`, 1)
+    monster.root.position.set(0, 300, 0) // loin de tout, sous le regard de personne
+    const frame = () => new Promise<void>((resolve) => this.scene.onAfterRenderObservable.addOnce(() => resolve()))
+    await frame()
+    await frame()
+    const { lowest, highest } = skinnedHeights(monster)
+    monster.root.dispose(false, true)
+    return { height: highest - lowest }
+  }
+
   teleport(x: number, z: number, faceX?: number, faceZ?: number): void {
     this.hero.root.position.set(x, this.grid.heightAt(x, z), z)
     if (faceX !== undefined && faceZ !== undefined) this.hero.yaw = Math.atan2(faceX - x, faceZ - z)
@@ -643,6 +659,8 @@ export class GameWorld {
     interior.events.on('focus', (it) => this.events.emit('focus', it))
     interior.events.on('interact', (it) => this.events.emit('interact', it))
     interior.events.on('room', (floor) => this.events.emit('floor', floor))
+    interior.events.on('fight', (enemy) => this.events.emit('fight', enemy))
+    interior.events.on('float', (float) => this.events.emit('float', float))
     // L'île se met en pause : plus d'image, plus d'événement de la souris pour sa caméra.
     if (this.islandLoop) this.engine.stopRenderLoop(this.islandLoop)
     this.camera.detachControl()

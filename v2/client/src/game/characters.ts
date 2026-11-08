@@ -6,12 +6,14 @@
 import {
   type AnimationGroup,
   type AbstractMesh,
+  type AssetContainer,
+  LoadAssetContainerAsync,
   type Scene,
   TransformNode,
   Vector3,
 } from '@babylonjs/core'
 import type { SaveData } from '../core/save'
-import { boundsOf, loadContainer } from './assets'
+import { boundsOf, loadContainer, MODELS } from './assets'
 
 /** Pièces d'équipement de chaque silhouette (noms des nœuds glTF, repris de la v1). */
 export const PARTS: Record<string, { main: string[]; off: string[]; head: string; cape: string }> = {
@@ -27,7 +29,10 @@ export const PARTS: Record<string, { main: string[]; off: string[]; head: string
   Rogue_Hooded: { main: ['Knife', '1H_Crossbow', '2H_Crossbow'], off: ['Knife_Offhand', 'Throwable'], head: '', cape: 'Rogue_Cape' },
 }
 
-export type Pose = 'idle' | 'walk' | 'run' | 'interact' | 'cheer' | 'spell' | 'hit'
+export type Pose =
+  | 'idle' | 'walk' | 'run' | 'interact' | 'cheer' | 'spell' | 'hit'
+  // Combat : attaque, mort, réveil de l'ennemi, provocation, sommeil (squelettes), parade.
+  | 'attack' | 'death' | 'awake' | 'taunt' | 'sleep' | 'block'
 
 const KAYKIT_ANIMS: Record<Pose, string> = {
   idle: 'Idle',
@@ -37,6 +42,47 @@ const KAYKIT_ANIMS: Record<Pose, string> = {
   cheer: 'Cheer',
   spell: 'Spellcast_Shoot',
   hit: 'Hit_A',
+  attack: '1H_Melee_Attack_Chop',
+  death: 'Death_A',
+  awake: 'Skeletons_Awaken_Standing',
+  taunt: 'Taunt',
+  sleep: 'Skeleton_Inactive_Standing_Pose',
+  block: 'Block_Hit',
+}
+
+/** Squelettes KayKit (ennemis) : même squelette que le héros, d'où les mêmes animations ; seuls l'attaque, le sommeil et le réveil changent. */
+function skeletonAnims(model: string): Record<Pose, string> {
+  const minion = model === 'Skeleton_Minion' // les sbires dorment couchés
+  return {
+    ...KAYKIT_ANIMS,
+    idle: 'Idle_Combat',
+    attack: model === 'Skeleton_Mage' ? 'Spellcast_Shoot' : model === 'Skeleton_Rogue' ? '1H_Melee_Attack_Stab' : '1H_Melee_Attack_Chop',
+    sleep: minion ? 'Skeletons_Inactive_Floor_Pose' : 'Skeleton_Inactive_Standing_Pose',
+    awake: minion ? 'Skeletons_Awaken_Floor' : 'Skeletons_Awaken_Standing',
+  }
+}
+
+/** Monstres Quaternius : leurs animations portent d'autres noms (sans le préfixe « CharacterArmature| »), souvent une seule
+ * pour plusieurs gestes. Pour chaque geste, la première animation que le modèle possède (repris de la v1 : MONSTER_ANIMS). */
+const MONSTER_POSES: Record<'idle' | 'hit' | 'death' | 'attack' | 'awake' | 'taunt', string[]> = {
+  idle: ['Idle', 'Flying_Idle', 'Dragon_Flying'],
+  hit: ['HitReact', 'HitRecieve', 'Dragon_Hit'],
+  death: ['Death', 'Dragon_Death'],
+  attack: ['Punch', 'Bite_Front', 'Headbutt', 'Weapon', 'Dragon_Attack', 'Dragon_Attack2'],
+  awake: ['Jump', 'Yes', 'Flying_Idle', 'Dragon_Flying'],
+  taunt: ['Dance', 'Wave', 'Yes', 'Dragon_Attack2'],
+}
+
+function monsterAnims(available: Set<string>): Record<Pose, string> {
+  const pick = (candidates: string[]) => candidates.find((n) => available.has(n)) ?? candidates[0]!
+  const idle = pick(MONSTER_POSES.idle)
+  const hit = pick(MONSTER_POSES.hit)
+  const attack = pick(MONSTER_POSES.attack)
+  const taunt = pick(MONSTER_POSES.taunt)
+  return {
+    idle, walk: idle, run: idle, sleep: idle, interact: taunt, cheer: taunt, spell: attack, block: hit,
+    hit, attack, taunt, death: pick(MONSTER_POSES.death), awake: pick(MONSTER_POSES.awake),
+  }
 }
 
 const FOX_ANIMS: Record<Pose, string> = {
@@ -47,6 +93,12 @@ const FOX_ANIMS: Record<Pose, string> = {
   cheer: 'Gallop_Jump',
   spell: 'Idle_2',
   hit: 'Idle_HitReact_Left',
+  attack: 'Idle_2',
+  death: 'Idle_HitReact_Right',
+  awake: 'Gallop_Jump',
+  taunt: 'Idle_2',
+  sleep: 'Idle',
+  block: 'Idle_HitReact_Left',
 }
 
 export class Character {
@@ -70,18 +122,39 @@ export class Character {
     this.current = group
   }
 
-  /** Animation jouée une fois (geste, joie), puis retour à l'animation en boucle. */
-  playOnce(pose: Pose, then: Pose = 'idle'): void {
+  /**
+   * Animation jouée une fois (geste, joie, coup), puis retour à l'animation en boucle `then` (null : le personnage garde
+   * sa dernière image, comme à sa mort). Rend une promesse tenue à la fin du geste (tout de suite si le modèle ne l'a pas).
+   */
+  playOnce(pose: Pose, then: Pose | null = 'idle', speed = 1): Promise<void> {
     const group = this.anims.get(this.names[pose])
-    if (!group) return
+    if (!group) return Promise.resolve()
     this.current?.stop()
     this.current = null
     this.once = group
-    group.start(false, 1)
-    group.onAnimationGroupEndObservable.addOnce(() => {
-      this.once = null
-      this.play(then)
+    group.start(false, speed)
+    return new Promise((resolve) => {
+      group.onAnimationGroupEndObservable.addOnce(() => {
+        this.once = null
+        if (then) this.play(then)
+        resolve()
+      })
     })
+  }
+
+  /** Durée d'un geste en secondes (0 si le modèle ne l'a pas) : pour caler la mise en scène. */
+  duration(pose: Pose, speed = 1): number {
+    const group = this.anims.get(this.names[pose])
+    return group ? (group.to - group.from) / 60 / speed : 0
+  }
+
+  /** Coupe l'animation en cours (le geste joué une fois comme la boucle) et reprend `then`. */
+  reset(then: Pose = 'idle'): void {
+    this.once?.stop()
+    this.once = null
+    this.current?.stop()
+    this.current = null
+    this.play(then)
   }
 
   set yaw(value: number) {
@@ -102,11 +175,12 @@ async function loadCharacter(
   path: string,
   name: string,
   height: number,
-  names: Record<Pose, string>,
+  names: Record<Pose, string> | ((available: Set<string>) => Record<Pose, string>),
   unique = false,
   fixedScale = 0,
 ): Promise<Character> {
-  const container = await loadContainer(scene, path)
+  // Un modèle « unique » (renard, monstre) garde les nœuds de son fichier, armature comprise : un conteneur à lui, jamais partagé.
+  const container = unique ? await loadOwnContainer(scene, path) : await loadContainer(scene, path)
   let inner: TransformNode
   let groups: AnimationGroup[]
   if (unique) {
@@ -153,9 +227,15 @@ async function loadCharacter(
     const base = group.name.replace(`${name}-`, '').split('|').pop() ?? group.name
     anims.set(base, group)
   }
-  const character = new Character(root, meshes, anims, names)
+  const poses = typeof names === 'function' ? names(new Set(anims.keys())) : names
+  const character = new Character(root, meshes, anims, poses)
   character.play('idle')
   return character
+}
+
+/** Conteneur chargé pour un seul usage (pas de cache) : deux gelées dans un même lieu ont chacune leur armature. */
+function loadOwnContainer(scene: Scene, path: string): Promise<AssetContainer> {
+  return LoadAssetContainerAsync(`${MODELS}/${path}`, scene, { pluginOptions: { gltf: { alwaysComputeSkeletonRootNode: true } } })
 }
 
 /** Pose un personnage animé sur le sol : sommet le plus bas, squelette appliqué, ramené au pied de
@@ -165,17 +245,26 @@ export function settleOnGround(character: Character): void {
   const inner = character.root.getChildren()[0] as TransformNode | undefined
   if (!inner) return
   const base = character.root.getAbsolutePosition().y
+  const { lowest } = skinnedHeights(character)
+  if (Number.isFinite(lowest)) inner.position.y += base - lowest
+}
+
+/** Point le plus bas et le plus haut du personnage dans le monde, squelette appliqué (après une première image). */
+export function skinnedHeights(character: Character): { lowest: number; highest: number } {
   let lowest = Infinity
+  let highest = -Infinity
   for (const m of character.meshes) {
     if (m.getTotalVertices() === 0) continue
     const p = m.getPositionData(true, false)
     if (!p) continue
     const w = m.getWorldMatrix().m
     for (let i = 0; i < p.length; i += 3) {
-      lowest = Math.min(lowest, p[i]! * w[1]! + p[i + 1]! * w[5]! + p[i + 2]! * w[9]! + w[13]!)
+      const y = p[i]! * w[1]! + p[i + 1]! * w[5]! + p[i + 2]! * w[9]! + w[13]!
+      lowest = Math.min(lowest, y)
+      highest = Math.max(highest, y)
     }
   }
-  if (Number.isFinite(lowest)) inner.position.y += base - lowest
+  return { lowest, highest }
 }
 
 /** Cache les pièces d'équipement non choisies (une arme par main, couvre-chef, cape). */
@@ -202,6 +291,18 @@ export async function loadNpc(scene: Scene, model: string, name: string, main: s
   const npc = await loadCharacter(scene, `kaykit/characters/${model}.glb`, name, 1.8, KAYKIT_ANIMS)
   dress(npc, model, { main, off })
   return npc
+}
+
+/** Squelette ennemi KayKit (même rig que le héros) ramené à `height` mètres, à son sommeil. */
+export async function loadSkeleton(scene: Scene, model: string, name: string, height: number): Promise<Character> {
+  const skeleton = await loadCharacter(scene, `kaykit/characters/${model}.glb`, name, height, skeletonAnims(model))
+  skeleton.play('sleep')
+  return skeleton
+}
+
+/** Monstre Quaternius à l'échelle `scale` (mesurée une fois : content/monde/monstres.json) ; à poser sur le sol après une première image. */
+export function loadMonster(scene: Scene, model: string, name: string, scale: number): Promise<Character> {
+  return loadCharacter(scene, `quaternius/monsters/${model}.glb`, name, 0, monsterAnims, true, scale)
 }
 
 /** Renard de Jules (monde lumineux). Son armature est à l'échelle 100 : le modèle mesure

@@ -5,10 +5,12 @@
  */
 import { useEffect, useRef, useState } from 'react'
 import type { Services } from '../app/services'
+import { prefetchPlace } from '../app/prefetch'
 import { reloadPending } from '../app/staleBuild'
 import { type Accommodations, applyToDocument, fromServer, withChildPrefs } from '../core/accessibility'
 import type { Item } from '../core/items'
 import { DEFAULT_VOLUME, volumeOf } from '../core/music'
+import { levelForXp } from '../core/progression'
 import { EMPTY_SAVE, SaveGame, type SaveData } from '../core/save'
 import { regionTitle } from '../core/world/places'
 import type { GameWorld, Interactable, WorldEvents } from '../game/GameWorld'
@@ -16,6 +18,7 @@ import type { WorldName } from '../game/theme'
 import { QuestionPanel, type QuestionOutcome } from './QuestionPanel'
 import { Dialog, Options } from './Dialogs'
 import { Minimap } from './Minimap'
+import { useFight } from './useFight'
 
 const STONE_XP = 15
 /** Préférences gardées sur le poste, pour chaque enfant : taille du texte, carte affichée, musique. */
@@ -37,6 +40,8 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
   const [world, setWorld] = useState<GameWorld | null>(null)
   const saveRef = useRef<SaveGame | null>(null)
   const [data, setData] = useState<SaveData>(() => structuredClone(EMPTY_SAVE))
+  // La partie à jour, même dans un combat qui dure (les fonctions asynchrones gardent l'état de leur création).
+  const dataRef = useRef<SaveData>(data)
   const [loading, setLoading] = useState<{ label: string; ratio: number } | null>({ label: 'Préparation', ratio: 0 })
   const [failure, setFailure] = useState('')
   const [region, setRegion] = useState<WorldEvents['region'] | null>(null)
@@ -57,6 +62,18 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
   const accommodations: Accommodations = withChildPrefs(fromServer(profile.accommodations), prefs)
   const params = new URLSearchParams(location.search)
 
+  const fight = useFight({
+    services,
+    worldRef,
+    world,
+    demo,
+    worldName: (profile.world as WorldName) ?? 'lumineux',
+    heroName: profile.name,
+    accommodations,
+    grantXp,
+    currentXp: () => dataRef.current.xp,
+  })
+
   useEffect(() => applyToDocument(accommodations), [accommodations])
   useEffect(() => {
     services.api.onOnlineChange = setOnline
@@ -76,6 +93,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
         saveRef.current = game
         save = game.data
       }
+      dataRef.current = save
       setData(save)
       try {
         const { GameWorld } = await import('../game/GameWorld') // Babylon.js : chargé à l'entrée dans l'île
@@ -148,7 +166,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
   const toggleMapRef = useRef(toggleMap)
   toggleMapRef.current = toggleMap
   const modalOpenRef = useRef(false)
-  modalOpenRef.current = modal !== null
+  modalOpenRef.current = modal !== null || fight.overlayOpen
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.repeat || e.ctrlKey || e.altKey || e.metaKey || e.key.toLowerCase() !== 'm') return
@@ -163,7 +181,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
 
   // Musique : à l'écran quand l'île est prête, réglée par l'enfant, muette pendant une question.
   const calm = accommodations.calm
-  const musicQuestion = modal?.kind === 'question'
+  const musicQuestion = modal?.kind === 'question' || fight.questionOpen
   useEffect(() => {
     services.music.configure({ muted: !musicOn, volume: musicVolume, calm })
   }, [services, musicOn, musicVolume, calm])
@@ -176,12 +194,23 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
     return () => services.music.stop()
   }, [services, world])
 
+  /** XP gagnées (combat) : rend le nouveau niveau si on en gagne un. */
+  function grantXp(amount: number): number | null {
+    const next = structuredClone(dataRef.current)
+    const before = levelForXp(next.xp)
+    next.xp += Math.max(0, Math.round(amount))
+    persist(next)
+    const after = levelForXp(next.xp)
+    return after > before ? after : null
+  }
+
   function close() {
     setModal(null)
     worldRef.current?.setInputEnabled(true)
   }
 
   function persist(next: SaveData) {
+    dataRef.current = next
     setData({ ...next })
     const game = saveRef.current
     if (game) {
@@ -218,6 +247,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
       if (accommodations.auto_read) void services.voice.say([WELCOME])
     } else if (target.place) {
       const place = target.place
+      if (target.open) prefetchPlace(place) // l'enfant lit le seuil : les modèles du lieu arrivent déjà
       const text = target.open
         ? `${place.dungeon.threshold} ${place.dungeon.rooms.length} étapes, une énigme, et un Effaceur à vaincre.`
         : `Ce chemin est encore fermé. Il s'ouvrira quand tu auras rapporté la page du lieu précédent de ${regionTitle(place.dungeon.region)}.`
@@ -246,21 +276,22 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
     if (!world) return
     setModal(null)
     setLoading({ label: place.dungeon.title, ratio: 0 })
-    try {
-      await world.enterPlace(place.dungeon.code, (label, ratio) => setLoading({ label, ratio }))
-      setLoading(null)
+    const entered = await fight.enter(place, (label, ratio) => setLoading({ label, ratio }))
+    setLoading(null)
+    if (entered === 'ok') {
       world.setInputEnabled(true)
-    } catch (error) {
-      console.error(error)
-      setLoading(null)
-      world.setInputEnabled(false)
-      setModal({
-        kind: 'dialog',
-        title: place.dungeon.title,
-        text: "L'intérieur n'a pas pu s'ouvrir. Reviens sur l'île et réessaie.",
-        actions: [{ label: 'D’accord', primary: true, run: close }],
-      })
+      return
     }
+    world.setInputEnabled(false)
+    setModal({
+      kind: 'dialog',
+      title: place.dungeon.title,
+      text:
+        entered === 'session'
+          ? "Le lieu n'a pas pu s'ouvrir : le serveur ne répond pas. Réessaie dans un instant."
+          : "L'intérieur n'a pas pu s'ouvrir. Reviens sur l'île et réessaie.",
+      actions: [{ label: 'D’accord', primary: true, run: close }],
+    })
   }
 
   /** La porte de sortie : retour sur l'île, devant le lieu. */
@@ -276,7 +307,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
           primary: true,
           run: () => {
             setModal(null)
-            worldRef.current?.leavePlace()
+            void fight.leave()
           },
         },
       ],
@@ -351,8 +382,9 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
 
       {region?.title && <div key={region.title} className="region-banner" data-testid="region">{region.title}</div>}
       {inside && floor && <div className="floor-label" data-testid="etage">{floor}</div>}
+      {fight.hud}
 
-      {focus && !modal && (
+      {focus && !modal && !fight.active && (
         <div className="prompt-bar" data-testid="invite">
           <kbd>E</kbd>{' '}
           {focus.kind === 'pierre'
@@ -365,7 +397,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
         </div>
       )}
 
-      {helpVisible && !loading && !modal && (
+      {helpVisible && !loading && !modal && !fight.active && (
         <div className="controls-help">
           <span><kbd>Z</kbd><kbd>Q</kbd><kbd>S</kbd><kbd>D</kbd> ou flèches : avancer</span>
           <span>Souris : regarder</span>
@@ -403,6 +435,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
           onDone={(outcome) => onQuestionDone(outcome, modal.target)}
         />
       )}
+      {fight.overlay}
       {modal?.kind === 'dialog' && <Dialog title={modal.title} text={modal.text} actions={modal.actions} />}
       {modal?.kind === 'options' && (
         <Options

@@ -177,6 +177,64 @@ html[data-calm='true'] .region-banner { opacity: 1; }
   background: rgb(28 24 36 / 78%); color: #fff7e2; border: 2px solid var(--gold-light); border-radius: 10px;
   padding: 0.25rem 1rem; font-family: var(--title-font); font-size: 1.05rem; pointer-events: none;
 }
+/* --- Combat dans un lieu (ui/Combat.tsx) ---------------------------------------------------- */
+.fight-foe { position: absolute; top: 60px; left: 50%; transform: translateX(-50%); width: min(420px, 60vw); pointer-events: none; }
+.fight-hero { position: absolute; bottom: 14px; left: 14px; width: min(300px, 40vw); pointer-events: none; }
+.hp-bar { display: grid; grid-template-columns: 1fr auto; gap: 0.15rem 0.6rem; align-items: center; background: rgb(28 24 36 / 82%); color: #fff7e2; border: 2px solid var(--gold-light); border-radius: 10px; padding: 0.3rem 0.7rem 0.4rem; }
+.hp-name { font-family: var(--title-font); font-size: 1rem; }
+.hp-count { font-size: 0.85rem; font-variant-numeric: tabular-nums; }
+.hp-track { grid-column: 1 / -1; height: 12px; border-radius: 6px; background: rgb(255 255 255 / 18%); overflow: hidden; }
+.hp-fill { display: block; height: 100%; width: 100%; border-radius: 6px; transition: width 0.35s ease; }
+.hp-foe .hp-fill { background: linear-gradient(90deg, #b3382c, #e0603f); }
+.hp-hero .hp-fill { background: linear-gradient(90deg, #2f8f4e, #5fcf7e); }
+html[data-calm='true'] .hp-fill { transition: none; }
+.hp-fill[data-part='0'] { width: 0%; }
+.hp-fill[data-part='5'] { width: 5%; }
+.hp-fill[data-part='10'] { width: 10%; }
+.hp-fill[data-part='15'] { width: 15%; }
+.hp-fill[data-part='20'] { width: 20%; }
+.hp-fill[data-part='25'] { width: 25%; }
+.hp-fill[data-part='30'] { width: 30%; }
+.hp-fill[data-part='35'] { width: 35%; }
+.hp-fill[data-part='40'] { width: 40%; }
+.hp-fill[data-part='45'] { width: 45%; }
+.hp-fill[data-part='50'] { width: 50%; }
+.hp-fill[data-part='55'] { width: 55%; }
+.hp-fill[data-part='60'] { width: 60%; }
+.hp-fill[data-part='65'] { width: 65%; }
+.hp-fill[data-part='70'] { width: 70%; }
+.hp-fill[data-part='75'] { width: 75%; }
+.hp-fill[data-part='80'] { width: 80%; }
+.hp-fill[data-part='85'] { width: 85%; }
+.hp-fill[data-part='90'] { width: 90%; }
+.hp-fill[data-part='95'] { width: 95%; }
+.hp-fill[data-part='100'] { width: 100%; }
+
+.fight-actions { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 0.7rem; }
+.fight-actions .action { display: grid; gap: 0.1rem; min-width: 11rem; text-align: center; padding: 0.5rem 1rem; }
+.action-name { font-size: 1.15rem; font-weight: 700; }
+.action-hint { font-size: 0.8rem; font-weight: 400; color: var(--ink-soft); }
+.floats { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
+.float-text {
+  position: absolute; transform: translate(-50%, -50%); font-family: var(--title-font); font-size: 2rem; font-weight: 700; color: #fff7e2;
+  text-shadow: 0 2px 6px rgb(0 0 0 / 85%), 0 0 14px rgb(0 0 0 / 60%); animation: float-up 1.3s ease-out forwards; white-space: nowrap;
+}
+.float-bad { color: #ff9f8f; }
+.float-good { color: #9be8a8; }
+.float-crit { color: #ffd447; font-size: 2.6rem; }
+@keyframes float-up {
+  0% { opacity: 0; transform: translate(-50%, -30%) scale(0.7); }
+  15% { opacity: 1; transform: translate(-50%, -60%) scale(1.1); }
+  100% { opacity: 0; transform: translate(-50%, -190%) scale(1); }
+}
+html[data-calm='true'] .float-text { animation: float-calm 1.3s ease-out forwards; }
+@keyframes float-calm { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
+.notice {
+  position: absolute; top: 118px; left: 50%; transform: translateX(-50%); font-family: var(--title-font); font-size: 1.7rem; color: #fff7e2;
+  text-shadow: 0 2px 6px rgb(0 0 0 / 85%), 0 0 18px rgb(0 0 0 / 50%); pointer-events: none; animation: banner 2.4s ease forwards; white-space: nowrap;
+}
+.sans-interface .fight-foe, .sans-interface .fight-hero, .sans-interface .fight-actions, .sans-interface .floats, .sans-interface .notice { visibility: hidden; }
+
 .prompt-bar {
   position: absolute; bottom: 9vh; left: 50%; transform: translateX(-50%);
   background: rgb(28 24 36 / 82%); color: #fff7e2; border: 2px solid var(--gold-light);

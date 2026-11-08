@@ -46,13 +46,21 @@ export const FOE_DAMAGE: Record<World, [number, number]> = { lumineux: [6, 10], 
 /** Un combattant : points de vie bornés entre 0 et le maximum. */
 export class Combatant {
   hp: number
+  maxHp: number
 
   constructor(
     readonly name: string,
-    readonly maxHp: number,
+    maxHp: number,
     hp = maxHp,
   ) {
+    this.maxHp = maxHp
     this.hp = hp
+  }
+
+  /** Nouveau niveau : plus de PV au maximum, et le héros reprend toute sa vie. */
+  raiseMax(maxHp: number): void {
+    this.maxHp = maxHp
+    this.hp = maxHp
   }
 
   get alive(): boolean {
