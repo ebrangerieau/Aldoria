@@ -47,7 +47,8 @@ export class MusicPlayer {
   readonly enabled: boolean
 
   constructor(
-    private readonly tracks: Track[],
+    /** Morceaux, dans l'ordre de lecture (lus aussi par le parcours navigateur). */
+    readonly tracks: Track[],
     /** Une voix parle-t-elle (lecture à voix haute) ? La musique se fait alors plus discrète. */
     private readonly speaking: () => boolean,
     params: URLSearchParams,

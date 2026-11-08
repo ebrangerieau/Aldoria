@@ -69,8 +69,10 @@
 >   boucle, fondu d'une seconde et demie, s'éteint pendant une question, baisse sous une voix, plus bas en mode calme ;
 >   bouton « Musique » et volume dans les Options (choix gardé pour chaque enfant), crédit dans les Options. Plusieurs
 >   morceaux : `content/monde/musique.json` (ordre de lecture), `tools/encode_musique.py` (même traitement que le thème,
->   volume égalisé), procédure dans `docs/exploitation.md`. Les deux nouveaux morceaux sont à déposer par Eric dans
->   `music/`. Pas encore : musique par région ou par monde (phase 3), sons d'ambiance.
+>   volume égalisé), procédure dans `docs/exploitation.md`. Trois morceaux à la suite, pour les deux enfants : le thème,
+>   « Enchanted Forest » (3 min 30) et « Fog-Shrouded Forest » (3 min 35), puis on recommence (le parcours navigateur saute
+>   à la fin de chacun et vérifie l'enchaînement). Pas encore : un morceau par monde ou par région (phase 3 ; « Enchanted
+>   Forest » irait à Jules et « Fog-Shrouded Forest » au Brouillard de Tom), sons d'ambiance.
 
 **Reste à faire pour terminer la phase 0**
 

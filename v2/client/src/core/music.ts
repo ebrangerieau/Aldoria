@@ -41,9 +41,14 @@ export function nextTrack(index: number, count: number): number {
   return count <= 0 ? 0 : (index + 1) % count
 }
 
-/** Crédits à afficher dans les Options, un par morceau. */
+/** Crédits à afficher dans les Options : une phrase par outil, avec tous ses morceaux. */
 export function creditLines(tracks: Track[]): string[] {
-  return tracks.map((t) => `« ${t.title} », créée avec ${t.tool}.`)
+  const byTool = new Map<string, string[]>()
+  for (const t of tracks) byTool.set(t.tool, [...(byTool.get(t.tool) ?? []), `« ${t.title} »`])
+  return [...byTool].map(([tool, titles]) => {
+    const list = titles.length > 1 ? `${titles.slice(0, -1).join(', ')} et ${titles[titles.length - 1]}` : titles[0]
+    return `${list}, ${titles.length > 1 ? 'créées' : 'créée'} avec ${tool}.`
+  })
 }
 
 /** Volume réglé par l'enfant (0 à 1), une valeur absente ou fausse valant le volume par défaut. */

@@ -33,8 +33,20 @@ describe('Liste des morceaux', () => {
       expect(track.title.trim()).not.toBe('')
       expect(track.tool.trim()).not.toBe('')
     }
-    expect(creditLines(TRACKS)).toHaveLength(TRACKS.length)
-    expect(creditLines(TRACKS)[0]).toContain('Ritual of the Cursed')
+    const credits = creditLines(TRACKS).join(' ')
+    for (const track of TRACKS) expect(credits).toContain(`« ${track.title} »`)
+  })
+
+  it('n’a ni fichier ni titre en double', () => {
+    expect(new Set(TRACKS.map((t) => t.file)).size).toBe(TRACKS.length)
+    expect(new Set(TRACKS.map((t) => t.title)).size).toBe(TRACKS.length)
+  })
+
+  it('groupe les crédits par outil, au pluriel quand il y a plusieurs morceaux', () => {
+    const track = (title: string, tool = 'Suno') => ({ file: `${title}.mp3`, title, tool })
+    expect(creditLines([track('A')])).toEqual(['« A », créée avec Suno.'])
+    expect(creditLines([track('A'), track('B'), track('C')])).toEqual(['« A », « B » et « C », créées avec Suno.'])
+    expect(creditLines([track('A'), track('B', 'Udio'), track('C')])).toEqual(['« A » et « C », créées avec Suno.', '« B », créée avec Udio.'])
   })
 
   it('est inscrite dans LICENSES.md', async () => {
