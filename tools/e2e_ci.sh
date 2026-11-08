@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Banc de test web en CI (Linux), même parcours que tools/e2e_web.ps1 sur le poste, mais sur une base
 # neuve : PostgreSQL jetable, famille de test (Jules 6e, PIN 1234 ; Tom 2nde, PIN 9876), parent du banc,
-# API et nginx construits depuis le dépôt, proxy « edge » (rôle de Traefik), puis les trois parcours dans
+# API et nginx construits depuis le dépôt, proxy « edge » (rôle de Traefik), puis les deux parcours dans
 # Chromium (WebGL logiciel, attentes multipliées par E2E_SLOW). Valeurs de test uniquement.
 # Prérequis : export web post-traité dans build/web. Usage : bash tools/e2e_ci.sh <dossier captures>
 set -euo pipefail
@@ -59,7 +59,6 @@ export E2E_BROWSER=chromium E2E_SLOW=${E2E_SLOW:-3} E2E_OUT="$out"
 status=0
 node login_flow.js "http://127.0.0.1:8097/" "$out" "$pair_game" || status=1
 node tts_check.js "http://127.0.0.1:8097/" "http://127.0.0.1:8098" $key "$pair_tts" $email $password || status=1
-node admin_flow.js "http://aldoria-admin.localhost:8097/" "http://127.0.0.1:8097/" "$out" $email $password || status=1
 if [ $status -ne 0 ]; then
   docker logs aldoria-api-test 2>&1 | tail -40
 fi

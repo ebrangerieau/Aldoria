@@ -44,7 +44,12 @@
 >   `deploy` vérifie d'abord que les images se lisent sans compte (le paquet `aldoria-web2` a été rendu public). Depuis le
 >   30 octobre, le pare-feu Hostinger n'ouvre le port 22 qu'à quelques adresses : chaque déploiement (v1 et v2) l'ouvre pour
 >   son runner par l'API Hostinger, puis le referme (`.github/scripts/vps-ssh.sh`, secret `HOSTINGER_API_TOKEN` ;
->   `docs/exploitation.md`). Reste à voir le parcours navigateur de contrôle passer contre `aldoria2` (job sur Ubuntu 24.04).
+>   `docs/exploitation.md`). Le parcours navigateur de contrôle passe contre `aldoria2` (job sur Ubuntu 24.04, commit `8387608`).
+> - **0.8, espace parent servi par la v2** : `aldoria-admin.bandtrack.fr` est routé vers le conteneur `web2` (build de
+>   `v2/admin`, routeur Traefik à part et de priorité 2) ; l'image `web` de la v1 ne contient plus que le jeu, `admin/` à la
+>   racine est gelé (`admin/README.md`). Le parcours de l'espace parent (`admin/e2e/admin_flow.js`, repris de la v1) tourne
+>   dans la CI v2 contre la vraie image `web2`, avec base, API et sauvegarde jetables (`tools/e2e_admin.sh`) ; après chaque
+>   mise en ligne, la CI vérifie que l'espace parent sert le commit (`aldoria-admin…/version.txt`).
 
 **Reste à faire pour terminer la phase 0**
 
@@ -54,7 +59,6 @@
 | 0.3 | Commandes au clavier vérifiées sur AZERTY et QWERTY ; souris (orbite, molette) sur le PC familial | séance de 5 minutes avec Eric |
 | 0.4 | WebGPU : servir twgsl depuis le site, mesurer face à WebGL 2, décider du moteur par défaut (D9) | `docs/perf-log.md`, nouvelle décision si changement |
 | 0.5 | Mesures sur le PC familial (et le PC de Tom) : images par seconde par profil, chargement, mémoire | `docs/perf-log.md` ; profil par défaut choisi d'après les mesures |
-| 0.8 | Espace parent servi par `web2` (code de `v2/admin`) au lieu du conteneur de la v1 ; `admin/` à la racine gelé | `aldoria-admin.bandtrack.fr` sert le build de `v2/admin` (libellé « Exploration », guide à jour) |
 
 **Critère de passage** : Jules et Tom se promènent dix minutes dans l'île sans aide, trouvent et éveillent au moins trois
 pierres chacun, et disent ce qu'ils voudraient y trouver. On note où ils s'ennuient et où ils se perdent.

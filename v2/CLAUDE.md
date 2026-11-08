@@ -10,13 +10,15 @@ est), `docs/BILAN-V1.md` (les erreurs à ne pas refaire). Histoire : `docs/histo
 
 - `client/` : jeu (Vite, TypeScript strict, Babylon.js 9, React 19). `src/core/` logique pure testée sans navigateur,
   `src/game/` Babylon.js seulement, `src/ui/` React seulement. Fichiers statiques dans `public/ressources/`.
-- `api/` : FastAPI reprise de la v1 (Python 3.12, `uv`) ; `admin/` : espace parent (React).
+- `api/` : FastAPI reprise de la v1 (Python 3.12, `uv`) ; `admin/` : espace parent (React), servi en production sur
+  `aldoria-admin.bandtrack.fr` par l'image `web2` (`admin/` à la racine du dépôt est gelé).
 - `content/` : programmes (`seed/`), vecteurs de réponses partagés (`test-vectors/`), données du monde (`monde/*.json`).
 - `deploy/` : nginx (CSP), Dockerfiles (contexte : ce dossier) ; `tools/` : scripts. Le Compose de production est celui de la
   racine (`deploy/docker-compose.yml`) : une seule API (celle de `v2/api`) et une seule base pour les deux jeux (D11).
 
 Mise en ligne : un push sur `main` qui touche `v2/` fait publier par `.github/workflows/v2.yml` l'API et le jeu v2, puis les
-déployer (sauvegarde de la base avant toute migration, contrôle de version, parcours navigateur sur `aldoria2.bandtrack.fr`).
+déployer (sauvegarde de la base avant toute migration, contrôle de version du jeu et de l'espace parent, parcours navigateur
+sur `aldoria2.bandtrack.fr`).
 `api/` à la racine est gelé : l'API évolue ici, sans jamais casser le jeu v1 (ses tests sont dans `api/tests/`).
 
 ## Commandes
@@ -32,6 +34,7 @@ npm --prefix client run captures       # vues de l'île dans e2e/captures (E2E_Q
 uv run --directory api pytest -q
 uv run --directory api ruff check .
 npm --prefix admin run build
+bash tools/e2e_admin.sh                # espace parent dans le navigateur, contre l'image web2 (Docker)
 ```
 
 Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&classe=2nde`, `&monde=brouillard`,
