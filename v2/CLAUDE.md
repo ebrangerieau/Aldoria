@@ -53,6 +53,11 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   l'API : toute modification se fait des deux côtés et s'ajoute à `content/test-vectors/answers.json`.
 - **Données du monde en JSON** (`content/monde/`) : jamais de lieu, de texte d'histoire ou de position écrits dans le code.
   Un lieu ajouté doit passer `api/tests/test_dungeon.py` et `client/tests/world.test.ts`.
+- **Combat** (`core/combat/encounter.ts`, testé sans moteur) : les règles seules, portées de la v1. L'interface pose la question
+  (`QuestionService.next(role, encounter.questionLevel(role))`), puis appelle `encounter.answer(action, verdict)` et raconte les
+  événements rendus, dans l'ordre. Un `Encounter` par donjon (ou arène), `engage(ennemi, …)` à chaque combat : le bouclier levé et
+  la série du critique « sans vitesse » passent d'un ennemi au suivant, comme dans la v1 (coup, soin, riposte, chute). Aucune animation, aucun son, aucun panneau dans `core/` ; un
+  changement de règle se fait là, avec son test, jamais dans la scène. XP, niveaux et PV du héros : `core/progression.ts`.
 - **Mini-carte** (`ui/Minimap.tsx`) : elle ne recalcule aucune position, elle lit les repères posés par le monde
   (`GameWorld.mapInfo`, événements `hero` et `markers`). Un repère d'une sorte nouvelle (habitant, gardien…) passe par
   `mapMarkers` (`core/world/minimap.ts`, avec son test) ; un lieu secret n'y figure jamais. Touche M : `event.key`, pas
