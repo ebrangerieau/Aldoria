@@ -34,13 +34,14 @@ import { isOpen, type Place, placesFor, regionTitle } from '../core/world/places
 import { type IslandLayout, Terrain } from '../core/world/terrain'
 import { type Atmosphere, createAtmosphere } from './atmosphere'
 import { type Character, loadFox, loadHero, loadNpc, settleOnGround } from './characters'
+import { InteriorWorld } from './interior'
 import { beacon, buildDecor } from './decor'
 import { createEngine, type EngineKind } from './engine'
 import { buildGround, buildSea } from './island'
 import { chooseQuality, type Quality } from './quality'
 import { THEMES, type WorldName } from './theme'
 
-export type InteractableKind = 'lieu' | 'pierre' | 'ysaline'
+export type InteractableKind = 'lieu' | 'pierre' | 'ysaline' | 'sortie'
 
 export interface Interactable {
   id: string
@@ -63,6 +64,10 @@ export type WorldEvents = {
   hero: HeroPose
   /** L'état d'un repère de la carte a changé (pierre éveillée…). */
   markers: MapMarker[]
+  /** On entre dans un lieu de quête (son intérieur est à l'écran), ou on en sort (null). */
+  interior: { place: Place } | null
+  /** Salle du héros dans l'intérieur d'un lieu (« Étage 2 / 6 »). */
+  floor: { index: number; label: string }
 }
 
 export interface HeroPose {
@@ -120,6 +125,11 @@ export class GameWorld {
   private regionTimer = 0
   private heroTimer = 0
   private instrumentation: SceneInstrumentation | null = null
+  places: Place[] = []
+  private islandLoop: (() => void) | null = null
+  private lastFrame = 0
+  /** Intérieur d'un lieu à l'écran : l'île est en pause. */
+  interior: InteriorWorld | null = null
 
   private constructor(
     private readonly canvas: HTMLCanvasElement,
@@ -166,6 +176,7 @@ export class GameWorld {
     void ground
 
     const places = placesFor(this.options.level, this.terrain)
+    this.places = places
     const steps = ['La Citadelle des Archives', 'Les lieux de quête', 'Le village', "L'île du Sphinx", 'Les forêts', 'Les nuages']
     const decor = await buildDecor(scene, this.terrain, grid, places, this.options.world, this.quality, this.atmosphere.shadows, (label) => {
       this.progress(label, 0.2 + (0.5 * (steps.indexOf(label) + 1)) / steps.length)
@@ -203,14 +214,15 @@ export class GameWorld {
     }
     this.progress("L'île est prête", 1)
 
-    let last = performance.now()
-    engine.runRenderLoop(() => {
+    this.lastFrame = performance.now()
+    this.islandLoop = () => {
       const now = performance.now()
-      const dt = Math.min(0.05, (now - last) / 1000)
-      last = now
+      const dt = Math.min(0.05, (now - this.lastFrame) / 1000)
+      this.lastFrame = now
       this.update(dt)
       scene.render()
-    })
+    }
+    engine.runRenderLoop(this.islandLoop)
     const onResize = () => engine.resize()
     window.addEventListener('resize', onResize)
     this.disposers.push(() => window.removeEventListener('resize', onResize))
@@ -300,6 +312,10 @@ export class GameWorld {
 
   /** L'interface prend la main (question, dialogue) : le héros s'arrête. */
   setInputEnabled(enabled: boolean): void {
+    if (this.interior) {
+      this.interior.setInputEnabled(enabled)
+      return
+    }
     this.inputEnabled = enabled
     if (!enabled) {
       this.keys.clear()
@@ -606,7 +622,58 @@ export class GameWorld {
     this.lastCameraInput = performance.now()
   }
 
+  // --- Intérieur d'un lieu de quête -------------------------------------------------------------
+
+  /**
+   * Entre dans le lieu `code` : son intérieur (scène à part, même moteur) remplace l'île à l'écran, qui
+   * est mise en pause. Rend faux si ce lieu n'existe pas pour cette classe. `onProgress` : chargement.
+   */
+  async enterPlace(code: string, onProgress?: (label: string, ratio: number) => void): Promise<boolean> {
+    const place = this.places.find((p) => p.dungeon.code === code)
+    if (!place || this.interior) return false
+    this.setInputEnabled(false)
+    const interior = await InteriorWorld.create(this.engine, this.canvas, {
+      place,
+      world: this.options.world,
+      look: this.options.save.look,
+      quality: this.quality,
+      calm: this.options.calm,
+      onProgress,
+    })
+    interior.events.on('focus', (it) => this.events.emit('focus', it))
+    interior.events.on('interact', (it) => this.events.emit('interact', it))
+    interior.events.on('room', (floor) => this.events.emit('floor', floor))
+    // L'île se met en pause : plus d'image, plus d'événement de la souris pour sa caméra.
+    if (this.islandLoop) this.engine.stopRenderLoop(this.islandLoop)
+    this.camera.detachControl()
+    this.interior = interior
+    this.focused = null
+    interior.start()
+    this.events.emit('region', { code: place.dungeon.region, title: place.dungeon.title })
+    this.events.emit('interior', { place })
+    this.events.emit('focus', null)
+    return true
+  }
+
+  /** Sort du lieu : l'intérieur disparaît, l'île reprend là où le héros l'avait laissée, devant la porte. */
+  leavePlace(): void {
+    const interior = this.interior
+    if (!interior) return
+    interior.dispose()
+    this.interior = null
+    this.camera.attachControl(this.canvas, true)
+    this.lastFrame = performance.now()
+    if (this.islandLoop) this.engine.runRenderLoop(this.islandLoop)
+    this.region = null // la région du héros est annoncée de nouveau
+    this.regionTimer = 0
+    this.setInputEnabled(true)
+    this.events.emit('interior', null)
+    this.events.emit('focus', this.focused)
+  }
+
   dispose(): void {
+    this.interior?.dispose()
+    this.interior = null
     for (const d of this.disposers) d()
     this.engine.stopRenderLoop()
     this.scene.dispose()

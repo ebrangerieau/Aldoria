@@ -5,6 +5,7 @@
  */
 import lieux from '@content/monde/lieux.json'
 import regions from '@content/monde/regions.json'
+import type { DungeonDecor } from './dungeon'
 import type { Point, Terrain } from './terrain'
 
 export interface DungeonData {
@@ -27,6 +28,8 @@ export interface DungeonData {
   chest_xp: number
   rooms: { kind: string; title: string; enemies?: { model: string; name: string; hp: number; tier: number; xp: number; scale: number }[] }[]
   v1_map_piece: string
+  /** Décor des salles (sol, murs, bannières, objets, couleur des torches) ; vide : décor par défaut. */
+  v1_decor: DungeonDecor
 }
 
 export interface Place extends Point {
