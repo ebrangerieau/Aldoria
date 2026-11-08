@@ -55,6 +55,15 @@
 >   développement (`client/e2e/perf.mjs`, `npm run perf`) : à 60 Hz au profil `haut`, WebGPU est plus régulier que WebGL 2 ;
 >   sans limite, WebGL 2 rend plus d'images ; aucune différence visible aux autres profils (`docs/perf-log.md`). WebGL 2 reste
 >   le moteur par défaut (D9 revue), à revoir avec les mesures du PC familial. Le compteur `?perf` affiche le moteur actif.
+> - **0.9, mini-carte** (8 novembre, avant la première séance : le critère de passage dit « sans aide », et V2-02 « ne jamais
+>   être perdu ») : en haut à droite, nord en haut, relief vu d'en haut (couleurs des régions, mer, neige, ombrage), Citadelle,
+>   village, île du Sphinx, lieux de quête (doré : ouvert, gris : fermé, coche : terminé), pierres (bleue : endormie, dorée :
+>   éveillée), héros en goutte orientée et cône du regard ; nom du lieu où l'on est dessous. Touche M (la lettre : AZERTY
+>   et QWERTY) ou bouton « Carte » pour la cacher, choix gardé pour chaque enfant ; jamais pendant une question. Repères lus
+>   dans le monde (`GameWorld.mapInfo`, événements `hero` et `markers`), logique dans `core/world/minimap.ts` (11 tests) ; la
+>   Tour de l'Oubli n'y figure pas. Le parcours navigateur vérifie que la carte suit le héros, se cache avec M, reste en
+>   place pendant une question et montre la pierre éveillée. Pas encore : aller quelque part en cliquant sur la carte, grande
+>   carte plein écran, brouillard des régions (phase 2) ; à décider d'après la séance.
 
 **Reste à faire pour terminer la phase 0**
 

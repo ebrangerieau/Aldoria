@@ -28,6 +28,7 @@ import { Emitter } from '../core/events'
 import type { SaveData } from '../core/save'
 import type { HeightGrid } from '../core/world/heightGrid'
 import type { Obstacles } from '../core/world/obstacles'
+import { heading, type MapMarker, mapMarkers, type ReliefPalette } from '../core/world/minimap'
 import { angleDelta, RUN_SPEED, step, WALK_SPEED } from '../core/world/movement'
 import { isOpen, type Place, placesFor, regionTitle } from '../core/world/places'
 import { type IslandLayout, Terrain } from '../core/world/terrain'
@@ -58,6 +59,25 @@ export type WorldEvents = {
   focus: Interactable | null
   interact: Interactable
   stats: { fps: number; drawCalls: number; triangles: number }
+  /** Position du héros pour la carte, dix fois par seconde : cap du héros et du regard (degrés, 0 = nord). */
+  hero: HeroPose
+  /** L'état d'un repère de la carte a changé (pierre éveillée…). */
+  markers: MapMarker[]
+}
+
+export interface HeroPose {
+  x: number
+  z: number
+  heading: number
+  view: number
+}
+
+/** Ce que la mini-carte lit du monde : les hauteurs du sol affiché, ses couleurs et ses repères. */
+export interface MapInfo {
+  heightAt: (x: number, z: number) => number
+  extent: number
+  palette: ReliefPalette
+  markers: MapMarker[]
 }
 
 export interface WorldOptions {
@@ -98,6 +118,7 @@ export class GameWorld {
   private disposers: (() => void)[] = []
   private statsTimer = 0
   private regionTimer = 0
+  private heroTimer = 0
   private instrumentation: SceneInstrumentation | null = null
 
   private constructor(
@@ -343,6 +364,11 @@ export class GameWorld {
       }
       this.updateFocus()
     }
+    this.heroTimer -= dt
+    if (this.heroTimer <= 0) {
+      this.heroTimer = 0.1
+      this.events.emit('hero', this.heroPose())
+    }
     this.statsTimer -= dt
     if (this.statsTimer <= 0) {
       this.statsTimer = 1
@@ -488,6 +514,31 @@ export class GameWorld {
       this.hero.playOnce('hit')
     }
     this.events.emit('focus', this.focused)
+    this.events.emit('markers', this.mapMarkers())
+  }
+
+  // --- Mini-carte -------------------------------------------------------------------------
+
+  heroPose(): HeroPose {
+    const p = this.hero.root.position
+    const yaw = this.hero.yaw
+    const alpha = this.camera.alpha
+    return { x: p.x, z: p.z, heading: heading(Math.sin(yaw), Math.cos(yaw)), view: heading(-Math.cos(alpha), -Math.sin(alpha)) }
+  }
+
+  private mapMarkers(): MapMarker[] {
+    return mapMarkers(layout, this.options.level, this.interactables, this.options.save.places)
+  }
+
+  mapInfo(): MapInfo {
+    const theme = THEMES[this.options.world]
+    const grid = this.grid
+    return {
+      heightAt: (x, z) => grid.heightAt(x, z),
+      extent: layout.taille,
+      palette: { water: theme.waterColor, regions: Object.values(layout.regions), desaturate: theme.desaturate },
+      markers: this.mapMarkers(),
+    }
   }
 
   /** Gerbe d'étincelles (plus discrète en mode calme). */
@@ -544,6 +595,7 @@ export class GameWorld {
     this.camera.target.set(x, this.grid.heightAt(x, z) + 1.45, z)
     this.camera.alpha = Math.atan2(-Math.cos(this.hero.yaw), -Math.sin(this.hero.yaw))
     this.regionTimer = 0
+    this.heroTimer = 0
   }
 
   /** Cadre la caméra (captures) : angle autour du héros, hauteur, distance. */
