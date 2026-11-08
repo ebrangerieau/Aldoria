@@ -19,6 +19,7 @@ env:
   # déploiement l'ouvre pour son runner, puis le referme (.github/scripts/vps-ssh.sh).
   VPS_FIREWALL_ID: '125084'
   V2_URL: https://aldoria2.bandtrack.fr
+  ADMIN_URL: https://aldoria-admin.bandtrack.fr
 
 jobs:
   api:
@@ -35,8 +36,10 @@ jobs:
       - run: uv run pytest -q
 
   admin:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
+    # Espace parent : types et build, puis parcours dans Chromium contre l'image web2 qui le sert en
+    # production (API, base et sauvegarde jetables ; v2/tools/e2e_admin.sh). Ubuntu 24.04 : Playwright 1.56.
+    runs-on: ubuntu-24.04
+    timeout-minutes: 25
     defaults:
       run:
         working-directory: v2/admin
@@ -49,6 +52,18 @@ jobs:
           cache-dependency-path: v2/admin/package-lock.json
       - run: npm ci --no-audit --no-fund
       - run: npm run build
+      - name: Parcours de l'espace parent dans le navigateur (image web2)
+        env:
+          E2E_BROWSER: chromium
+          E2E_SLOW: '2'
+        run: bash ../tools/e2e_admin.sh "$RUNNER_TEMP/admin-e2e"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: v2-admin-captures
+          path: ${{ runner.temp }}/admin-e2e
+          retention-days: 7
+          if-no-files-found: ignore
 
   client:
     # Types, tests unitaires (dont les vecteurs de réponses partagés avec l'API), build, puis
@@ -195,7 +210,7 @@ jobs:
         env:
           HOSTINGER_API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
         run: bash .github/scripts/vps-ssh.sh close
-      - name: Contrôle en production (API et jeu v2 de ce commit)
+      - name: Contrôle en production (API, jeu v2 et espace parent de ce commit)
         env:
           VPS_HOST: ${{ secrets.VPS_HOST }}
         run: |
@@ -203,14 +218,16 @@ jobs:
           for i in $(seq 1 30); do
             health=$(curl -fsS "$PROD_URL/api/v1/health" || true)
             web=$(curl -fsS "$V2_URL/version.txt?n=$i" || true)
+            admin=$(curl -fsS "$ADMIN_URL/version.txt?n=$i" || true)
             if echo "$health" | grep -q "\"version\":\"$GITHUB_SHA\"" && echo "$health" | grep -q '"status":"ok"' \
-               && [ "$web" = "$GITHUB_SHA" ]; then
-              echo "En production : API $health ; jeu v2 $web" | tee -a "$GITHUB_STEP_SUMMARY"
+               && [ "$web" = "$GITHUB_SHA" ] && [ "$admin" = "$GITHUB_SHA" ]; then
+              echo "En production : API $health ; jeu v2 $web ; espace parent $admin" | tee -a "$GITHUB_STEP_SUMMARY"
               exit 0
             fi
             sleep 10
           done
-          echo "La production ne sert pas ce commit : API $health ; jeu v2 ${web:-?}" | tee -a "$GITHUB_STEP_SUMMARY"
+          echo "La production ne sert pas ce commit : API $health ; jeu v2 ${web:-?} ; espace parent ${admin:-?}" \
+            | tee -a "$GITHUB_STEP_SUMMARY"
           exit 1
       - uses: actions/setup-node@v4
         with:

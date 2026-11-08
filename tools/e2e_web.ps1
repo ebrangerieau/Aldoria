@@ -2,9 +2,8 @@
 #   export web (image de la CI) → nginx « web » + API + PostgreSQL de test
 #   → proxy « edge » (rôle de Traefik : même origine pour le jeu et /api)
 #   → parcours joueur dans Edge headless (tools/e2e/login_flow.js)
-#   → lecture à voix haute appelée dans le navigateur (tools/e2e/tts_check.js)
-#   → espace parent : connexion d'un adulte, famille, et API parent introuvable sur l'hôte public
-#     (tools/e2e/admin_flow.js).
+#   → lecture à voix haute appelée dans le navigateur (tools/e2e/tts_check.js).
+# L'espace parent est servi par la v2 : son parcours est v2/tools/e2e_admin.sh.
 # Prérequis : Docker Desktop, conteneurs aldoria-pg et aldoria-api-test (réseau aldoria-test)
 # avec un profil de test (PIN 1234) dans la famille 1. Le parent du banc et les codes de liaison
 # des appareils sont créés ici (valeurs de test locales uniquement).
@@ -39,7 +38,7 @@ docker run -d --name aldoria-api-test --network aldoria-test -p 127.0.0.1:8098:8
     -e ALDORIA_BACKUP_STATUS_DIR=/etat-sauvegardes -v "$bk/etat:/etat-sauvegardes:ro" `
     aldoria-api:local | Out-Null
 Start-Sleep -Seconds 6
-# Parent du banc (exploitant, pour l'onglet Exploitation) : créé une fois, garde son mot de passe.
+# Parent du banc (lecture à voix haute réglée par l'API parent) : créé une fois, garde son mot de passe.
 $parentEmail = "parent@test.local"
 $parentPassword = "mot-de-passe-du-banc-local"
 & { $ErrorActionPreference = "Continue"
@@ -60,7 +59,5 @@ node "$e2e/login_flow.js" "http://127.0.0.1:8097/" $out $pairGame
 $game = $LASTEXITCODE
 node "$e2e/tts_check.js" "http://127.0.0.1:8097/" "http://127.0.0.1:8098" "cle-de-test-locale-uniquement-0123456789" $pairTts $parentEmail $parentPassword
 $tts = $LASTEXITCODE
-node "$e2e/admin_flow.js" "http://aldoria-admin.localhost:8097/" "http://127.0.0.1:8097/" $out $parentEmail $parentPassword
-$admin = $LASTEXITCODE
 Write-Host "Captures : $out"
-exit [Math]::Max([Math]::Max($game, $admin), $tts)
+exit [Math]::Max($game, $tts)

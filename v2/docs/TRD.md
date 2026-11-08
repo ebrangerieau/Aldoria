@@ -192,18 +192,19 @@ En production, **une seule API et une seule base servent les deux jeux** (D11). 
 
 | Service | Image | Publiée et déployée par | Rôle |
 | --- | --- | --- | --- |
-| `web` | `aldoria-web` (`ALDORIA_TAG`) | `.github/workflows/ci.yml` | jeu v1 sur `aldoria.bandtrack.fr`, espace parent sur `aldoria-admin.bandtrack.fr` |
-| `web2` | `aldoria-web2` (`ALDORIA2_TAG`) | `.github/workflows/v2.yml` | jeu v2 sur `aldoria2.bandtrack.fr` (contient aussi l'espace parent de `v2/admin`, servi à l'étape 0.8) |
+| `web` | `aldoria-web` (`ALDORIA_TAG`) | `.github/workflows/ci.yml` | jeu v1 sur `aldoria.bandtrack.fr` |
+| `web2` | `aldoria-web2` (`ALDORIA2_TAG`) | `.github/workflows/v2.yml` | jeu v2 sur `aldoria2.bandtrack.fr`, espace parent (`v2/admin`) sur `aldoria-admin.bandtrack.fr` (depuis l'étape 0.8) |
 | `api` | `aldoria-api` (`ALDORIA2_TAG`) | `.github/workflows/v2.yml`, depuis `v2/api` | API des deux jeux ; `/api` est routé vers elle sur `aldoria.*` et `aldoria2.*` |
 | `voice`, `db`, `backup` | inchangés | `ci.yml` (voix, sauvegardes) | inchangés |
 
-- `v2.yml` (chemins `v2/**`, son fichier, `deploy/docker-compose.yml`) : API (ruff, pytest), espace parent (build), client
-  (types, Vitest, build, parcours navigateur). Sur `main` : publication des deux images (contexte `v2/`), puis déploiement.
+- `v2.yml` (chemins `v2/**`, son fichier, `.github/scripts/**`, `deploy/docker-compose.yml`) : API (ruff, pytest), espace
+  parent (build, puis parcours navigateur contre l'image `web2` : `tools/e2e_admin.sh`), client (types, Vitest, build,
+  parcours navigateur). Sur `main` : publication des deux images (contexte `v2/`), puis déploiement.
 - **Déploiement v2** (job `deploy`, mêmes secrets SSH que la v1, environnement `production`) : sauvegarde vérifiée de la base
   si la migration appliquée en base (donnée par `/health`) n'est pas la dernière de `v2/api`, ou si l'API ne répond pas ; copie
   du Compose ;
   `ALDORIA2_TAG` écrit dans `.env` ; `docker compose pull api web2` puis `up -d --no-deps api web2` ; l'API en service et
-  `aldoria2.bandtrack.fr/version.txt` doivent donner ce commit dans les 5 minutes ; puis le parcours navigateur (mode découverte,
+  `aldoria2.bandtrack.fr/version.txt` et `aldoria-admin.bandtrack.fr/version.txt` doivent donner ce commit dans les 5 minutes ; puis le parcours navigateur (mode découverte,
   rien n'est enregistré) tourne contre `aldoria2.bandtrack.fr`.
 - **Déploiement v1** (`ci.yml`) : ne publie plus l'API ; ne recrée que `web`, `voice` et `backup` ; ne contrôle que la version
   de son jeu. Son parcours navigateur construit l'API depuis `v2/api` : le jeu v1 est testé contre l'API de la production.
@@ -238,7 +239,7 @@ textures et animations des personnages allégées (une seule copie des animation
    avant) et le jeu v2 s'ouvre sur `aldoria2.bandtrack.fr`. Les deux jeux écrivent dans la même base : les réponses données dans
    la v2 comptent dans le suivi et dans l'espace parent. Un PC se relie une fois à `aldoria2` (l'appareil est mémorisé par site).
 2. **Étape 0.8** : l'espace parent est servi par le conteneur `web2` (code de `v2/admin`) ; `admin/` à la racine est gelé à son
-   tour.
+   tour, l'image `web` de la v1 ne contient plus que le jeu, et le parcours de l'espace parent est passé dans la CI v2.
 3. **Phase 4** : quand la v2 couvre ce que les enfants utilisent dans la v1 (critère du plan), le jeu v2 est servi aussi sur
    `aldoria.bandtrack.fr` ; la v1 reste quelques semaines sur une autre adresse, puis `game/` est archivé et `v2/` remonte à
    la racine (le Compose de production avec lui).

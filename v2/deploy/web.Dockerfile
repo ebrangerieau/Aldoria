@@ -1,5 +1,6 @@
-# Image du service `web2` (aldoria-web2) : jeu v2 (build Vite) et espace parent de v2/admin,
-# servis par nginx selon l'hôte. Contexte de build : le dossier v2/ (le client importe content/).
+# Image du service `web2` (aldoria-web2) : jeu v2 (build Vite) sur aldoria2.* et espace parent de
+# v2/admin sur aldoria-admin.*, servis par nginx selon l'hôte. Contexte de build : le dossier v2/
+# (le client importe content/).
 #   docker build -f deploy/web.Dockerfile --build-arg GIT_SHA=$(git rev-parse HEAD) .
 
 FROM node:22-alpine AS client
@@ -28,6 +29,7 @@ COPY deploy/voix/ /usr/share/nginx/html/voix/
 COPY deploy/musique/ /usr/share/nginx/html/musique/
 COPY --from=admin /admin/dist/ /usr/share/nginx/admin/
 ARG GIT_SHA=dev
-RUN echo "${GIT_SHA}" > /usr/share/nginx/html/version.txt
+# Version du build, pour le jeu et pour l'espace parent (contrôlées par la CI après chaque mise en ligne).
+RUN echo "${GIT_SHA}" > /usr/share/nginx/html/version.txt && cp /usr/share/nginx/html/version.txt /usr/share/nginx/admin/
 
 HEALTHCHECK --interval=30s --timeout=3s CMD wget -q --spider http://127.0.0.1/ || exit 1
