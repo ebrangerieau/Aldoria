@@ -5,6 +5,7 @@
  */
 import { useEffect, useRef, useState } from 'react'
 import type { Services } from '../app/services'
+import { reloadPending } from '../app/staleBuild'
 import { type Accommodations, applyToDocument, fromServer, withChildPrefs } from '../core/accessibility'
 import type { Item } from '../core/items'
 import { EMPTY_SAVE, SaveGame, type SaveData } from '../core/save'
@@ -90,8 +91,9 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
         setLoading(null)
         if (params.has('e2e')) (window as unknown as { __aldoria: unknown }).__aldoria = { world, services }
       } catch (error) {
+        if (reloadPending()) return // nouvelle version du jeu : la page se recharge
         console.error(error)
-        setFailure("L'île n'a pas pu se charger. Vérifie que le navigateur est à jour (WebGL 2), puis recharge la page.")
+        setFailure("L'île n'a pas pu se charger. Recharge la page. Si ça recommence, le navigateur est peut-être trop ancien (WebGL 2).")
       }
     })()
     return () => {
