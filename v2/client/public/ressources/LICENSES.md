@@ -44,5 +44,6 @@ Tout asset ajouté au jeu est inscrit ici (IMPLEMENTATION_PLAN §1.2).
 | `fonts/DejaVuSans.ttf` | DejaVu Fonts 2.37 (police de secours des symboles) | Bitstream / DejaVu | https://github.com/dejavu-fonts/dejavu-fonts | Bitstream Vera License (libre, voir `fonts/DejaVu-LICENSE.txt`) | 2026-10-11 |
 | `sfx/*.wav` | Effets sonores synthétisés par `tools/make_sfx.py` | Projet Aldoria | (généré) | Domaine public | 2026-10-10 |
 | `addons/gut/` (outil, non exporté) | GUT 9.7.1 | Butch Wesley | https://github.com/bitwes/Gut | MIT | 2026-10-10 |
+| `babylon/glslang/`, `babylon/twgsl/` (traduction des shaders GLSL en WGSL pour WebGPU, téléchargée seulement si un shader n'a pas de version WGSL ; copiés de `node_modules/@babylonjs/core/assets/` au build par `vite.config.ts`, pas dans le dépôt) | glslang et twgsl distribués avec `@babylonjs/core` 9.35.0 | Khronos Group (glslang) ; Babylon.js, à partir de Tint du projet Dawn de Google (twgsl) | https://github.com/KhronosGroup/glslang, https://github.com/BabylonJS/twgsl | paquet `@babylonjs/core` : Apache 2.0 ; glslang et Tint : licences permissives de leurs dépôts (BSD 3 clauses pour l'essentiel) | 2026-11-08 |
 
 Crédit non obligatoire mais apprécié : « Assets 3D par Kay Lousberg, www.kaylousberg.com ».

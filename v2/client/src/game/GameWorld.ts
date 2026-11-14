@@ -14,6 +14,8 @@ import {
   Color3,
   Color4,
   DynamicTexture,
+  type Engine,
+  EngineInstrumentation,
   type Mesh,
   MeshBuilder,
   ParticleSystem,
@@ -22,9 +24,11 @@ import {
   SceneInstrumentation,
   StandardMaterial,
   Vector3,
+  type WebGPUEngine,
 } from '@babylonjs/core'
 import ile from '@content/monde/ile.json'
 import { Emitter } from '../core/events'
+import { browserLabel, type FrameSample, type PerfReport, percentile, summarize, tourAt, tourStops } from '../core/perf'
 import type { SaveData } from '../core/save'
 import type { HeightGrid } from '../core/world/heightGrid'
 import type { Obstacles } from '../core/world/obstacles'
@@ -57,7 +61,7 @@ export type WorldEvents = {
   region: { code: string | null; title: string }
   focus: Interactable | null
   interact: Interactable
-  stats: { fps: number; drawCalls: number; triangles: number }
+  stats: { fps: number; drawCalls: number; triangles: number; engine: string }
 }
 
 export interface WorldOptions {
@@ -80,6 +84,10 @@ export class GameWorld {
   scene!: Scene
   engine!: AbstractEngine
   engineKind: EngineKind = 'webgl2'
+  /** WebGPU demandé mais pas pris : pourquoi (repli sur WebGL 2). */
+  engineFallback: string | undefined
+  /** Moment où l'île est prête (ms depuis l'ouverture de la page). */
+  readyAt = 0
   hero!: Character
   camera!: ArcRotateCamera
   private grid!: HeightGrid
@@ -120,9 +128,10 @@ export class GameWorld {
   }
 
   private async build(): Promise<void> {
-    const { engine, kind } = await createEngine(this.canvas, this.params)
+    const { engine, kind, fallback } = await createEngine(this.canvas, this.params)
     this.engine = engine
     this.engineKind = kind
+    this.engineFallback = fallback
     engine.setHardwareScalingLevel(this.quality.hardwareScaling / Math.min(window.devicePixelRatio || 1, 2))
     const scene = new Scene(engine)
     this.scene = scene
@@ -175,12 +184,13 @@ export class GameWorld {
 
     this.buildInteractables(places)
     this.bindInput()
-    // Compteurs par image (?perf et tests) : appels de dessin, durée d'une image.
-    if (this.params.has('perf') || this.params.has('e2e')) {
+    // Compteurs par image (?perf, ?mesure et tests) : appels de dessin, durée d'une image.
+    if (this.params.has('perf') || this.params.has('e2e') || this.params.has('mesure')) {
       this.instrumentation = new SceneInstrumentation(scene)
       this.instrumentation.captureFrameTime = true
     }
     this.progress("L'île est prête", 1)
+    this.readyAt = performance.now()
 
     let last = performance.now()
     engine.runRenderLoop(() => {
@@ -343,13 +353,16 @@ export class GameWorld {
       }
       this.updateFocus()
     }
-    this.statsTimer -= dt
-    if (this.statsTimer <= 0) {
-      this.statsTimer = 1
+    // Une fois par seconde de temps réel (dt est plafonné : à 3 images par seconde, il
+    // faudrait sept secondes pour le premier relevé).
+    const now = performance.now()
+    if (now >= this.statsTimer) {
+      this.statsTimer = now + 1000
       this.events.emit('stats', {
         fps: Math.round(this.engine.getFps()),
         drawCalls: this.instrumentation?.drawCallsCounter.current ?? 0,
         triangles: Math.round(this.scene.getActiveIndices() / 3),
+        engine: this.engineLabel(),
       })
     }
   }
@@ -529,6 +542,83 @@ export class GameWorld {
     ps.disposeOnStop = true
     ps.targetStopDuration = 1.6
     ps.start()
+  }
+
+  // --- Banc de mesure (?mesure) ------------------------------------------------------------
+
+  engineLabel(): string {
+    return this.engineKind === 'webgpu' ? 'WebGPU' : this.engineFallback ? 'WebGL 2 (repli)' : 'WebGL 2'
+  }
+
+  /**
+   * Le héros fait le tour de l'île (`tourStops`, core/perf.ts) ; à chaque arrêt, la caméra fait un
+   * tour complet. Relève la durée de chaque image, le temps du processeur (scene.render) et, si le
+   * navigateur le permet, celui de la carte graphique. Le premier dixième de chaque arrêt n'est pas
+   * compté : le saut d'un arrêt à l'autre n'arrive jamais en jouant.
+   */
+  async measure(seconds: number, onProgress?: (ratio: number) => void): Promise<PerfReport> {
+    const stops = tourStops(layout)
+    const instrumentation = this.instrumentation ?? new SceneInstrumentation(this.scene)
+    instrumentation.captureFrameTime = true
+    this.instrumentation = instrumentation
+    const gpu = new EngineInstrumentation(this.engine)
+    gpu.captureGPUFrameTime = true
+    this.setInputEnabled(false)
+    const samples: FrameSample[] = []
+    const drawCalls: number[] = []
+    const triangles: number[] = []
+    let index = -1
+    let alpha = 0
+    const start = performance.now()
+    let last = start
+    await new Promise<void>((resolve) => {
+      const observer = this.scene.onAfterRenderObservable.add(() => {
+        const now = performance.now()
+        const at = tourAt(stops, seconds, (now - start) / 1000)
+        if (at.done) {
+          this.scene.onAfterRenderObservable.remove(observer)
+          resolve()
+          return
+        }
+        if (at.index !== index) {
+          index = at.index
+          const stop = stops[index]!
+          this.teleport(stop.x, stop.z, stop.faceX, stop.faceZ)
+          this.camera.beta = 1.22
+          this.camera.radius = 8.5
+          alpha = this.camera.alpha
+        } else if (at.turn > 0.1) {
+          const gpuNs = gpu.gpuFrameTimeCounter?.current ?? 0
+          samples.push({ frameMs: now - last, cpuMs: instrumentation.frameTimeCounter.current, gpuMs: gpuNs > 0 ? gpuNs / 1e6 : undefined })
+          drawCalls.push(instrumentation.drawCallsCounter.current)
+          triangles.push(this.scene.getActiveIndices() / 3)
+        }
+        this.camera.alpha = alpha + at.turn * Math.PI * 2
+        this.lastCameraInput = now
+        last = now
+        onProgress?.(Math.min(1, (now - start) / 1000 / seconds))
+      })
+    })
+    gpu.dispose()
+    this.teleport(layout.depart.x, layout.depart.z, layout.citadelle.x, layout.citadelle.z)
+    this.setInputEnabled(true)
+    const info = (this.engine as Engine | WebGPUEngine).getInfo()
+    const memory = (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory
+    return {
+      date: new Date().toISOString().slice(0, 10),
+      browser: browserLabel(navigator.userAgent),
+      gpu: (this.engineKind === 'webgpu' ? [info.vendor, info.version] : [info.renderer]).filter((v) => v && !v.startsWith('unknown')).join(' '),
+      engine: this.engineLabel(),
+      quality: this.quality.name,
+      width: this.engine.getRenderWidth(),
+      height: this.engine.getRenderHeight(),
+      seconds,
+      summary: summarize(samples),
+      drawCalls: Math.round(percentile(drawCalls, 100)),
+      triangles: Math.round(percentile(triangles, 100)),
+      loadMs: this.readyAt,
+      heapMb: memory ? memory.usedJSHeapSize / 1048576 : null,
+    }
   }
 
   // --- Outils de test et de capture (?e2e) ------------------------------------------------

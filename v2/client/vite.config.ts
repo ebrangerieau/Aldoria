@@ -1,5 +1,7 @@
+import { createReadStream, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import react from '@vitejs/plugin-react'
+import type { Plugin } from 'vite'
 import { defineConfig } from 'vitest/config'
 
 // Contenus partagés avec l'API (content/ : lieux, régions, vecteurs de test) : importés tels
@@ -21,8 +23,36 @@ export const CSP = [
   "form-action 'none'",
 ].join('; ')
 
+/**
+ * Outils que Babylon.js charge à la demande pour WebGPU (glslang et twgsl : traduction d'un
+ * shader GLSL en WGSL), pris dans le paquet installé (même version que le moteur) et servis par
+ * le site sous /ressources/babylon/ (src/game/engine.ts) : jamais depuis le CDN de Babylon.js,
+ * que la CSP refuse. Copiés dans le build, servis tels quels par `npm run dev`.
+ */
+export const BABYLON_TOOLS = ['glslang/glslang.js', 'glslang/glslang.wasm', 'twgsl/twgsl.js', 'twgsl/twgsl.wasm']
+
+function babylonTools(): Plugin {
+  const source = fileURLToPath(new URL('./node_modules/@babylonjs/core/assets/', import.meta.url))
+  return {
+    name: 'aldoria-babylon-tools',
+    configureServer(server) {
+      server.middlewares.use('/ressources/babylon/', (req, res, next) => {
+        const file = BABYLON_TOOLS.find((f) => req.url === `/${f}`)
+        if (!file) return next()
+        res.setHeader('Content-Type', file.endsWith('.wasm') ? 'application/wasm' : 'text/javascript')
+        createReadStream(source + file).pipe(res)
+      })
+    },
+    generateBundle() {
+      for (const file of BABYLON_TOOLS) {
+        this.emitFile({ type: 'asset', fileName: `ressources/babylon/${file}`, source: readFileSync(source + file) })
+      }
+    },
+  }
+}
+
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), babylonTools()],
   resolve: { alias: { '@content': content } },
   server: {
     port: 5173,

@@ -7,14 +7,18 @@ import { useEffect, useRef, useState } from 'react'
 import type { Services } from '../app/services'
 import { type Accommodations, applyToDocument, fromServer, withChildPrefs } from '../core/accessibility'
 import type { Item } from '../core/items'
+import type { PerfReport } from '../core/perf'
 import { EMPTY_SAVE, SaveGame, type SaveData } from '../core/save'
 import { regionTitle } from '../core/world/places'
 import type { GameWorld, Interactable, WorldEvents } from '../game/GameWorld'
 import type { WorldName } from '../game/theme'
 import { QuestionPanel, type QuestionOutcome } from './QuestionPanel'
 import { Dialog, Options } from './Dialogs'
+import { MeasurePanel, MeasureProgress } from './Measure'
 
 const STONE_XP = 15
+/** Durée du banc de mesure sans valeur (`?mesure`) : quatre secondes par arrêt du tour. */
+const MEASURE_SECONDS = 40
 const today = (): string => new Date().toISOString().slice(0, 10)
 
 type Modal =
@@ -39,6 +43,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
   const [stats, setStats] = useState<WorldEvents['stats'] | null>(null)
   const [online, setOnline] = useState(services.api.online)
   const [helpVisible, setHelpVisible] = useState(true)
+  const [measure, setMeasure] = useState<{ ratio: number } | { report: PerfReport } | null>(null)
   const profile = services.session.profile!
   const prefsKey = `prefs.${profile.id}`
   const [prefs, setPrefs] = useState<{ text_size?: number }>(() => services.store.get(prefsKey, {}))
@@ -89,6 +94,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
         world.events.on('interact', (target) => interactRef.current(target))
         setLoading(null)
         if (params.has('e2e')) (window as unknown as { __aldoria: unknown }).__aldoria = { world, services }
+        if (params.has('mesure')) void runMeasure(world)
       } catch (error) {
         console.error(error)
         setFailure("L'île n'a pas pu se charger. Vérifie que le navigateur est à jour (WebGL 2), puis recharge la page.")
@@ -109,6 +115,24 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
     }, 1000)
     return () => window.clearInterval(timer)
   }, [services])
+
+  /** Banc de mesure : l'avancement change par dixièmes (un rendu React par image fausserait la mesure). */
+  async function runMeasure(world: GameWorld) {
+    setHelpVisible(false)
+    setMeasure({ ratio: 0 })
+    await new Promise((resolve) => window.setTimeout(resolve, 1500)) // ombres et shaders prêts
+    let shown = 0
+    const report = await world.measure(Number(params.get('mesure')) || MEASURE_SECONDS, (ratio) => {
+      const tenth = Math.floor(ratio * 10) / 10
+      if (tenth !== shown) {
+        shown = tenth
+        setMeasure({ ratio: tenth })
+      }
+    })
+    const handle = (window as unknown as { __aldoria?: Record<string, unknown> }).__aldoria
+    if (handle) handle.mesure = report
+    setMeasure({ report })
+  }
 
   function close() {
     setModal(null)
@@ -229,7 +253,15 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
       )}
 
       {params.has('perf') && stats && (
-        <div className="perf">{stats.fps} i/s · {stats.drawCalls} appels · {Math.round(stats.triangles / 1000)} k triangles · {worldRef.current?.quality.name}</div>
+        <div className="perf">{stats.fps} i/s · {stats.drawCalls} appels · {Math.round(stats.triangles / 1000)} k triangles · {worldRef.current?.quality.name} · {stats.engine}</div>
+      )}
+      {measure && 'ratio' in measure && <MeasureProgress ratio={measure.ratio} />}
+      {measure && 'report' in measure && (
+        <MeasurePanel
+          report={measure.report}
+          onAgain={() => worldRef.current && void runMeasure(worldRef.current)}
+          onClose={() => setMeasure(null)}
+        />
       )}
 
       {loading && (
