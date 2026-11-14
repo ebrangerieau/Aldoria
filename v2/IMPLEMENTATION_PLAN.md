@@ -148,7 +148,7 @@ Dans l'ordre que les enfants choisiront à la séance de la phase 1 :
 - prologue en cinq tableaux joués dans l'île, voix enregistrées de Maître Ysaline (`deploy/voix/manifest.json` ; **seuils faits le 14 novembre** : les 30 textes de lieu sont lus de
   sa vraie voix ; restent à brancher les pages rendues, le prologue, le brouillard, Clairval et la Tour de l'Oubli quand ces
   moments existent dans l'île, et à enregistrer ses répliques nouvelles de la v2), musique ;
-- Archives (étoiles par notion), bestiaire ; brouillard des régions pas encore au programme, qui recule page après page.
+- Archives (étoiles par notion : **fait le 14 novembre**, bouton « Archives » de l'île, `core/archives.ts`), bestiaire (avec les rencontres) ; brouillard des régions pas encore au programme, qui recule page après page.
 
 **Critère de passage** : deux semaines d'usage spontané (au moins deux séances par semaine et par enfant, sans relance).
 

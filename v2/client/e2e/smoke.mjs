@@ -279,6 +279,39 @@ try {
     await page.screenshot({ path: `${OUT}/06-eveillee.png` })
   })
 
+  await step('Archives : étoiles par notion (réponse du serveur simulée), fermeture à Échap', async () => {
+    const payload = {
+      chapters: [
+        {
+          code: '6e.fractions',
+          title: 'Les fractions',
+          subject: { code: 'maths', label: 'Mathématiques' },
+          status: 'en_cours',
+          notions: [
+            { code: 'a', label: 'Lire une fraction', playable: true, stars: 3, state: 'acquise', mastery: 90, seen: 9, set_aside: null },
+            { code: 'b', label: 'Comparer', playable: true, stars: 1, state: 'en cours', mastery: 30, seen: 3, set_aside: null },
+          ],
+        },
+      ],
+    }
+    await page.route('**/api/v1/play/progress', (route) => route.fulfill({ json: payload }))
+    // Découverte : pas de jeton. On en pose un le temps de la lecture (sinon la voix du serveur serait appelée par la suite).
+    await page.evaluate(() => (window.__aldoria.services.api.token = 'e2e'))
+    try {
+      await page.getByTestId('bouton-archives').click()
+      await page.getByTestId('archives').waitFor()
+      await page.getByText('1 notion acquise ★★★ · 0 fragile · 1 en cours · 0 à découvrir').waitFor({ timeout: 5000 * SLOW })
+      const stars = await page.locator('.archives-stars').allTextContents()
+      if (stars.join('|') !== '★★★|★☆☆') throw new Error(`étoiles des Archives : ${stars.join('|')}`)
+      await page.screenshot({ path: `${OUT}/05b-archives.png` })
+      await page.keyboard.press('Escape')
+      await page.getByTestId('archives').waitFor({ state: 'detached' })
+    } finally {
+      await page.evaluate(() => (window.__aldoria.services.api.token = ''))
+      await page.unroute('**/api/v1/play/progress')
+    }
+  })
+
   await step('vue de la Citadelle et des montagnes', async () => {
     await page.evaluate(() => {
       const w = window.__aldoria.world

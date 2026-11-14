@@ -14,6 +14,7 @@ import { regionTitle } from '../core/world/places'
 import type { GameWorld, Interactable, WorldEvents } from '../game/GameWorld'
 import type { WorldName } from '../game/theme'
 import { PlayTimeGuard } from './PlayTimeGuard'
+import { Archives } from './Archives'
 import { QuestionPanel, type QuestionOutcome } from './QuestionPanel'
 import { Dialog, Options } from './Dialogs'
 import { Minimap } from './Minimap'
@@ -27,6 +28,7 @@ type Modal =
   | { kind: 'question'; item: Item; target: Interactable }
   | { kind: 'dialog'; title: string; text: string; note?: string; actions: { label: string; primary?: boolean; run: () => void }[] }
   | { kind: 'options' }
+  | { kind: 'archives' }
   | null
 
 const WELCOME =
@@ -349,6 +351,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
                 Musique
               </button>
             )}
+            <button type="button" className="secondary small" data-testid="bouton-archives" onClick={() => { worldRef.current?.setInputEnabled(false); setModal({ kind: 'archives' }) }}>Archives</button>
             <button type="button" className="secondary small" onClick={() => { worldRef.current?.setInputEnabled(false); setModal({ kind: 'options' }) }}>Options</button>
             <button type="button" className="secondary small" onClick={onQuit}>Quitter</button>
           </div>
@@ -419,6 +422,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
         onBlock={(blocked) => worldRef.current?.setInputEnabled(!blocked)}
         onEnd={onQuit}
       />
+      {modal?.kind === 'archives' && <Archives services={services} onClose={close} />}
       {modal?.kind === 'options' && (
         <Options
           accommodations={accommodations}

@@ -76,6 +76,9 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   une question et baisse sous une voix (`Voice.isSpeaking`) ; `&musique=0` la désactive (ni lecture ni bouton : captures,
   mesures). Ajouter un morceau : `python tools/encode_musique.py`, procédure dans `docs/exploitation.md`. Une scène qui
   pose une question ou un dialogue sans passer par `GameScreen` doit prévenir `services.music.setFocus`.
+- **Archives** (`core/archives.ts` : lecture de `GET /play/progress`, résumé, dernier état gardé sur l'appareil pour la consultation hors
+  connexion ; `ui/Archives.tsx`, bouton « Archives » de l'île) : une à trois étoiles par notion, groupées par matière puis par chapitre. La
+  maîtrise vient toujours du serveur, jamais calculée par le client. Le bestiaire (créatures vaincues) vient avec les rencontres.
 - **Effets sonores** (`core/sfx.ts` : les dix sons de `public/ressources/sfx`, volume de la v1 ; `app/sfx.ts` : lecteur Web Audio créé au
   premier geste, `services.sfx.play('correct')`) : bonne et mauvaise réponse dans `QuestionPanel` ; les coups, le soin et la victoire du
   combat s'appellent de la même façon. Jamais d'effet lié à la vitesse de réponse ; `&sons=0` les désactive (captures, mesures).
