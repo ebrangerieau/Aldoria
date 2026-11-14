@@ -17,8 +17,23 @@ export const RUSH_WINDOW = 3
 export const RUSH_RATIO = 0.25
 export const RUSH_PENALTY_QUESTIONS = 5
 
-/** Types de question que le client v2 sait afficher (les autres arrivent en phase 1). */
-export const SUPPORTED_TYPES = new Set(['mcq', 'numeric', 'expression', 'text', 'order', 'true_false'])
+/** Types de question que le client v2 sait afficher (ui/widgets/Widgets.tsx). */
+export const SUPPORTED_TYPES = new Set(['mcq', 'numeric', 'expression', 'text', 'order', 'true_false', 'vector', 'number_line', 'sign_table'])
+
+/**
+ * Visuels que le client v2 sait dessiner (ui/widgets/Visuals.tsx). Une question dont le visuel est
+ * absent d'ici n'est jamais posée : sans lui, l'énoncé serait souvent incompréhensible (robot,
+ * carte, graphique). À agrandir en même temps que les composants. 24 lieux sur 30 n'en ont pas
+ * besoin ; les six lieux de maths demandent les derniers (graph, robot, map, pont, rapporteur,
+ * repere_tir).
+ */
+export const SUPPORTED_VISUALS = new Set(['balance', 'number_line', 'grid', 'sign_table'])
+
+export function isPlayable(item: Item): boolean {
+  if (!SUPPORTED_TYPES.has(item.type)) return false
+  const kind = item.visual?.kind
+  return !item.visual || (typeof kind === 'string' && SUPPORTED_VISUALS.has(kind))
+}
 
 export interface SubmitResult {
   correct: boolean
@@ -49,8 +64,7 @@ export class QuestionService {
   constructor(
     private readonly source: QuestionSource,
     private readonly random: () => number = Math.random,
-    private readonly canShow: (item: Item) => boolean = (item) =>
-      SUPPORTED_TYPES.has(item.type) && !item.visual,
+    private readonly canShow: (item: Item) => boolean = isPlayable,
   ) {}
 
   /** Nouvelle activité : difficulté de départ du serveur (un cran plus bas si « départ doux »). */

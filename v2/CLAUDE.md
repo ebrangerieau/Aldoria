@@ -61,6 +61,12 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   le décor répété passe en *thin instances*. Tout asset ajouté est inscrit dans `client/public/ressources/LICENSES.md`.
 - **Sauvegarde** : partie v2 dans l'emplacement `v2` (`core/save.ts`). La maîtrise des notions n'est jamais calculée par le
   client. Aucune migration ne doit casser la v1 tant qu'elle est en service.
+- **Visuels de questions** : une question n'est posée que si son type et son visuel sont dessinés (`core/questionService.ts` :
+  `SUPPORTED_TYPES`, `SUPPORTED_VISUALS`, `isPlayable`), sinon l'énoncé serait incompréhensible. Calculs dans `core/visuals.ts`
+  (testés), dessin SVG dans `ui/widgets/Visuals.tsx`, réponses dans `ui/widgets/Widgets.tsx`. Aujourd'hui : balance, droite
+  graduée, repère quadrillé (vecteurs), tableau de signes ; 24 lieux sur 30 n'ont pas besoin des autres. Restent (lieux de
+  maths et Clairval) : graph, robot, map, table, pont, rapporteur, repere_tir. Ajouter un visuel : le composant, son test, puis
+  son nom dans `SUPPORTED_VISUALS`.
 - **Voix enregistrées** (ElevenLabs : Maître Ysaline et le narrateur) : `deploy/voix/` (`manifest.json` : empreinte SHA-256 du
   texte exact vers un MP3), servies sous `/voix/` (image web ; `vite.config.ts` en dev et en preview). `core/voice.ts` joue le son
   d'un texte français dont l'empreinte est au manifeste (même sans compte), sinon Piper, sinon la voix du navigateur

@@ -10,6 +10,7 @@ import { answerText } from '../core/answerText'
 import type { Item, UserInput } from '../core/items'
 import type { SubmitResult } from '../core/questionService'
 import { Formula } from './Formula'
+import { VisualFor } from './widgets/Visuals'
 import { widgetFor } from './widgets/Widgets'
 
 export interface QuestionOutcome {
@@ -78,6 +79,8 @@ export function QuestionPanel({ services, item: first, title, gameMode, accommod
         </header>
         <p className="prompt">{item.prompt}</p>
         {item.latex && <Formula latex={item.latex} svg={item.latex_hash ? services.session.pack?.formulas[item.latex_hash] : undefined} />}
+
+        <VisualFor key={`visuel-${item.id}`} item={item} revealed={result ? { correct: result.correct, answer: answerText(item) } : null} />
 
         {!result && Widget && <Widget key={item.id} item={item} onAnswer={answer} disabled={false} />}
         {!result && !Widget && <p className="error">Ce type de question arrivera bientôt.</p>}
