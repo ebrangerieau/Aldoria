@@ -23,6 +23,8 @@ export interface SaveData {
   story: string[]
   /** Objets du sac (core/progression/inventory.ts). */
   items: Owned
+  /** Lieu en cours : salle de reprise (chaque salle franchie devient un point de reprise). */
+  checkpoints: Record<string, number>
   look: { model: string; main: string; off: string; cape: string }
 }
 
@@ -32,6 +34,7 @@ export const EMPTY_SAVE: SaveData = {
   stones: {},
   story: [],
   items: {},
+  checkpoints: {},
   look: { model: 'Knight', main: '1H_Sword', off: 'Round_Shield', cape: 'origine' },
 }
 
@@ -110,6 +113,18 @@ export class SaveGame {
   /** Un lieu de quête terminé de plus (le suivant de sa région s'ouvre dès la première fois). */
   completePlace(code: string): void {
     this.data.places = { ...this.data.places, [code]: (this.data.places[code] ?? 0) + 1 }
+  }
+
+  checkpoint(code: string): number {
+    return this.data.checkpoints[code] ?? 0
+  }
+
+  /** Salle de reprise d'un lieu ; 0 efface le point de reprise (lieu terminé). */
+  setCheckpoint(code: string, room: number): void {
+    const next = { ...this.data.checkpoints }
+    if (room > 0) next[code] = room
+    else delete next[code]
+    this.data.checkpoints = next
   }
 
   /** Étape de l'histoire vue (une seule fois). */

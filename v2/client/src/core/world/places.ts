@@ -25,8 +25,39 @@ export interface DungeonData {
   boss_defeat: string
   enigma: { generator: string; mode: string; title: string; intro: string; xp: number }
   chest_xp: number
-  rooms: { kind: string; title: string; enemies?: { model: string; name: string; hp: number; tier: number; xp: number; scale: number }[] }[]
+  rooms: RoomSpec[]
   v1_map_piece: string
+  v1_decor: Decor
+}
+
+export type RoomKind = 'entree' | 'combat' | 'enigme' | 'boss'
+
+export interface EnemySpec {
+  model: string
+  name: string
+  hp: number
+  tier: number
+  xp: number
+  /** Position dans la salle, repère de la v1 (x vers l'est, z vers le sud) : `toWorld` (core/quest/layout.ts). */
+  v1_at: [number, number]
+  scale: number
+}
+
+export interface RoomSpec {
+  kind: RoomKind
+  title: string
+  enemies?: EnemySpec[]
+}
+
+/** Décor propre au lieu (pièces KayKit de /ressources/models/kaykit/dungeon/) ; valeur absente : décor par défaut. */
+export interface Decor {
+  floor?: string
+  floor_accent?: string
+  walls?: string[]
+  banners?: string[]
+  /** [pièce, position dans la salle (repère de la v1), orientation en degrés, rayon de l'obstacle]. */
+  props?: [string, [number, number, number], number, number][]
+  torch_color?: [number, number, number]
 }
 
 export interface Place extends Point {

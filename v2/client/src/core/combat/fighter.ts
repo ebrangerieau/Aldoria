@@ -4,10 +4,21 @@ export class Fighter {
 
   constructor(
     readonly name: string,
-    readonly maxHp: number,
+    public maxHp: number,
     hp = maxHp,
   ) {
     this.hp = Math.max(0, Math.min(maxHp, hp))
+  }
+
+  /** Toute la vie (avant l'Effaceur, après un repli) ; rend ce qui a été récupéré. */
+  restore(): number {
+    return this.heal(this.maxHp)
+  }
+
+  /** Nouveau maximum (montée de niveau) : le héros est soigné. */
+  setMax(maxHp: number): void {
+    this.maxHp = maxHp
+    this.hp = maxHp
   }
 
   get alive(): boolean {
