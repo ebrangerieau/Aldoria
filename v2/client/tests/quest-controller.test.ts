@@ -315,11 +315,21 @@ describe('énigme', () => {
     expect(Object.values(save.data.items).reduce((a, b) => a + (b ?? 0), 0)).toBe(1)
   })
 
-  it('hors connexion, sans énigme dans le paquet : le piédestal se réarme et le lieu reste jouable', async () => {
+  it('sans énigme jouable (hors connexion, visuel non dessiné), une question du chapitre la remplace', async () => {
     const { controller, stage, ui, questions } = setup([ev.room(3), ev.pedestal(1), ev.leave], {}, { save: Object.assign(new FakeSave(), { checkpoints: { tour_fractions: 3 } }) })
     questions.unavailable.add('enigme')
     await controller.run()
-    expect(ui.banners.map((b) => b.text)).toContain('Énigme indisponible hors connexion')
+    expect(questions.requested.map((r) => r.role)).toEqual(['enigme', 'chapitre'])
+    expect(ui.asked[0]!.mode).toBe('enigme')
+    expect(stage.log).toEqual(['piédestal 1 résolu'])
+  })
+
+  it('sans aucune question, le piédestal se réarme et le lieu reste jouable', async () => {
+    const { controller, stage, ui, questions } = setup([ev.room(3), ev.pedestal(1), ev.leave], {}, { save: Object.assign(new FakeSave(), { checkpoints: { tour_fractions: 3 } }) })
+    questions.unavailable.add('enigme')
+    questions.unavailable.add('chapitre')
+    await controller.run()
+    expect(ui.banners.map((b) => b.text)).toContain('Aucune question disponible pour cette énigme')
     expect(stage.log).toEqual(['piédestal 1 réarmé'])
   })
 

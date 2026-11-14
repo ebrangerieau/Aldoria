@@ -38,7 +38,10 @@ import { type IslandLayout, Terrain } from '../core/world/terrain'
 import { type Atmosphere, createAtmosphere } from './atmosphere'
 import { type Character, loadFox, loadHero, loadNpc, settleOnGround } from './characters'
 import { beacon, buildDecor } from './decor'
+import type { DungeonData } from '../core/world/places'
+import type { Progress } from '../core/quest/run'
 import { createEngine, type EngineKind } from './engine'
+import { type FloatingText, InteriorWorld } from './interior/InteriorWorld'
 import { buildGround, buildSea } from './island'
 import { chooseQuality, type Quality } from './quality'
 import { THEMES, type WorldName } from './theme'
@@ -107,6 +110,12 @@ export class GameWorld {
   private statsTimer = 0
   private regionTimer = 0
   private instrumentation: SceneInstrumentation | null = null
+  private islandLoop: (() => void) | null = null
+  private interiorLoop: (() => void) | null = null
+  private beacons = new Map<string, Mesh>()
+  /** Intérieur d'un lieu en cours (la boucle de l'île est alors à l'arrêt). */
+  interior: InteriorWorld | null = null
+  private entering: Promise<InteriorWorld> | null = null
 
   private constructor(
     private readonly canvas: HTMLCanvasElement,
@@ -193,13 +202,14 @@ export class GameWorld {
     this.readyAt = performance.now()
 
     let last = performance.now()
-    engine.runRenderLoop(() => {
+    this.islandLoop = () => {
       const now = performance.now()
       const dt = Math.min(0.05, (now - last) / 1000)
       last = now
       this.update(dt)
       scene.render()
-    })
+    }
+    engine.runRenderLoop(this.islandLoop)
     const onResize = () => engine.resize()
     window.addEventListener('resize', onResize)
     this.disposers.push(() => window.removeEventListener('resize', onResize))
@@ -285,6 +295,79 @@ export class GameWorld {
         this.destination = { x: pick.pickedPoint.x, z: pick.pickedPoint.z }
       }
     })
+  }
+
+  /**
+   * Entre dans l'intérieur d'un lieu : la boucle de l'île s'arrête, celle de l'intérieur la remplace.
+   * `leavePlace` rend tout à l'île. Le monde de l'île reste en mémoire (on y revient à pied).
+   */
+  enterPlace(options: {
+    def: DungeonData
+    progress: Progress
+    timeOver?: () => boolean
+    onFloat?: (text: FloatingText) => void
+    onProgress?: (label: string, ratio: number) => void
+  }): Promise<InteriorWorld> {
+    // Un seul intérieur à la fois : un deuxième appel (écran monté deux fois en développement) rend le même.
+    if (!this.entering) {
+      this.entering = this.createPlace(options).catch((error) => {
+        this.entering = null
+        throw error
+      })
+    }
+    return this.entering
+  }
+
+  private async createPlace(options: Parameters<GameWorld['enterPlace']>[0]): Promise<InteriorWorld> {
+    this.setInputEnabled(false)
+    if (this.islandLoop) this.engine.stopRenderLoop(this.islandLoop)
+    this.camera.detachControl()
+    const interior = await InteriorWorld.create({
+      engine: this.engine,
+      canvas: this.canvas,
+      world: this.options.world,
+      look: this.options.save.look,
+      quality: this.quality,
+      calm: this.options.calm,
+      ...options,
+    })
+    interior.start()
+    this.interior = interior
+    let last = performance.now()
+    this.interiorLoop = () => {
+      const now = performance.now()
+      const dt = Math.min(0.05, (now - last) / 1000)
+      last = now
+      interior.frame(dt)
+    }
+    this.engine.runRenderLoop(this.interiorLoop)
+    return interior
+  }
+
+  /** Retour à l'île, là où le héros l'avait laissée. */
+  leavePlace(): void {
+    this.entering = null
+    if (this.interiorLoop) this.engine.stopRenderLoop(this.interiorLoop)
+    this.interiorLoop = null
+    this.interior?.dispose()
+    this.interior = null
+    this.camera.attachControl(this.canvas, true)
+    if (this.islandLoop) this.engine.runRenderLoop(this.islandLoop)
+    this.setInputEnabled(true)
+  }
+
+  /** Une partie a progressé (lieu terminé) : les seuils des lieux suivants s'ouvrent. */
+  refreshPlaces(save: SaveData): void {
+    for (const it of this.interactables) {
+      if (it.kind !== 'lieu' || !it.place) continue
+      const open = isOpen(it.place, save.places)
+      it.open = open
+      const ring = this.beacons.get(it.place.dungeon.code)
+      const material = ring?.material as StandardMaterial | null | undefined
+      if (material) material.emissiveColor = Color3.FromHexString(open ? '#ffd27a' : '#7a7f8c').scale(open ? 1 : 0.25)
+    }
+    this.options.save.places = save.places
+    this.events.emit('focus', this.focused)
   }
 
   /** L'interface prend la main (question, dialogue) : le héros s'arrête. */
@@ -404,7 +487,7 @@ export class GameWorld {
       const toStart = Math.atan2(layout.depart.x - place.x, layout.depart.z - place.z)
       const door = new Vector3(place.x + Math.sin(toStart) * 7.5, y, place.z + Math.cos(toStart) * 7.5)
       door.y = this.grid.heightAt(door.x, door.z)
-      beacon(this.scene, `seuil-${place.dungeon.code}`, door, open ? '#ffd27a' : '#7a7f8c', open)
+      this.beacons.set(place.dungeon.code, beacon(this.scene, `seuil-${place.dungeon.code}`, door, open ? '#ffd27a' : '#7a7f8c', open))
       this.interactables.push({
         id: place.dungeon.code, kind: 'lieu', label: place.dungeon.title, x: door.x, z: door.z, radius: 4, place, open,
       })
@@ -646,6 +729,7 @@ export class GameWorld {
 
   dispose(): void {
     for (const d of this.disposers) d()
+    this.interior?.dispose()
     this.engine.stopRenderLoop()
     this.scene.dispose()
     this.engine.dispose()

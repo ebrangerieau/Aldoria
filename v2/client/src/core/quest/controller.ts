@@ -17,7 +17,7 @@ import { heroMaxHp, levelForXp } from '../progression/progression'
 import type { SubmitResult } from '../questionService'
 import type { DungeonData } from '../world/places'
 import type { HeroVoice } from './heroVoice'
-import { breathe, chestMessage, type EnemyState, enigmaReward, Progress } from './run'
+import { breathe, chestMessage, type EnemyState, enigmaReward, Progress, resumeRoom } from './run'
 
 export type Tone = 'good' | 'bad' | 'accent' | 'gold' | 'plain'
 
@@ -126,9 +126,10 @@ export class QuestController {
     private readonly stage: QuestStage,
     private readonly ui: QuestUi,
     private readonly services: QuestServices,
+    /** L'avancement peut être créé avant (la scène 3D le lit aussi) ; sinon il part du point de reprise. */
+    progress?: Progress,
   ) {
-    const checkpoint = Math.max(0, Math.min(def.rooms.length - 1, services.save.checkpoint(def.code)))
-    this.progress = new Progress(def, checkpoint)
+    this.progress = progress ?? new Progress(def, resumeRoom(def, services.save.checkpoint(def.code)))
     this.hero = new Fighter('Héros', heroMaxHp(levelForXp(services.save.data.xp)))
     this.texts = services.world === 'brouillard' ? combat.brouillard : combat.lumineux
     this.random = services.random ?? Math.random
@@ -321,9 +322,11 @@ export class QuestController {
   private async solvePedestal(index: number): Promise<void> {
     if (this.progress.solved.has(index)) return
     const { ui, stage, services, def } = this
-    const item = services.questions.next('enigme')
+    // Sans énigme jouable (hors connexion, ou visuel pas encore dessiné par le client), une question du chapitre
+    // la remplace : un lieu ne reste jamais infranchissable.
+    const item = services.questions.next('enigme') ?? services.questions.next('chapitre')
     if (!item) {
-      ui.banner('Énigme indisponible hors connexion', 'bad')
+      ui.banner('Aucune question disponible pour cette énigme', 'bad')
       stage.pedestalRearm(index)
       return
     }

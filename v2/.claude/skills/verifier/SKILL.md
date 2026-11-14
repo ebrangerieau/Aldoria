@@ -15,6 +15,8 @@ Dans l'ordre, depuis la racine du dépôt :
    `npm --prefix v2/client run e2e`. Le parcours échoue sur toute erreur de la page, toute violation de la CSP et tout 404 :
    lire le message (une violation nomme la directive), corriger la cause, jamais la CSP.
    Hors du poste, si le Chromium de `playwright-core` n'est pas installé : `CHROMIUM_PATH=/chemin/vers/chromium`.
+   Si un lieu de quête, le combat ou le contrôleur de `core/quest/` ont changé : aussi `npm --prefix v2/client run e2e:lieu`
+   (la Tour des Fractions de l'entrée au coffre, environ deux minutes en rendu logiciel ; `E2E_LIEU=<code>` pour un autre lieu).
    Si le moteur, le rendu ou `vite.config.ts` ont changé : aussi `npm --prefix v2/client run e2e:webgpu` (WebGPU et repli sur
    WebGL 2). Il dit « WebGPU INDISPONIBLE » et ignore sa partie WebGPU si le navigateur n'a pas d'adaptateur : ce vert ne prouve
    rien en WebGPU, le dire dans le compte rendu.

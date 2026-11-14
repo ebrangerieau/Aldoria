@@ -24,6 +24,9 @@ export interface EnemyState {
   fighter: Fighter
 }
 
+/** Salle de reprise d'un lieu : celle du point de reprise, ramenée aux salles qui existent. */
+export const resumeRoom = (def: DungeonData, saved: number): number => Math.max(0, Math.min(def.rooms.length - 1, saved))
+
 export class Progress {
   readonly enemies: EnemyState[] = []
   /** Piédestaux résolus (indices 0 à 2). */

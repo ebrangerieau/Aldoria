@@ -103,3 +103,28 @@ nouvelle qui la remplace, avec la date. D1 à D6 et D11 ont été prises avec Er
 - **Implique** : `api/` à la racine est gelé ; `v2/api` garde tous les tests de la v1, qui décrivent ce que le jeu v1 attend ;
   le parcours navigateur de la v1 tourne contre `v2/api` ; toute migration est sauvegardée avant d'être appliquée (job `deploy`
   de `v2.yml`) et ne doit jamais casser la v1. Remplace la partie « déploiement séparé » de D6 et du TRD.
+
+## D12 : l'intérieur d'un lieu : combat au contact, salles de plain-pied (14 novembre 2026, provisoire)
+
+- **Contexte** : le PRD §10 laisse ouvert « rencontres visibles qui approchent, ou combat déclenché au contact » ; la v1 faisait
+  monter l'enfant d'étage en étage par des escaliers (souhait des enfants).
+- **Choix provisoire** : le combat se déclenche **au contact** (le héros s'approche d'un ennemi endormi, à 3,6 m, `AGGRO_DISTANCE`
+  dans `game/interior/InteriorWorld.ts`) et les six salles sont **de plain-pied**, côté sud ouvert comme dans la v1 (la caméra
+  reste de ce côté). Un seul réglage à changer pour essayer l'autre approche.
+- **Reste à faire** : trancher avec Jules et Tom à la séance de la phase 1 (question 2 de la liste du plan) ; remettre les étages
+  qui montent (escalier KayKit, `height_at` de la v1) si les enfants le réclament : le contrôleur du lieu ne change pas, seule la
+  scène (`Floor.heightAt`) change.
+- **Implique** : tout le déroulé (salles, combats, énigme, Effaceur, coffre, reprise) vit dans `core/quest/` derrière deux
+  interfaces (`QuestStage`, `QuestUi`) et se teste sans navigateur ; la scène 3D et React ne font que jouer et afficher.
+
+## D13 : les répliques enregistrées de la v1 servent telles quelles, même celles qui parlent d'une « carte » (14 novembre 2026)
+
+- **Contexte** : les 83 enregistrements ElevenLabs de la v1 (voix de Maître Ysaline et du narrateur) sont meilleurs que Piper. Les
+  30 phrases de « page rapportée » (`page-<lieu>`) finissent par « le chemin vers … s'éclaire sur la carte », or la v2 n'a plus
+  de carte du royaume mais une île.
+- **Choix** : on les joue quand même (c'est la qualité de voix qu'Eric a demandée), le texte affiché étant **identique** au son
+  (sinon l'empreinte ne correspond plus et Piper reprend la main).
+- **À réenregistrer** : ces 30 phrases, avec « s'éclaire sur l'île » (ou le seuil qui brille), puis `python tools/voix_elevenlabs.py`
+  (clé ElevenLabs). Idem les répliques de Maître Ysaline propres à la v2 (accueil dans l'île) et les répliques d'entrée et de
+  défaite des Effaceurs (`boss_intro`, `boss_defeat`, sans enregistrement : Piper).
+

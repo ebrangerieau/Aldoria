@@ -28,7 +28,22 @@
    "Magnifique !",
    "Trop fort !"
   ],
-  "wrong_title": "Presque ! Regarde comment faire :"
+  "wrong_title": "Presque ! Regarde comment faire :",
+  "interieur": {
+   "fond": "#2a2140",
+   "ambiance": "#f4ead8",
+   "ambiance_force": 1.0,
+   "soleil": "#ffd9a0",
+   "soleil_force": 1.35,
+   "torche": [
+    1.0,
+    0.68,
+    0.32
+   ],
+   "accent": "#ff9f45",
+   "bon": "#5ee08a",
+   "mauvais": "#ff6b5e"
+  }
  },
  "brouillard": {
   "actions": {
@@ -58,6 +73,21 @@
    "Rapide et juste.",
    "Bien vu."
   ],
-  "wrong_title": "Pas cette fois. La méthode :"
+  "wrong_title": "Pas cette fois. La méthode :",
+  "interieur": {
+   "fond": "#06080d",
+   "ambiance": "#5a6a8a",
+   "ambiance_force": 0.55,
+   "soleil": "#a9c4ff",
+   "soleil_force": 0.75,
+   "torche": [
+    0.55,
+    0.75,
+    1.0
+   ],
+   "accent": "#7fb2ff",
+   "bon": "#3fb950",
+   "mauvais": "#f85149"
+  }
  }
 }

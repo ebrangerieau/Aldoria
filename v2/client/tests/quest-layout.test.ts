@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  CHEST_AT, DOOR_Z, entryPoint, Floor, PEDESTALS, ROOM_D, ROOM_W, roomAt, START_POINT, toWorld, VOID_HEIGHT, WALL_MARGIN, yawToWorld,
+  CHEST_AT, DOOR_Z, entryPoint, Floor, PEDESTALS, ROOM_D, ROOM_W, roomAt, route, START_POINT, toWorld, VOID_HEIGHT, WALL_MARGIN, yawToWorld,
 } from '../src/core/quest/layout'
 import { HERO_RADIUS, step } from '../src/core/world/movement'
 
@@ -8,7 +8,11 @@ describe('repère de l’intérieur', () => {
   it('retourne z de la v1 (mur du fond) et garde x : l’est reste à droite', () => {
     expect(toWorld(11, 7)).toEqual({ x: 11, z: 13 })
     expect(toWorld(0, 0)).toEqual({ x: 0, z: ROOM_D })
-    expect(yawToWorld(90)).toBeCloseTo(-Math.PI / 2)
+    // Le mur du fond regarde vers l'intérieur (−z) ; le mur ouest vers l'est ; le mur est vers l'ouest.
+    const facing = (deg: number) => [Math.sin(yawToWorld(deg)), Math.cos(yawToWorld(deg))].map((v) => Math.round(v) + 0)
+    expect(facing(0)).toEqual([0, -1])
+    expect(facing(90)).toEqual([1, 0])
+    expect(facing(-90)).toEqual([-1, 0])
   })
 
   it('trouve la salle d’un point, ramenée aux salles qui existent', () => {
@@ -90,5 +94,37 @@ describe('zone praticable', () => {
     expect(floor.doorsBetween(5, 40)).toEqual([0, 1])
     expect(floor.doorsBetween(40, 5)).toEqual([0, 1])
     expect(floor.doorsBetween(5, 6)).toEqual([])
+  })
+})
+
+describe('trajet d’un clic sur le sol', () => {
+  it('va tout droit dans la même salle, en restant dans les murs', () => {
+    const floor = new Floor(6)
+    expect(route(floor, { x: 3, z: 5 }, { x: 9, z: 12 })).toEqual([{ x: 9, z: 12 }])
+    const clamped = route(floor, { x: 3, z: 5 }, { x: -20, z: 99 })
+    expect(clamped).toEqual([{ x: WALL_MARGIN + 0.2, z: ROOM_D - WALL_MARGIN - 0.2 }])
+  })
+
+  it('passe par le milieu de chaque porte ouverte, vers l’est comme vers l’ouest', () => {
+    const floor = new Floor(6)
+    floor.openDoor(0)
+    floor.openDoor(1)
+    const east = route(floor, { x: 5, z: 3 }, { x: 40, z: 15 })
+    expect(east).toEqual([
+      { x: ROOM_W - 1.2, z: DOOR_Z }, { x: ROOM_W + 1.2, z: DOOR_Z },
+      { x: 2 * ROOM_W - 1.2, z: DOOR_Z }, { x: 2 * ROOM_W + 1.2, z: DOOR_Z },
+      { x: 40, z: 15 },
+    ])
+    const west = route(floor, { x: 40, z: 15 }, { x: 5, z: 3 })
+    expect(west[0]).toEqual({ x: 2 * ROOM_W + 1.2, z: DOOR_Z })
+    expect(west.at(-1)).toEqual({ x: 5, z: 3 })
+  })
+
+  it('s’arrête devant la première porte fermée', () => {
+    const floor = new Floor(6)
+    floor.openDoor(0)
+    const path = route(floor, { x: 5, z: 3 }, { x: 70, z: 10 })
+    expect(path.at(-1)).toEqual({ x: 2 * ROOM_W - 1.2, z: DOOR_Z })
+    expect(path).toHaveLength(3)
   })
 })

@@ -83,6 +83,7 @@ jobs:
           npm run preview > "$RUNNER_TEMP/preview.log" 2>&1 &
           npx --yes wait-on@8 -t 60000 http://127.0.0.1:4173/
           npm run e2e
+          npm run e2e:lieu
       - name: Parcours WebGPU (décision D9 ; résultat dans le résumé du job)
         # Non bloquant tant qu'il n'a pas tourné au vert sur un runner : le « headless shell » ou la pile
         # Vulkan logicielle peuvent manquer de WebGPU. Le résumé du job dit s'il a réussi, échoué ou si la

@@ -71,6 +71,25 @@ et le Labyrinthe des Vecteurs (Tom), les premiers de la v1.
 - Note de 1 à 5 en fin de lieu (`session/end`, `rating`).
 - Widgets restants : vecteur (Tom en a besoin dès le Labyrinthe), droite graduée, tableau de signes.
 
+> ✅ **Fait le 14 novembre 2026** (la phase 1 est lancée à la demande d'Eric, **sans que la séance de la phase 0 ait eu lieu** :
+> la règle 1 du plan n'est pas respectée, à rattraper avec les enfants) :
+> - **Règles pures et testées** (`core/`) : `combat/` (Encounter, Fighter, monstres des 30 lieux), `progression/` (XP, niveaux, sac de
+>   cinq objets), `quest/` (géométrie de l'intérieur, plan de construction des 30 lieux, voix du héros, règles du lieu, contrôleur
+>   du déroulé). 236 tests Vitest.
+> - **Intérieur 3D** (`game/interior/`) : six salles KayKit en thin instances, héros et ennemis animés (squelettes KayKit,
+>   monstres Quaternius mis à taille), combat au contact (D12), énigme à trois piédestaux, Effaceur à huit sceaux, coffre, page
+>   rendue, reprise à la salle franchie, note de fin ; interface React (barres de vie, menu Frappe/Sort/Soin/Sac, bandeaux, textes
+>   qui montent). Le bouton « J'y vais » des seuils ouvre le lieu ; l'île reprend avec le lieu suivant ouvert et le salut
+>   enregistré de Maître Ysaline (D13).
+> - **Visuels de questions** : balance, droite graduée, repère quadrillé (vecteurs), tableau de signes. 24 lieux sur 30 sont
+>   entièrement jouables avec ce que l'API envoie ; les six lieux de maths prennent une question du chapitre à la place de
+>   l'énigme tant que leurs visuels (graph, robot, map, pont, rapporteur, repère de tir) manquent.
+> - Parcours `npm run e2e:lieu` : la Tour des Fractions de l'entrée au coffre, sous la CSP de production.
+>
+> **Reste à faire pour terminer la phase 1** : temps de jeu fixé par le parent (limite, rappel de pause : absent de la v2) ;
+> étages qui montent (D12) ; sons (`Sfx` de la v1 : coups, bonne réponse, victoire) ; lieu de Tom vérifié en séance (Labyrinthe
+> des Vecteurs : le reste des visuels de maths) ; réglage de la lumière et de la caméra à l'œil ; séance observée.
+
 **Critère de passage** : chaque enfant termine son lieu, et **demande à en faire un autre**. Note de fin de lieu ≥ 4.
 
 ## Phase 2 : reprendre ce que les enfants aimaient dans la v1
@@ -114,7 +133,8 @@ L'API et la base sont communes depuis l'étape 0.6 (D11) : la bascule ne touche 
 ## Questions à poser aux enfants dès la première séance
 
 1. Qu'est-ce que tu as envie de trouver en te promenant dans l'île ?
-2. Les rencontres : tu veux voir les ennemis venir vers toi, ou les trouver en entrant dans une salle ?
+2. Les rencontres : tu veux voir les ennemis venir vers toi, ou les trouver en entrant dans une salle ? (aujourd'hui : on les
+   réveille en s'approchant, D12 ; et les étages qui montent, tu les veux ?)
 3. Le renard (Jules) : il doit faire quoi ? Trouver des passages, des objets, des pierres cachées ?
 4. Tom : le monde Brouillard est-il assez différent ? Plus sombre, la nuit, la pluie ?
 5. Vous jouez où : sur quel PC, combien de temps, à quel moment de la journée ?

@@ -8,13 +8,17 @@ import type { Services } from '../app/services'
 import { type Accommodations, applyToDocument, fromServer, withChildPrefs } from '../core/accessibility'
 import type { Item } from '../core/items'
 import type { PerfReport } from '../core/perf'
+import lignes from '@content/voix/lignes.json'
+import type { QuestResult } from '../core/quest/controller'
 import { EMPTY_SAVE, SaveGame, type SaveData } from '../core/save'
-import { regionTitle } from '../core/world/places'
+import { MemoryStore } from '../core/storage'
+import { DUNGEONS, type DungeonData, regionTitle } from '../core/world/places'
 import type { GameWorld, Interactable, WorldEvents } from '../game/GameWorld'
 import type { WorldName } from '../game/theme'
 import { QuestionPanel, type QuestionOutcome } from './QuestionPanel'
 import { Dialog, Options } from './Dialogs'
 import { MeasurePanel, MeasureProgress } from './Measure'
+import { PlaceScreen } from './PlaceScreen'
 
 const STONE_XP = 15
 /** Durée du banc de mesure sans valeur (`?mesure`) : quatre secondes par arrêt du tour. */
@@ -44,6 +48,10 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
   const [online, setOnline] = useState(services.api.online)
   const [helpVisible, setHelpVisible] = useState(true)
   const [measure, setMeasure] = useState<{ ratio: number } | { report: PerfReport } | null>(null)
+  /** Lieu de quête en cours (son intérieur remplace l'île à l'écran). */
+  const [place, setPlace] = useState<DungeonData | null>(null)
+  const placeSave = useRef<SaveGame | null>(null)
+  const startPlaceRef = useRef<(def: DungeonData) => void>(() => {})
   const profile = services.session.profile!
   const prefsKey = `prefs.${profile.id}`
   const [prefs, setPrefs] = useState<{ text_size?: number }>(() => services.store.get(prefsKey, {}))
@@ -94,6 +102,9 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
         world.events.on('stats', setStats)
         world.events.on('interact', (target) => interactRef.current(target))
         setLoading(null)
+        // Entrée directe dans un lieu (essais, captures, tests) : ?lieu=<code>.
+        const direct = DUNGEONS.find((d) => d.code === params.get('lieu'))
+        if (direct) startPlaceRef.current(direct)
         if (params.has('e2e')) (window as unknown as { __aldoria: unknown }).__aldoria = { world, services }
         if (params.has('mesure')) void runMeasure(world)
       } catch (error) {
@@ -138,6 +149,54 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
   function close() {
     setModal(null)
     worldRef.current?.setInputEnabled(true)
+  }
+
+  /** Entre dans l'intérieur d'un lieu. En mode découverte, la partie vit en mémoire : rien n'est enregistré. */
+  function startPlace(def: DungeonData) {
+    const game = saveRef.current ?? new SaveGame(services.api, new MemoryStore(), 0)
+    if (!saveRef.current) game.data = structuredClone(data)
+    placeSave.current = game
+    setModal(null)
+    worldRef.current?.setInputEnabled(false)
+    setHelpVisible(false)
+    setPlace(def)
+  }
+  startPlaceRef.current = startPlace
+
+  /** Retour à l'île : la partie a avancé (XP, sac, lieu terminé), les seuils suivants s'ouvrent, et Maître Ysaline salue la page rapportée. */
+  async function onPlaceExit(result: QuestResult) {
+    const game = placeSave.current
+    const def = place
+    setPlace(null)
+    if (!game || !def) return
+    const before = data.story
+    const next = structuredClone(game.data)
+    setData(next)
+    worldRef.current?.refreshPlaces(next)
+    // La session de l'île reprend (les pierres de savoir enregistrent leurs réponses).
+    if (!demo) {
+      await services.session.start('monde')
+      services.questions.reset(fromServer(services.session.profile?.accommodations).easy_start)
+    } else {
+      services.session.mode = 'monde'
+    }
+    const step = `page-${def.code}`
+    const line = lignes.find((l) => l.id === step)
+    if (result.status === 'completed' && !before.includes(step) && next.story.includes(step) && line) {
+      // Les phrases enregistrées de Maître Ysaline parlent encore d'une « carte » : à réenregistrer (docs/decisions.md D12).
+      setModal({
+        kind: 'dialog',
+        title: 'Maître Ysaline',
+        text: line.texte,
+        actions: [
+          { label: '🔊 Écouter', run: () => void services.voice.say([line.texte]) },
+          { label: 'Merci !', primary: true, run: close },
+        ],
+      })
+      if (accommodations.auto_read) void services.voice.say([line.texte])
+    } else {
+      worldRef.current?.setInputEnabled(true)
+    }
   }
 
   function persist(next: SaveData) {
@@ -194,13 +253,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
               {
                 label: "J'y vais",
                 primary: true,
-                run: () =>
-                  setModal({
-                    kind: 'dialog',
-                    title: place.dungeon.title,
-                    text: "L'intérieur de ce lieu se construit encore (phase 1 de la v2). Les pierres de savoir de l'île t'attendent en attendant !",
-                    actions: [{ label: 'D’accord', primary: true, run: close }],
-                  }),
+                run: () => startPlace(place.dungeon),
               },
             ]
           : [{ label: 'D’accord', primary: true, run: close }],
@@ -227,7 +280,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
   }
 
   return (
-    <div className="game">
+    <div className={place ? 'game place-mode' : 'game'}>
       <canvas ref={canvasRef} className="world-canvas" tabIndex={-1} aria-label="L'île d'Aldoria" data-testid="monde" />
 
       <div className="hud-top">
@@ -256,6 +309,20 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
           <span><kbd>E</kbd> : agir</span>
           <span>Clic sur le sol : y aller</span>
         </div>
+      )}
+
+      {place && placeSave.current && worldRef.current && (
+        <PlaceScreen
+          services={services}
+          world={worldRef.current}
+          def={place}
+          save={placeSave.current}
+          demo={demo}
+          accommodations={accommodations}
+          profileName={profile.name}
+          worldName={(profile.world as WorldName) ?? 'lumineux'}
+          onExit={(result) => void onPlaceExit(result)}
+        />
       )}
 
       {params.has('perf') && stats && (

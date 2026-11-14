@@ -111,6 +111,26 @@ condition à remplir avant de passer WebGPU par défaut.
 Mesure : `?mesure` (`core/perf.ts`, `GameWorld.measure`) fait faire un tour fixe de l'île et rend une ligne pour
 `docs/perf-log.md` ; protocole dans ce journal.
 
+### 2.3 bis Les lieux de quête (`core/quest/`, `game/interior/`, `ui/PlaceScreen.tsx`)
+
+Un lieu (un des 30 donjons de la v1, `content/monde/lieux.json`) est six salles en enfilade : entrée, deux combats, énigme, combat,
+Effaceur. Le déroulé est **pur** (testé sans navigateur) :
+
+- `quest/layout.ts` : repère, zone praticable (`Floor`, un `Ground` qui rend « hors sol » dans les murs : le déplacement de
+  l'île glisse le long sans code de collision de plus), portes, trajet d'un clic ;
+- `quest/pieces.ts` : plan de construction (quelle pièce KayKit, où, tournée de combien) pour chacun des 30 lieux ;
+- `quest/run.ts` : ennemis et blessures, énigme, souffle repris, message du coffre ; `quest/heroVoice.ts` ;
+- `quest/controller.ts` : le déroulé entier, derrière **`QuestStage`** (le monde 3D : explorer, engager, jouer un tour, ouvrir
+  une porte, coffre) et **`QuestUi`** (panneaux, barres, bandeaux, questions). Un faux de chaque permet de tester le parcours
+  complet (`tests/quest-controller.test.ts`).
+
+`game/interior/InteriorWorld.ts` implémente `QuestStage` dans une seconde scène Babylon.js sur le même moteur : la boucle de
+l'île s'arrête pendant le lieu (`GameWorld.enterPlace` / `leavePlace`) et le cache des modèles est propre à chaque scène
+(`game/assets.ts`). Toute la géométrie fixe est en thin instances avec un seul matériau (un appel de dessin par sorte de pièce) ;
+seules les portes sont des modèles à part. `ui/PlaceScreen.tsx` prête l'interface au contrôleur et rend la main à l'île avec le
+résultat (la partie, la session `monde`, le lieu suivant qui s'ouvre). Session du serveur : `mode: "donjon"` avec les
+`chapter_codes` du lieu et l'énigme (`enigma.generator`, trois questions) ; `game_mode` des réponses : `combat`, `boss`, `enigme`.
+
 ### 2.4 Déplacement et caméra
 
 - `core/world/movement.ts` : vitesse de course 6,5 m/s, marche 2,8 m/s (Maj) ; refus de l'eau profonde (plus de 0,7 m) et des

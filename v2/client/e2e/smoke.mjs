@@ -170,6 +170,23 @@ try {
     const note = await page.locator('.dialog .hint').innerText()
     if (!/étapes, une énigme/.test(note)) throw new Error(`indication des étapes absente : ${note}`)
   })
+
+  await step('« J’y vais » ouvre le lieu ; « Quitter le lieu » ramène à l’île, rien n’est perdu', async () => {
+    await page.getByRole('button', { name: "J'y vais" }).click()
+    await page.getByRole('button', { name: 'En avant !' }).click({ timeout: 120_000 * SLOW })
+    await page.getByTestId('pv-heros').waitFor({ timeout: 20_000 * SLOW })
+    await page.screenshot({ path: `${OUT}/09-lieu.png` })
+    await page.getByRole('button', { name: 'Quitter le lieu' }).click()
+    await page.getByTestId('lieu').waitFor({ state: 'detached', timeout: 30_000 * SLOW })
+    const back = await page.evaluate(() => ({ interior: window.__aldoria.world.interior !== null, hero: window.__aldoria.world.heroPosition() }))
+    if (back.interior) throw new Error("l'intérieur n'a pas été rendu")
+    // Le héros marche de nouveau dans l'île.
+    await page.keyboard.down('KeyW')
+    await page.waitForTimeout(800 * SLOW)
+    await page.keyboard.up('KeyW')
+    const moved = await page.evaluate(() => window.__aldoria.world.heroPosition())
+    if (Math.hypot(moved.x - back.hero.x, moved.z - back.hero.z) < 0.5) throw new Error("le héros ne bouge plus dans l'île")
+  })
 } catch (error) {
   problems.push(String(error))
   await page.screenshot({ path: `${OUT}/echec.png` }).catch(() => {})

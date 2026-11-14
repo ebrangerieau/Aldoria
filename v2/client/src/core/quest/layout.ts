@@ -23,8 +23,12 @@ export const VOID_HEIGHT = -10
 
 /** Positions du JSON (v1) vers le repère du monde : x inchangé, z retourné. */
 export const toWorld = (v1x: number, v1z: number): { x: number; z: number } => ({ x: v1x, z: ROOM_D - v1z })
-/** Orientation (degrés) du repère de la v1 vers celle du monde (miroir en z : le sens s'inverse). */
-export const yawToWorld = (v1Degrees: number): number => (-v1Degrees * Math.PI) / 180
+/**
+ * Orientation d'une pièce : degrés du repère de la v1 vers radians du monde. Le modèle garde sa face avant
+ * (+z) ; seule sa place est retournée en z, donc la direction vers laquelle il regarde (sin θ, cos θ) devient
+ * (sin θ, −cos θ), soit θ' = π − θ. Mur du fond (0°) : tourné de 180° vers l'intérieur ; mur ouest (90°) : 90°.
+ */
+export const yawToWorld = (v1Degrees: number): number => Math.PI - (v1Degrees * Math.PI) / 180
 
 export const roomOrigin = (i: number): { x: number; z: number } => ({ x: i * ROOM_W, z: 0 })
 
@@ -84,4 +88,25 @@ export class Floor implements Ground {
     for (let i = Math.min(a, b); i < Math.max(a, b); i += 1) out.push(i)
     return out
   }
+}
+
+/**
+ * Trajet d'un point à un autre (clic sur le sol) : par le milieu de chaque porte franchie, tout droit
+ * ailleurs. Il s'arrête devant la première porte fermée, sans jamais sortir de la zone praticable.
+ */
+export function route(floor: Floor, from: { x: number; z: number }, to: { x: number; z: number }): { x: number; z: number }[] {
+  const points: { x: number; z: number }[] = []
+  const a = roomAt(from.x, floor.roomCount)
+  const b = roomAt(to.x, floor.roomCount)
+  const dir = b > a ? 1 : -1
+  for (let i = a; i !== b; i += dir) {
+    const door = Math.min(i, i + dir)
+    const doorX = (door + 1) * ROOM_W
+    points.push({ x: doorX - dir * 1.2, z: DOOR_Z })
+    if (!floor.isDoorOpen(door)) return points
+    points.push({ x: doorX + dir * 1.2, z: DOOR_Z })
+  }
+  const clamp = (v: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, v))
+  points.push({ x: clamp(to.x, WALL_MARGIN + 0.2, floor.roomCount * ROOM_W - WALL_MARGIN - 0.2), z: clamp(to.z, WALL_MARGIN + 0.2, ROOM_D - WALL_MARGIN - 0.2) })
+  return points
 }

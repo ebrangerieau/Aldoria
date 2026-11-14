@@ -28,6 +28,7 @@ npm --prefix client test               # Vitest : logique, vecteurs partagés, r
 npm --prefix client run typecheck
 npm --prefix client run build          # puis : npm --prefix client run preview (port 4173, CSP de production)
 npm --prefix client run e2e            # parcours dans Chromium contre la prévisualisation
+npm --prefix client run e2e:lieu        # la Tour des Fractions de l'entrée au coffre, puis retour à l'île (E2E_LIEU=<code> pour un autre)
 npm --prefix client run e2e:webgpu     # idem en WebGPU (partie WebGPU ignorée, bien signalée, sans adaptateur ; le repli sur WebGL 2 est toujours vérifié)
 npm --prefix client run captures       # vues de l'île dans e2e/captures (E2E_QUALITE=moyen en rendu logiciel)
 uv run --directory api pytest -q
@@ -39,6 +40,7 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
 `&qualite=haut|moyen|bas`, `&perf` (compteur), `&e2e` (crochet `window.__aldoria` : `world.teleport(x, z, versX, versZ)`,
 `world.frame(alpha, beta, distance)`, `world.heroPosition()`, `question`, `services`, `mesure`, `world.engineKind`,
 `world.engineFallback`), `&interface=0`, `&moteur=webgl2|webgpu` (WebGL 2 par défaut ; repli automatique si WebGPU manque, D9),
+`&lieu=<code>` (entre directement dans un lieu de quête ; crochet `__aldoria.place` : `controller`, `stage`, `progress`),
 `&mesure[=secondes]` (banc de mesure : tour fixe de l'île, ligne à recopier dans `docs/perf-log.md`, 40 s par défaut),
 `&renard=0` (sans le renard), `&erreurs=0|1` (remontée des erreurs ; active par défaut dans le jeu construit seulement),
 `&erreur_test=1` (erreur d'essai au démarrage).
@@ -61,6 +63,12 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   le décor répété passe en *thin instances*. Tout asset ajouté est inscrit dans `client/public/ressources/LICENSES.md`.
 - **Sauvegarde** : partie v2 dans l'emplacement `v2` (`core/save.ts`). La maîtrise des notions n'est jamais calculée par le
   client. Aucune migration ne doit casser la v1 tant qu'elle est en service.
+- **Lieux de quête** : le déroulé vit dans `core/quest/` derrière `QuestStage` (scène 3D) et `QuestUi` (React) ; la scène
+  (`game/interior/`) et `ui/PlaceScreen.tsx` jouent et affichent, ils ne décident rien. Toute nouvelle règle de lieu va dans
+  `core/quest/` avec son test (faux de scène et d'interface). Aucun texte de lieu dans le code : `lieux.json`, `heros.json`,
+  `combat.json`. Un modèle d'ennemi ajouté s'inscrit dans `core/combat/monsters.ts` (le test vérifie que le fichier existe).
+  Une pièce de décor ajoutée doit être dans `public/ressources/models/kaykit/dungeon/` (`tests/quest-pieces.test.ts` le vérifie
+  pour les 30 lieux).
 - **Visuels de questions** : une question n'est posée que si son type et son visuel sont dessinés (`core/questionService.ts` :
   `SUPPORTED_TYPES`, `SUPPORTED_VISUALS`, `isPlayable`), sinon l'énoncé serait incompréhensible. Calculs dans `core/visuals.ts`
   (testés), dessin SVG dans `ui/widgets/Visuals.tsx`, réponses dans `ui/widgets/Widgets.tsx`. Aujourd'hui : balance, droite
