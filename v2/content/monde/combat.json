@@ -1,0 +1,45 @@
+{
+  "description": "Textes du combat, par monde (repris de la v1 : WorldTheme). Noms des trois actions, mots d'encouragement après une bonne réponse, cris de victoire, texte du repli.",
+  "lumineux": {
+    "actions": {
+      "automatisme": "Coup d'épée",
+      "chapitre": "Sort d'étoiles",
+      "soin": "Potion"
+    },
+    "encouragements": [
+      "Super !",
+      "Excellent !",
+      "Tu gères !",
+      "Magnifique !",
+      "Trop fort !"
+    ],
+    "victoire": [
+      "Victoire !",
+      "Bien joué !",
+      "Bravo, Archiviste !",
+      "Quelle puissance !"
+    ],
+    "repli": "Ouf ! Tu reprends ton souffle près du feu de camp. Tes forces reviennent, rien n'est perdu."
+  },
+  "brouillard": {
+    "actions": {
+      "automatisme": "Frappe",
+      "chapitre": "Arcane",
+      "soin": "Régénération"
+    },
+    "encouragements": [
+      "Exact.",
+      "Net.",
+      "Impeccable.",
+      "Rapide et juste.",
+      "Bien vu."
+    ],
+    "victoire": [
+      "Ennemi dissipé.",
+      "Propre.",
+      "Brouillard repoussé.",
+      "Archive restaurée."
+    ],
+    "repli": "Le Brouillard t'a repoussé. Tu te replies et récupères. Aucune progression perdue."
+  }
+}

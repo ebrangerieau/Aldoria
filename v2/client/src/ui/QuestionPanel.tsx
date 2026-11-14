@@ -16,6 +16,8 @@ import { widgetFor } from './widgets/Widgets'
 export interface QuestionOutcome {
   item: Item
   result: SubmitResult | null // null : question mise de côté sans réponse
+  /** L'indice a servi (il réduit la puissance d'un coup : core/combat/encounter.ts). */
+  hintUsed: boolean
   /** Temps de réponse en millisecondes (sans la lecture de l'explication) ; 0 si la question n'a pas été répondue. */
   timeMs?: number
 }
@@ -71,7 +73,7 @@ export function QuestionPanel({ services, item: first, title, gameMode, accommod
       setHintShown(false)
       setAsideArmed(false)
     } else {
-      onDone({ item, result: null })
+      onDone({ item, result: null, hintUsed: false })
     }
   }
 
@@ -116,7 +118,7 @@ export function QuestionPanel({ services, item: first, title, gameMode, accommod
               </>
             )}
             <div className="actions">
-              <button type="button" className="primary" autoFocus onClick={() => onDone({ item, result, timeMs: answeredIn.current })}>Continuer</button>
+              <button type="button" className="primary" autoFocus onClick={() => onDone({ item, result, hintUsed: hintShown, timeMs: answeredIn.current })}>Continuer</button>
             </div>
           </div>
         )}
