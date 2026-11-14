@@ -1,206 +1,344 @@
-import { existsSync } from 'node:fs'
-import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
-import lieux from '@content/monde/lieux.json'
-import { Encounter, type AnswerFacts, type EncounterOptions, BOSS_HITS } from '../src/core/combat/encounter'
-import { Fighter } from '../src/core/combat/fighter'
-import { isKayKit, isMonster, modelPath } from '../src/core/combat/monsters'
+import {
+  type Action, type Answer, BASE_POWER, BOSS_CRIT_MULT, BOSS_HITS, Combatant, CRIT_MULT, Encounter, type EncounterSettings, type Engagement,
+  FAST_MULT, FOE_DAMAGE, GUARD_MULT, HINT_MULT,
+} from '../src/core/combat/encounter'
+import { answerXp, heroMaxHp, levelForXp, levelProgress, MAX_LEVEL, xpForLevel } from '../src/core/progression'
 
-const right = (over: Partial<AnswerFacts> = {}): AnswerFacts => ({ correct: true, speedRatio: 1.5, rewardFactor: 1, difficulty: 2, hintPenalized: false, ...over })
-const wrong = (): AnswerFacts => ({ correct: false, speedRatio: 1, rewardFactor: 1, difficulty: 2, hintPenalized: false })
+const right = (over: Partial<Answer> = {}): Answer => ({ correct: true, speedRatio: 0.8, rewardFactor: 1, hintUsed: false, difficulty: 2, ...over })
+const wrong = (over: Partial<Answer> = {}): Answer => ({ correct: false, speedRatio: 0.8, rewardFactor: 1, hintUsed: false, difficulty: 2, ...over })
 
-function fight(over: Partial<EncounterOptions> & { heroHp?: number; enemyHp?: number } = {}) {
-  const hero = new Fighter('héros', over.heroHp ?? 100)
-  const enemy = new Fighter('ennemi', over.enemyHp ?? 100)
-  const encounter = new Encounter({ hero, enemy, tier: 2, world: 'lumineux', random: () => 0, ...over })
-  return { hero, enemy, encounter }
+/** Un combat : héros à 100 PV, ennemi à `foeHp`, riposte au milieu de sa fourchette (random = 0,5). */
+function fight(over: Partial<EncounterSettings & Engagement> = {}, foeHp = 100, heroHp = 100) {
+  const { world, noSpeed, random, ...engagement } = over
+  const hero = new Combatant('Archiviste', 100, heroHp)
+  const foe = new Combatant('Champignon', foeHp)
+  const encounter = new Encounter(hero, { world: world ?? 'lumineux', noSpeed, random: random ?? (() => 0.5) })
+  encounter.engage(foe, { tier: 1, rewardXp: 30, ...engagement })
+  return { hero, foe, encounter }
 }
 
-describe('Fighter', () => {
-  it('ne descend pas sous 0 PV et ne dépasse pas son maximum', () => {
-    const f = new Fighter('x', 50)
-    expect(f.damage(80)).toBe(50)
-    expect(f.alive).toBe(false)
-    expect(f.heal(30)).toBe(30)
-    expect(f.heal(100)).toBe(20)
-    expect(f.hp).toBe(50)
+const strike = (events: { kind: string }[]) => events.find((e) => e.kind === 'hero_strike') as { power: number; crit: boolean } | undefined
+
+describe('Progression', () => {
+  it('place les niveaux à 100·n·(n−1) XP', () => {
+    expect(levelForXp(0)).toBe(1)
+    expect(levelForXp(199)).toBe(1)
+    expect(levelForXp(200)).toBe(2)
+    expect(levelForXp(600)).toBe(3)
+    expect(levelForXp(1199)).toBe(3)
+    expect(xpForLevel(5)).toBe(2000)
+    expect(levelForXp(10 ** 9)).toBe(MAX_LEVEL)
+  })
+
+  it('mesure l’avancement dans le niveau et donne 10 PV par niveau', () => {
+    expect(levelProgress(400)).toBeCloseTo(0.5, 5)
+    expect(levelProgress(10 ** 9)).toBe(1)
+    expect(heroMaxHp(1)).toBe(100)
+    expect(heroMaxHp(4)).toBe(130)
+  })
+
+  it('donne 10 XP par cran de difficulté', () => {
+    expect(answerXp(1)).toBe(10)
+    expect(answerXp(5)).toBe(50)
   })
 })
 
-describe('puissance d’une bonne réponse', () => {
-  it('vaut la base de l’action, modulée par la vitesse', () => {
-    expect(fight().encounter.turn('automatisme', right()).resolution).toMatchObject({ kind: 'hit', power: 18, crit: false })
-    expect(fight().encounter.turn('chapitre', right()).resolution).toMatchObject({ power: 32, crit: false })
-    expect(fight().encounter.turn('chapitre', right({ speedRatio: 0.8 })).resolution).toMatchObject({ power: 38, crit: false }) // × 1,2
-    expect(fight().encounter.turn('automatisme', right({ speedRatio: 0.4 })).resolution).toMatchObject({ power: 29, crit: true }) // × 1,6
+describe('Puissance d’un coup', () => {
+  it('frappe à la puissance de base sur une réponse juste, sans vitesse particulière', () => {
+    const { encounter, foe } = fight()
+    const turn = encounter.answer('automatisme', right({ speedRatio: 1.4 }))
+    expect(strike(turn.events)).toEqual({ kind: 'hero_strike', action: 'automatisme', power: BASE_POWER.automatisme, crit: false })
+    expect(foe.hp).toBe(100 - BASE_POWER.automatisme)
   })
 
-  it('un indice ordinaire retire 30 % de puissance et interdit le coup critique', () => {
-    expect(fight().encounter.turn('automatisme', right({ hintPenalized: true })).resolution).toMatchObject({ power: 13, crit: false }) // 18 × 0,7
-    expect(fight().encounter.turn('automatisme', right({ speedRatio: 0.4, hintPenalized: true })).resolution).toMatchObject({ power: 15, crit: false }) // 18 × 1,2 × 0,7
-  })
-
-  it('une récompense réduite (clic au hasard) réduit la puissance sans le dire', () => {
-    expect(fight().encounter.turn('automatisme', right({ rewardFactor: 0.5 })).resolution).toMatchObject({ power: 9 })
-  })
-
-  it('rapporte 10 XP par cran de difficulté', () => {
-    expect(fight().encounter.turn('automatisme', right({ difficulty: 3 })).resolution).toMatchObject({ xp: 30 })
-  })
-})
-
-describe('erreur et riposte', () => {
-  it('une erreur n’inflige rien et laisse l’ennemi frapper plein pot (base + force)', () => {
-    const { enemy, hero, encounter } = fight()
-    const r = encounter.turn('automatisme', wrong())
-    expect(r.resolution).toEqual({ kind: 'miss' })
-    expect(enemy.hp).toBe(100)
-    expect(r.enemyAttack).toEqual({ kind: 'hit', damage: 8, guarded: false }) // 6 + force 2
-    expect(hero.hp).toBe(92)
-  })
-
-  it('après une bonne réponse, les dégâts subis sont réduits de moitié', () => {
+  it('le sort du chapitre frappe plus fort que la frappe', () => {
     const { encounter } = fight()
-    expect(encounter.turn('automatisme', right()).enemyAttack).toEqual({ kind: 'hit', damage: 4, guarded: true })
+    const turn = encounter.answer('chapitre', right({ speedRatio: 1.4 }))
+    expect(strike(turn.events)!.power).toBe(BASE_POWER.chapitre)
+    expect(BASE_POWER.chapitre).toBeGreaterThan(BASE_POWER.automatisme)
   })
 
-  it('les dégâts de l’ennemi dépendent du monde (6 à 10 lumineux, 9 à 14 brouillard)', () => {
-    expect(fight({ random: () => 0 }).encounter.enemyTurn(false)).toMatchObject({ damage: 8 })
-    expect(fight({ random: () => 0.999 }).encounter.enemyTurn(false)).toMatchObject({ damage: 12 })
-    expect(fight({ world: 'brouillard', random: () => 0 }).encounter.enemyTurn(false)).toMatchObject({ damage: 11 })
-    expect(fight({ world: 'brouillard', random: () => 0.999 }).encounter.enemyTurn(false)).toMatchObject({ damage: 16 })
-  })
-})
-
-describe('issue du combat', () => {
-  it('l’ennemi tombé ne riposte pas : victoire', () => {
-    const { encounter } = fight({ enemyHp: 10 })
-    const r = encounter.turn('automatisme', right())
-    expect(r.outcome).toBe('victory')
-    expect(r.enemyAttack).toBeNull()
-    expect(r.resolution).toMatchObject({ kind: 'hit', defeated: true })
+  it('une réponse rapide (moins que le temps cible) frappe 20 % plus fort', () => {
+    const { encounter } = fight()
+    const hit = strike(encounter.answer('automatisme', right({ speedRatio: 0.7 })).events)!
+    expect(hit.power).toBe(Math.round(BASE_POWER.automatisme * FAST_MULT))
+    expect(hit.crit).toBe(false)
   })
 
-  it('un héros à 0 PV se replie, et l’ennemi garde ses blessures', () => {
-    const { enemy, encounter } = fight({ heroHp: 5 })
-    encounter.turn('automatisme', right()) // 18 de dégâts à l'ennemi, riposte 4
-    const r = encounter.turn('automatisme', wrong()) // riposte 8
-    expect(r.outcome).toBe('retreat')
-    expect(enemy.hp).toBe(82)
+  it('en moins de la moitié du temps cible, c’est un coup critique', () => {
+    const { encounter } = fight()
+    const hit = strike(encounter.answer('automatisme', right({ speedRatio: 0.3 })).events)!
+    expect(hit).toMatchObject({ crit: true, power: Math.round(BASE_POWER.automatisme * CRIT_MULT) })
   })
-})
 
-describe('soin', () => {
-  it('rend des PV (35), jamais au-delà du maximum, et n’est proposé que si le héros est blessé', () => {
-    const { hero, encounter } = fight({ heroHp: 100 })
-    expect(encounter.canHeal).toBe(false)
-    hero.damage(20)
-    expect(encounter.canHeal).toBe(true)
-    const r = encounter.turn('soin', right())
-    expect(r.resolution).toMatchObject({ kind: 'heal', power: 35, healed: 20 })
-    expect(Encounter.roleOf('soin')).toBe('chapitre')
+  it('l’indice retire le critique et réduit la puissance de 30 %', () => {
+    const { encounter } = fight()
+    const hit = strike(encounter.answer('automatisme', right({ speedRatio: 0.3, hintUsed: true })).events)!
+    expect(hit.crit).toBe(false)
+    expect(hit.power).toBe(Math.round(BASE_POWER.automatisme * FAST_MULT * HINT_MULT))
+  })
+
+  it('les clics au hasard réduisent les gains (facteur de récompense)', () => {
+    const { encounter } = fight()
+    const hit = strike(encounter.answer('chapitre', right({ speedRatio: 1.4, rewardFactor: 0.5 })).events)!
+    expect(hit.power).toBe(Math.round(BASE_POWER.chapitre * 0.5))
+  })
+
+  it('une bonne réponse rapporte 10 XP par cran de difficulté', () => {
+    const { encounter } = fight()
+    const turn = encounter.answer('automatisme', right({ difficulty: 3 }))
+    expect(turn.events[0]).toEqual({ kind: 'xp', amount: 30 })
   })
 })
 
-describe('Effaceur (boss)', () => {
-  it('brise un sceau par bonne réponse : BOSS_HITS réponses, 7 avec des critiques', () => {
-    const slow = fight({ boss: true, enemyHp: 200, heroHp: 10_000 })
-    let n = 0
-    while (slow.enemy.alive) {
-      slow.encounter.turn('automatisme', right())
-      n += 1
-    }
-    expect(n).toBe(BOSS_HITS)
-    const quick = fight({ boss: true, enemyHp: 200, heroHp: 10_000 })
-    n = 0
-    while (quick.enemy.alive) {
-      quick.encounter.turn('chapitre', right({ speedRatio: 0.3 }))
-      n += 1
-    }
-    expect(n).toBe(7)
+describe('Sans pénalité de lenteur', () => {
+  it('ignore la vitesse : jamais de critique ni de bonus de rapidité au début', () => {
+    const { encounter } = fight({ noSpeed: true })
+    const hit = strike(encounter.answer('automatisme', right({ speedRatio: 0.1 })).events)!
+    expect(hit).toMatchObject({ crit: false, power: BASE_POWER.automatisme })
   })
 
-  it('les sceaux valent le même dégât quelle que soit l’action (sauf le soin), et un indice le réduit', () => {
-    expect(fight({ boss: true, enemyHp: 200 }).encounter.turn('chapitre', right()).resolution).toMatchObject({ power: 25 })
-    expect(fight({ boss: true, enemyHp: 200 }).encounter.turn('automatisme', right({ hintPenalized: true })).resolution).toMatchObject({ power: 18 })
-    expect(fight({ boss: true, enemyHp: 200, heroHp: 100 }).encounter.turn('soin', right()).resolution).toMatchObject({ kind: 'heal' })
-  })
-
-  it('la difficulté monte d’un cran sous le niveau du joueur à un cran au-dessus', () => {
-    const asked = (base: number, questions: number) => {
-      const { encounter } = fight({ boss: true, baseLevels: { automatisme: base, chapitre: base } })
-      encounter.questions = questions
-      return encounter.levelFor('automatisme')
-    }
-    expect([0, 3, 7].map((q) => asked(3, q))).toEqual([2, 3, 4])
-    expect([0, 7].map((q) => asked(1, q))).toEqual([1, 2])
-    expect([0, 7].map((q) => asked(5, q))).toEqual([4, 5])
-    expect(asked(3, 40)).toBe(4) // plafonné
-  })
-
-  it('hors Effaceur, la difficulté reste adaptative (0 = celle du service de questions)', () => {
-    expect(fight({ baseLevels: { automatisme: 3, chapitre: 3 } }).encounter.levelFor('chapitre')).toBe(0)
-  })
-})
-
-describe('« sans pénalité de lenteur »', () => {
-  it('la vitesse ne compte plus : ni bonus ni coup critique rapide', () => {
-    expect(fight({ noSpeed: true }).encounter.turn('automatisme', right({ speedRatio: 0.1 })).resolution).toMatchObject({ power: 18, crit: false })
-  })
-
-  it('la 3e bonne réponse d’affilée sans indice est un coup critique, puis la série repart', () => {
-    const { encounter } = fight({ noSpeed: true, heroHp: 10_000, enemyHp: 10_000 })
-    const crits = [1, 2, 3, 4, 5, 6].map(() => (encounter.turn('automatisme', right()).resolution as { crit: boolean }).crit)
+  it('le critique récompense la régularité : troisième bonne réponse d’affilée', () => {
+    const { encounter } = fight({ noSpeed: true }, 1000)
+    const crits = [1, 2, 3, 4, 5, 6].map(() => strike(encounter.answer('automatisme', right({ speedRatio: 2 })).events)!.crit)
     expect(crits).toEqual([false, false, true, false, false, true])
   })
 
-  it('une erreur ou un indice casse la régularité', () => {
-    const { encounter } = fight({ noSpeed: true, heroHp: 10_000, enemyHp: 10_000 })
-    encounter.turn('automatisme', right())
-    encounter.turn('automatisme', right())
-    encounter.turn('automatisme', wrong())
-    expect((encounter.turn('automatisme', right()).resolution as { crit: boolean }).crit).toBe(false)
-    expect((encounter.turn('automatisme', right()).resolution as { crit: boolean }).crit).toBe(false)
-    expect((encounter.turn('automatisme', right({ hintPenalized: true })).resolution as { crit: boolean }).crit).toBe(false)
+  it('une erreur remet la série à zéro', () => {
+    const { encounter } = fight({ noSpeed: true }, 1000)
+    encounter.answer('automatisme', right())
+    encounter.answer('automatisme', right())
+    encounter.answer('automatisme', wrong())
+    expect(strike(encounter.answer('automatisme', right()).events)!.crit).toBe(false)
+  })
+
+  it('pas de critique avec un indice', () => {
+    const { encounter } = fight({ noSpeed: true }, 1000)
+    encounter.answer('automatisme', right())
+    encounter.answer('automatisme', right())
+    expect(strike(encounter.answer('automatisme', right({ hintUsed: true })).events)!.crit).toBe(false)
   })
 })
 
-describe('sac en combat', () => {
-  it('le bouclier annule le prochain coup, une seule fois, et ne coûte pas de tour', () => {
-    const { hero, encounter } = fight()
-    expect(encounter.canUse('bouclier', 1)).toBe(true)
-    expect(encounter.useBag('bouclier')).toEqual({ kind: 'shield' })
-    expect(encounter.canUse('bouclier', 1)).toBe(false) // déjà levé
-    expect(encounter.turn('automatisme', wrong()).enemyAttack).toEqual({ kind: 'blocked' })
-    expect(hero.hp).toBe(100)
-    expect(encounter.turn('automatisme', wrong()).enemyAttack).toMatchObject({ kind: 'hit' })
+describe('Soin', () => {
+  it('rend des PV, jamais plus que le maximum, et l’ennemi riposte ensuite', () => {
+    const { encounter, hero } = fight({}, 100, 90)
+    const turn = encounter.answer('soin', right({ speedRatio: 1.4 }))
+    expect(turn.events).toContainEqual({ kind: 'hero_heal', healed: 10 })
+    expect(turn.events.at(-1)).toMatchObject({ kind: 'foe_attack', blocked: false })
+    expect(hero.hp).toBeLessThanOrEqual(hero.maxHp)
   })
 
-  it('la potion rend toute la vie ; grisée si le héros est en pleine forme ou si le sac est vide', () => {
-    const { hero, encounter } = fight()
-    expect(encounter.canUse('potion', 3)).toBe(false)
-    hero.damage(70)
-    expect(encounter.canUse('potion', 0)).toBe(false)
-    expect(encounter.canUse('potion', 1)).toBe(true)
-    expect(encounter.useBag('potion')).toEqual({ kind: 'potion', healed: 70 })
-    expect(hero.hp).toBe(100)
+  it('n’est proposé qu’à un héros blessé', () => {
+    expect(fight({}, 100, 100).encounter.canHeal).toBe(false)
+    expect(fight({}, 100, 99).encounter.canHeal).toBe(true)
   })
 
-  it('plume et parchemin ne s’utilisent pas en combat (ils sont dans la question)', () => {
-    expect(fight().encounter.canUse('plume', 3)).toBe(false)
-    expect(fight().encounter.useBag('parchemin')).toBeNull()
+  it('interroge le chapitre', () => {
+    const { encounter } = fight()
+    expect(encounter.roleOf('soin')).toBe('chapitre')
+    expect(encounter.roleOf('automatisme')).toBe('automatisme')
+    expect(encounter.roleOf('chapitre')).toBe('chapitre')
   })
 })
 
-describe('monstres des 30 lieux', () => {
-  const root = fileURLToPath(new URL('../public/ressources/models/', import.meta.url))
-  const models = [...new Set(lieux.dungeons.flatMap((d) => d.rooms.flatMap((r) => (r.enemies ?? []).map((e) => e.model))))]
+describe('Riposte de l’ennemi', () => {
+  it('frappe plus fort dans le Brouillard que dans le monde lumineux', () => {
+    expect(FOE_DAMAGE.brouillard[0]).toBeGreaterThan(FOE_DAMAGE.lumineux[0])
+    const lumineux = fight({ world: 'lumineux', random: () => 0 })
+    const brouillard = fight({ world: 'brouillard', random: () => 0 })
+    lumineux.encounter.answer('automatisme', wrong())
+    brouillard.encounter.answer('automatisme', wrong())
+    expect(100 - lumineux.hero.hp).toBe(FOE_DAMAGE.lumineux[0] + 1)
+    expect(100 - brouillard.hero.hp).toBe(FOE_DAMAGE.brouillard[0] + 1)
+  })
 
-  it('chaque modèle d’ennemi est connu et son fichier est livré', () => {
-    expect(models.length).toBeGreaterThanOrEqual(18)
-    for (const m of models) {
-      expect(isMonster(m) || isKayKit(m), `modèle inconnu : ${m}`).toBe(true)
-      expect(existsSync(root + modelPath(m)), `fichier absent : ${modelPath(m)}`).toBe(true)
+  it('reste dans la fourchette, bornes comprises', () => {
+    for (const [draw, expected] of [[0, 6], [0.999999, 10]] as const) {
+      const { encounter, hero } = fight({ random: () => draw, tier: 0 })
+      encounter.answer('automatisme', wrong())
+      expect(100 - hero.hp).toBe(expected)
     }
+  })
+
+  it('ajoute la force de l’ennemi', () => {
+    const weak = fight({ tier: 1 })
+    const strong = fight({ tier: 4 })
+    weak.encounter.answer('automatisme', wrong())
+    strong.encounter.answer('automatisme', wrong())
+    expect(weak.hero.hp - strong.hero.hp).toBe(3)
+  })
+
+  it('frappe deux fois moins fort après une bonne réponse (garde)', () => {
+    const miss = fight()
+    const hit = fight({}, 1000)
+    miss.encounter.answer('automatisme', wrong())
+    hit.encounter.answer('automatisme', right())
+    const taken = (c: ReturnType<typeof fight>) => 100 - c.hero.hp
+    expect(taken(hit)).toBe(Math.round(taken(miss) * GUARD_MULT))
+  })
+
+  it('une erreur n’abîme pas l’ennemi et ouvre l’explication', () => {
+    const { encounter, foe } = fight()
+    const turn = encounter.answer('chapitre', wrong())
+    expect(turn.events[0]).toEqual({ kind: 'hero_stumble' })
+    expect(foe.hp).toBe(100)
+    expect(turn.outcome).toBeNull()
+  })
+})
+
+describe('Sac', () => {
+  it('le bouclier arrête le prochain coup, une seule fois', () => {
+    const { encounter, hero } = fight()
+    expect(encounter.useShield()).toEqual({ kind: 'shield_up' })
+    expect(encounter.shieldUp).toBe(true)
+    const turn = encounter.answer('automatisme', wrong())
+    expect(turn.events.at(-1)).toEqual({ kind: 'foe_attack', damage: 0, blocked: true })
+    expect(hero.hp).toBe(100)
+    expect(encounter.shieldUp).toBe(false)
+    encounter.answer('automatisme', wrong())
+    expect(hero.hp).toBeLessThan(100)
+  })
+
+  it('la potion rend toute la vie, sans passer le tour', () => {
+    const { encounter, hero, foe } = fight({}, 100, 25)
+    expect(encounter.usePotion()).toEqual({ kind: 'potion', healed: 75 })
+    expect(hero.hp).toBe(100)
+    expect(foe.hp).toBe(100)
+    expect(encounter.questions).toBe(0)
+  })
+})
+
+describe('Fin du combat', () => {
+  it('victoire : l’ennemi tombe, l’XP du combat est rendue, pas de riposte', () => {
+    const { encounter, hero } = fight({ rewardXp: 45 }, 15)
+    const turn = encounter.answer('automatisme', right({ speedRatio: 1.4 }))
+    expect(turn.outcome).toBe('victory')
+    expect(turn.events.map((e) => e.kind)).toEqual(['xp', 'hero_strike', 'foe_down', 'xp'])
+    expect(turn.events.at(-1)).toEqual({ kind: 'xp', amount: 45 })
+    expect(hero.hp).toBe(100)
+  })
+
+  it('repli : le héros à 0 PV tombe, sans autre conséquence', () => {
+    const { encounter, hero } = fight({}, 100, 5)
+    const turn = encounter.answer('automatisme', wrong())
+    expect(hero.hp).toBe(0)
+    expect(turn.outcome).toBe('retreat')
+    expect(turn.events.slice(-2).map((e) => e.kind)).toEqual(['foe_attack', 'hero_down'])
+  })
+
+  it('le bouclier sauve un héros à 1 PV', () => {
+    const { encounter, hero } = fight({}, 100, 1)
+    encounter.useShield()
+    expect(encounter.answer('automatisme', wrong()).outcome).toBeNull()
+    expect(hero.hp).toBe(1)
+  })
+})
+
+describe('D’un ennemi au suivant (un Encounter par donjon, comme dans la v1)', () => {
+  it('le bouclier levé passe au combat suivant, il n’est perdu que sur un coup', () => {
+    const { encounter, hero } = fight({}, 10)
+    encounter.useShield()
+    expect(encounter.answer('automatisme', right({ speedRatio: 1.4 })).outcome).toBe('victory') // pas de riposte : le bouclier reste
+    expect(encounter.shieldUp).toBe(true)
+    encounter.engage(new Combatant('Squelette', 100), { tier: 2, rewardXp: 35 })
+    const turn = encounter.answer('automatisme', wrong())
+    expect(turn.events.at(-1)).toEqual({ kind: 'foe_attack', damage: 0, blocked: true })
+    expect(hero.hp).toBe(100)
+  })
+
+  it('la série du critique « sans vitesse » continue chez l’ennemi suivant', () => {
+    const { encounter } = fight({ noSpeed: true }, 20)
+    encounter.answer('automatisme', right()) // 18 : l'ennemi (20 PV) tient
+    expect(encounter.answer('automatisme', right()).outcome).toBe('victory') // deuxième bonne réponse d'affilée
+    encounter.engage(new Combatant('Gelée', 200), { tier: 2, rewardXp: 35 })
+    expect(strike(encounter.answer('automatisme', right()).events)!.crit).toBe(true) // la troisième
+  })
+
+  it('remet à zéro ce qui est propre au combat : questions posées, difficulté du boss, ennemi', () => {
+    const { encounter } = fight({ boss: true, baseLevels: { chapitre: 3 } }, 220)
+    for (let k = 0; k < 5; k += 1) encounter.answer('chapitre', wrong())
+    expect(encounter.questions).toBe(5)
+    expect(encounter.questionLevel('chapitre')).toBeGreaterThan(2)
+    const next = new Combatant('Autre', 80)
+    encounter.engage(next, { tier: 1, rewardXp: 20 })
+    expect(encounter.questions).toBe(0)
+    expect(encounter.foe).toBe(next)
+    expect(encounter.isBoss).toBe(false)
+    expect(encounter.questionLevel('chapitre')).toBe(0)
+  })
+
+  it('refuse de jouer sans combat ouvert', () => {
+    const lone = new Encounter(new Combatant('Archiviste', 100), { world: 'lumineux' })
+    expect(() => lone.answer('automatisme', right())).toThrow(/engage/)
+  })
+})
+
+describe('Boss de synthèse', () => {
+  const boss = (over: Partial<EncounterSettings & Engagement> = {}, hp = 100) =>
+    fight({ boss: true, baseLevels: { automatisme: 3, chapitre: 3 }, ...over }, hp)
+
+  it('chaque bonne réponse brise un sceau : 8 coups, quelle que soit l’action', () => {
+    const { encounter, foe } = boss()
+    const power = Math.ceil(100 / BOSS_HITS)
+    for (const action of ['automatisme', 'chapitre'] as Action[]) {
+      const hit = strike(encounter.answer(action, right({ speedRatio: 1.4 })).events)!
+      expect(hit.power).toBe(power)
+    }
+    expect(foe.hp).toBe(100 - 2 * power)
+  })
+
+  it('au mieux 7 questions avec des critiques, 8 sans, jusqu’à 12 avec un indice à chaque question', () => {
+    // 220 PV : un boss réel (les Effaceurs ont de 200 à 260 PV, lieux.json).
+    const count = (answer: Answer) => {
+      const { encounter } = boss({ random: () => 0 }, 220)
+      let n = 0
+      while (n < 50) {
+        n += 1
+        if (encounter.answer('chapitre', answer).outcome === 'victory') break
+        encounter.hero.heal(100) // le héros tient : on compte les questions du boss seulement
+      }
+      return n
+    }
+    expect(count(right({ speedRatio: 0.2 }))).toBe(7)
+    expect(count(right({ speedRatio: 1.2 }))).toBe(BOSS_HITS)
+    const hinted = count(right({ speedRatio: 1.2, hintUsed: true }))
+    expect(hinted).toBeGreaterThan(BOSS_HITS)
+    expect(hinted).toBeLessThanOrEqual(12)
+    expect(Math.round(Math.ceil(220 / BOSS_HITS) * BOSS_CRIT_MULT)).toBe(35)
+  })
+
+  it('le soin d’un boss reste un soin (puissance de base)', () => {
+    const { encounter, hero } = boss({}, 100)
+    hero.damage(60)
+    const turn = encounter.answer('soin', right({ speedRatio: 1.4 }))
+    expect(turn.events).toContainEqual({ kind: 'hero_heal', healed: BASE_POWER.soin })
+  })
+
+  it('la difficulté monte de un cran sous le niveau du joueur à un cran au-dessus', () => {
+    const { encounter } = boss()
+    const levels: number[] = []
+    for (let k = 0; k < BOSS_HITS; k += 1) {
+      levels.push(encounter.questionLevel('chapitre'))
+      encounter.answer('chapitre', wrong()) // la difficulté ne dépend que du nombre de questions posées
+      encounter.hero.heal(100)
+    }
+    expect(levels[0]).toBe(2)
+    expect(levels.at(-1)).toBe(4)
+    expect(levels).toEqual([...levels].sort((a, b) => a - b))
+  })
+
+  it('reste entre 1 et 5, et sans boss laisse QuestionService choisir', () => {
+    const low = fight({ boss: true, baseLevels: { chapitre: 1 } }).encounter
+    expect(low.questionLevel('chapitre')).toBe(1)
+    const high = fight({ boss: true, baseLevels: { chapitre: 5 } }).encounter
+    for (let k = 0; k < 10; k += 1) {
+      high.answer('chapitre', wrong())
+      high.hero.heal(100)
+    }
+    expect(high.questionLevel('chapitre')).toBe(5)
+    expect(fight().encounter.questionLevel('chapitre')).toBe(0)
+    expect(boss().encounter.isBoss).toBe(true)
   })
 })

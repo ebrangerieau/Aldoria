@@ -10,7 +10,6 @@ import {
   TransformNode,
   Vector3,
 } from '@babylonjs/core'
-import { isMonster, MONSTER_HEIGHTS, MONSTER_YAW, modelPath } from '../core/combat/monsters'
 import type { SaveData } from '../core/save'
 import { boundsOf, loadContainer } from './assets'
 
@@ -28,72 +27,26 @@ export const PARTS: Record<string, { main: string[]; off: string[]; head: string
   Rogue_Hooded: { main: ['Knife', '1H_Crossbow', '2H_Crossbow'], off: ['Knife_Offhand', 'Throwable'], head: '', cape: 'Rogue_Cape' },
 }
 
-export type Pose =
-  | 'idle' | 'walk' | 'run' | 'interact' | 'cheer' | 'spell' | 'hit'
-  // Combat (intérieur des lieux)
-  | 'attack' | 'block' | 'death' | 'taunt' | 'item' | 'sleep' | 'awaken' | 'combat'
+export type Pose = 'idle' | 'walk' | 'run' | 'interact' | 'cheer' | 'spell' | 'hit'
 
-/** Noms d'animation possibles pour chaque pose, du préféré au repli (le premier qui existe est joué). */
-type PoseNames = Record<Pose, string[]>
-
-const KAYKIT_ANIMS: PoseNames = {
-  idle: ['Idle'],
-  walk: ['Walking_A'],
-  run: ['Running_A'],
-  interact: ['Interact'],
-  cheer: ['Cheer'],
-  spell: ['Spellcast_Shoot', 'Spellcast_Raise'],
-  hit: ['Hit_A', 'Hit_B'],
-  attack: ['1H_Melee_Attack_Chop', '1H_Melee_Attack_Slice_Diagonal', '2H_Melee_Attack_Chop', 'Unarmed_Melee_Attack_Punch_A'],
-  block: ['Block_Hit', 'Block'],
-  death: ['Death_A', 'Death_B'],
-  taunt: ['Taunt', 'Cheer'],
-  item: ['Use_Item', 'Interact'],
-  sleep: ['Skeleton_Inactive_Standing_Pose', 'Idle'],
-  awaken: ['Skeletons_Awaken_Standing', 'Spawn_Ground', 'Cheer'],
-  combat: ['Idle_Combat', 'Idle'],
+const KAYKIT_ANIMS: Record<Pose, string> = {
+  idle: 'Idle',
+  walk: 'Walking_A',
+  run: 'Running_A',
+  interact: 'Interact',
+  cheer: 'Cheer',
+  spell: 'Spellcast_Shoot',
+  hit: 'Hit_A',
 }
 
-/** Squelette « sbire » : couché, il se relève. */
-const MINION_ANIMS: PoseNames = { ...KAYKIT_ANIMS, sleep: ['Skeletons_Inactive_Floor_Pose', 'Idle'], awaken: ['Skeletons_Awaken_Floor', 'Spawn_Ground', 'Cheer'] }
-
-/** Monstres Quaternius : noms sans le préfixe « CharacterArmature| » (traduits des noms KayKit, comme dans la v1). */
-const MONSTER_IDLE = ['Idle', 'Flying_Idle', 'Dragon_Flying']
-const MONSTER_HIT = ['HitReact', 'HitRecieve', 'Dragon_Hit']
-const MONSTER_ANIMS: PoseNames = {
-  idle: MONSTER_IDLE,
-  walk: MONSTER_IDLE,
-  run: MONSTER_IDLE,
-  interact: ['Yes', 'Wave', ...MONSTER_IDLE],
-  cheer: ['Dance', 'Wave', 'Yes', ...MONSTER_IDLE],
-  spell: ['Headbutt', 'Punch', 'Bite_Front', 'Dragon_Attack2'],
-  hit: MONSTER_HIT,
-  attack: ['Punch', 'Bite_Front', 'Headbutt', 'Dragon_Attack', 'Dragon_Attack2'],
-  block: MONSTER_HIT,
-  death: ['Death', 'Dragon_Death'],
-  taunt: ['Dance', 'Wave', 'Yes', 'Dragon_Attack2', ...MONSTER_IDLE],
-  item: MONSTER_IDLE,
-  sleep: MONSTER_IDLE,
-  awaken: ['Jump', 'Yes', 'Flying_Idle', 'Dragon_Flying'],
-  combat: MONSTER_IDLE,
-}
-
-const FOX_ANIMS: PoseNames = {
-  idle: ['Idle'],
-  walk: ['Walk'],
-  run: ['Gallop'],
-  interact: ['Eating'],
-  cheer: ['Gallop_Jump'],
-  spell: ['Idle_2'],
-  hit: ['Idle_HitReact_Left'],
-  attack: ['Idle_2'],
-  block: ['Idle_HitReact_Left'],
-  death: ['Idle'],
-  taunt: ['Gallop_Jump'],
-  item: ['Eating'],
-  sleep: ['Idle'],
-  awaken: ['Gallop_Jump'],
-  combat: ['Idle'],
+const FOX_ANIMS: Record<Pose, string> = {
+  idle: 'Idle',
+  walk: 'Walk',
+  run: 'Gallop',
+  interact: 'Eating',
+  cheer: 'Gallop_Jump',
+  spell: 'Idle_2',
+  hit: 'Idle_HitReact_Left',
 }
 
 export class Character {
@@ -104,76 +57,39 @@ export class Character {
     readonly root: TransformNode,
     readonly meshes: AbstractMesh[],
     private readonly anims: Map<string, AnimationGroup>,
-    private readonly names: PoseNames,
-    private readonly random: () => number = Math.random,
+    private readonly names: Record<Pose, string>,
   ) {}
-
-  /** Animations disponibles pour une pose, dans l'ordre de préférence. */
-  private available(pose: Pose): AnimationGroup[] {
-    return this.names[pose].flatMap((n) => {
-      const g = this.anims.get(n)
-      return g ? [g] : []
-    })
-  }
-
-  /** Vrai si le modèle sait jouer cette pose. */
-  can(pose: Pose): boolean {
-    return this.available(pose).length > 0
-  }
 
   /** Animation en boucle (sauf pendant une animation jouée une fois). */
   play(pose: Pose): void {
     if (this.once) return
-    const group = this.available(pose)[0]
+    const group = this.anims.get(this.names[pose])
     if (!group || group === this.current) return
     this.current?.stop()
     group.start(true, 1)
     this.current = group
   }
 
-  /**
-   * Animation jouée une fois (geste, coup), puis retour à l'animation en boucle `then` (ou, avec
-   * `then = null`, le personnage reste dans sa dernière position : mort). Une des animations
-   * possibles est tirée au hasard. Rend la main à la fin, ou tout de suite si le modèle ne la connaît pas.
-   */
-  playOnce(pose: Pose, then: Pose | null = 'idle', speed = 1): Promise<void> {
-    const options = this.available(pose)
-    const group = options[Math.floor(this.random() * options.length)]
-    if (!group) return Promise.resolve()
-    this.once?.stop()
+  /** Animation jouée une fois (geste, joie), puis retour à l'animation en boucle. */
+  playOnce(pose: Pose, then: Pose = 'idle'): void {
+    const group = this.anims.get(this.names[pose])
+    if (!group) return
     this.current?.stop()
     this.current = null
     this.once = group
-    return new Promise((resolve) => {
-      group.start(false, speed)
-      group.onAnimationGroupEndObservable.addOnce(() => {
-        this.once = null
-        if (then) this.play(then)
-        resolve()
-      })
+    group.start(false, 1)
+    group.onAnimationGroupEndObservable.addOnce(() => {
+      this.once = null
+      this.play(then)
     })
   }
 
-  /** Immobilise l'animation en cours (personnage endormi : première image de la pose). */
-  freeze(pose: Pose): void {
-    this.play(pose)
-    this.current?.pause()
-  }
-
-  /** Reprend après `freeze`. */
-  thaw(): void {
-    this.current?.play(true)
-  }
-
-  /** Quart de tour des modèles dessinés de profil (dragon) pour qu'ils fassent face à `yaw`. */
-  yawOffset = 0
-
   set yaw(value: number) {
-    this.root.rotation.y = value + this.yawOffset
+    this.root.rotation.y = value
   }
 
   get yaw(): number {
-    return this.root.rotation.y - this.yawOffset
+    return this.root.rotation.y
   }
 }
 
@@ -186,7 +102,7 @@ async function loadCharacter(
   path: string,
   name: string,
   height: number,
-  names: PoseNames,
+  names: Record<Pose, string>,
   unique = false,
   fixedScale = 0,
 ): Promise<Character> {
@@ -242,24 +158,6 @@ async function loadCharacter(
   return character
 }
 
-/** Hauteurs (monde) du sommet le plus bas et le plus haut d'un personnage animé, squelette appliqué. */
-function skinnedExtent(character: Character): { lowest: number; highest: number } {
-  let lowest = Infinity
-  let highest = -Infinity
-  for (const m of character.meshes) {
-    if (m.getTotalVertices() === 0) continue
-    const p = m.getPositionData(true, false)
-    if (!p) continue
-    const w = m.getWorldMatrix().m
-    for (let i = 0; i < p.length; i += 3) {
-      const y = p[i]! * w[1]! + p[i + 1]! * w[5]! + p[i + 2]! * w[9]! + w[13]!
-      lowest = Math.min(lowest, y)
-      highest = Math.max(highest, y)
-    }
-  }
-  return { lowest, highest }
-}
-
 /** Pose un personnage animé sur le sol : sommet le plus bas, squelette appliqué, ramené au pied de
  * `root`. Pour les modèles dont la boîte englobante au repos ne dit rien (renard Quaternius) ;
  * à appeler après une première image, quand les os sont calculés. */
@@ -267,21 +165,17 @@ export function settleOnGround(character: Character): void {
   const inner = character.root.getChildren()[0] as TransformNode | undefined
   if (!inner) return
   const base = character.root.getAbsolutePosition().y
-  const { lowest } = skinnedExtent(character)
+  let lowest = Infinity
+  for (const m of character.meshes) {
+    if (m.getTotalVertices() === 0) continue
+    const p = m.getPositionData(true, false)
+    if (!p) continue
+    const w = m.getWorldMatrix().m
+    for (let i = 0; i < p.length; i += 3) {
+      lowest = Math.min(lowest, p[i]! * w[1]! + p[i + 1]! * w[5]! + p[i + 2]! * w[9]! + w[13]!)
+    }
+  }
   if (Number.isFinite(lowest)) inner.position.y += base - lowest
-}
-
-/** Ramène un personnage animé à `height` mètres (monstres Quaternius, dont la boîte au repos ne dit rien de la
- * taille réelle), puis le pose sur le sol. À appeler après une première image, comme `settleOnGround`. */
-export function fitToHeight(character: Character, height: number): void {
-  const inner = character.root.getChildren()[0] as TransformNode | undefined
-  if (!inner) return
-  const { lowest, highest } = skinnedExtent(character)
-  if (!Number.isFinite(lowest) || highest - lowest < 0.01) return
-  inner.scaling.scaleInPlace(height / (highest - lowest))
-  character.root.computeWorldMatrix(true)
-  for (const m of character.meshes) m.computeWorldMatrix(true)
-  settleOnGround(character)
 }
 
 /** Cache les pièces d'équipement non choisies (une arme par main, couvre-chef, cape). */
@@ -314,21 +208,4 @@ export async function loadNpc(scene: Scene, model: string, name: string, main: s
  * 5,2 unités de long ; 0,21 en fait un renard d'un peu plus d'un mètre. */
 export function loadFox(scene: Scene): Promise<Character> {
   return loadCharacter(scene, 'quaternius/Fox.glb', 'renard', 0, FOX_ANIMS, true, 0.21)
-}
-
-/** Taille visée d'un ennemi, en mètres : celle de son modèle (monstres) ou celle d'un humain, fois l'échelle du lieu. */
-export const enemyHeight = (model: string, scale: number): number => (isMonster(model) ? MONSTER_HEIGHTS[model]! : 1.9) * scale
-
-/**
- * Ennemi d'un lieu : squelette KayKit (mêmes animations que le héros) ou monstre Quaternius. Les
- * monstres sont mis à taille par `fitToHeight` après la première image.
- */
-export async function loadEnemy(scene: Scene, model: string, name: string, scale: number): Promise<Character> {
-  if (!isMonster(model)) {
-    const names = model === 'Skeleton_Minion' ? MINION_ANIMS : KAYKIT_ANIMS
-    return loadCharacter(scene, modelPath(model), name, enemyHeight(model, scale), names)
-  }
-  const monster = await loadCharacter(scene, modelPath(model), name, 0, MONSTER_ANIMS, false, 1)
-  monster.yawOffset = ((MONSTER_YAW[model] ?? 0) * Math.PI) / 180
-  return monster
 }

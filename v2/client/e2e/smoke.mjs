@@ -1,5 +1,6 @@
 // Parcours de fumée dans un vrai navigateur : écran titre → île (mode découverte) → le héros
-// avance → pierre d'éveil → question → bonne réponse → la pierre s'éveille. Échoue sur toute
+// avance → la mini-carte le suit et se cache avec M → la musique joue, se coupe et se tait pendant
+// une question → l'intérieur d'un lieu (entrée par le seuil, étage 2 au clavier, sortie) → pierre d'éveil → question → bonne réponse → la pierre s'éveille. Échoue sur toute
 // erreur de la page ou toute ressource introuvable. Captures dans $E2E_OUT (défaut : e2e/captures).
 //   npm run build && npm run preview &   puis   npm run e2e
 import { mkdirSync } from 'node:fs'
@@ -22,6 +23,8 @@ const QUALITY = process.env.E2E_QUALITE ?? 'bas'
 mkdirSync(OUT, { recursive: true })
 
 const problems = []
+// E2E_RETARD_MUSIQUE=<ms> : chaque fichier de /musique/ arrive avec ce retard (réseau lent, CI chargée).
+const MUSIC_DELAY = Number(process.env.E2E_RETARD_MUSIQUE ?? 0)
 const browser = await chromium.launch({
   executablePath: process.env.CHROMIUM_PATH || undefined,
   args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'],
@@ -32,6 +35,12 @@ const TEST_ERROR = "Erreur d'essai (erreur_test=1)"
 page.on('pageerror', (e) => { if (!e.message.includes(TEST_ERROR)) problems.push(`erreur de la page : ${e.message}`) })
 page.on('console', (m) => { if (m.type() === 'error' && !m.text().includes(TEST_ERROR)) problems.push(`console : ${m.text()}`) })
 page.on('response', (r) => { if (r.status() >= 400) problems.push(`${r.status()} ${r.url()}`) })
+if (MUSIC_DELAY > 0) {
+  await page.route('**/musique/**', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, MUSIC_DELAY))
+    await route.continue()
+  })
+}
 
 const step = async (label, fn) => {
   const t = Date.now()
@@ -91,7 +100,7 @@ try {
 
   await step('le héros avance (touche Z/W)', async () => {
     const before = await page.evaluate(() => window.__aldoria.world.heroPosition())
-    await page.locator('canvas').click({ position: { x: 640, y: 120 } })
+    await page.getByTestId('monde').click({ position: { x: 640, y: 120 } })
     await page.keyboard.down('KeyW')
     await page.waitForTimeout(1500 * SLOW)
     await page.keyboard.up('KeyW')
@@ -100,12 +109,140 @@ try {
     if (moved < 1) throw new Error(`le héros n'a pas bougé (${moved.toFixed(2)} m)`)
   })
 
+  await step('la carte suit le héros et se cache avec M', async () => {
+    const carte = page.getByTestId('carte')
+    await carte.waitFor()
+    const u = () => page.getByTestId('carte-heros').getAttribute('data-u').then(Number)
+    const before = await u()
+    // 70 m vers l'est : la flèche part vers la droite de la carte.
+    await page.evaluate(() => window.__aldoria.world.teleport(70, 60, 120, 105))
+    await page.waitForFunction(
+      (start) => Number(document.querySelector('[data-testid=carte-heros]')?.getAttribute('data-u')) > start + 15,
+      before,
+      { timeout: 5000 * SLOW },
+    )
+    await page.locator('.hud-right').screenshot({ path: `${OUT}/02b-carte.png` })
+    await page.keyboard.press('m')
+    await carte.waitFor({ state: 'detached' })
+    if ((await page.getByTestId('bouton-carte').getAttribute('aria-pressed')) !== 'false') throw new Error('bouton « Carte » pas relâché')
+    await page.keyboard.press('m')
+    await carte.waitFor()
+    if ((await u()) <= before) throw new Error('la carte rouverte ne montre plus le héros où il est')
+  })
+
+  await step('la musique joue, se coupe avec le bouton et revient', async () => {
+    const music = () => page.evaluate(() => window.__aldoria.services.music.state())
+    // Le navigateur ne la lance qu'après un geste : le clic sur le monde, plus haut, en est un.
+    await page.waitForFunction(() => window.__aldoria.services.music.state().playing, null, { timeout: 15_000 * SLOW })
+    const first = await music()
+    if (first.track !== 'theme.mp3') throw new Error(`premier morceau inattendu : ${first.track}`)
+    await page.waitForFunction(() => window.__aldoria.services.music.state().level > 0.05, null, { timeout: 10_000 * SLOW })
+    await page.waitForTimeout(800 * SLOW)
+    if ((await music()).time <= first.time) throw new Error('la musique n’avance pas')
+    const button = page.getByTestId('bouton-musique')
+    if ((await button.getAttribute('aria-pressed')) !== 'true') throw new Error('bouton « Musique » pas enfoncé alors qu’elle joue')
+    await button.click()
+    await page.waitForFunction(() => !window.__aldoria.services.music.state().playing, null, { timeout: 8000 * SLOW })
+    if ((await button.getAttribute('aria-pressed')) !== 'false') throw new Error('bouton « Musique » pas relâché')
+    await button.click()
+    await page.waitForFunction(() => window.__aldoria.services.music.state().playing, null, { timeout: 8000 * SLOW })
+  })
+
+  await step('en fin de morceau, le suivant prend le relais, puis le thème revient après le dernier', async () => {
+    const music = () => page.evaluate(() => window.__aldoria.services.music.state())
+    const tracks = await page.evaluate(() => window.__aldoria.services.music.tracks.map((t) => t.file))
+    if (tracks.length < 2) return // un seul morceau : il boucle sur lui-même (vérifié à la main)
+    // On saute à une seconde et demie de la fin du morceau en cours, tant de fois qu'il y a de morceaux.
+    for (let k = 1; k <= tracks.length; k += 1) {
+      const before = await music()
+      const expected = tracks[(tracks.indexOf(before.track) + 1) % tracks.length]
+      // « Joue » dès l'appel à play() : le début du morceau peut ne pas être arrivé (sa durée est alors inconnue).
+      await page.waitForFunction(
+        () => Number.isFinite(window.__aldoria.services.music.state().duration) && window.__aldoria.services.music.state().duration > 10,
+        null,
+        { timeout: 30_000 * SLOW },
+      )
+      await page.evaluate(() => {
+        const a = window.__aldoria.services.music.audio
+        a.currentTime = a.duration - 1.5
+      })
+      await page.waitForFunction((next) => window.__aldoria.services.music.state().track === next, expected, { timeout: 12_000 * SLOW })
+      await page.waitForFunction(() => window.__aldoria.services.music.state().playing, null, { timeout: 8000 * SLOW })
+    }
+    if ((await music()).track !== tracks[0]) throw new Error('après le dernier morceau, le premier devait revenir')
+    await page.waitForFunction(() => window.__aldoria.services.music.audio.currentTime > 0.3, null, { timeout: 8000 * SLOW })
+  })
+
+  await step('un lieu de quête : on entre par le seuil, on monte à l’étage 2 au clavier, on sort', async () => {
+    // Devant la porte de la Tour des Fractions (le premier lieu de maths de la 6e), face à elle.
+    const door = await page.evaluate(() => {
+      const w = window.__aldoria.world
+      const it = w.interactables.find((i) => i.id === 'tour_fractions')
+      w.teleport(it.x, it.z - 1.5, it.x, it.z)
+      return { x: it.x, z: it.z }
+    })
+    await page.getByTestId('invite').waitFor({ timeout: 10_000 * SLOW })
+    await page.keyboard.press('KeyE')
+    await page.getByRole('dialog').waitFor()
+    await page.getByRole('button', { name: "J'y vais" }).click()
+    await page.getByTestId('etage').waitFor({ timeout: 60_000 * SLOW })
+    if ((await page.getByTestId('etage').innerText()).replace(/\s+/g, ' ').toLowerCase() !== 'étage 1 / 6') throw new Error('départ à l’étage 1 attendu')
+    if ((await page.getByTestId('carte').count()) !== 0) throw new Error('la mini-carte devrait être cachée dans un lieu')
+    await page.screenshot({ path: `${OUT}/03a-interieur.png` })
+    // Orientation des modèles (piège : un mur est symétrique et ne dit rien) : chaque escalier tient entre 12 et 16 m de sa salle,
+    // chaque battant de porte, ouvert, dans sa salle (x ≥ 16·i), jamais sur l'escalier qui y mène.
+    const bad = await page.evaluate(() => {
+      const boxes = (suffix) =>
+        window.__aldoria.world.interior.scene.meshes
+          .filter((m) => m.name.endsWith(suffix))
+          .map((m) => ({ room: Number(m.name.split('-')[1]), box: m.getBoundingInfo().boundingBox }))
+      const out = []
+      for (const { room, box } of boxes('-stairs')) {
+        if (box.minimumWorld.x < 16 * room + 11.9 || box.maximumWorld.x > 16 * room + 16.1) out.push(`escalier ${room} : x ${box.minimumWorld.x.toFixed(1)} à ${box.maximumWorld.x.toFixed(1)}`)
+      }
+      for (const { room, box } of boxes('wall_doorway_door')) {
+        if (box.minimumWorld.x < 16 * room - 0.3) out.push(`porte ${room} : battant à x ${box.minimumWorld.x.toFixed(1)}`)
+      }
+      return out
+    })
+    if (bad.length > 0) throw new Error(`modèles mal orientés : ${bad.join(' ; ')}`)
+    // Vers l'est (D) : la porte, puis l'escalier, jusqu'à la deuxième salle (4 m plus haut).
+    await page.getByTestId('monde').click({ position: { x: 640, y: 120 } })
+    await page.keyboard.down('KeyD')
+    await page.waitForFunction(() => document.querySelector('[data-testid=etage]')?.textContent?.includes('2 / 6'), null, { timeout: 30_000 * SLOW })
+    await page.keyboard.up('KeyD')
+    const up = await page.evaluate(() => window.__aldoria.world.interior.heroPosition())
+    if (up.y < 3.5) throw new Error(`le héros n'est pas monté (${up.y.toFixed(1)} m)`)
+    await page.screenshot({ path: `${OUT}/03b-etage2.png` })
+    // La sortie : la porte du mur ouest de la première salle.
+    await page.evaluate(() => window.__aldoria.world.interior.teleport(1.9, -10))
+    await page.getByTestId('invite').waitFor({ timeout: 10_000 * SLOW })
+    await page.keyboard.press('KeyE')
+    await page.getByRole('button', { name: 'Sortir' }).click()
+    await page.getByTestId('carte').waitFor({ timeout: 10_000 * SLOW })
+    const after = await page.evaluate(() => ({ inside: window.__aldoria.world.interior, pos: window.__aldoria.world.heroPosition() }))
+    if (after.inside !== null) throw new Error('l’intérieur devrait être fermé')
+    if (Math.hypot(after.pos.x - door.x, after.pos.z - door.z) > 4) throw new Error('le héros devrait être revenu devant la porte du lieu')
+    // L'île répond de nouveau aux touches.
+    const before = await page.evaluate(() => window.__aldoria.world.heroPosition())
+    await page.keyboard.down('KeyS')
+    await page.waitForTimeout(700 * SLOW)
+    await page.keyboard.up('KeyS')
+    const moved = await page.evaluate(() => window.__aldoria.world.heroPosition())
+    if (Math.hypot(moved.x - before.x, moved.z - before.z) < 0.5) throw new Error('le héros de l’île ne bouge plus après la sortie')
+  })
+
   await step("question de la pierre d'éveil", async () => {
     await page.evaluate(() => window.__aldoria.world.teleport(9, -24.5, 9, -22))
     await page.getByTestId('invite').waitFor({ timeout: 10_000 * SLOW })
     await page.screenshot({ path: `${OUT}/03-pierre.png` })
     await page.keyboard.press('KeyE')
     await page.getByRole('dialog').waitFor()
+    // Pendant une question, la musique s'éteint en fondu (l'enfant reste concentré) ; elle revient après.
+    await page.waitForFunction(() => !window.__aldoria.services.music.state().playing, null, { timeout: 8000 * SLOW })
+    // Pendant une question, M ne touche pas à la carte (ni à la réponse : elle est remplie plus bas).
+    await page.keyboard.press('m')
+    if ((await page.getByTestId('carte').count()) !== 1) throw new Error('la touche M a caché la carte pendant une question')
     await page.waitForTimeout(500)
     await page.screenshot({ path: `${OUT}/04-question.png` })
   })
@@ -130,8 +267,11 @@ try {
     await page.screenshot({ path: `${OUT}/05-juste.png` })
     await page.getByRole('button', { name: 'Continuer' }).click()
     await page.getByRole('dialog').waitFor({ state: 'detached' })
+    await page.waitForFunction(() => window.__aldoria.services.music.state().playing, null, { timeout: 8000 * SLOW })
     const xp = await page.locator('.badge').innerText()
     if (!/15 XP/.test(xp)) throw new Error(`XP attendue après la pierre : ${xp}`)
+    // La carte montre la pierre éveillée (dorée).
+    await page.locator('[data-id="pierre-eveil"].mark-eveillee').waitFor({ state: 'attached', timeout: 3000 })
     await page.waitForTimeout(800 * SLOW)
     await page.screenshot({ path: `${OUT}/06-eveillee.png` })
   })
@@ -169,23 +309,6 @@ try {
     if (speech.length > 0) throw new Error(`Piper appelé pour un texte enregistré : ${speech.join(' ')}`)
     const note = await page.locator('.dialog .hint').innerText()
     if (!/étapes, une énigme/.test(note)) throw new Error(`indication des étapes absente : ${note}`)
-  })
-
-  await step('« J’y vais » ouvre le lieu ; « Quitter le lieu » ramène à l’île, rien n’est perdu', async () => {
-    await page.getByRole('button', { name: "J'y vais" }).click()
-    await page.getByRole('button', { name: 'En avant !' }).click({ timeout: 120_000 * SLOW })
-    await page.getByTestId('pv-heros').waitFor({ timeout: 20_000 * SLOW })
-    await page.screenshot({ path: `${OUT}/09-lieu.png` })
-    await page.getByRole('button', { name: 'Quitter le lieu' }).click()
-    await page.getByTestId('lieu').waitFor({ state: 'detached', timeout: 30_000 * SLOW })
-    const back = await page.evaluate(() => ({ interior: window.__aldoria.world.interior !== null, hero: window.__aldoria.world.heroPosition() }))
-    if (back.interior) throw new Error("l'intérieur n'a pas été rendu")
-    // Le héros marche de nouveau dans l'île.
-    await page.keyboard.down('KeyW')
-    await page.waitForTimeout(800 * SLOW)
-    await page.keyboard.up('KeyW')
-    const moved = await page.evaluate(() => window.__aldoria.world.heroPosition())
-    if (Math.hypot(moved.x - back.hero.x, moved.z - back.hero.z) < 0.5) throw new Error("le héros ne bouge plus dans l'île")
   })
 } catch (error) {
   problems.push(String(error))

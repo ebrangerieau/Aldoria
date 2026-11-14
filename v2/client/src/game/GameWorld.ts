@@ -14,8 +14,6 @@ import {
   Color3,
   Color4,
   DynamicTexture,
-  type Engine,
-  EngineInstrumentation,
   type Mesh,
   MeshBuilder,
   ParticleSystem,
@@ -24,29 +22,26 @@ import {
   SceneInstrumentation,
   StandardMaterial,
   Vector3,
-  type WebGPUEngine,
 } from '@babylonjs/core'
 import ile from '@content/monde/ile.json'
 import { Emitter } from '../core/events'
-import { browserLabel, type FrameSample, type PerfReport, percentile, summarize, tourAt, tourStops } from '../core/perf'
 import type { SaveData } from '../core/save'
 import type { HeightGrid } from '../core/world/heightGrid'
 import type { Obstacles } from '../core/world/obstacles'
+import { heading, type MapMarker, mapMarkers, type ReliefPalette } from '../core/world/minimap'
 import { angleDelta, RUN_SPEED, step, WALK_SPEED } from '../core/world/movement'
 import { isOpen, type Place, placesFor, regionTitle } from '../core/world/places'
 import { type IslandLayout, Terrain } from '../core/world/terrain'
 import { type Atmosphere, createAtmosphere } from './atmosphere'
 import { type Character, loadFox, loadHero, loadNpc, settleOnGround } from './characters'
+import { InteriorWorld } from './interior'
 import { beacon, buildDecor } from './decor'
-import type { DungeonData } from '../core/world/places'
-import type { Progress } from '../core/quest/run'
 import { createEngine, type EngineKind } from './engine'
-import { type FloatingText, InteriorWorld } from './interior/InteriorWorld'
 import { buildGround, buildSea } from './island'
 import { chooseQuality, type Quality } from './quality'
 import { THEMES, type WorldName } from './theme'
 
-export type InteractableKind = 'lieu' | 'pierre' | 'ysaline'
+export type InteractableKind = 'lieu' | 'pierre' | 'ysaline' | 'sortie'
 
 export interface Interactable {
   id: string
@@ -64,7 +59,30 @@ export type WorldEvents = {
   region: { code: string | null; title: string }
   focus: Interactable | null
   interact: Interactable
-  stats: { fps: number; drawCalls: number; triangles: number; engine: string }
+  stats: { fps: number; drawCalls: number; triangles: number }
+  /** Position du héros pour la carte, dix fois par seconde : cap du héros et du regard (degrés, 0 = nord). */
+  hero: HeroPose
+  /** L'état d'un repère de la carte a changé (pierre éveillée…). */
+  markers: MapMarker[]
+  /** On entre dans un lieu de quête (son intérieur est à l'écran), ou on en sort (null). */
+  interior: { place: Place } | null
+  /** Salle du héros dans l'intérieur d'un lieu (« Étage 2 / 6 »). */
+  floor: { index: number; label: string }
+}
+
+export interface HeroPose {
+  x: number
+  z: number
+  heading: number
+  view: number
+}
+
+/** Ce que la mini-carte lit du monde : les hauteurs du sol affiché, ses couleurs et ses repères. */
+export interface MapInfo {
+  heightAt: (x: number, z: number) => number
+  extent: number
+  palette: ReliefPalette
+  markers: MapMarker[]
 }
 
 export interface WorldOptions {
@@ -87,10 +105,6 @@ export class GameWorld {
   scene!: Scene
   engine!: AbstractEngine
   engineKind: EngineKind = 'webgl2'
-  /** WebGPU demandé mais pas pris : pourquoi (repli sur WebGL 2). */
-  engineFallback: string | undefined
-  /** Moment où l'île est prête (ms depuis l'ouverture de la page). */
-  readyAt = 0
   hero!: Character
   camera!: ArcRotateCamera
   private grid!: HeightGrid
@@ -109,13 +123,13 @@ export class GameWorld {
   private disposers: (() => void)[] = []
   private statsTimer = 0
   private regionTimer = 0
+  private heroTimer = 0
   private instrumentation: SceneInstrumentation | null = null
+  places: Place[] = []
   private islandLoop: (() => void) | null = null
-  private interiorLoop: (() => void) | null = null
-  private beacons = new Map<string, Mesh>()
-  /** Intérieur d'un lieu en cours (la boucle de l'île est alors à l'arrêt). */
+  private lastFrame = 0
+  /** Intérieur d'un lieu à l'écran : l'île est en pause. */
   interior: InteriorWorld | null = null
-  private entering: Promise<InteriorWorld> | null = null
 
   private constructor(
     private readonly canvas: HTMLCanvasElement,
@@ -137,10 +151,9 @@ export class GameWorld {
   }
 
   private async build(): Promise<void> {
-    const { engine, kind, fallback } = await createEngine(this.canvas, this.params)
+    const { engine, kind } = await createEngine(this.canvas, this.params)
     this.engine = engine
     this.engineKind = kind
-    this.engineFallback = fallback
     engine.setHardwareScalingLevel(this.quality.hardwareScaling / Math.min(window.devicePixelRatio || 1, 2))
     const scene = new Scene(engine)
     this.scene = scene
@@ -163,6 +176,7 @@ export class GameWorld {
     void ground
 
     const places = placesFor(this.options.level, this.terrain)
+    this.places = places
     const steps = ['La Citadelle des Archives', 'Les lieux de quête', 'Le village', "L'île du Sphinx", 'Les forêts', 'Les nuages']
     const decor = await buildDecor(scene, this.terrain, grid, places, this.options.world, this.quality, this.atmosphere.shadows, (label) => {
       this.progress(label, 0.2 + (0.5 * (steps.indexOf(label) + 1)) / steps.length)
@@ -193,19 +207,18 @@ export class GameWorld {
 
     this.buildInteractables(places)
     this.bindInput()
-    // Compteurs par image (?perf, ?mesure et tests) : appels de dessin, durée d'une image.
-    if (this.params.has('perf') || this.params.has('e2e') || this.params.has('mesure')) {
+    // Compteurs par image (?perf et tests) : appels de dessin, durée d'une image.
+    if (this.params.has('perf') || this.params.has('e2e')) {
       this.instrumentation = new SceneInstrumentation(scene)
       this.instrumentation.captureFrameTime = true
     }
     this.progress("L'île est prête", 1)
-    this.readyAt = performance.now()
 
-    let last = performance.now()
+    this.lastFrame = performance.now()
     this.islandLoop = () => {
       const now = performance.now()
-      const dt = Math.min(0.05, (now - last) / 1000)
-      last = now
+      const dt = Math.min(0.05, (now - this.lastFrame) / 1000)
+      this.lastFrame = now
       this.update(dt)
       scene.render()
     }
@@ -297,81 +310,12 @@ export class GameWorld {
     })
   }
 
-  /**
-   * Entre dans l'intérieur d'un lieu : la boucle de l'île s'arrête, celle de l'intérieur la remplace.
-   * `leavePlace` rend tout à l'île. Le monde de l'île reste en mémoire (on y revient à pied).
-   */
-  enterPlace(options: {
-    def: DungeonData
-    progress: Progress
-    timeOver?: () => boolean
-    onFloat?: (text: FloatingText) => void
-    onProgress?: (label: string, ratio: number) => void
-  }): Promise<InteriorWorld> {
-    // Un seul intérieur à la fois : un deuxième appel (écran monté deux fois en développement) rend le même.
-    if (!this.entering) {
-      this.entering = this.createPlace(options).catch((error) => {
-        this.entering = null
-        throw error
-      })
-    }
-    return this.entering
-  }
-
-  private async createPlace(options: Parameters<GameWorld['enterPlace']>[0]): Promise<InteriorWorld> {
-    this.setInputEnabled(false)
-    if (this.islandLoop) this.engine.stopRenderLoop(this.islandLoop)
-    this.camera.detachControl()
-    const interior = await InteriorWorld.create({
-      engine: this.engine,
-      canvas: this.canvas,
-      world: this.options.world,
-      look: this.options.save.look,
-      quality: this.quality,
-      calm: this.options.calm,
-      ...options,
-    })
-    interior.start()
-    this.interior = interior
-    let last = performance.now()
-    this.interiorLoop = () => {
-      const now = performance.now()
-      const dt = Math.min(0.05, (now - last) / 1000)
-      last = now
-      interior.frame(dt)
-    }
-    this.engine.runRenderLoop(this.interiorLoop)
-    return interior
-  }
-
-  /** Retour à l'île, là où le héros l'avait laissée. */
-  leavePlace(): void {
-    this.entering = null
-    if (this.interiorLoop) this.engine.stopRenderLoop(this.interiorLoop)
-    this.interiorLoop = null
-    this.interior?.dispose()
-    this.interior = null
-    this.camera.attachControl(this.canvas, true)
-    if (this.islandLoop) this.engine.runRenderLoop(this.islandLoop)
-    this.setInputEnabled(true)
-  }
-
-  /** Une partie a progressé (lieu terminé) : les seuils des lieux suivants s'ouvrent. */
-  refreshPlaces(save: SaveData): void {
-    for (const it of this.interactables) {
-      if (it.kind !== 'lieu' || !it.place) continue
-      const open = isOpen(it.place, save.places)
-      it.open = open
-      const ring = this.beacons.get(it.place.dungeon.code)
-      const material = ring?.material as StandardMaterial | null | undefined
-      if (material) material.emissiveColor = Color3.FromHexString(open ? '#ffd27a' : '#7a7f8c').scale(open ? 1 : 0.25)
-    }
-    this.options.save.places = save.places
-    this.events.emit('focus', this.focused)
-  }
-
   /** L'interface prend la main (question, dialogue) : le héros s'arrête. */
   setInputEnabled(enabled: boolean): void {
+    if (this.interior) {
+      this.interior.setInputEnabled(enabled)
+      return
+    }
     this.inputEnabled = enabled
     if (!enabled) {
       this.keys.clear()
@@ -436,16 +380,18 @@ export class GameWorld {
       }
       this.updateFocus()
     }
-    // Une fois par seconde de temps réel (dt est plafonné : à 3 images par seconde, il
-    // faudrait sept secondes pour le premier relevé).
-    const now = performance.now()
-    if (now >= this.statsTimer) {
-      this.statsTimer = now + 1000
+    this.heroTimer -= dt
+    if (this.heroTimer <= 0) {
+      this.heroTimer = 0.1
+      this.events.emit('hero', this.heroPose())
+    }
+    this.statsTimer -= dt
+    if (this.statsTimer <= 0) {
+      this.statsTimer = 1
       this.events.emit('stats', {
         fps: Math.round(this.engine.getFps()),
         drawCalls: this.instrumentation?.drawCallsCounter.current ?? 0,
         triangles: Math.round(this.scene.getActiveIndices() / 3),
-        engine: this.engineLabel(),
       })
     }
   }
@@ -487,7 +433,7 @@ export class GameWorld {
       const toStart = Math.atan2(layout.depart.x - place.x, layout.depart.z - place.z)
       const door = new Vector3(place.x + Math.sin(toStart) * 7.5, y, place.z + Math.cos(toStart) * 7.5)
       door.y = this.grid.heightAt(door.x, door.z)
-      this.beacons.set(place.dungeon.code, beacon(this.scene, `seuil-${place.dungeon.code}`, door, open ? '#ffd27a' : '#7a7f8c', open))
+      beacon(this.scene, `seuil-${place.dungeon.code}`, door, open ? '#ffd27a' : '#7a7f8c', open)
       this.interactables.push({
         id: place.dungeon.code, kind: 'lieu', label: place.dungeon.title, x: door.x, z: door.z, radius: 4, place, open,
       })
@@ -584,6 +530,31 @@ export class GameWorld {
       this.hero.playOnce('hit')
     }
     this.events.emit('focus', this.focused)
+    this.events.emit('markers', this.mapMarkers())
+  }
+
+  // --- Mini-carte -------------------------------------------------------------------------
+
+  heroPose(): HeroPose {
+    const p = this.hero.root.position
+    const yaw = this.hero.yaw
+    const alpha = this.camera.alpha
+    return { x: p.x, z: p.z, heading: heading(Math.sin(yaw), Math.cos(yaw)), view: heading(-Math.cos(alpha), -Math.sin(alpha)) }
+  }
+
+  private mapMarkers(): MapMarker[] {
+    return mapMarkers(layout, this.options.level, this.interactables, this.options.save.places)
+  }
+
+  mapInfo(): MapInfo {
+    const theme = THEMES[this.options.world]
+    const grid = this.grid
+    return {
+      heightAt: (x, z) => grid.heightAt(x, z),
+      extent: layout.taille,
+      palette: { water: theme.waterColor, regions: Object.values(layout.regions), desaturate: theme.desaturate },
+      markers: this.mapMarkers(),
+    }
   }
 
   /** Gerbe d'étincelles (plus discrète en mode calme). */
@@ -627,83 +598,6 @@ export class GameWorld {
     ps.start()
   }
 
-  // --- Banc de mesure (?mesure) ------------------------------------------------------------
-
-  engineLabel(): string {
-    return this.engineKind === 'webgpu' ? 'WebGPU' : this.engineFallback ? 'WebGL 2 (repli)' : 'WebGL 2'
-  }
-
-  /**
-   * Le héros fait le tour de l'île (`tourStops`, core/perf.ts) ; à chaque arrêt, la caméra fait un
-   * tour complet. Relève la durée de chaque image, le temps du processeur (scene.render) et, si le
-   * navigateur le permet, celui de la carte graphique. Le premier dixième de chaque arrêt n'est pas
-   * compté : le saut d'un arrêt à l'autre n'arrive jamais en jouant.
-   */
-  async measure(seconds: number, onProgress?: (ratio: number) => void): Promise<PerfReport> {
-    const stops = tourStops(layout)
-    const instrumentation = this.instrumentation ?? new SceneInstrumentation(this.scene)
-    instrumentation.captureFrameTime = true
-    this.instrumentation = instrumentation
-    const gpu = new EngineInstrumentation(this.engine)
-    gpu.captureGPUFrameTime = true
-    this.setInputEnabled(false)
-    const samples: FrameSample[] = []
-    const drawCalls: number[] = []
-    const triangles: number[] = []
-    let index = -1
-    let alpha = 0
-    const start = performance.now()
-    let last = start
-    await new Promise<void>((resolve) => {
-      const observer = this.scene.onAfterRenderObservable.add(() => {
-        const now = performance.now()
-        const at = tourAt(stops, seconds, (now - start) / 1000)
-        if (at.done) {
-          this.scene.onAfterRenderObservable.remove(observer)
-          resolve()
-          return
-        }
-        if (at.index !== index) {
-          index = at.index
-          const stop = stops[index]!
-          this.teleport(stop.x, stop.z, stop.faceX, stop.faceZ)
-          this.camera.beta = 1.22
-          this.camera.radius = 8.5
-          alpha = this.camera.alpha
-        } else if (at.turn > 0.1) {
-          const gpuNs = gpu.gpuFrameTimeCounter?.current ?? 0
-          samples.push({ frameMs: now - last, cpuMs: instrumentation.frameTimeCounter.current, gpuMs: gpuNs > 0 ? gpuNs / 1e6 : undefined })
-          drawCalls.push(instrumentation.drawCallsCounter.current)
-          triangles.push(this.scene.getActiveIndices() / 3)
-        }
-        this.camera.alpha = alpha + at.turn * Math.PI * 2
-        this.lastCameraInput = now
-        last = now
-        onProgress?.(Math.min(1, (now - start) / 1000 / seconds))
-      })
-    })
-    gpu.dispose()
-    this.teleport(layout.depart.x, layout.depart.z, layout.citadelle.x, layout.citadelle.z)
-    this.setInputEnabled(true)
-    const info = (this.engine as Engine | WebGPUEngine).getInfo()
-    const memory = (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory
-    return {
-      date: new Date().toISOString().slice(0, 10),
-      browser: browserLabel(navigator.userAgent),
-      gpu: (this.engineKind === 'webgpu' ? [info.vendor, info.renderer, info.version] : [info.renderer]).filter((v) => v && !v.startsWith('unknown')).join(' '),
-      engine: this.engineLabel(),
-      quality: this.quality.name,
-      width: this.engine.getRenderWidth(),
-      height: this.engine.getRenderHeight(),
-      seconds,
-      summary: summarize(samples),
-      drawCalls: Math.round(percentile(drawCalls, 100)),
-      triangles: Math.round(percentile(triangles, 100)),
-      loadMs: this.readyAt,
-      heapMb: memory ? memory.usedJSHeapSize / 1048576 : null,
-    }
-  }
-
   // --- Outils de test et de capture (?e2e) ------------------------------------------------
 
   heroPosition(): { x: number; y: number; z: number } {
@@ -717,6 +611,7 @@ export class GameWorld {
     this.camera.target.set(x, this.grid.heightAt(x, z) + 1.45, z)
     this.camera.alpha = Math.atan2(-Math.cos(this.hero.yaw), -Math.sin(this.hero.yaw))
     this.regionTimer = 0
+    this.heroTimer = 0
   }
 
   /** Cadre la caméra (captures) : angle autour du héros, hauteur, distance. */
@@ -727,9 +622,59 @@ export class GameWorld {
     this.lastCameraInput = performance.now()
   }
 
+  // --- Intérieur d'un lieu de quête -------------------------------------------------------------
+
+  /**
+   * Entre dans le lieu `code` : son intérieur (scène à part, même moteur) remplace l'île à l'écran, qui
+   * est mise en pause. Rend faux si ce lieu n'existe pas pour cette classe. `onProgress` : chargement.
+   */
+  async enterPlace(code: string, onProgress?: (label: string, ratio: number) => void): Promise<boolean> {
+    const place = this.places.find((p) => p.dungeon.code === code)
+    if (!place || this.interior) return false
+    this.setInputEnabled(false)
+    const interior = await InteriorWorld.create(this.engine, this.canvas, {
+      place,
+      world: this.options.world,
+      look: this.options.save.look,
+      quality: this.quality,
+      calm: this.options.calm,
+      onProgress,
+    })
+    interior.events.on('focus', (it) => this.events.emit('focus', it))
+    interior.events.on('interact', (it) => this.events.emit('interact', it))
+    interior.events.on('room', (floor) => this.events.emit('floor', floor))
+    // L'île se met en pause : plus d'image, plus d'événement de la souris pour sa caméra.
+    if (this.islandLoop) this.engine.stopRenderLoop(this.islandLoop)
+    this.camera.detachControl()
+    this.interior = interior
+    this.focused = null
+    interior.start()
+    this.events.emit('region', { code: place.dungeon.region, title: place.dungeon.title })
+    this.events.emit('interior', { place })
+    this.events.emit('focus', null)
+    return true
+  }
+
+  /** Sort du lieu : l'intérieur disparaît, l'île reprend là où le héros l'avait laissée, devant la porte. */
+  leavePlace(): void {
+    const interior = this.interior
+    if (!interior) return
+    interior.dispose()
+    this.interior = null
+    this.camera.attachControl(this.canvas, true)
+    this.lastFrame = performance.now()
+    if (this.islandLoop) this.engine.runRenderLoop(this.islandLoop)
+    this.region = null // la région du héros est annoncée de nouveau
+    this.regionTimer = 0
+    this.setInputEnabled(true)
+    this.events.emit('interior', null)
+    this.events.emit('focus', this.focused)
+  }
+
   dispose(): void {
-    for (const d of this.disposers) d()
     this.interior?.dispose()
+    this.interior = null
+    for (const d of this.disposers) d()
     this.engine.stopRenderLoop()
     this.scene.dispose()
     this.engine.dispose()

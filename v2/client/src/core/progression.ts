@@ -1,8 +1,8 @@
 /**
- * XP et niveau du héros, portés de la v1 (core/progression/progression.gd). Le niveau n est
- * atteint à 100·n·(n−1) XP : 200, 600, 1 200, 2 000… Chaque niveau donne 10 PV de plus.
+ * XP et niveau du héros, portés de la v1 (game/core/progression/progression.gd). Le niveau n
+ * est atteint à 100·n·(n−1) XP : 200, 600, 1 200, 2 000… Chaque niveau donne 10 PV de plus.
  * Gains : bonne réponse 10 × difficulté ; ennemi vaincu, énigme et coffre selon le lieu
- * (`content/monde/lieux.json`).
+ * (content/monde/lieux.json).
  */
 export const MAX_LEVEL = 50
 export const BASE_HP = 100

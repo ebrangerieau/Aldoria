@@ -10,9 +10,8 @@
     "preview": "vite preview",
     "test": "vitest run",
     "e2e": "node e2e/smoke.mjs",
-    "e2e:webgpu": "node e2e/webgpu.mjs",
-    "e2e:lieu": "node e2e/lieu.mjs",
-    "captures": "node e2e/captures.mjs"
+    "captures": "node e2e/captures.mjs",
+    "perf": "node e2e/perf.mjs"
   },
   "dependencies": {
     "@babylonjs/core": "9.35.0",

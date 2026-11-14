@@ -15,15 +15,11 @@ Dans l'ordre, depuis la racine du dépôt :
    `npm --prefix v2/client run e2e`. Le parcours échoue sur toute erreur de la page, toute violation de la CSP et tout 404 :
    lire le message (une violation nomme la directive), corriger la cause, jamais la CSP.
    Hors du poste, si le Chromium de `playwright-core` n'est pas installé : `CHROMIUM_PATH=/chemin/vers/chromium`.
-   Si un lieu de quête, le combat ou le contrôleur de `core/quest/` ont changé : aussi `npm --prefix v2/client run e2e:lieu`
-   (la Tour des Fractions de l'entrée au coffre, environ deux minutes en rendu logiciel ; `E2E_LIEU=<code>` pour un autre lieu).
-   Si le moteur, le rendu ou `vite.config.ts` ont changé : aussi `npm --prefix v2/client run e2e:webgpu` (WebGPU et repli sur
-   WebGL 2). Il dit « WebGPU INDISPONIBLE » et ignore sa partie WebGPU si le navigateur n'a pas d'adaptateur : ce vert ne prouve
-   rien en WebGPU, le dire dans le compte rendu.
 4. Si le monde ou l'interface ont changé : skill `captures`.
-5. Espace parent modifié : `npm --prefix v2/admin run build`, et le guide (`v2/admin/src/Guide.tsx`) à jour.
+5. Espace parent modifié : `npm --prefix v2/admin run build`, puis `bash v2/tools/e2e_admin.sh` (Docker démarré : base,
+   API, sauvegarde et image `web2` jetables, parcours dans Edge) ; le guide (`v2/admin/src/Guide.tsx`) à jour.
 6. Mettre à jour `v2/IMPLEMENTATION_PLAN.md` (fait / reste), `v2/docs/perf-log.md` si les chiffres de rendu ont bougé, et
    `v2/docs/decisions.md` si un choix a été fait.
 
-La CI (`.github/workflows/v2.yml`) rejoue 1 à 3 sur chaque push qui touche `v2/`. Elle ne publie rien pour l'instant
-(étape 0.6 du plan).
+La CI (`.github/workflows/v2.yml`) rejoue 1 à 3 et le parcours de l'espace parent sur chaque push qui touche `v2/` ; sur
+`main`, elle publie et déploie.

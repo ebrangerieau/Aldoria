@@ -16,8 +16,6 @@ import { widgetFor } from './widgets/Widgets'
 export interface QuestionOutcome {
   item: Item
   result: SubmitResult | null // null : question mise de côté sans réponse
-  /** Indice ordinaire demandé (il réduit la puissance d'un coup en combat). */
-  hintUsed: boolean
 }
 
 export function QuestionPanel({ services, item: first, title, gameMode, accommodations, success = 'Bravo !', onDone }: {
@@ -68,7 +66,7 @@ export function QuestionPanel({ services, item: first, title, gameMode, accommod
       setHintShown(false)
       setAsideArmed(false)
     } else {
-      onDone({ item, result: null, hintUsed: hintShown })
+      onDone({ item, result: null })
     }
   }
 
@@ -113,7 +111,7 @@ export function QuestionPanel({ services, item: first, title, gameMode, accommod
               </>
             )}
             <div className="actions">
-              <button type="button" className="primary" autoFocus onClick={() => onDone({ item, result, hintUsed: hintShown })}>Continuer</button>
+              <button type="button" className="primary" autoFocus onClick={() => onDone({ item, result })}>Continuer</button>
             </div>
           </div>
         )}

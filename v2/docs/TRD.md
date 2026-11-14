@@ -17,7 +17,7 @@ sont repris sans changement de fond ; ce document décrit ce qui est nouveau ou 
 | Production | une seule API (construite depuis `v2/api`) et une seule base pour les deux jeux ; le jeu v2 sur `aldoria2.bandtrack.fr` | D11 |
 | Contenu du monde | JSON dans `content/monde/`, jamais dans le code | D7 |
 | Déplacement | règles pures (eau, pentes, cercles d'obstacles) sans moteur physique | D8 |
-| Rendu | WebGL 2 par défaut ; WebGPU prêt (outils servis par le site, repli automatique), défaut à choisir après mesure | D9 |
+| Rendu | WebGL 2 par défaut ; WebGPU par `?moteur=webgpu` (mesuré à l'étape 0.4, à revoir sur le PC familial) | D9 |
 | CSP | stricte (`style-src 'self'`, rien hors du site), vérifiée par les tests navigateur | D10 |
 
 ## 1. Architecture
@@ -95,41 +95,13 @@ client/
 Profils (`?qualite=`, `game/quality.ts`) : `haut` (défaut), `moyen`, `bas`. Ils ne changent que des réglages (taille des
 ombres, cascades, MSAA, SSAO, halo, densité de végétation, résolution), jamais le code d'une scène.
 
-### 2.3 Moteur : WebGL 2 par défaut, WebGPU prêt
+### 2.3 Moteur : WebGL 2 puis WebGPU
 
-`game/engine.ts` crée un moteur WebGL 2 par défaut ; `?moteur=webgpu` demande WebGPU, `?moteur=webgl2` force l'autre. Si WebGPU
-manque ou échoue à l'initialisation, le jeu repart en WebGL 2 (`world.engineFallback` dit pourquoi, le compteur `?perf` et le banc
-`?mesure` affichent « WebGL 2 (repli) »). Tout le code de rendu passe par l'API commune de Babylon.js et ne dépend pas du moteur.
-
-Babylon.js charge à la demande, depuis son CDN, glslang et twgsl (traduction d'un shader GLSL en WGSL) : la CSP l'interdit.
-`vite.config.ts` les copie de `node_modules/@babylonjs/core/assets/` vers `/ressources/babylon/` (build et `npm run dev`, même
-version que le moteur), `Tools.ScriptBaseUrl` y pointe, et nginx sert `.wasm` en `application/wasm` (type obligatoire avec
-`nosniff`). Les shaders de l'île ont tous leur version WGSL : ces fichiers (2,6 Mo, 0,9 Mo compressés) ne sont téléchargés que si
-un shader GLSL sans équivalent apparaît. Le choix du moteur par défaut attend les mesures de l'étape 0.5 : voir D9, avec la
-condition à remplir avant de passer WebGPU par défaut.
-
-Mesure : `?mesure` (`core/perf.ts`, `GameWorld.measure`) fait faire un tour fixe de l'île et rend une ligne pour
-`docs/perf-log.md` ; protocole dans ce journal.
-
-### 2.3 bis Les lieux de quête (`core/quest/`, `game/interior/`, `ui/PlaceScreen.tsx`)
-
-Un lieu (un des 30 donjons de la v1, `content/monde/lieux.json`) est six salles en enfilade : entrée, deux combats, énigme, combat,
-Effaceur. Le déroulé est **pur** (testé sans navigateur) :
-
-- `quest/layout.ts` : repère, zone praticable (`Floor`, un `Ground` qui rend « hors sol » dans les murs : le déplacement de
-  l'île glisse le long sans code de collision de plus), portes, trajet d'un clic ;
-- `quest/pieces.ts` : plan de construction (quelle pièce KayKit, où, tournée de combien) pour chacun des 30 lieux ;
-- `quest/run.ts` : ennemis et blessures, énigme, souffle repris, message du coffre ; `quest/heroVoice.ts` ;
-- `quest/controller.ts` : le déroulé entier, derrière **`QuestStage`** (le monde 3D : explorer, engager, jouer un tour, ouvrir
-  une porte, coffre) et **`QuestUi`** (panneaux, barres, bandeaux, questions). Un faux de chaque permet de tester le parcours
-  complet (`tests/quest-controller.test.ts`).
-
-`game/interior/InteriorWorld.ts` implémente `QuestStage` dans une seconde scène Babylon.js sur le même moteur : la boucle de
-l'île s'arrête pendant le lieu (`GameWorld.enterPlace` / `leavePlace`) et le cache des modèles est propre à chaque scène
-(`game/assets.ts`). Toute la géométrie fixe est en thin instances avec un seul matériau (un appel de dessin par sorte de pièce) ;
-seules les portes sont des modèles à part. `ui/PlaceScreen.tsx` prête l'interface au contrôleur et rend la main à l'île avec le
-résultat (la partie, la session `monde`, le lieu suivant qui s'ouvre). Session du serveur : `mode: "donjon"` avec les
-`chapter_codes` du lieu et l'énigme (`enigma.generator`, trois questions) ; `game_mode` des réponses : `combat`, `boss`, `enigme`.
+`game/engine.ts` crée un moteur WebGL 2. `?moteur=webgpu` essaie WebGPU (retour à WebGL 2 si le navigateur ne le propose pas).
+Babylon.js 9 a une version WGSL de tous les shaders de l'île : en WebGPU, il ne charge ni glslang ni twgsl (traduction des
+shaders GLSL, servis par un CDN que la CSP interdit). Étape 0.4 faite le 8 novembre : WebGL 2 reste le moteur par défaut, à revoir
+avec les mesures du PC familial (D9, `docs/perf-log.md`). Tout le code de rendu passe par l'API commune de Babylon.js et ne
+dépend pas du moteur ; un matériau ajouté doit exister en WGSL (vérifié avec `?moteur=webgpu`).
 
 ### 2.4 Déplacement et caméra
 
@@ -224,18 +196,19 @@ En production, **une seule API et une seule base servent les deux jeux** (D11). 
 
 | Service | Image | Publiée et déployée par | Rôle |
 | --- | --- | --- | --- |
-| `web` | `aldoria-web` (`ALDORIA_TAG`) | `.github/workflows/ci.yml` | jeu v1 sur `aldoria.bandtrack.fr`, espace parent sur `aldoria-admin.bandtrack.fr` |
-| `web2` | `aldoria-web2` (`ALDORIA2_TAG`) | `.github/workflows/v2.yml` | jeu v2 sur `aldoria2.bandtrack.fr` (contient aussi l'espace parent de `v2/admin`, servi à l'étape 0.8) |
+| `web` | `aldoria-web` (`ALDORIA_TAG`) | `.github/workflows/ci.yml` | jeu v1 sur `aldoria.bandtrack.fr` |
+| `web2` | `aldoria-web2` (`ALDORIA2_TAG`) | `.github/workflows/v2.yml` | jeu v2 sur `aldoria2.bandtrack.fr`, espace parent (`v2/admin`) sur `aldoria-admin.bandtrack.fr` (depuis l'étape 0.8) |
 | `api` | `aldoria-api` (`ALDORIA2_TAG`) | `.github/workflows/v2.yml`, depuis `v2/api` | API des deux jeux ; `/api` est routé vers elle sur `aldoria.*` et `aldoria2.*` |
 | `voice`, `db`, `backup` | inchangés | `ci.yml` (voix, sauvegardes) | inchangés |
 
-- `v2.yml` (chemins `v2/**`, son fichier, `deploy/docker-compose.yml`) : API (ruff, pytest), espace parent (build), client
-  (types, Vitest, build, parcours navigateur). Sur `main` : publication des deux images (contexte `v2/`), puis déploiement.
+- `v2.yml` (chemins `v2/**`, son fichier, `.github/scripts/**`, `deploy/docker-compose.yml`) : API (ruff, pytest), espace
+  parent (build, puis parcours navigateur contre l'image `web2` : `tools/e2e_admin.sh`), client (types, Vitest, build,
+  parcours navigateur). Sur `main` : publication des deux images (contexte `v2/`), puis déploiement.
 - **Déploiement v2** (job `deploy`, mêmes secrets SSH que la v1, environnement `production`) : sauvegarde vérifiée de la base
   si la migration appliquée en base (donnée par `/health`) n'est pas la dernière de `v2/api`, ou si l'API ne répond pas ; copie
   du Compose ;
   `ALDORIA2_TAG` écrit dans `.env` ; `docker compose pull api web2` puis `up -d --no-deps api web2` ; l'API en service et
-  `aldoria2.bandtrack.fr/version.txt` doivent donner ce commit dans les 5 minutes ; puis le parcours navigateur (mode découverte,
+  `aldoria2.bandtrack.fr/version.txt` et `aldoria-admin.bandtrack.fr/version.txt` doivent donner ce commit dans les 5 minutes ; puis le parcours navigateur (mode découverte,
   rien n'est enregistré) tourne contre `aldoria2.bandtrack.fr`.
 - **Déploiement v1** (`ci.yml`) : ne publie plus l'API ; ne recrée que `web`, `voice` et `backup` ; ne contrôle que la version
   de son jeu. Son parcours navigateur construit l'API depuis `v2/api` : le jeu v1 est testé contre l'API de la production.
@@ -270,7 +243,7 @@ textures et animations des personnages allégées (une seule copie des animation
    avant) et le jeu v2 s'ouvre sur `aldoria2.bandtrack.fr`. Les deux jeux écrivent dans la même base : les réponses données dans
    la v2 comptent dans le suivi et dans l'espace parent. Un PC se relie une fois à `aldoria2` (l'appareil est mémorisé par site).
 2. **Étape 0.8** : l'espace parent est servi par le conteneur `web2` (code de `v2/admin`) ; `admin/` à la racine est gelé à son
-   tour.
+   tour, l'image `web` de la v1 ne contient plus que le jeu, et le parcours de l'espace parent est passé dans la CI v2.
 3. **Phase 4** : quand la v2 couvre ce que les enfants utilisent dans la v1 (critère du plan), le jeu v2 est servi aussi sur
    `aldoria.bandtrack.fr` ; la v1 reste quelques semaines sur une autre adresse, puis `game/` est archivé et `v2/` remonte à
    la racine (le Compose de production avec lui).

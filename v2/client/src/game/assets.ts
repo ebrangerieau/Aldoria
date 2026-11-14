@@ -19,17 +19,16 @@ import {
 
 export const MODELS = '/ressources/models'
 
-/** Un conteneur appartient à la scène dans laquelle il a été chargé : le cache est donc propre à chaque
- * scène (l'île, puis l'intérieur d'un lieu), sinon un modèle chargé pour l'une serait copié dans l'autre. */
+/** Un modèle chargé appartient à sa scène : une scène de plus (l'intérieur d'un lieu) a ses propres conteneurs. */
 const containers = new WeakMap<Scene, Map<string, Promise<AssetContainer>>>()
 
 export function loadContainer(scene: Scene, path: string): Promise<AssetContainer> {
-  let cache = containers.get(scene)
-  if (!cache) {
-    cache = new Map()
-    containers.set(scene, cache)
+  let loaded = containers.get(scene)
+  if (!loaded) {
+    loaded = new Map()
+    containers.set(scene, loaded)
   }
-  let promise = cache.get(path)
+  let promise = loaded.get(path)
   if (!promise) {
     promise = LoadAssetContainerAsync(`${MODELS}/${path}`, scene, {
       // Racine du squelette recalculée (ancêtre commun des os) au lieu de `skin.skeleton` : le
@@ -38,7 +37,7 @@ export function loadContainer(scene: Scene, path: string): Promise<AssetContaine
       // Sans effet sur un fichier valide (KayKit).
       pluginOptions: { gltf: { alwaysComputeSkeletonRootNode: true } },
     })
-    cache.set(path, promise)
+    loaded.set(path, promise)
   }
   return promise
 }

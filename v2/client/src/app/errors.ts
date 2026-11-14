@@ -6,6 +6,7 @@
  * Rien ne part sans appareil relié : le mode découverte et les tests n'envoient rien.
  */
 import { type ErrorReporter, locationOf } from '../core/errorReport'
+import { reloadPending } from './staleBuild'
 
 export const TEST_ERROR = "Erreur d'essai (erreur_test=1)"
 
@@ -17,10 +18,12 @@ export function captureEnabled(params: URLSearchParams, production: boolean): bo
 export function installErrorCapture(reporter: ErrorReporter, params: URLSearchParams): void {
   const origin = location.origin
   window.addEventListener('error', (event) => {
+    if (reloadPending()) return // nouvelle version : la page se recharge (app/staleBuild.ts)
     const fallback = event.filename ? `${event.filename}:${event.lineno}:${event.colno}` : ''
     reporter.add(event.message || String(event.error), locationOf((event.error as Error | undefined)?.stack, fallback, origin))
   })
   window.addEventListener('unhandledrejection', (event) => {
+    if (reloadPending()) return
     const reason = event.reason as unknown
     const message = reason instanceof Error ? reason.message : String(reason)
     reporter.add(`Promesse rejetée : ${message}`, locationOf(reason instanceof Error ? reason.stack : undefined, '', origin))
@@ -28,6 +31,7 @@ export function installErrorCapture(reporter: ErrorReporter, params: URLSearchPa
   const original = console.error.bind(console)
   console.error = (...args: unknown[]) => {
     original(...args)
+    if (reloadPending()) return
     const text = args.map((a) => (a instanceof Error ? a.message : typeof a === 'string' ? a : safeJson(a))).join(' ')
     const error = args.find((a): a is Error => a instanceof Error)
     reporter.add(text, locationOf(error?.stack, 'console.error', origin))

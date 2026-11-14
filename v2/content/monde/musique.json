@@ -1,0 +1,8 @@
+{
+  "description": "Morceaux de la musique d'ambiance, dans l'ordre où ils se jouent, en boucle (un seul morceau : il boucle sur lui-même). Les fichiers sont dans v2/deploy/musique/ (réencodés : 96 kbit/s, silence final retiré, fondu au début et à la fin) ; nginx les sert sous /musique/. Chaque morceau est aussi inscrit dans client/public/ressources/LICENSES.md.",
+  "morceaux": [
+    { "fichier": "theme.mp3", "titre": "Ritual of the Cursed", "outil": "Suno" },
+    { "fichier": "enchanted-forest.mp3", "titre": "Enchanted Forest", "outil": "Suno" },
+    { "fichier": "fog-shrouded-forest.mp3", "titre": "Fog-Shrouded Forest", "outil": "Suno" }
+  ]
+}

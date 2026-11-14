@@ -39,17 +39,48 @@
 >   d'enfant) ; dédoublonnées, par lots de 20, gardées sans réseau (`core/errorReport.ts`, `app/errors.ts`). Version du
 >   jeu dans les Options. 9 tests Vitest (123 en tout) ; le parcours navigateur vérifie la capture d'une erreur d'essai
 >   (`?erreur_test=1`). Reste à voir une vraie erreur dans Exploitation → Erreurs du jeu, une fois `aldoria2` en ligne.
+> - **0.6, mise en ligne** (D11) : la CI v2 publie l'API (depuis `v2/api`) et le jeu v2 ; la base a été sauvegardée puis
+>   est passée à la migration 0013 ; `aldoria2.bandtrack.fr` sert le jeu v2 à côté du jeu v1 (commit `24314b4`). Le job
+>   `deploy` vérifie d'abord que les images se lisent sans compte (le paquet `aldoria-web2` a été rendu public). Depuis le
+>   30 octobre, le pare-feu Hostinger n'ouvre le port 22 qu'à quelques adresses : chaque déploiement (v1 et v2) l'ouvre pour
+>   son runner par l'API Hostinger, puis le referme (`.github/scripts/vps-ssh.sh`, secret `HOSTINGER_API_TOKEN` ;
+>   `docs/exploitation.md`). Le parcours navigateur de contrôle passe contre `aldoria2` (job sur Ubuntu 24.04, commit `8387608`).
+> - **0.8, espace parent servi par la v2** : `aldoria-admin.bandtrack.fr` est routé vers le conteneur `web2` (build de
+>   `v2/admin`, routeur Traefik à part et de priorité 2) ; l'image `web` de la v1 ne contient plus que le jeu, `admin/` à la
+>   racine est gelé (`admin/README.md`). Le parcours de l'espace parent (`admin/e2e/admin_flow.js`, repris de la v1) tourne
+>   dans la CI v2 contre la vraie image `web2`, avec base, API et sauvegarde jetables (`tools/e2e_admin.sh`) ; après chaque
+>   mise en ligne, la CI vérifie que l'espace parent sert le commit (`aldoria-admin…/version.txt`).
+> - **0.4, WebGPU** (8 novembre) : servir twgsl n'est pas nécessaire. Babylon.js 9 a une version WGSL de tous les shaders de
+>   l'île : en WebGPU, rien ne vient du CDN, aucune violation de la CSP, dans les deux mondes. Mesures sur le PC de
+>   développement (`client/e2e/perf.mjs`, `npm run perf`) : à 60 Hz au profil `haut`, WebGPU est plus régulier que WebGL 2 ;
+>   sans limite, WebGL 2 rend plus d'images ; aucune différence visible aux autres profils (`docs/perf-log.md`). WebGL 2 reste
+>   le moteur par défaut (D9 revue), à revoir avec les mesures du PC familial. Le compteur `?perf` affiche le moteur actif.
+> - **0.9, mini-carte** (8 novembre, avant la première séance : le critère de passage dit « sans aide », et V2-02 « ne jamais
+>   être perdu ») : en haut à droite, nord en haut, relief vu d'en haut (couleurs des régions, mer, neige, ombrage), Citadelle,
+>   village, île du Sphinx, lieux de quête (doré : ouvert, gris : fermé, coche : terminé), pierres (bleue : endormie, dorée :
+>   éveillée), héros en goutte orientée et cône du regard ; nom du lieu où l'on est dessous. Touche M (la lettre : AZERTY
+>   et QWERTY) ou bouton « Carte » pour la cacher, choix gardé pour chaque enfant ; jamais pendant une question. Repères lus
+>   dans le monde (`GameWorld.mapInfo`, événements `hero` et `markers`), logique dans `core/world/minimap.ts` (11 tests) ; la
+>   Tour de l'Oubli n'y figure pas. Le parcours navigateur vérifie que la carte suit le héros, se cache avec M, reste en
+>   place pendant une question et montre la pierre éveillée. Pas encore : aller quelque part en cliquant sur la carte, grande
+>   carte plein écran, brouillard des régions (phase 2) ; à décider d'après la séance.
+> - **0.10, musique de la v1** (8 novembre) : le thème (« Ritual of the Cursed », Suno) était déjà servi par `web2` mais
+>   rien ne le jouait. Lecteur `app/music.ts` (mélangeur de volume `core/music.ts`, 15 tests) : démarre à l'entrée dans l'île,
+>   boucle, fondu d'une seconde et demie, s'éteint pendant une question, baisse sous une voix, plus bas en mode calme ;
+>   bouton « Musique » et volume dans les Options (choix gardé pour chaque enfant), crédit dans les Options. Plusieurs
+>   morceaux : `content/monde/musique.json` (ordre de lecture), `tools/encode_musique.py` (même traitement que le thème,
+>   volume égalisé), procédure dans `docs/exploitation.md`. Trois morceaux à la suite, pour les deux enfants : le thème,
+>   « Enchanted Forest » (3 min 30) et « Fog-Shrouded Forest » (3 min 35), puis on recommence (le parcours navigateur saute
+>   à la fin de chacun et vérifie l'enchaînement). Pas encore : un morceau par monde ou par région (phase 3 ; « Enchanted
+>   Forest » irait à Jules et « Fog-Shrouded Forest » au Brouillard de Tom), sons d'ambiance.
 
 **Reste à faire pour terminer la phase 0**
 
 | Étape | Quoi | Comment vérifier |
 | --- | --- | --- |
-| 0.1 | Jouer la v2 avec un vrai profil (connexion, séance `monde`, réponses en base, sauvegarde `v2`) : se fait sur `aldoria2.bandtrack.fr` dès l'étape 0.6 | l'espace parent montre la séance « Exploration » et les réponses de la v2 |
+| 0.1 | Jouer la v2 avec un vrai profil (connexion, séance `monde`, réponses en base, sauvegarde `v2`) : sur `aldoria2.bandtrack.fr`, après avoir relié le PC une fois (code de l'onglet Famille) | l'espace parent montre la séance « Exploration » et les réponses de la v2 |
 | 0.3 | Commandes au clavier vérifiées sur AZERTY et QWERTY ; souris (orbite, molette) sur le PC familial | séance de 5 minutes avec Eric |
-| 0.4 | ✅ **Fait le 14 novembre** : WebGPU prêt (glslang et twgsl servis par le site, repli automatique sur WebGL 2, nginx `application/wasm`), banc de mesure `?mesure`, parcours `npm run e2e:webgpu` (CI : étape non bloquante, résumé du job). Le moteur par défaut reste WebGL 2 et se décide à l'étape 0.5 (D9) | `npm run e2e:webgpu` ; D9 |
-| 0.5 | Mesures sur le PC familial (et le PC de Tom) avec `?mesure`, **dans les deux moteurs** (WebGL 2 et WebGPU), aux trois profils, deux fois : images par seconde, saccades, chargement, mémoire. Puis choisir le profil par défaut **et le moteur par défaut** (D9 : WebGPU seulement s'il est au moins aussi fluide à `haut` et après une garde contre la perte de l'appareil) | `docs/perf-log.md` (protocole en tête) ; décision D9 mise à jour |
-| 0.6 | Mise en ligne (D11) : la CI v2 publie l'API (depuis `v2/api`) et le jeu v2, sauvegarde la base, applique la migration 0013 et ouvre `aldoria2.bandtrack.fr` à côté du jeu v1. À faire par Eric une fois : l'entrée DNS `aldoria2`, et vérifier que le VPS peut tirer la nouvelle image `aldoria-web2` | job `deploy` de `v2.yml` vert : API et `version.txt` du commit, parcours navigateur contre le site |
-| 0.8 | Espace parent servi par `web2` (code de `v2/admin`) au lieu du conteneur de la v1 ; `admin/` à la racine gelé | `aldoria-admin.bandtrack.fr` sert le build de `v2/admin` (libellé « Exploration », guide à jour) |
+| 0.5 | Mesures sur le PC familial (et le PC de Tom) : images par seconde par profil, chargement, mémoire, en WebGL 2 et avec `&moteur=webgpu` (protocole de `docs/perf-log.md`) | `docs/perf-log.md` ; profil et moteur par défaut choisis d'après les mesures (D9) |
 
 **Critère de passage** : Jules et Tom se promènent dix minutes dans l'île sans aide, trouvent et éveillent au moins trois
 pierres chacun, et disent ce qu'ils voudraient y trouver. On note où ils s'ennuient et où ils se perdent.
@@ -61,6 +92,19 @@ et le Labyrinthe des Vecteurs (Tom), les premiers de la v1.
 
 - Intérieur chargé à part (scène Babylon.js par lieu, transition depuis le seuil), étages qui montent (souhait des enfants),
   décor repris de `lieux.json` (`v1_decor`).
+  **✅ Étape 1.2 faite (8 novembre 2026)** : « J'y vais » ouvre l'intérieur du lieu derrière l'écran de chargement. Six salles de
+  16 × 20 m en enfilade, chacune 4 m plus haut, reliées par une porte (battant ouvert) et un escalier ; vue en coupe, caméra au
+  sud dans un arc devant le héros ; décor KayKit de `v1_decor`, torches (lumières des salles voisines), ambiance par monde
+  (couleurs de la v1). Géométrie dans `core/world/dungeon.ts` (22 tests : sol, escaliers, murs, 30 lieux traversés du bas en
+  haut), scène dans `game/interior.ts` (même moteur et même canevas que l'île, qui est mise en pause : `GameWorld.enterPlace` /
+  `leavePlace`). Étage affiché en haut, mini-carte cachée, sortie par la porte du mur ouest de la première salle (E), retour
+  devant le seuil. Mesuré : 60 images/s aux trois profils, 0,6 à 1,7 s de chargement ; WebGPU
+  (`&moteur=webgpu`) identique, sans erreur ni requête hors du site. Les 30 lieux s'ouvrent sans erreur ; le parcours navigateur
+  vérifie aussi l'orientation des escaliers et des battants de porte. Pas encore (étapes suivantes) : ennemis, boss, énigme, coffre,
+  portes fermées tant que la salle n'est pas vaincue ; clic sur le sol (il faudra un chemin par les portes et l'escalier : au
+  clavier seulement pour l'instant) ; le renard de Jules reste dehors (dans la v1, le compagnon suivait dans un donjon qui monte) ;
+  la musique continue de jouer dans un lieu (dans la v1, silence en donjon) ; le mur de séparation cache le héros une fraction de
+  seconde quand il passe une porte (la caméra est au sud, dans l'axe du mur).
 - **Rencontres au tour par tour** : port de `Encounter` (v1) dans `core/combat/` (testé sans moteur) ; l'ennemi est dans le
   décor, le monde se fige pendant la question ; Frappe (automatisme), Sort (chapitre), Soin, Sac ; repli sans perte. Monstres
   Quaternius (`Fighter.MONSTERS` de la v1 à porter) et squelettes KayKit.
@@ -71,26 +115,20 @@ et le Labyrinthe des Vecteurs (Tom), les premiers de la v1.
 - Note de 1 à 5 en fin de lieu (`session/end`, `rating`).
 - Widgets restants : vecteur (Tom en a besoin dès le Labyrinthe), droite graduée, tableau de signes.
 
-> ✅ **Fait le 14 novembre 2026** (la phase 1 est lancée à la demande d'Eric, **sans que la séance de la phase 0 ait eu lieu** :
-> la règle 1 du plan n'est pas respectée, à rattraper avec les enfants) :
-> - **Règles pures et testées** (`core/`) : `combat/` (Encounter, Fighter, monstres des 30 lieux), `progression/` (XP, niveaux, sac de
->   cinq objets), `quest/` (géométrie de l'intérieur, plan de construction des 30 lieux, voix du héros, règles du lieu, contrôleur
->   du déroulé). 236 tests Vitest.
-> - **Intérieur 3D** (`game/interior/`) : six salles KayKit en thin instances, héros et ennemis animés (squelettes KayKit,
->   monstres Quaternius mis à taille), combat au contact (D12), énigme à trois piédestaux, Effaceur à huit sceaux, coffre, page
->   rendue, reprise à la salle franchie, note de fin ; interface React (barres de vie, menu Frappe/Sort/Soin/Sac, bandeaux, textes
->   qui montent). Le bouton « J'y vais » des seuils ouvre le lieu ; l'île reprend avec le lieu suivant ouvert et le salut
->   enregistré de Maître Ysaline (D13).
-> - **Visuels de questions** : balance, droite graduée, repère quadrillé (vecteurs), tableau de signes. 24 lieux sur 30 sont
->   entièrement jouables avec ce que l'API envoie ; les six lieux de maths prennent une question du chapitre à la place de
->   l'énigme tant que leurs visuels (graph, robot, map, pont, rapporteur, repère de tir) manquent.
-> - Parcours `npm run e2e:lieu` : la Tour des Fractions de l'entrée au coffre, sous la CSP de production.
->
-> **Reste à faire pour terminer la phase 1** : temps de jeu fixé par le parent (limite, rappel de pause : absent de la v2) ;
-> étages qui montent (D12) ; sons (`Sfx` de la v1 : coups, bonne réponse, victoire) ; lieu de Tom vérifié en séance (Labyrinthe
-> des Vecteurs : le reste des visuels de maths) ; réglage de la lumière et de la caméra à l'œil ; séance observée.
-
 **Critère de passage** : chaque enfant termine son lieu, et **demande à en faire un autre**. Note de fin de lieu ≥ 4.
+
+**Découpage** (8 novembre 2026 : Eric a choisi de commencer la phase 1 avant la première séance ; les étapes 0.1, 0.3, 0.5 et la
+séance de la phase 0 restent à faire et passeront sur l'ensemble). Chaque étape est une PR qui laisse le jeu jouable ; on commence
+par ce qui se teste sans moteur.
+
+| Étape | Quoi | Fait |
+| --- | --- | --- |
+| 1.1 | **Règles du combat** : `core/combat/encounter.ts` (puissance, critique, boss et ses sceaux, soin, riposte, bouclier et potion, repli) et `core/progression.ts` (XP, niveaux, PV), portés de la v1 avec 36 tests (un `Encounter` par donjon, `engage` à chaque ennemi) ; aucune mise en scène | ✅ |
+| 1.2 | **Intérieur d'un lieu** : scène Babylon.js chargée à part, transition depuis le seuil (« J'y vais »), salles de `lieux.json`, étages qui montent, retour à l'île | |
+| 1.3 | **Rencontres dans le décor** : monstres Quaternius et squelettes KayKit, monde figé pendant la question, barre d'actions (Frappe, Sort, Soin, Sac) et panneau de question, repli sans perte ; brancher l'aménagement `no_speed` (déjà dans `Accommodations`) sur `EncounterSettings.noSpeed`, et le sac d'objets (phase 2) sur `useShield` / `usePotion` | |
+| 1.4 | **Effaceur, coffre, page** : sceaux du boss, répliques d'entrée et de défaite, coffre et page rendue, lieu suivant qui s'ouvre, salut de Maître Ysaline au retour | |
+| 1.5 | **Énigme à trois piédestaux, héros qui parle, note de 1 à 5** (`session/end`, `rating`) | |
+| 1.6 | **Widgets** : vecteur, droite graduée, tableau de signes (Tom en a besoin dès le Labyrinthe des Vecteurs) ; fait aussi : la balance et le repère quadrillé (énigmes des deux premiers lieux) et `isPlayable` (une question dont le visuel manque n'est jamais posée) : `core/visuals.ts`, `ui/widgets/Visuals.tsx`. 24 lieux sur 30 n'ont besoin d'aucun autre visuel ; restent graph, robot, map, table, pont, rapporteur, repère de tir | ✅ |
 
 ## Phase 2 : reprendre ce que les enfants aimaient dans la v1
 
@@ -133,8 +171,7 @@ L'API et la base sont communes depuis l'étape 0.6 (D11) : la bascule ne touche 
 ## Questions à poser aux enfants dès la première séance
 
 1. Qu'est-ce que tu as envie de trouver en te promenant dans l'île ?
-2. Les rencontres : tu veux voir les ennemis venir vers toi, ou les trouver en entrant dans une salle ? (aujourd'hui : on les
-   réveille en s'approchant, D12 ; et les étages qui montent, tu les veux ?)
+2. Les rencontres : tu veux voir les ennemis venir vers toi, ou les trouver en entrant dans une salle ?
 3. Le renard (Jules) : il doit faire quoi ? Trouver des passages, des objets, des pierres cachées ?
 4. Tom : le monde Brouillard est-il assez différent ? Plus sombre, la nuit, la pluie ?
 5. Vous jouez où : sur quel PC, combien de temps, à quel moment de la journée ?

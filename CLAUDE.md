@@ -9,13 +9,15 @@ Documents de référence : `docs/PRD.md`, `docs/TRD.md`, `IMPLEMENTATION_PLAN.md
 **L'API de production se construit depuis `v2/api`** et sert les deux jeux, sur la même base (`v2/docs/decisions.md`, D11) :
 `api/` à la racine est **gelé**, toute évolution de l'API se fait dans `v2/api` (qui garde les tests de la v1 et ne doit jamais
 casser le jeu v1). Le Compose de production (`deploy/docker-compose.yml`) a deux jeux : `web` (v1, déployé par `ci.yml`) et
-`web2` (v2, sur `aldoria2.*`, déployé avec l'API par `v2.yml`) ; chaque CI ne recrée que ses services.
+`web2` (v2, sur `aldoria2.*`, et espace parent de `v2/admin` sur `aldoria-admin.*`, déployé avec l'API par `v2.yml`) ;
+chaque CI ne recrée que ses services.
 
 ## Arborescence
 
 - `game/` : projet Godot (GDScript typé, renderer Compatibility, export web sans threads)
 - `api/` : FastAPI (Python 3.12, `uv`)
-- `admin/` : espace parent React + TypeScript + Vite (servi par l'image `web` sur `aldoria-admin.*`)
+- `admin/` : espace parent React + TypeScript + Vite, **gelé** depuis l'étape 0.8 de la v2 : l'espace parent servi sur
+  `aldoria-admin.*` est celui de `v2/admin` (image `web2`), qui évolue seul
 - `content/` : schémas d'items, seed, vecteurs de test partagés API/client
 - `deploy/` : docker-compose (Traefik bandtrack.fr), Dockerfiles, nginx
 - `tools/` : scripts (post-traitement de l'export web…)
@@ -37,9 +39,9 @@ uv run --directory api python ../tools/export_pack_fixture.py
 godot --path game --rendering-driver opengl3 -- --scene=calibration --screenshot=C:/chemin/capture.png --quality=tablette
 # Galerie de questions (PC) : une question d'un type donné, tirée des paquets de test, dans le vrai panneau
 godot --path game --rendering-driver opengl3 -- --scene=questions --level=6e --type=number_line [--visual=graph] [--index=0] --screenshot=C:/chemin/q.png --shot-delay=1.5
-# Espace parent : vérification des types + build ; `npm run dev` relaie /api vers l'API locale
-# (exporter ALDORIA_ADMIN_KEY, la même que celle du conteneur API local)
-npm --prefix admin run build
+# Espace parent (v2/admin) : vérification des types + build ; `npm run dev` relaie /api vers l'API locale
+# (exporter ALDORIA_ADMIN_KEY, la même que celle du conteneur API local) ; parcours : bash v2/tools/e2e_admin.sh
+npm --prefix v2/admin run build
 # API
 uv run --directory api pytest -q
 uv run --directory api ruff check .
@@ -313,6 +315,6 @@ sauvegarde avant migration, push, suivi de la CI, contrôle en production). Les 
   L'espace parent n'utilise aucun style en ligne (CSP `style-src 'self'`) : graphiques en SVG.
   Résumé de la semaine (onglet Semaine, `GET /admin/profiles/{id}/week?offset=N`, `app/weekly.py`) : lundi à dimanche,
   heure de Paris (`tzdata`), comparé à la semaine précédente, une phrase de résumé sans pronom (le prénom).
-  Toute fonction ajoutée ou modifiée dans l'espace parent est décrite dans son guide (`admin/src/Guide.tsx`),
+  Toute fonction ajoutée ou modifiée dans l'espace parent est décrite dans son guide (`v2/admin/src/Guide.tsx`),
   en langage simple, avec les étapes pour s'en servir.
 - Textes visibles par les enfants en français ; aucune donnée personnelle hors du foyer.

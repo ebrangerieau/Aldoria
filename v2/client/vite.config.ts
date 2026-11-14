@@ -1,12 +1,91 @@
-import { createReadStream, existsSync, readFileSync } from 'node:fs'
+import { createReadStream, existsSync, statSync } from 'node:fs'
+import type { IncomingMessage, ServerResponse } from 'node:http'
 import { fileURLToPath } from 'node:url'
 import react from '@vitejs/plugin-react'
-import type { Plugin } from 'vite'
-import { defineConfig } from 'vitest/config'
+import { defineConfig, type Plugin } from 'vitest/config'
 
 // Contenus partagés avec l'API (content/ : lieux, régions, vecteurs de test) : importés tels
 // quels, jamais recopiés dans le client.
 const content = fileURLToPath(new URL('../content', import.meta.url))
+
+/**
+ * La musique (deploy/musique/*.mp3) n'est pas dans le client : en production nginx la sert sous
+ * /musique/ (deploy/web.Dockerfile). Ici, le serveur de développement et la prévisualisation la
+ * servent depuis le même dossier, avec les requêtes par plages (Range) dont les lecteurs audio ont
+ * besoin pour boucler et reprendre.
+ */
+const musicDir = fileURLToPath(new URL('../deploy/musique/', import.meta.url))
+
+function serveMusic(req: IncomingMessage, res: ServerResponse, next: () => void): void {
+  let name = ''
+  try {
+    name = decodeURIComponent((req.url ?? '').split('?')[0]!.replace(/^\/musique\//, ''))
+  } catch {
+    return next() // adresse mal encodée : pas un de nos fichiers
+  }
+  if (!req.url?.startsWith('/musique/') || !/^[\w.-]+\.mp3$/.test(name) || !existsSync(musicDir + name)) return next()
+  const size = statSync(musicDir + name).size
+  const range = /^bytes=(\d*)-(\d*)$/.exec(req.headers.range ?? '')
+  let start = 0
+  let end = size - 1
+  if (range) {
+    if (range[1] !== '') start = Number(range[1])
+    if (range[2] !== '') end = Math.min(end, Number(range[2]))
+    if (range[1] === '' && range[2] !== '') {
+      start = Math.max(0, size - Number(range[2]))
+      end = size - 1
+    }
+    if (start > end || start >= size) {
+      res.writeHead(416, { 'Content-Range': `bytes */${size}` }).end()
+      return
+    }
+  }
+  res.writeHead(range ? 206 : 200, {
+    'Content-Type': 'audio/mpeg',
+    'Accept-Ranges': 'bytes',
+    'Content-Length': end - start + 1,
+    'Cache-Control': 'no-cache',
+    ...(range ? { 'Content-Range': `bytes ${start}-${end}/${size}` } : {}),
+  })
+  if (req.method === 'HEAD') res.end()
+  else createReadStream(musicDir + name, { start, end }).pipe(res)
+}
+
+const music = (): Plugin => ({
+  name: 'aldoria-musique',
+  configureServer: (server) => void server.middlewares.use(serveMusic),
+  configurePreviewServer: (server) => void server.middlewares.use(serveMusic),
+})
+
+/**
+ * Voix enregistrées (ElevenLabs) de Maître Ysaline et du narrateur : deploy/voix/, servies sous /voix/
+ * (src/core/recordedVoices.ts). En production, l'image web les copie à côté du jeu (deploy/web.Dockerfile) ;
+ * ici, `npm run dev` et `npm run preview` (donc les parcours dans le navigateur) les lisent à la source.
+ */
+const voiceDir = fileURLToPath(new URL('../deploy/voix/', import.meta.url))
+
+function serveVoices(req: IncomingMessage, res: ServerResponse, next: () => void): void {
+  let name = ''
+  try {
+    name = decodeURIComponent((req.url ?? '').split('?')[0]!.replace(/^\/voix\//, ''))
+  } catch {
+    return next() // adresse mal encodée : pas un de nos fichiers
+  }
+  if (!req.url?.startsWith('/voix/') || !/^[\w.-]+\.(mp3|json)$/.test(name) || !existsSync(voiceDir + name)) return next()
+  res.writeHead(200, {
+    'Content-Type': name.endsWith('.mp3') ? 'audio/mpeg' : 'application/json',
+    'Content-Length': statSync(voiceDir + name).size,
+    'Cache-Control': 'no-cache',
+  })
+  if (req.method === 'HEAD') res.end()
+  else createReadStream(voiceDir + name).pipe(res)
+}
+
+const recordedVoices = (): Plugin => ({
+  name: 'aldoria-voix',
+  configureServer: (server) => void server.middlewares.use(serveVoices),
+  configurePreviewServer: (server) => void server.middlewares.use(serveVoices),
+})
 
 /** CSP du jeu, identique à celle de deploy/nginx/web.conf. */
 export const CSP = [
@@ -23,56 +102,8 @@ export const CSP = [
   "form-action 'none'",
 ].join('; ')
 
-/**
- * Outils que Babylon.js charge à la demande pour WebGPU (glslang et twgsl : traduction d'un
- * shader GLSL en WGSL), pris dans le paquet installé (même version que le moteur) et servis par
- * le site sous /ressources/babylon/ (src/game/engine.ts) : jamais depuis le CDN de Babylon.js,
- * que la CSP refuse. Copiés dans le build, servis tels quels par `npm run dev`.
- */
-export const BABYLON_TOOLS = ['glslang/glslang.js', 'glslang/glslang.wasm', 'twgsl/twgsl.js', 'twgsl/twgsl.wasm']
-
-function babylonTools(): Plugin {
-  const source = fileURLToPath(new URL('./node_modules/@babylonjs/core/assets/', import.meta.url))
-  return {
-    name: 'aldoria-babylon-tools',
-    configureServer(server) {
-      server.middlewares.use('/ressources/babylon/', (req, res, next) => {
-        const file = BABYLON_TOOLS.find((f) => req.url === `/${f}`)
-        if (!file) return next()
-        res.setHeader('Content-Type', file.endsWith('.wasm') ? 'application/wasm' : 'text/javascript')
-        createReadStream(source + file).pipe(res)
-      })
-    },
-    generateBundle() {
-      for (const file of BABYLON_TOOLS) {
-        this.emitFile({ type: 'asset', fileName: `ressources/babylon/${file}`, source: readFileSync(source + file) })
-      }
-    },
-  }
-}
-
-/**
- * Voix enregistrées (ElevenLabs) de Maître Ysaline et du narrateur : deploy/voix/, servies sous /voix/
- * (src/core/recordedVoices.ts). En production, l'image web les copie à côté du jeu (deploy/web.Dockerfile) ;
- * ici, `npm run dev` et `npm run preview` (donc les parcours dans le navigateur) les lisent à la source.
- */
-function recordedVoices(): Plugin {
-  const dir = fileURLToPath(new URL('../deploy/voix/', import.meta.url))
-  const serve = (req: { url?: string }, res: import('node:http').ServerResponse, next: () => void) => {
-    const name = decodeURIComponent((req.url ?? '').split('?')[0]!.slice(1))
-    if (!/^[\w.-]+\.(mp3|json)$/.test(name) || !existsSync(dir + name)) return next()
-    res.setHeader('Content-Type', name.endsWith('.mp3') ? 'audio/mpeg' : 'application/json')
-    createReadStream(dir + name).pipe(res)
-  }
-  return {
-    name: 'aldoria-voix',
-    configureServer: (server) => void server.middlewares.use('/voix/', serve),
-    configurePreviewServer: (server) => void server.middlewares.use('/voix/', serve),
-  }
-}
-
 export default defineConfig({
-  plugins: [react(), babylonTools(), recordedVoices()],
+  plugins: [react(), music(), recordedVoices()],
   resolve: { alias: { '@content': content } },
   server: {
     port: 5173,

@@ -5,40 +5,55 @@ téléchargés, moins de 400 appels de dessin, moins de 2 millions de triangles 
 
 ## Protocole
 
-Le jeu mesure lui-même (`?mesure`). Il fait faire au héros un tour fixe de l'île (le départ, le village, puis chaque région, vue
-depuis un peu avant son cœur), avec un tour complet de caméra à chaque arrêt, et relève la durée de chaque image, le temps du
-processeur (`scene.render`) et celui de la carte graphique quand le navigateur le permet.
+1. Ouvrir le jeu avec `?decouverte&perf&qualite=haut` (puis `moyen`, `bas`) dans Chrome ou Edge, en plein écran.
+2. Attendre 20 s sans toucher la souris au point de départ, puis 20 s en courant vers les Cimes Fractales.
+3. Noter le compteur en bas à droite (images par seconde, appels de dessin, triangles) et, dans les outils de développement
+   (onglet Réseau, cache désactivé), le poids téléchargé et le temps jusqu'à l'île prête.
+4. Recharger pour mesurer le chargement en cache.
+5. Refaire 1 à 3 avec `&moteur=webgpu` (le compteur indique le moteur actif).
 
-1. Ouvrir `https://aldoria2.bandtrack.fr/?decouverte&mesure&qualite=haut&moteur=webgl2` dans Chrome ou Edge, en plein écran,
-   sans autre onglet ni programme gourmand. Ne toucher ni la souris ni le clavier pendant les 40 secondes du tour
-   (`&mesure=60` pour un tour plus long).
-2. Le panneau final donne les résultats et **une ligne prête à copier** (« Copier la ligne ») pour le tableau ci-dessous. Si
-   le panneau dit « moins de 60 images relevées », **ne pas recopier** : le rendu est trop lent pour conclure.
-3. « Mesurer en WebGPU » refait la même mesure avec l'autre moteur. Toujours mesurer **les deux moteurs, les trois profils**
-   (`haut`, `moyen`, `bas`), **deux fois** (la première chauffe le cache et compile les shaders).
-4. Noter à la main ce que le navigateur masque : le nom exact de la carte graphique (Gestionnaire des tâches, onglet
-   Performances ; le panneau n'en donne souvent que le fabricant en WebGPU) et, sous le tableau, le poids téléchargé et le temps de
-   chargement à froid (outils de développement, onglet Réseau, cache désactivé).
+Sur un poste qui a le dépôt : `npm --prefix client run perf` mesure tout cela seul (moteurs, profils, deux vues ; voir
+l'en-tête de `client/e2e/perf.mjs`), avec `PERF_SYNCHRO=1` pour la synchronisation normale.
 
-Le conteneur de développement n'a pas de carte graphique (rendu logiciel SwiftShader) : ses chiffres servent à suivre les appels
-de dessin et les triangles, jamais à comparer deux moteurs ni à juger la fluidité.
-
-## Banc de mesure (`?mesure`)
-
-Une ligne par moteur, profil et passage, telle que le panneau la donne. Les temps de la carte graphique sont « n. d. » quand le
-navigateur ne les fournit pas.
-
-| Date | Carte | Navigateur | Moteur | Profil | Rendu | Images/s | 95e centile | Saccades | Processeur | Carte graphique | Appels | Triangles | Île prête | Mémoire JS |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| à faire | PC familial | Chrome / Edge | WebGL 2 et WebGPU | haut, moyen, bas | | | | | | | | | | étape 0.5 du plan |
-
-## Relevés à la main du 7 novembre (avant le banc)
+## Mesures
 
 | Date | Appareil | Navigateur | Profil | Images/s | Appels | Triangles | Téléchargé | Île prête | Remarques |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | 2026-11-07 | conteneur de développement, sans carte graphique (SwiftShader) | Chromium 1243 sans tête | bas | 14 | 172 | 0,32 M | 11,9 Mo | 1,5 s (serveur local) | images/s sans valeur hors carte graphique ; sert à suivre appels et triangles |
 | 2026-11-07 | idem | idem | moyen | 4 | 218 | 0,85 M | idem | idem | |
 | 2026-11-07 | idem | idem | haut | 3 | 290 | 1,44 M | idem | idem | végétation réduite à 60 % : à 100 %, 2,59 M triangles |
+| à faire | PC familial | Chrome / Edge | haut, moyen, bas | | | | | | étape 0.5 du plan ; comparer aussi `&moteur=webgpu` |
+
+## WebGL 2 face à WebGPU (8 novembre, étape 0.4)
+
+Mesuré par `npm --prefix client run perf` (`client/e2e/perf.mjs`, serveur de prévisualisation lancé) : Edge 152 sans fenêtre,
+carte graphique du PC de développement d'Eric (puce Intel intégrée, architecture Xe-LPG), 1920 × 1080, mode découverte,
+vues « départ » et « panorama », 10 s par vue après 4 s de mise en route. Le compteur `?perf` affiche le moteur actif.
+
+**Sans synchronisation verticale** (ce que la machine peut rendre) :
+
+| Profil | WebGL 2 | WebGPU | Appels | Triangles |
+| --- | --- | --- | --- | --- |
+| haut | 98 à 99 i/s | 95 à 96 i/s | 319 à 325 | 1,46 M |
+| moyen | 178 à 189 i/s | 106 à 138 i/s | 242 à 248 | 0,86 M |
+| bas | 566 à 591 i/s | 320 à 340 i/s | 189 à 192 | 0,33 M |
+
+**Synchronisation normale (60 Hz)**, profil `haut`, quatre passages en alternant l'ordre des moteurs :
+
+| Moteur | Images/s | 95 % des images en moins de | Calcul d'une image (processeur) |
+| --- | --- | --- | --- |
+| WebGL 2 | 55 à 60 | 18 à 28 ms (à-coups dans 3 passages sur 4) | 2,7 ms |
+| WebGPU | 60 | 17,5 à 18 ms | 4 ms |
+
+Aux profils `moyen` et `bas`, les deux moteurs tiennent 60 i/s sans à-coups (95 % des images en moins de 17,7 ms).
+Île prête en 0,9 à 1,7 s avec les deux (serveur local). Monde Brouillard : mêmes ordres de grandeur, aucune erreur.
+
+**En WebGPU, aucun fichier ne vient du CDN** de Babylon.js : ni glslang ni twgsl ne sont demandés (Babylon.js 9 a une version WGSL
+de tous les shaders de l'île), aucune violation de la CSP, aucune erreur, dans les deux mondes. Servir twgsl (1,7 Mo) et glslang
+(0,9 Mo) depuis le site n'est donc pas utile tant qu'aucun matériau seulement GLSL n'est ajouté.
+
+Lecture : sur cette machine, WebGL 2 rend plus d'images quand rien ne le limite, mais WebGPU est plus régulier au profil `haut`
+à 60 Hz. L'écart est faible et ne vaut que pour ce PC ; décision dans `docs/decisions.md` (D9).
 
 **Poids du build** (7 novembre) : Babylon.js 8,2 Mo (1,8 Mo compressé, chargé seulement à l'entrée dans l'île), interface 0,35 Mo
 (0,1 Mo compressé), KaTeX 0,26 Mo et ses polices. Modèles 3D téléchargés pour l'île : 9,8 Mo, dont 3,7 Mo pour le chevalier
