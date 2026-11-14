@@ -128,6 +128,17 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   (`helpCounted` : seul « Un indice ? » baisse la puissance du coup). Tests dans le navigateur (`&e2e`) : `__aldoria.give(id, n)` met des objets
   au sac. Reste à faire : le sac n'est pas consultable hors combat (les objets gagnés s'annoncent, mais aucun écran ne les liste), pas d'objet
   gagné par une quête de village ni à l'arène (ni village ni arène dans la v2).
+- **Reliques et Table des Reliques** (décision D13 ; `core/relics.ts`, `content/monde/reliques.json`, tests `reliques.test.ts`) : seize **sceaux**, un par couple
+  d'un élément (flamme, onde, feuille, étoile : chacun a une couleur **et une forme**, jamais la couleur seule) et d'un rang (I à IV) ; deux reliques
+  « se répondent » quand elles partagent un élément ou un rang. Huit se ramassent dans l'île (une par région, positions de `reliques.json`, vérifiées sur
+  la terre ferme, atteignables à pied et à l'écart des bâtiments par `reliques.test.ts`), huit tombent du **coffre** des premiers lieux terminés
+  (`completePlace` : `chestRelic`, la première fois seulement, avec rattrapage d'une partie ancienne ; `Completion.relic`, ligne « Relique trouvée : … ! »).
+  Rangées dans la partie (`SaveData.relics`, `normalizeRelics`, jamais deux fois ; `SaveData.table` : dernier jour récompensé). **La table** : un carré de 4 × 4
+  où chaque rangée et chaque colonne ne répète ni un élément ni un rang ; les reliques de l'enfant (neuf au plus, `MAX_HOLES`) sont à placer, toutes les autres
+  sont gravées dans la pierre ; `makePuzzle(owned, graine)` part d'un carré complet (`randomSquare`), donc **toujours soluble** (une seule solution jusqu'à huit
+  cases, parfois deux à neuf : `isSolved` juge la règle, pas le carré d'origine). `place` / `lift` / `hint` / `applyHint` rendent une nouvelle table ; l'indice
+  coûtera un parchemin du sac. `claimTable` : le premier carré du jour rapporte l'XP (`TABLE_XP_PER_HOLE` par case) et, à partir de cinq cases, un objet ;
+  les suivants sont de l'entraînement. Fait : la logique, la partie, le coffre. Reste à faire : les lueurs à ramasser dans l'île, l'écran de la Table (Citadelle).
 - **Musique** (`app/music.ts` joue, `core/music.ts` décide du volume, testé) : morceaux de `deploy/musique/` listés dans
   `content/monde/musique.json` (ordre de lecture, crédit des Options), servis sous `/musique/` par nginx ; `npm run dev` et
   `vite preview` les servent depuis le même dossier (`vite.config.ts`, requêtes `Range` comprises). Elle démarre à l'entrée

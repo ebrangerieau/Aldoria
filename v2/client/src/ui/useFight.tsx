@@ -437,7 +437,7 @@ export function useFight(options: FightOptions) {
   )
 
   /**
-   * Le héros ouvre le coffre de l'Effaceur : le lieu est terminé (XP du coffre, deux objets, page rendue la première fois), l'île s'allume
+   * Le héros ouvre le coffre de l'Effaceur : le lieu est terminé (XP du coffre, deux objets, page rendue et relique la première fois), l'île s'allume
    * pour le lieu suivant, puis retour sur l'île. Rend si c'était la première fois (Maître Ysaline salue alors le héros) et le lieu.
    */
   const openChest = useCallback(async (): Promise<{ first: boolean; code: string } | null> => {
@@ -453,7 +453,7 @@ export function useFight(options: FightOptions) {
     const done = completePlace(before, lieu.dungeon)
     persist(done.save)
     w.placeCompleted(done.save.places)
-    const message = chestMessage(lieu.dungeon, { first: done.first, answered: s.questions.answered, correct: s.questions.correctCount, found: done.found })
+    const message = chestMessage(lieu.dungeon, { first: done.first, answered: s.questions.answered, correct: s.questions.correctCount, found: done.found, relic: done.relic })
     const level = levelForXp(done.save.xp)
     const text = level > levelForXp(before.xp) ? `${message.text}\nNiveau ${level} !` : message.text
     const code = lieu.dungeon.code

@@ -530,6 +530,8 @@ try {
         if (!message.includes(attendu)) throw new Error(`message du coffre sans « ${attendu} » : ${message}`)
       }
       if (!/Dans ton sac : /.test(message)) throw new Error(`le coffre devrait rendre deux objets : ${message}`)
+      // Une relique (core/relics.ts) : la première fois seulement, la première des reliques de coffre.
+      if (first !== message.includes('Relique trouvée : Sceau de Flamme II !')) throw new Error(`la relique du coffre : première fois = ${first} : ${message}`)
       await page.screenshot({ path: `${OUT}/03g-page.png` })
       await page.getByRole('button', { name: 'Continuer' }).click()
       // La note de plaisir, facultative : la première fois on donne quatre étoiles, la seconde on passe.

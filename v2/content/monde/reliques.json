@@ -1,0 +1,28 @@
+{
+  "description": "Les seize sceaux de la Grande Chronique : un par couple d'un élément et d'un rang (décision D13). Huit se ramassent dans l'île (source « ile » : x vers l'est, z vers le nord, en mètres, sur la terre ferme et atteignables à pied, vérifié par tests/reliques.test.ts), huit tombent du coffre d'un lieu quand `apres` lieux ont été terminés pour la première fois (source « lieu »). Un sceau n'est jamais gagné deux fois.",
+  "elements": [
+    { "id": "flamme", "nom": "Flamme", "de": "de Flamme", "couleur": "#e8553d", "forme": "triangle" },
+    { "id": "onde", "nom": "Onde", "de": "d'Onde", "couleur": "#3d8fe8", "forme": "cercle" },
+    { "id": "feuille", "nom": "Feuille", "de": "de Feuille", "couleur": "#4caf50", "forme": "losange" },
+    { "id": "etoile", "nom": "Étoile", "de": "d'Étoile", "couleur": "#f2c230", "forme": "etoile" }
+  ],
+  "rangs": ["I", "II", "III", "IV"],
+  "reliques": [
+    { "element": "flamme", "rang": 1, "source": { "type": "ile", "region": "emc", "x": -60, "z": -42 } },
+    { "element": "onde", "rang": 1, "source": { "type": "ile", "region": "sciences", "x": -146, "z": 132 } },
+    { "element": "feuille", "rang": 1, "source": { "type": "ile", "region": "svt", "x": -162, "z": -126 } },
+    { "element": "etoile", "rang": 1, "source": { "type": "ile", "region": "maths", "x": 76, "z": 52 } },
+    { "element": "flamme", "rang": 3, "source": { "type": "ile", "region": "anglais", "x": -188, "z": 30 } },
+    { "element": "onde", "rang": 3, "source": { "type": "ile", "region": "francais", "x": -26, "z": -186 } },
+    { "element": "feuille", "rang": 3, "source": { "type": "ile", "region": "histoire_geo", "x": 206, "z": -10 } },
+    { "element": "etoile", "rang": 3, "source": { "type": "ile", "region": "snt", "x": 126, "z": -138 } },
+    { "element": "flamme", "rang": 2, "source": { "type": "lieu", "apres": 1 } },
+    { "element": "onde", "rang": 2, "source": { "type": "lieu", "apres": 2 } },
+    { "element": "feuille", "rang": 2, "source": { "type": "lieu", "apres": 3 } },
+    { "element": "etoile", "rang": 2, "source": { "type": "lieu", "apres": 4 } },
+    { "element": "flamme", "rang": 4, "source": { "type": "lieu", "apres": 6 } },
+    { "element": "onde", "rang": 4, "source": { "type": "lieu", "apres": 8 } },
+    { "element": "feuille", "rang": 4, "source": { "type": "lieu", "apres": 10 } },
+    { "element": "etoile", "rang": 4, "source": { "type": "lieu", "apres": 12 } }
+  ]
+}
