@@ -34,14 +34,16 @@ import {
   TransformNode,
   Vector3,
 } from '@babylonjs/core'
+import { Combatant, type CombatEvent } from '../core/combat/encounter'
 import { Emitter } from '../core/events'
 import type { SaveData } from '../core/save'
-import { Dungeon, type Piece } from '../core/world/dungeon'
+import { AGGRO_DISTANCE, Dungeon, ENEMY_RADIUS, type Piece } from '../core/world/dungeon'
+import { HERO_HEIGHT, isSkeleton, monsterFit } from '../core/world/monsters'
 import { angleDelta, RUN_SPEED, step, WALK_SPEED } from '../core/world/movement'
 import { Obstacles } from '../core/world/obstacles'
 import type { Place } from '../core/world/places'
 import { loadContainer } from './assets'
-import { type Character, loadHero } from './characters'
+import { type Character, loadHero, loadMonster, loadSkeleton, settleOnGround } from './characters'
 import type { Interactable } from './GameWorld'
 import type { Quality } from './quality'
 import { INTERIORS, type WorldName } from './theme'
@@ -57,11 +59,49 @@ const TORCH_REACH = 1
 /** Arc de la caméra autour du sud (radians de part et d'autre). */
 const ARC = 0.55
 
+/** Un ennemi de `lieux.json` (salle de combat). */
+export interface EnemySpec {
+  model: string
+  name: string
+  hp: number
+  tier: number
+  xp: number
+  v1_at: [number, number]
+  scale?: number
+}
+
+export interface Enemy {
+  id: string
+  room: number
+  spec: EnemySpec
+  character: Character
+  /** Ses points de vie : un combat repris après un repli le retrouve blessé (rien n'est perdu). */
+  combatant: Combatant
+  defeated: boolean
+  /** Désarmé après un repli : il ne se réengage qu'une fois le héros éloigné. */
+  armed: boolean
+  /** Son obstacle rond : retiré à sa chute, le héros marche sur sa dépouille. */
+  obstacle: { x: number; z: number; r: number }
+  x: number
+  z: number
+}
+
+export type FloatTone = 'good' | 'bad' | 'crit' | 'plain'
+
 export type InteriorEvents = {
   focus: Interactable | null
   interact: Interactable
   room: { index: number; label: string }
+  /** Le héros a approché un ennemi : l'interface lance le combat (`beginFight`, `present`, `endFight`). */
+  fight: Enemy
+  /** Nombre flottant (dégâts, soin), en pixels de l'écran. */
+  float: { text: string; tone: FloatTone; x: number; y: number }
+  /** La porte `index` (entre la salle `index` et la suivante) s'ouvre. */
+  door: { index: number }
 }
+
+const wait = (ms: number): Promise<void> => new Promise((resolve) => window.setTimeout(resolve, ms))
+const easeOutBack = (t: number): number => 1 + 2.70158 * (t - 1) ** 3 + 1.70158 * (t - 1) ** 2
 
 export interface InteriorOptions {
   place: Place
@@ -86,6 +126,16 @@ export class InteriorWorld {
   private focused: Interactable | null = null
   private room = -1
   private torches: { light: PointLight; room: number }[] = []
+  /** Battants de porte : la porte k est dans le mur ouest de la salle k + 1. */
+  private leaves = new Map<number, { mesh: AbstractMesh; closed: Quaternion; open: Quaternion }>()
+  enemies: Enemy[] = []
+  /** L'ennemi du combat en cours : le héros ne marche plus. */
+  fighting: Enemy | null = null
+  private shadows!: CascadedShadowGenerator
+  private focusTarget: Vector3 | null = null
+  private radiusGoal: number | null = null
+  private savedRadius = 11
+  private shake = 0
   private flames: AbstractMesh | null = null
   private flameTime = 0
   private pipeline: DefaultRenderingPipeline | null = null
@@ -147,6 +197,9 @@ export class InteriorWorld {
     shadows.normalBias = 0.02
     shadows.darkness = 0.3
 
+    this.shadows = shadows
+    // Les portes de sortie des salles de combat sont fermées jusqu'à la victoire (l'entrée et l'énigme s'ouvrent d'elles-mêmes).
+    dungeon.lockDoors(place.dungeon.rooms.map((r) => r.kind))
     this.progress('Les salles', 0.1)
     await this.buildPieces(shadows)
     this.progress('Les torches', 0.7)
@@ -158,6 +211,8 @@ export class InteriorWorld {
     this.hero.root.position.set(start.x, start.y, start.z)
     this.hero.yaw = Math.PI / 2 // vers l'est : la porte, puis l'escalier
     for (const m of this.hero.meshes) shadows.addShadowCaster(m, false)
+    this.progress('Les ennemis', 0.9)
+    await this.buildEnemies()
 
     // La sortie : la porte du mur ouest de la première salle.
     this.interactables.push({ id: 'sortie', kind: 'sortie', label: `Sortir : ${place.dungeon.title}`, x: 1, z: start.z, radius: 1.4 })
@@ -199,16 +254,246 @@ export class InteriorWorld {
     wrap.rotation.y = ((piece.heading - FRONT_HEADING) * Math.PI) / 180
     if (piece.scaleY !== undefined) wrap.scaling.y = piece.scaleY
     const meshes = inner.getChildMeshes(false)
+    let leaf: AbstractMesh | undefined
     if (piece.role === 'porte') {
-      const leaf = meshes.find((m) => m.name.endsWith('wall_doorway_door'))
-      if (leaf) leaf.rotationQuaternion = Quaternion.RotationAxis(Vector3.Up(), DOOR_OPEN_ANGLE).multiply(leaf.rotationQuaternion ?? Quaternion.Identity())
+      leaf = meshes.find((m) => m.name.endsWith('wall_doorway_door'))
+      if (leaf) {
+        const closed = leaf.rotationQuaternion?.clone() ?? Quaternion.Identity()
+        const open = Quaternion.RotationAxis(Vector3.Up(), DOOR_OPEN_ANGLE).multiply(closed)
+        // La porte k est dans le mur ouest de la salle k + 1 ; celle de la première salle (la sortie) reste ouverte.
+        const door = piece.room - 1
+        leaf.rotationQuaternion = door < 0 || this.dungeon.isDoorOpen(door) ? open : closed
+        this.leaves.set(door, { mesh: leaf, closed, open })
+      }
     }
     wrap.computeWorldMatrix(true)
     for (const m of meshes) {
       m.computeWorldMatrix(true)
-      m.freezeWorldMatrix()
+      if (m !== leaf) m.freezeWorldMatrix() // le battant pivote : son repère reste libre
     }
     return meshes
+  }
+
+  // --- Ennemis ----------------------------------------------------------------------------
+
+  /** Les ennemis des salles de combat (le boss : étape 1.4) : un modèle chacun, endormi à sa place de la v1, tourné vers l'ouest. */
+  private async buildEnemies(): Promise<void> {
+    const jobs: Promise<void>[] = []
+    this.options.place.dungeon.rooms.forEach((room, index) => {
+      if (room.kind === 'boss') return
+      for (const [k, spec] of ((room.enemies ?? []) as EnemySpec[]).entries()) jobs.push(this.spawn(index, k, spec))
+    })
+    await Promise.all(jobs)
+    const monsters = this.enemies.filter((e) => !isSkeleton(e.spec.model)).map((e) => e.character)
+    // Un monstre Quaternius se pose sur le sol une fois ses os calculés (première image).
+    this.scene.onAfterRenderObservable.addOnce(() => monsters.forEach(settleOnGround))
+  }
+
+  private async spawn(room: number, k: number, spec: EnemySpec): Promise<void> {
+    const at = this.dungeon.enemyPoint(room, spec.v1_at)
+    const name = `ennemi-${room}-${k}`
+    const stretch = spec.scale ?? 1
+    const fit = monsterFit(spec.model)
+    const character = fit
+      ? await loadMonster(this.scene, spec.model, name, fit.scale * stretch)
+      : await loadSkeleton(this.scene, spec.model, name, HERO_HEIGHT * stretch)
+    character.root.position.set(at.x, this.dungeon.heightAt(at.x, at.z), at.z)
+    character.yaw = -Math.PI / 2 + (fit?.yaw ?? 0) // tourné vers l'ouest, d'où vient le héros
+    for (const m of character.meshes) this.shadows.addShadowCaster(m, false)
+    const obstacle = { x: at.x, z: at.z, r: ENEMY_RADIUS }
+    this.obstacles.add(obstacle)
+    this.enemies.push({
+      id: name, room, spec, character, combatant: new Combatant(spec.name, spec.hp), defeated: false, armed: true, obstacle, x: at.x, z: at.z,
+    })
+  }
+
+  /** Les ennemis de la salle encore debout. */
+  enemiesLeft(room: number): number {
+    return this.enemies.filter((e) => e.room === room && !e.defeated).length
+  }
+
+  // --- Portes -----------------------------------------------------------------------------
+
+  /** Ouvre la porte `index` (entre la salle `index` et la suivante) : le passage se libère et le battant pivote. */
+  openDoor(index: number, animate = true): void {
+    if (this.dungeon.isDoorOpen(index)) return
+    this.dungeon.openDoor(index)
+    const leaf = this.leaves.get(index)
+    if (leaf) {
+      if (!animate) leaf.mesh.rotationQuaternion = leaf.open
+      else {
+        let t = 0
+        const observer = this.scene.onBeforeRenderObservable.add(() => {
+          t = Math.min(1, t + this.engine.getDeltaTime() / 800)
+          leaf.mesh.rotationQuaternion = Quaternion.Slerp(leaf.closed, leaf.open, easeOutBack(t))
+          if (t >= 1) this.scene.onBeforeRenderObservable.remove(observer)
+        })
+      }
+    }
+    this.events.emit('door', { index })
+  }
+
+  // --- Combat : l'interface mène le déroulé, la scène le met en scène -----------------------------
+
+  /** Ce que le héros aborde : l'ennemi de sa salle le plus proche, à moins de AGGRO_DISTANCE, s'il n'est ni vaincu ni désarmé. */
+  private nearestFoe(): Enemy | null {
+    const p = this.hero.root.position
+    let best: Enemy | null = null
+    let bestD = AGGRO_DISTANCE
+    for (const e of this.enemies) {
+      if (e.defeated || e.room !== this.room) continue
+      const d = Math.hypot(p.x - e.x, p.z - e.z)
+      if (!e.armed) {
+        e.armed = d > AGGRO_DISTANCE + 1 // s'éloigner pour réessayer (après un repli)
+        continue
+      }
+      if (d < bestD) {
+        best = e
+        bestD = d
+      }
+    }
+    return best
+  }
+
+  /** Le héros se met en place pendant que l'ennemi se réveille ; la caméra cadre les deux. */
+  async beginFight(enemy: Enemy): Promise<void> {
+    this.fighting = enemy
+    this.setInputEnabled(false)
+    this.focused = null
+    this.events.emit('focus', null)
+    const spot = this.dungeon.fightSpot(enemy.room, enemy)
+    const from = this.hero.root.position.clone()
+    const to = new Vector3(spot.x, this.dungeon.heightAt(spot.x, spot.z), spot.z)
+    this.hero.yaw = Math.atan2(to.x - from.x, to.z - from.z)
+    this.hero.play('run')
+    const woke = enemy.character.playOnce('awake', 'idle')
+    this.savedRadius = this.camera.radius
+    this.radiusGoal = 10
+    this.focusTarget = to.add(enemy.character.root.position).scale(0.5).add(new Vector3(0, 1.3, 0))
+    const duration = 450
+    const started = performance.now()
+    await new Promise<void>((resolve) => {
+      const observer = this.scene.onBeforeRenderObservable.add(() => {
+        const k = Math.min(1, (performance.now() - started) / duration)
+        this.hero.root.position.copyFrom(Vector3.Lerp(from, to, k))
+        if (k >= 1) {
+          this.scene.onBeforeRenderObservable.remove(observer)
+          resolve()
+        }
+      })
+    })
+    this.hero.play('idle')
+    this.hero.yaw = Math.PI / 2 // face à l'est : l'ennemi
+    enemy.character.yaw = -Math.PI / 2 + (monsterFit(enemy.spec.model)?.yaw ?? 0)
+    await Promise.race([woke, wait(1200)]) // un réveil trop long ne retient pas le combat
+    enemy.character.play('idle')
+    await wait(300)
+  }
+
+  /** Raconte ce qui s'est passé, dans l'ordre : coup, soin, riposte, chute. */
+  async present(events: CombatEvent[], landed?: (event: CombatEvent) => void): Promise<void> {
+    const enemy = this.fighting
+    if (!enemy) return
+    const foe = enemy.character
+    const hero = this.hero
+    const above = (c: Character, y: number) => c.root.position.add(new Vector3(0, y, 0))
+    for (const e of events) {
+      switch (e.kind) {
+        case 'xp':
+          landed?.(e)
+          break
+        case 'hero_strike': {
+          void hero.playOnce(e.action === 'chapitre' ? 'spell' : 'attack', 'idle', e.crit ? 1 : 1.2)
+          await wait(e.action === 'chapitre' ? 450 : 350)
+          landed?.(e)
+          void foe.playOnce('hit', 'idle')
+          this.float(`${e.power}${e.crit ? ' !' : ''}`, e.crit ? 'crit' : 'plain', above(foe, 1.4))
+          this.shakeCamera(e.crit ? 0.35 : 0.18)
+          await wait(e.crit ? 750 : 550)
+          break
+        }
+        case 'hero_heal':
+          void hero.playOnce('cheer', 'idle')
+          landed?.(e)
+          this.float(`+${e.healed}`, 'good', above(hero, 2.1))
+          await wait(700)
+          break
+        case 'hero_stumble':
+          void hero.playOnce('block', 'idle', 0.8)
+          await wait(500)
+          break
+        case 'foe_attack':
+          void foe.playOnce('attack', 'idle')
+          await wait(450)
+          landed?.(e)
+          if (e.blocked) this.float('Bloqué !', 'good', above(hero, 2.1))
+          else {
+            void hero.playOnce('hit', 'idle')
+            this.float(`-${e.damage}`, 'bad', above(hero, 2.1))
+            this.shakeCamera(0.12)
+          }
+          await wait(600)
+          break
+        case 'foe_down':
+          landed?.(e)
+          void foe.playOnce('death', null)
+          await wait(1400)
+          break
+        case 'hero_down':
+          landed?.(e)
+          void hero.playOnce('death', null)
+          await wait(1500)
+          break
+        default:
+          break
+      }
+    }
+  }
+
+  /** Fin du combat : la victoire laisse l'ennemi à terre ; un repli remet le héros à l'entrée de la salle (l'ennemi garde ses blessures). */
+  async endFight(outcome: 'victory' | 'retreat'): Promise<void> {
+    const enemy = this.fighting
+    if (!enemy) return
+    if (outcome === 'victory') {
+      enemy.defeated = true
+      this.obstacles.remove(enemy.obstacle)
+      this.hero.play('idle')
+    } else {
+      enemy.armed = false
+      enemy.character.reset('idle')
+      enemy.character.yaw = -Math.PI / 2 + (monsterFit(enemy.spec.model)?.yaw ?? 0)
+      this.hero.reset('idle')
+      const entry = this.dungeon.entryPoint(enemy.room)
+      this.hero.root.position.set(entry.x, entry.y, entry.z)
+      this.hero.yaw = Math.PI / 2
+      this.camera.target.set(entry.x, entry.y + 1.45, entry.z)
+    }
+    this.focusTarget = null
+    this.radiusGoal = this.savedRadius
+    this.fighting = null
+    this.room = -1 // la salle est annoncée de nouveau
+    this.updateRoom(true)
+    this.setInputEnabled(true)
+  }
+
+  /** Hors du combat, le héros revient à sa pose (par exemple après sa chute). */
+  reviveHero(): void {
+    this.hero.reset('idle')
+  }
+
+  private float(text: string, tone: FloatTone, at: Vector3): void {
+    const p = Vector3.Project(
+      at,
+      Matrix.Identity(),
+      this.scene.getTransformMatrix(),
+      this.camera.viewport.toGlobal(this.engine.getRenderWidth(), this.engine.getRenderHeight()),
+    )
+    const k = this.canvas.clientWidth / this.engine.getRenderWidth()
+    this.events.emit('float', { text, tone, x: p.x * k, y: p.y * k })
+  }
+
+  private shakeCamera(amount: number): void {
+    if (!this.options.calm) this.shake = Math.max(this.shake, amount)
   }
 
   private buildTorches(): void {
@@ -346,23 +631,44 @@ export class InteriorWorld {
   }
 
   private update(dt: number): void {
-    const dir = this.inputEnabled ? this.direction() : { x: 0, z: 0, walk: false }
+    const free = this.inputEnabled && !this.fighting
+    const dir = free ? this.direction() : { x: 0, z: 0, walk: false }
     const p = this.hero.root.position
     const s = step({ x: p.x, z: p.z }, dir, dir.walk ? WALK_SPEED : RUN_SPEED, dt, this.dungeon, this.obstacles)
     const moving = s.moved > 0.001
     p.x = s.x
     p.z = s.z
-    p.y += (s.y - p.y) * Math.min(1, dt * 18)
-    if (moving) {
+    if (!this.fighting) p.y += (s.y - p.y) * Math.min(1, dt * 18)
+    if (this.fighting) {
+      // Le héros reste sur place (beginFight le déplace lui-même, la mise en scène l'anime).
+    } else if (moving) {
       this.hero.yaw = this.hero.yaw + angleDelta(this.hero.yaw, Math.atan2(dir.x, dir.z)) * Math.min(1, dt * 12)
       this.hero.play(dir.walk ? 'walk' : 'run')
     } else {
       this.hero.play('idle')
     }
-    // La caméra suit en place (réaffecter `camera.target` annulerait le mouvement de la souris).
-    this.camera.target.copyFrom(Vector3.Lerp(this.camera.target, new Vector3(p.x, p.y + 1.45, p.z), 1 - Math.exp(-14 * dt)))
+    // La caméra suit en place (réaffecter `camera.target` annulerait le mouvement de la souris) ; pendant un combat, elle cadre les deux.
+    const goal = this.focusTarget ?? new Vector3(p.x, p.y + 1.45, p.z)
+    this.camera.target.copyFrom(Vector3.Lerp(this.camera.target, goal, 1 - Math.exp(-(this.focusTarget ? 6 : 14) * dt)))
+    if (this.radiusGoal !== null) {
+      this.camera.radius += (this.radiusGoal - this.camera.radius) * (1 - Math.exp(-4 * dt))
+      if (Math.abs(this.radiusGoal - this.camera.radius) < 0.05) this.radiusGoal = null
+    }
+    if (this.shake > 0.001) {
+      this.camera.target.x += (Math.random() - 0.5) * this.shake
+      this.camera.target.y += (Math.random() - 0.5) * this.shake * 0.6
+      this.shake *= Math.exp(-9 * dt)
+    }
     this.updateRoom(false)
-    this.updateFocus()
+    if (!this.fighting) {
+      const foe = this.nearestFoe()
+      if (foe) {
+        this.fighting = foe // posé tout de suite : un seul combat à la fois
+        this.events.emit('fight', foe)
+        return
+      }
+      this.updateFocus()
+    }
     if (this.flames && !this.options.calm) {
       this.flameTime += dt
       this.flames.visibility = 0.9 + 0.1 * Math.sin(this.flameTime * 14)

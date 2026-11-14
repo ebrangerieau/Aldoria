@@ -53,11 +53,14 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   l'API : toute modification se fait des deux côtés et s'ajoute à `content/test-vectors/answers.json`.
 - **Données du monde en JSON** (`content/monde/`) : jamais de lieu, de texte d'histoire ou de position écrits dans le code.
   Un lieu ajouté doit passer `api/tests/test_dungeon.py` et `client/tests/world.test.ts`.
-- **Combat** (`core/combat/encounter.ts`, testé sans moteur) : les règles seules, portées de la v1. L'interface pose la question
-  (`QuestionService.next(role, encounter.questionLevel(role))`), puis appelle `encounter.answer(action, verdict)` et raconte les
-  événements rendus, dans l'ordre. Un `Encounter` par donjon (ou arène), `engage(ennemi, …)` à chaque combat : le bouclier levé et
-  la série du critique « sans vitesse » passent d'un ennemi au suivant, comme dans la v1 (coup, soin, riposte, chute). Aucune animation, aucun son, aucun panneau dans `core/` ; un
-  changement de règle se fait là, avec son test, jamais dans la scène. XP, niveaux et PV du héros : `core/progression.ts`.
+- **Combat** (`core/combat/`, testé sans moteur) : `encounter.ts` les règles seules, portées de la v1 ; `flow.ts` le déroulé (action,
+  question, verdict, récit) avec un hôte à trois méthodes ; `texts.ts` les mots de chaque monde (`content/monde/combat.json`). Un
+  `Encounter` par lieu, `engage(ennemi, …)` à chaque combat : le bouclier levé et la série du critique « sans vitesse » passent d'un
+  ennemi au suivant, comme dans la v1. Aucune animation, aucun son, aucun panneau dans `core/` : `game/interior.ts` met en scène
+  (`beginFight`, `present`, `endFight`), `ui/useFight.tsx` mène le combat (barres, actions, question, annonces). Un changement de
+  règle se fait dans `core/`, avec son test, jamais dans la scène. XP, niveaux et PV du héros : `core/progression.ts`. Les questions
+  d'un lieu viennent de sa session « donjon » (`app/placeSession.ts` : chapitres du lieu, comme dans la v1 ; en mode découverte, le
+  paquet de test restreint à la matière) : sans elle, un combat poserait des questions de toute matière.
 - **Mini-carte** (`ui/Minimap.tsx`) : elle ne recalcule aucune position, elle lit les repères posés par le monde
   (`GameWorld.mapInfo`, événements `hero` et `markers`). Un repère d'une sorte nouvelle (habitant, gardien…) passe par
   `mapMarkers` (`core/world/minimap.ts`, avec son test) ; un lieu secret n'y figure jamais. Touche M : `event.key`, pas
@@ -67,8 +70,13 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   « z » de la v1 : les positions de `lieux.json` y sont valables telles quelles, salles impaires en miroir pour le décor). Les murs
   sont du « vide » pour le déplacement (`heightAt` rend `VOID_HEIGHT`), pas des collisions du moteur. Scène à part, même moteur :
   `GameWorld.enterPlace(code)` met l'île en pause, `leavePlace()` la reprend ; un modèle se charge par scène (`loadContainer`).
-  Un chiffre de géométrie change ici avec son test, jamais dans la scène. `&e2e` : `world.enterPlace(code)`, `world.interior`
-  (`teleport(x, z)`, `frame(écart, beta, distance)`, `heroPosition()`), `world.places`.
+  Un chiffre de géométrie change ici avec son test, jamais dans la scène. Portes : fermées jusqu'à la victoire dans la salle (sauf
+  l'entrée et l'énigme : `OPEN_KINDS`), du « vide » pour le déplacement tant qu'elles le sont ; ennemis à leur place de la v1
+  (`v1_at`, sans miroir), tournés vers l'ouest, leur obstacle retiré à leur chute. Ennemis : squelettes KayKit (même rig que le héros)
+  et monstres Quaternius, dont l'échelle est mesurée une fois (`content/monde/monstres.json`, `node tools/mesurer_monstres.mjs` avec
+  la prévisualisation lancée : une boîte au repos ne dit rien d'une armature à l'échelle 100). `&e2e` : `world.enterPlace(code)`,
+  `world.interior` (`teleport(x, z)`, `frame(écart, beta, distance)`, `heroPosition()`, `enemies`, `fighting`), `world.places`,
+  `world.measureMonster(modèle)`, et `encounter` (le combat en cours : `hero.hp`…).
 - **Musique** (`app/music.ts` joue, `core/music.ts` décide du volume, testé) : morceaux de `deploy/musique/` listés dans
   `content/monde/musique.json` (ordre de lecture, crédit des Options), servis sous `/musique/` par nginx ; `npm run dev` et
   `vite preview` les servent depuis le même dossier (`vite.config.ts`, requêtes `Range` comprises). Elle démarre à l'entrée
@@ -165,6 +173,9 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
 - Mise en ligne pendant qu'un onglet est ouvert : chaque build renomme ses fichiers, l'ancienne page ne trouve plus
   `GameWorld-….js` à l'entrée dans l'île. nginx répond 404 sur `/assets/` (jamais la page d'accueil) et le jeu recharge la
   page une fois sur `vite:preloadError` (`app/staleBuild.ts`). Un fichier chargé à la demande (`import()`) en profite d'office.
+- Un monstre Quaternius se charge dans son propre conteneur (`loadOwnContainer`, pas de cache) et garde les nœuds de son fichier :
+  une copie perd l'armature (-90°, ×100) et s'étire. Deux gelées dans un même lieu ont donc chacune leur chargement. Les squelettes
+  KayKit, eux, passent par le cache (copie sans danger) mais pèsent 4,8 Mo chacun, avec leurs 95 animations.
 - Orientation d'un modèle posé à la main (`game/interior.ts`, `FRONT_HEADING = 0`) : sans rotation, la face avant d'un modèle KayKit
   (+Z du fichier : où descend un escalier, où saille une torche) regarde le **nord** du monde. Un mur est symétrique et ne le dit
   pas : vérifier sur l'escalier (sa boîte doit aller de 12 à 16 m, pas de 16 à 20) et sur les bannières (elles disparaissent

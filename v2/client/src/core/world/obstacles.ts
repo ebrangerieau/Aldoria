@@ -31,6 +31,25 @@ export class Obstacles {
     this.count += 1
   }
 
+  /** Retire un obstacle posé par `add` (un ennemi vaincu ne barre plus le chemin). */
+  remove(circle: Circle): void {
+    const span = Math.ceil(circle.r / this.cellSize)
+    const ci = Math.floor(circle.x / this.cellSize)
+    const cj = Math.floor(circle.z / this.cellSize)
+    let found = false
+    for (let di = -span; di <= span; di += 1) {
+      for (let dj = -span; dj <= span; dj += 1) {
+        const list = this.cells.get(`${ci + di},${cj + dj}`)
+        const at = list?.indexOf(circle) ?? -1
+        if (list && at >= 0) {
+          list.splice(at, 1)
+          found = true
+        }
+      }
+    }
+    if (found) this.count -= 1
+  }
+
   near(x: number, z: number): Circle[] {
     return this.cells.get(`${Math.floor(x / this.cellSize)},${Math.floor(z / this.cellSize)}`) ?? []
   }

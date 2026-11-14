@@ -32,6 +32,16 @@ export const WALL_CLEARANCE = 0.75
 export const DOOR_PASS = 0.8
 /** Hauteur rendue hors du donjon (murs, vide) : la marche du héros s'y refuse (comme l'eau profonde). */
 export const VOID_HEIGHT = -10
+/** Distance héros – ennemi pendant un combat (v1 : FIGHT_GAP). */
+export const FIGHT_GAP = 4.8
+/** À cette distance d'un ennemi de sa salle, le combat s'engage (v1 : AGGRO_DISTANCE). */
+export const AGGRO_DISTANCE = 3.6
+/** Le héros ne se place pas plus près que cela du mur ouest de la salle pour combattre. */
+export const FIGHT_MARGIN = 1.2
+/** Rayon de l'obstacle d'un ennemi (v1 : 0,5). */
+export const ENEMY_RADIUS = 0.5
+/** Salles dont la porte de sortie n'attend rien : l'entrée, et l'énigme tant qu'elle n'est pas portée (étape 1.5). */
+export const OPEN_KINDS = new Set(['entree', 'enigme'])
 
 export type Vec3 = [number, number, number]
 
@@ -97,6 +107,8 @@ export const headingOf = (yaw: number): number => (((180 - yaw) % 360) + 360) % 
 
 export class Dungeon {
   readonly length: number
+  /** Portes fermées : la porte k est entre la salle k et la salle k + 1 (son battant est dans le mur ouest de la salle k + 1). */
+  private readonly closed = new Set<number>()
 
   constructor(
     readonly roomCount: number,
@@ -136,6 +148,41 @@ export class Dungeon {
     return `Étage ${i + 1} / ${this.roomCount}`
   }
 
+  // --- Portes ---------------------------------------------------------------------------
+
+  /** Ferme les portes de sortie des salles qui demandent d'être vaincues (toutes sauf celles de `OPEN_KINDS`). */
+  lockDoors(kinds: string[]): void {
+    this.closed.clear()
+    kinds.forEach((kind, room) => {
+      if (room < this.roomCount - 1 && !OPEN_KINDS.has(kind)) this.closed.add(room)
+    })
+  }
+
+  isDoorOpen(door: number): boolean {
+    return !this.closed.has(door)
+  }
+
+  openDoor(door: number): void {
+    this.closed.delete(door)
+  }
+
+  /** Portes encore fermées. */
+  get lockedDoors(): number[] {
+    return [...this.closed].sort((a, b) => a - b)
+  }
+
+  // --- Combats --------------------------------------------------------------------------
+
+  /** Position d'un ennemi (x dans la salle, profondeur : `v1_at` de lieux.json) : le même point que dans la v1, sans miroir. */
+  enemyPoint(room: number, at: [number, number]): { x: number; z: number } {
+    return this.point(room, at[0], at[1])
+  }
+
+  /** Où se met le héros pour combattre un ennemi : FIGHT_GAP à sa gauche (à l'ouest), sans sortir de la salle. */
+  fightSpot(room: number, enemy: { x: number; z: number }): { x: number; z: number } {
+    return { x: Math.max(enemy.x - FIGHT_GAP, room * ROOM_W + FIGHT_MARGIN), z: enemy.z }
+  }
+
   // --- Sol ----------------------------------------------------------------------------
 
   /**
@@ -147,10 +194,10 @@ export class Dungeon {
     const depth = -z
     if (x < WALL_CLEARANCE || x > this.length - WALL_CLEARANCE) return VOID_HEIGHT
     if (depth < WALL_CLEARANCE || depth > ROOM_D - 0.4) return VOID_HEIGHT
-    // Mur de séparation, percé par la porte.
+    // Mur de séparation, percé par la porte (fermée : plein).
     const wall = Math.round(x / ROOM_W)
-    if (wall >= 1 && wall <= this.roomCount - 1 && Math.abs(x - wall * ROOM_W) < WALL_CLEARANCE && Math.abs(depth - DOOR_DEPTH) > DOOR_PASS) {
-      return VOID_HEIGHT
+    if (wall >= 1 && wall <= this.roomCount - 1 && Math.abs(x - wall * ROOM_W) < WALL_CLEARANCE) {
+      if (Math.abs(depth - DOOR_DEPTH) > DOOR_PASS || this.closed.has(wall - 1)) return VOID_HEIGHT
     }
     const i = this.roomAt(x)
     const base = i * this.rise

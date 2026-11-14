@@ -48,6 +48,7 @@ Ces notes vont dans `docs/perf-log.md`. Elles décident du profil et du moteur p
 | Maître Ysaline | Lui parle-t-il ? Écoute-t-il ou lit-il ? | |
 | Musique | Joue dès l'entrée dans l'île, se tait pendant une question | Plaît-elle ou gêne-t-elle ? Trouve-t-il seul le bouton « Musique » (en haut à droite) ? Le volume est-il bon sous la voix de Maître Ysaline ? | |
 | Seuils des lieux | Approche-t-il d'une tour qui brille ? Entre-t-il (« J'y vais ») ? | |
+| Combat | Comprend-il les trois actions (Frappe, Sort, Soin) et qu'une question suit ? Lit-il les barres de PV ? Que dit-il quand l'ennemi tombe, quand la porte s'ouvre, quand il se replie ? Les touches 1, 2, 3 ? Les monstres lui plaisent-ils (tailles, noms) ? | |
 | Intérieur d'un lieu | Monte-t-il les étages seul (porte, escalier) ? Trouve-t-il la sortie ? Le mur cache-t-il le héros quand il passe une porte ? Quel étage dit-il être en train de faire ? | |
 | Le monde | Que trouve-t-il beau, vide, ennuyeux ? Brouillard (Tom) : assez différent ? | |
 
