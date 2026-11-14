@@ -4,7 +4,7 @@
  * d'annonce. Le déroulé est mené par core/combat/flow.ts depuis ui/GameScreen.tsx ; ici, on ne fait qu'afficher.
  */
 import { useEffect } from 'react'
-import type { Action } from '../core/combat/encounter'
+import { type Action, BOSS_HITS, sealsLeft } from '../core/combat/encounter'
 import type { FightView } from '../core/combat/flow'
 import { combatTexts } from '../core/combat/texts'
 import type { FloatTone } from '../game/interior'
@@ -33,12 +33,25 @@ function Bar({ label, hp, max, tone, testId }: { label: string; hp: number; max:
   )
 }
 
-/** Barres de PV : l'ennemi en haut au centre, le héros en bas à gauche. */
+/** Les sceaux d'un Effaceur : un par bonne réponse, au plus (losange plein : intact, vide : brisé : lisible sans les couleurs). */
+export function Seals({ left }: { left: number }) {
+  return (
+    <div className="seals" data-testid="sceaux" data-left={left} role="img" aria-label={`Sceaux de l'Effaceur : ${left} sur ${BOSS_HITS}`}>
+      <span className="seals-name">Sceaux</span>
+      {Array.from({ length: BOSS_HITS }, (_, i) => (
+        <span key={i} className={i < left ? 'seal on' : 'seal off'} aria-hidden="true">{i < left ? '◆' : '◇'}</span>
+      ))}
+    </div>
+  )
+}
+
+/** Barres de PV : l'ennemi en haut au centre (avec ses sceaux s'il est un Effaceur), le héros en bas à gauche. */
 export function FightBars({ view, heroName }: { view: FightView; heroName: string }) {
   return (
     <>
       <div className="fight-foe">
         <Bar label={view.foe.name} hp={view.foe.hp} max={view.foe.maxHp} tone="foe" testId="pv-ennemi" />
+        {view.boss && <Seals left={sealsLeft(view.foe.hp, view.foe.maxHp)} />}
       </div>
       <div className="fight-hero">
         <Bar label={heroName} hp={view.hero.hp} max={view.hero.maxHp} tone="hero" testId="pv-heros" />

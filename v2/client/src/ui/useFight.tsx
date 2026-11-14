@@ -12,6 +12,8 @@ import type { Services } from '../app/services'
 import { type Action, type Answer, Combatant, Encounter } from '../core/combat/encounter'
 import { applyEvent, type FightHost, type FightView, runFight, viewOf } from '../core/combat/flow'
 import { combatTexts, pickOne } from '../core/combat/texts'
+import { chestMessage, completePlace } from '../core/quest/chest'
+import type { SaveData } from '../core/save'
 import type { Accommodations } from '../core/accessibility'
 import type { Item } from '../core/items'
 import { heroMaxHp, levelForXp } from '../core/progression'
@@ -41,6 +43,9 @@ export interface FightOptions {
   grantXp: (amount: number) => number | null
   /** XP actuelle, pour le niveau d'entrée dans le lieu. */
   currentXp: () => number
+  /** La partie à jour (même dans un combat qui dure) et son rangement : la fin d'un lieu y écrit le lieu terminé, l'XP du coffre, les objets. */
+  getSave: () => SaveData
+  persist: (next: SaveData) => void
 }
 
 export function useFight(options: FightOptions) {
@@ -48,12 +53,14 @@ export function useFight(options: FightOptions) {
   const [view, setView] = useState<FightView | null>(null)
   const [phase, setPhase] = useState<Phase>('busy')
   const [question, setQuestion] = useState<{ item: Item; title: string; success: string; resolve: (o: QuestionOutcome) => void } | null>(null)
-  const [dialog, setDialog] = useState<{ title: string; text: string; label: string; resolve: () => void } | null>(null)
+  const [dialog, setDialog] = useState<{ title: string; text: string; actions: { label: string; primary?: boolean; run: () => void }[] } | null>(null)
   const [floats, setFloats] = useState<Floating[]>([])
   const [notice, setNotice] = useState<{ id: number; text: string } | null>(null)
   const encounter = useRef<Encounter | null>(null)
   const placeSession = useRef<PlaceSession | null>(null)
   const place = useRef<Place | null>(null)
+  /** Effaceurs qui se sont déjà présentés dans cette visite : après un repli, ils ne se présentent pas deux fois. */
+  const taunted = useRef(new Set<string>())
   const viewRef = useRef<FightView | null>(null)
   const actionResolver = useRef<((action: Action) => void) | null>(null)
   const nextId = useRef(1)
@@ -72,6 +79,30 @@ export function useFight(options: FightOptions) {
     window.setTimeout(() => setNotice((current) => (current?.id === id ? null : current)), NOTICE_MS)
   }, [])
 
+  /**
+   * Un dialogue à un bouton ; avec `voice`, un bouton « Écouter » lit ce texte enregistré (seul et à l'identique : sa voix en dépend), et
+   * l'aménagement « lecture automatique » le lit d'office. Rend la main quand l'enfant a répondu.
+   */
+  const speak = useCallback(
+    (title: string, text: string, label: string, voice?: string) =>
+      new Promise<void>((resolve) => {
+        const { services: s, accommodations: acc } = latest.current
+        const say = () => void s.voice.say([voice ?? text])
+        const done = () => {
+          s.voice.stop()
+          setDialog(null)
+          resolve()
+        }
+        setDialog({
+          title,
+          text,
+          actions: [...(voice ? [{ label: '🔊 Écouter', run: say }] : []), { label, primary: true, run: done }],
+        })
+        if (voice && acc.auto_read) say()
+      }),
+    [],
+  )
+
   const addFloat = useCallback((f: Omit<Floating, 'id'>) => {
     const id = nextId.current++
     setFloats((list) => [...list, { ...f, id }])
@@ -88,12 +119,27 @@ export function useFight(options: FightOptions) {
     const lieu = place.current
     if (!current || !interior || !enc || !lieu) return
     const { services: s } = latest.current
+    const def = lieu.dungeon
     enc.engage(enemy.combatant, {
       tier: enemy.spec.tier,
       rewardXp: enemy.spec.xp,
+      boss: enemy.boss,
       baseLevels: { automatisme: s.questions.levelFor('automatisme'), chapitre: s.questions.levelFor('chapitre') },
     })
     await interior.beginFight(enemy)
+    if (enemy.boss) {
+      // Grand combat : le héros aborde l'Effaceur avec toutes ses forces (règle de la v1), puis l'Effaceur se présente, une seule fois par visite.
+      if (enc.hero.hp < enc.hero.maxHp) {
+        enc.hero.heal(enc.hero.maxHp)
+        s.sfx.play('heal')
+        announce('Tes forces sont rendues !')
+      }
+      show(viewOf(enc))
+      if (!taunted.current.has(enemy.id)) {
+        taunted.current.add(enemy.id)
+        await speak(enemy.spec.name, def.boss_intro, 'En garde !', def.boss_intro)
+      }
+    }
     show(viewOf(enc))
 
     const host: FightHost = {
@@ -147,7 +193,15 @@ export function useFight(options: FightOptions) {
     // Le déroulé tourne jusqu'à la victoire ou au repli ; une action en suspens (écran quitté) ne le retient pas.
     const outcome = await runFight(enc, host)
     setPhase('busy')
-    if (outcome === 'victory') {
+    if (outcome === 'victory' && enemy.boss) {
+      // L'Effaceur a le dernier mot (le héros ne bouge pas encore), puis le coffre apparaît : la page n'est pas loin.
+      show(null)
+      await speak(enemy.spec.name, def.boss_defeat, 'Reprendre la page', def.boss_defeat)
+      await interior.endFight('victory')
+      interior.revealChest()
+      s.sfx.play('crit')
+      announce('Un coffre est apparu !')
+    } else if (outcome === 'victory') {
       show(null)
       await interior.endFight('victory')
       const { hero } = enc
@@ -161,10 +215,7 @@ export function useFight(options: FightOptions) {
         }, 900)
       }
     } else {
-      await new Promise<void>((resolve) => {
-        setDialog({ title: 'Repli', text: combatTexts(latest.current.worldName).repli, label: "Reprendre l'exploration", resolve })
-      })
-      setDialog(null)
+      await speak('Repli', combatTexts(latest.current.worldName).repli, "Reprendre l'exploration")
       show(null)
       enc.hero.heal(enc.hero.maxHp)
       await interior.endFight('retreat')
@@ -208,6 +259,7 @@ export function useFight(options: FightOptions) {
         return 'scene'
       }
       place.current = target
+      taunted.current = new Set()
       const level = levelForXp(latest.current.currentXp())
       encounter.current = new Encounter(new Combatant(heroName, heroMaxHp(level)), {
         world: worldName,
@@ -230,6 +282,32 @@ export function useFight(options: FightOptions) {
     placeSession.current = null
     await closing?.end()
   }, [worldRef, show])
+
+  /**
+   * Le héros ouvre le coffre de l'Effaceur : le lieu est terminé (XP du coffre, deux objets, page rendue la première fois), l'île s'allume
+   * pour le lieu suivant, puis retour sur l'île. Rend si c'était la première fois (Maître Ysaline salue alors le héros) et le lieu.
+   */
+  const openChest = useCallback(async (): Promise<{ first: boolean; code: string } | null> => {
+    const w = worldRef.current
+    const interior = w?.interior
+    const lieu = place.current
+    if (!w || !interior || !lieu || !interior.chestReady) return null
+    const { services: s, getSave, persist } = latest.current
+    interior.openChest()
+    s.sfx.play('victory')
+    await new Promise<void>((resolve) => window.setTimeout(resolve, 900)) // le couvercle se lève
+    const before = getSave()
+    const done = completePlace(before, lieu.dungeon)
+    persist(done.save)
+    w.placeCompleted(done.save.places)
+    const message = chestMessage(lieu.dungeon, { first: done.first, answered: s.questions.answered, correct: s.questions.correctCount, found: done.found })
+    const level = levelForXp(done.save.xp)
+    const text = level > levelForXp(before.xp) ? `${message.text}\nNiveau ${level} !` : message.text
+    const code = lieu.dungeon.code
+    await speak(message.title, text, "Retour sur l'île")
+    await leave()
+    return { first: done.first, code }
+  }, [worldRef, speak, leave])
 
   const choose = useCallback((action: Action) => {
     const resolve = actionResolver.current
@@ -264,9 +342,9 @@ export function useFight(options: FightOptions) {
           onDone={question.resolve}
         />
       )}
-      {dialog && <Dialog title={dialog.title} text={dialog.text} actions={[{ label: dialog.label, primary: true, run: dialog.resolve }]} />}
+      {dialog && <Dialog title={dialog.title} text={dialog.text} actions={dialog.actions} />}
     </>
   )
 
-  return { hud, overlay, enter, leave, active: view !== null || dialog !== null, questionOpen: question !== null, overlayOpen: question !== null || dialog !== null }
+  return { hud, overlay, enter, leave, openChest, active: view !== null || dialog !== null, questionOpen: question !== null, overlayOpen: question !== null || dialog !== null }
 }
