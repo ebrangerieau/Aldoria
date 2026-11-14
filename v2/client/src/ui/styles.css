@@ -150,6 +150,8 @@ html[data-big-targets='true'] .minimap { width: 300px; }
 .mark-lieu .mark-check { fill: none; stroke: var(--good-ink); stroke-width: 1.6; }
 .mark-pierre circle { fill: #6fb6ff; stroke: #123a56; }
 .mark-pierre.mark-eveillee circle { fill: #ffd27a; stroke: #5a3d0c; }
+.mark-jour path { fill: #ffd447; stroke: #5a3d0c; }
+.mark-jour.mark-faite path { fill: #d9c9a0; stroke: #6b5a3a; }
 .mark-hero { fill: #fff; stroke: var(--ink); stroke-width: 1.4; stroke-linejoin: round; }
 .mark-view { fill: rgb(255 250 225 / 50%); stroke: rgb(43 33 24 / 45%); stroke-width: 0.8; }
 .minimap-caption {
@@ -268,6 +270,11 @@ figure.visual.graph { max-width: 460px; }
 .v-graph-curve { fill: none; stroke: var(--accent); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
 .v-graph-dot { fill: var(--accent); stroke: #fff; stroke-width: 1.5; }
 
+.daily-bar { position: absolute; top: 4.3rem; left: 50%; transform: translateX(-50%); z-index: 6; display: flex; align-items: center; gap: 1rem; padding: 0.4rem 0.8rem; border-radius: 12px; background: rgb(251 244 228 / 94%); border: 2px solid var(--gold); }
+.daily-bar ol { display: flex; gap: 0.35rem; margin: 0; padding: 0; list-style: none; }
+.pip { width: 1.7rem; height: 1.7rem; border-radius: 50%; display: grid; place-items: center; border: 2px solid var(--ink-soft); font-weight: 700; font-size: 1rem; color: #fff; }
+.pip.juste { background: var(--good-ink); border-color: var(--good-ink); }
+.pip.faux { background: var(--bad-ink); border-color: var(--bad-ink); }
 .archives { width: min(820px, 94vw); max-height: calc(100vh - 4rem); overflow-y: auto; }
 .archives-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; }
 .archives-head h2 { margin: 0; }

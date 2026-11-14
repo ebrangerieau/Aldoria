@@ -76,3 +76,14 @@ export function summary(owned: Owned): string {
   const parts = ORDER.filter((id) => count(owned, id) > 0).map((id) => `${ITEMS[id].short} ×${count(owned, id)}`)
   return 'Sac : ' + (parts.length > 0 ? parts.join(' · ') : "vide pour l'instant")
 }
+
+/** Sac relu d'une partie ancienne ou abîmée : objets connus seulement, de 0 à MAX_PER_ITEM. */
+export function normalizeOwned(raw: unknown): Owned {
+  const given = (typeof raw === 'object' && raw !== null && !Array.isArray(raw) ? raw : {}) as Record<string, unknown>
+  const owned: Owned = {}
+  for (const id of ORDER) {
+    const n = given[id]
+    if (typeof n === 'number' && Number.isFinite(n) && n > 0) owned[id] = Math.min(MAX_PER_ITEM, Math.floor(n))
+  }
+  return owned
+}

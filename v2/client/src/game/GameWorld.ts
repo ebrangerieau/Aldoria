@@ -35,13 +35,14 @@ import { type IslandLayout, Terrain } from '../core/world/terrain'
 import { type Atmosphere, createAtmosphere } from './atmosphere'
 import { type Character, loadFox, loadHero, loadNpc, settleOnGround } from './characters'
 import { InteriorWorld } from './interior'
+import { today as localDay } from '../core/dailyChallenge'
 import { beacon, buildDecor } from './decor'
 import { createEngine, type EngineKind } from './engine'
 import { buildGround, buildSea } from './island'
 import { chooseQuality, type Quality } from './quality'
 import { THEMES, type WorldName } from './theme'
 
-export type InteractableKind = 'lieu' | 'pierre' | 'ysaline' | 'sortie'
+export type InteractableKind = 'lieu' | 'pierre' | 'ysaline' | 'sortie' | 'jour'
 
 export interface Interactable {
   id: string
@@ -115,6 +116,8 @@ export class GameWorld {
   private destination: { x: number; z: number } | null = null
   private inputEnabled = true
   private interactables: Interactable[] = []
+  private dayCrystal: Mesh | null = null
+  private dayRing: Mesh | null = null
   private focused: Interactable | null = null
   private region: string | null = null
   private lastCameraInput = 0
@@ -476,13 +479,63 @@ export class GameWorld {
       this.obstacles.add({ x: stone.x, z: stone.z, r: 0.75 })
       this.interactables.push({ id: stone.id, kind: 'pierre', label: stone.label, x: stone.x, z: stone.z, radius: 2.8, open: !awake })
     }
+    this.buildDayStone()
     // Les cristaux tournent doucement sur eux-mêmes (immobiles en mode calme).
     if (!this.options.calm) {
       this.scene.onBeforeRenderObservable.add(() => {
         const dt = this.engine.getDeltaTime() / 1000
         for (const crystal of this.stones.values()) crystal.rotation.y += dt * 0.8
+        if (this.dayCrystal) this.dayCrystal.rotation.y += dt * 0.8
       })
     }
+  }
+
+  /**
+   * La Pierre du Jour (défi quotidien), sur le chemin de la Citadelle : plus haute que les pierres de savoir, grès chaud et cristal
+   * doré tant que le défi du jour reste à relever ; le cristal s'apaise une fois relevé (elle se réveille demain).
+   */
+  private buildDayStone(): void {
+    const { x, z } = layout.pierre_jour
+    const y = this.grid.heightAt(x, z)
+    if (y < 1) return
+    const material = new StandardMaterial('pierre-jour', this.scene)
+    material.diffuseColor = Color3.FromHexString('#9a8566')
+    material.specularColor = new Color3(0.08, 0.08, 0.1)
+    const mesh = MeshBuilder.CreateCylinder('pierre-jour', { diameterTop: 0.7, diameterBottom: 1.5, height: 2.8, tessellation: 6 }, this.scene)
+    mesh.position.set(x, y + 1.25, z)
+    mesh.material = material
+    mesh.receiveShadows = true
+    mesh.isPickable = false
+    this.atmosphere.shadows.addShadowCaster(mesh, false)
+    const crystal = MeshBuilder.CreatePolyhedron('pierre-jour-cristal', { type: 1, size: 0.4 }, this.scene)
+    crystal.position.set(x, y + 3.4, z)
+    crystal.scaling.y = 1.6
+    const glow = new StandardMaterial('pierre-jour-cristal', this.scene)
+    glow.disableLighting = true
+    glow.diffuseColor = Color3.Black()
+    crystal.material = glow
+    crystal.isPickable = false
+    this.dayCrystal = crystal
+    this.dayRing = beacon(this.scene, 'pierre-jour', new Vector3(x, y, z), '#ffd447', true)
+    this.obstacles.add({ x, z, r: 0.85 })
+    const done = this.options.save.daily.days.includes(localDay())
+    this.interactables.push({ id: 'pierre-jour', kind: 'jour', label: 'La Pierre du Jour', x, z, radius: 3, open: !done })
+    this.setDayLook(!done)
+  }
+
+  /** Le défi du jour vient d'être relevé (ou ne l'est pas encore) : l'éclat de la pierre et son repère sur la carte suivent. */
+  setDayChallenge(todo: boolean): void {
+    const target = this.interactables.find((it) => it.id === 'pierre-jour')
+    if (!target) return
+    target.open = todo
+    this.setDayLook(todo)
+    this.events.emit('markers', this.mapMarkers())
+  }
+
+  private setDayLook(todo: boolean): void {
+    const crystal = this.dayCrystal
+    if (crystal) (crystal.material as StandardMaterial).emissiveColor = Color3.FromHexString(todo ? '#ffd447' : '#9fa8b8').scale(todo ? 1.25 : 0.85)
+    if (this.dayRing) this.dayRing.setEnabled(todo)
   }
 
   private setStoneLook(crystal: Mesh, awake: boolean): void {

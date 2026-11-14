@@ -31,3 +31,12 @@ describe('sac', () => {
     expect(inv.summary({ plume: 2, bouclier: 1 })).toBe('Sac : Plume ×2 · Bouclier ×1')
   })
 })
+
+describe('sac relu d’une partie', () => {
+  it('ne garde que les objets connus, entre 0 et 5', () => {
+    expect(inv.normalizeOwned(undefined)).toEqual({})
+    expect(inv.normalizeOwned('x')).toEqual({})
+    expect(inv.normalizeOwned([1, 2])).toEqual({})
+    expect(inv.normalizeOwned({ plume: 2.9, bouclier: 99, potion: 0, parchemin: -3, epee: 4, soin: 'beaucoup' })).toEqual({ plume: 2, bouclier: 5 })
+  })
+})

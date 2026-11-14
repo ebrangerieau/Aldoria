@@ -142,7 +142,7 @@ Dans l'ordre que les enfants choisiront à la séance de la phase 1 :
 - les 28 autres lieux (contenu déjà prêt dans `lieux.json`), région par région ;
 - balance géante, stand de tir (Lice), pont des fractions : comme des lieux de l'île, plus des panneaux posés sur une salle ;
 - Clairval en plein air et ses habitants (`villages.json`), quêtes du jour ;
-- Pierre du Jour (défi quotidien, série, coffre de la semaine, sans compte à rebours) ;
+- Pierre du Jour (défi quotidien, série, coffre de la semaine, sans compte à rebours) : **faite le 14 novembre**, pierre sur le chemin de la Citadelle (`core/dailyRun.ts`, `ui/DailyChallenge.tsx`) ;
 - île du Sphinx : barque, passages, blocs du temple (niveaux de `tools/make_sphinx_levels.py` sortis en JSON) ;
 - apparence du héros (silhouettes, armes, capes, déblocages) et sac d'objets ;
 - prologue en cinq tableaux joués dans l'île, voix enregistrées de Maître Ysaline (`deploy/voix/manifest.json` ; **seuils faits le 14 novembre** : les 30 textes de lieu sont lus de

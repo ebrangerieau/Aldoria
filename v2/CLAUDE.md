@@ -76,6 +76,14 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   une question et baisse sous une voix (`Voice.isSpeaking`) ; `&musique=0` la désactive (ni lecture ni bouton : captures,
   mesures). Ajouter un morceau : `python tools/encode_musique.py`, procédure dans `docs/exploitation.md`. Une scène qui
   pose une question ou un dialogue sans passer par `GameScreen` doit prévenir `services.music.setFocus`.
+- **Pierre du Jour** (défi quotidien, `ile.json` : `pierre_jour`, sur le chemin de la Citadelle ; interaction `kind: 'jour'`) : dix automatismes
+  d'affilée, **sans compte à rebours à l'écran**, puis un bilan (bonnes réponses, temps de réponse cumulé, record, série de jours, coffre de la
+  semaine). `core/dailyChallenge.ts` (série, rattrapage d'un jour manqué, record, coffre) et `core/dailyRun.ts` (déroulé et textes du bilan)
+  sont purs et testés ; `app/dailySession.ts` ferme la session « monde » et ouvre une session « defi » (automatismes seulement, côté API),
+  puis rouvre l'île ; `ui/DailyChallenge.tsx` enchaîne les écrans avec `QuestionPanel` (`gameMode` « defi », `timeMs` rendu avec la réponse).
+  Un défi interrompu ne compte pas ; un second défi le même jour est un entraînement (pas de bonus, pas de série de plus). L'état (`daily`)
+  et le sac (`items`) sont rangés dans la partie (`core/save.ts`, `normalizeSave` relit une ancienne partie). Sans pénalité de lenteur
+  (`no_speed`) : aucun temps n'est écrit.
 - **Archives** (`core/archives.ts` : lecture de `GET /play/progress`, résumé, dernier état gardé sur l'appareil pour la consultation hors
   connexion ; `ui/Archives.tsx`, bouton « Archives » de l'île) : une à trois étoiles par notion, groupées par matière puis par chapitre. La
   maîtrise vient toujours du serveur, jamais calculée par le client. Le bestiaire (créatures vaincues) vient avec les rencontres.
@@ -116,8 +124,7 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
 - **Logiques de la v1 portées, pas encore branchées à l'écran** (pures, testées, `core/`) : sac d'objets (`inventory.ts` : plume,
   parchemin, bouclier, potion, 5 au plus de chaque ; le combat applique déjà les deux derniers), voix du héros entre les salles
   (`heroVoice.ts` et `content/monde/heros.json`), apparence du héros et du renard
-  (`wardrobe.ts`, `content/monde/apparence.json`), défi quotidien (`dailyChallenge.ts` : série, rattrapage, record, coffre de la
-  semaine), île du Sphinx (`sphinx/board.ts` : jeu de blocs ; `sphinx/island.ts` : passages de barque, paliers, aide du Sphinx ;
+  (`wardrobe.ts`, `content/monde/apparence.json`), île du Sphinx (`sphinx/board.ts` : jeu de blocs ; `sphinx/island.ts` : passages de barque, paliers, aide du Sphinx ;
   180 énigmes dans `content/monde/sphinx_niveaux.json`, converties de `game/worlds/shared/sphinx_levels.gd` de la v1 ;
   `python tools/make_sphinx_levels.py` les régénère (graine fixe, mais le palier 6 est très long à calculer : relancé jusqu'au
   palier 5 seulement, jamais comparé en entier à la v1). Leur état se range dans

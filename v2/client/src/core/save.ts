@@ -8,6 +8,8 @@
  * notions est calculée par le serveur à partir des réponses, jamais par le client.
  */
 import type { ApiClient } from './api'
+import { EMPTY_DAILY, normalizeDaily, type DailyState } from './dailyChallenge'
+import { normalizeOwned, type Owned } from './inventory'
 import type { Store } from './storage'
 
 export const SCHEMA_VERSION = 1
@@ -21,6 +23,10 @@ export interface SaveData {
   /** Étapes de l'histoire déjà vues (prologue, pages rendues…). */
   story: string[]
   look: { model: string; main: string; off: string; cape: string }
+  /** Pierre du Jour : jours des défis faits, record, série, coffres de la semaine ouverts (core/dailyChallenge.ts). */
+  daily: DailyState
+  /** Objets du sac (core/inventory.ts). */
+  items: Owned
 }
 
 export const EMPTY_SAVE: SaveData = {
@@ -29,6 +35,14 @@ export const EMPTY_SAVE: SaveData = {
   stones: {},
   story: [],
   look: { model: 'Knight', main: '1H_Sword', off: 'Round_Shield', cape: 'origine' },
+  daily: EMPTY_DAILY,
+  items: {},
+}
+
+/** Partie relue (locale ou du serveur) : les champs absents d'une ancienne partie reprennent leur valeur par défaut. */
+export function normalizeSave(data: Partial<SaveData> | null | undefined): SaveData {
+  const given = data ?? {}
+  return { ...structuredClone(EMPTY_SAVE), ...given, daily: normalizeDaily(given.daily), items: normalizeOwned(given.items) }
 }
 
 interface ServerSave {
@@ -106,7 +120,7 @@ export class SaveGame {
   private adopt(revision: number, epoch: number, data: Partial<SaveData>, dirty: boolean): void {
     this.revision = revision
     this.epoch = epoch
-    this.data = { ...structuredClone(EMPTY_SAVE), ...data }
+    this.data = normalizeSave(data)
     this.dirty = dirty
   }
 
