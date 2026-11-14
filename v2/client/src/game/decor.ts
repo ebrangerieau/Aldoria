@@ -16,6 +16,7 @@ import {
 } from '@babylonjs/core'
 import type { HeightGrid } from '../core/world/heightGrid'
 import { Obstacles } from '../core/world/obstacles'
+import { ISLAND_RELICS } from '../core/relics'
 import type { Place } from '../core/world/places'
 import { fbm, type Relief, type Terrain, valueNoise } from '../core/world/terrain'
 import { mergedModel, placeModel } from './assets'
@@ -102,6 +103,9 @@ export async function buildDecor(
     { x: layout.ysaline.x, z: layout.ysaline.z, r: 8 },
     { x: layout.pierre_eveil.x, z: layout.pierre_eveil.z, r: 6 },
     { x: layout.pierre_jour.x, z: layout.pierre_jour.z, r: 6 },
+    // Les reliques de l'île et la Table des Reliques : ni tronc ni rocher dessus ou contre elles (core/relics.ts).
+    { x: layout.table_reliques.x, z: layout.table_reliques.z, r: 8 },
+    ...ISLAND_RELICS.map((r) => ({ x: r.source.x, z: r.source.z, r: 6 })),
     ...terrain.pads.map((p) => ({ x: p.x, z: p.z, r: p.radius + 7 })),
   ]
   const STEP = 6.5

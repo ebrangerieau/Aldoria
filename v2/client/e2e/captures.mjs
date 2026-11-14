@@ -38,6 +38,11 @@ const VIEWS = {
   'relique-onde': { query: '', at: [-148.6, 132], face: [-146, 132], beta: 1.3, radius: 6, turn: 0.35 },
   'relique-feuille': { query: '', at: [-164.6, -126], face: [-162, -126], beta: 1.3, radius: 6, turn: 0.35 },
   'relique-etoile': { query: '', at: [73.4, 52], face: [76, 52], beta: 1.3, radius: 6, turn: 0.35 },
+  // Les quatre autres reliques de l'île : le décor (arbres, rochers) ne doit ni les cacher ni les toucher.
+  'relique-anglais': { query: '', at: [-190.6, 30], face: [-188, 30], beta: 1.3, radius: 6, turn: 0.35 },
+  'relique-francais': { query: '', at: [-28.6, -186], face: [-26, -186], beta: 1.3, radius: 6, turn: 0.35 },
+  'relique-histoire': { query: '', at: [203.4, -10], face: [206, -10], beta: 1.3, radius: 6, turn: 0.35 },
+  'relique-snt': { query: '', at: [123.4, -138], face: [126, -138], beta: 1.3, radius: 6, turn: 0.35 },
   'relique-brouillard': { query: '&monde=brouillard&classe=2nde', at: [-62.6, -42], face: [-60, -42], beta: 1.3, radius: 6, turn: 0.35 },
   // Intérieur d'un lieu : `lieu` (code), `salle` (0 à 5), `at` : [x dans la salle, profondeur], caméra : écart au sud, inclinaison, distance.
   interieur: { query: '', lieu: 'tour_fractions', salle: 0, at: [6, 9], turn: 0, beta: 1.05, radius: 12, interface: true },

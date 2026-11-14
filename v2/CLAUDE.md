@@ -132,7 +132,8 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   d'un élément (flamme, onde, feuille, étoile : chacun a une couleur **et une forme**, jamais la couleur seule) et d'un rang (I à IV) ; deux reliques
   « se répondent » quand elles partagent un élément ou un rang. Huit se ramassent dans l'île (une par région, positions de `reliques.json`, vérifiées sur
   la terre ferme, atteignables à pied et à l'écart des bâtiments par `reliques.test.ts`), huit tombent du **coffre** des premiers lieux terminés
-  (`completePlace` : `chestRelic`, la première fois seulement, avec rattrapage d'une partie ancienne ; `Completion.relic`, ligne « Relique trouvée : … ! »).
+  (`completePlace` : `chestRelic` à **chaque** fin de lieu rend la relique due et pas encore trouvée, donc le tour d'un lieu terminé la première fois et le rattrapage d'une
+  partie ancienne, même en rejouant un lieu, jamais de doublon ; `Completion.relic`, ligne « Relique trouvée : … ! »).
   Rangées dans la partie (`SaveData.relics`, `normalizeRelics`, jamais deux fois ; `SaveData.table` : dernier jour récompensé). **La table** : un carré de 4 × 4
   où chaque rangée et chaque colonne ne répète ni un élément ni un rang ; les reliques de l'enfant (neuf au plus, `MAX_HOLES`) sont à placer, toutes les autres
   sont gravées dans la pierre ; `makePuzzle(owned, graine)` part d'un carré complet (`randomSquare`), donc **toujours soluble** (une seule solution jusqu'à huit

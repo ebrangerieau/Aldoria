@@ -175,6 +175,21 @@ describe('Le coffre d’un lieu', () => {
     expect(chestRelic(save.relics, 99)?.id).toBe('onde-4') // la suite attend son tour
   })
 
+  it('une partie ancienne rattrape son retard même en rejouant un lieu (chaque coffre rend la relique due)', () => {
+    // 12 lieux déjà terminés avant les reliques : les huit reliques de coffre sont dues, un coffre rejoué en rend une.
+    const places = Object.fromEntries(Array.from({ length: 12 }, (_, i) => [`l${i}`, 1]))
+    let save = fresh({ places })
+    const got: string[] = []
+    for (let i = 0; i < 9; i += 1) {
+      const done = completePlace(save, { code: 'l0', chest_xp: 10 }, () => 0)
+      expect(done.first).toBe(false)
+      if (done.relic) got.push(done.relic.id)
+      save = done.save
+    }
+    expect(got).toEqual(['flamme-2', 'onde-2', 'feuille-2', 'etoile-2', 'flamme-4', 'onde-4', 'feuille-4', 'etoile-4'])
+    expect(save.relics).toEqual(got) // la neuvième fois, plus rien : jamais de doublon
+  })
+
   it('annonce la relique dans le message du coffre', () => {
     const def2 = { title: 'La Tour', page: 'la page des Fractions', page_text: 'Texte.', outro: 'Fin.', chest_xp: 100 }
     const text = chestMessage(def2, { first: true, answered: 5, correct: 4, found: [], relic: relicOf('flamme-2') }).text

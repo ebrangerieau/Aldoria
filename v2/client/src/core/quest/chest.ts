@@ -4,7 +4,8 @@
  * modifiée sur place ; l'interface la range par `persist`.
  *
  * - À chaque fin de lieu : l'XP du coffre (`chest_xp`) et deux objets du sac.
- * - La première fois seulement, aussi une relique si c'est le tour de l'une d'elles (`chestRelic`, core/relics.ts).
+ * - Aussi une relique quand l'une d'elles est due et pas encore trouvée (`chestRelic`, core/relics.ts : le tour d'un lieu terminé pour la première fois,
+ *   ou le rattrapage d'une partie ancienne, même en rejouant un lieu).
  * - La première fois seulement : la page est rendue (`page_text`, titre « La page des X retrouvée ! ») et Maître Ysaline salue
  *   l'Archiviste au retour sur l'île en annonçant le chemin qui s'ouvre (texte et voix enregistrée : content/voix/lignes.json,
  *   `page-<code>`). Ensuite : le mot de la fin (`outro`).
@@ -25,7 +26,7 @@ export interface Completion {
   /** Première fois que ce lieu est terminé : la page est rendue et Maître Ysaline salue au retour. */
   first: boolean
   found: ItemId[]
-  /** La relique du coffre (première fois seulement, quand c'est le tour d'une relique de coffre), sinon null. */
+  /** La relique du coffre, quand l'une d'elles est due et pas encore trouvée, sinon null. */
   relic: Relic | null
 }
 
@@ -35,7 +36,10 @@ export function completePlace(save: SaveData, def: Pick<DungeonData, 'code' | 'c
   const first = done === 0
   const { save: withItems, found } = findItems(save, CHEST_ITEMS, random)
   const key = `page-${def.code}`
-  const relic = first ? chestRelic(save.relics, placesDone(save) + 1) : null
+  // La relique due et pas encore possédée : à chaque fin de lieu, pas seulement la première (une partie ancienne rattrape son retard au
+  // fil des coffres, même en rejouant un lieu) ; sans retard, un lieu rejoué n'en rend aucune.
+  const places = { ...save.places, [def.code]: done + 1 }
+  const relic = chestRelic(save.relics, placesDone({ places }))
   return {
     first,
     found,
