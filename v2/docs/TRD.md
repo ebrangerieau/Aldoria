@@ -129,7 +129,9 @@ Mesure : `?mesure` (`core/perf.ts`, `GameWorld.measure`) fait faire un tour fixe
 - Les aménagements du parent (`Profile.accommodations`, inchangés) deviennent des attributs de `<html>`
   (`data-text-size`, `data-readable-font`, `data-spacing`, `data-big-targets`, `data-calm`, `data-colorblind`) ; `ui/styles.css`
   fait le reste. L'enfant peut agrandir le texte, pas descendre sous le choix du parent.
-- Lecture à voix haute : voix du serveur (`POST /play/speech`) si l'enfant est connecté, sinon voix du navigateur.
+- Lecture à voix haute : un texte de Maître Ysaline ou du narrateur a sa voix enregistrée (ElevenLabs, `deploy/voix/`, manifeste par
+  empreinte SHA-256 du texte, servie sous `/voix/`), jouée en premier ; sinon voix du serveur (`POST /play/speech`, Piper) si l'enfant
+  est connecté, sinon voix du navigateur.
 - Aucun style en ligne écrit dans le HTML : React passe ses styles par l'objet `style` (autorisé par la CSP), le reste par
   des classes et des attributs `data-*`.
 

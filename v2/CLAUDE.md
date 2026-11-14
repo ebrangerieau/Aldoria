@@ -61,6 +61,14 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   le décor répété passe en *thin instances*. Tout asset ajouté est inscrit dans `client/public/ressources/LICENSES.md`.
 - **Sauvegarde** : partie v2 dans l'emplacement `v2` (`core/save.ts`). La maîtrise des notions n'est jamais calculée par le
   client. Aucune migration ne doit casser la v1 tant qu'elle est en service.
+- **Voix enregistrées** (ElevenLabs : Maître Ysaline et le narrateur) : `deploy/voix/` (`manifest.json` : empreinte SHA-256 du
+  texte exact vers un MP3), servies sous `/voix/` (image web ; `vite.config.ts` en dev et en preview). `core/voice.ts` joue le son
+  d'un texte français dont l'empreinte est au manifeste (même sans compte), sinon Piper, sinon la voix du navigateur
+  (`core/recordedVoices.ts`). Un texte enregistré se lit **seul et à l'identique** : une phrase collée à côté lui ferait perdre sa
+  voix, donc l'afficher à part (`note` du `Dialog`, non lue). Modifier un texte de `content/voix/lignes.json` ou le `threshold`
+  d'un lieu fait échouer `tests/recordedVoices.test.ts` : relancer `python tools/voix_elevenlabs.py` (clé ElevenLabs dans
+  l'environnement, jamais dans le dépôt ; `--essai` liste ce qui serait généré, sans clé). Un nouveau texte de Maître Ysaline
+  s'ajoute à `lignes.json` (groupe, id, texte, voix), puis le script génère son son. Crédit ElevenLabs dans les Options.
 - **Textes visibles par les enfants en français**, tutoiement ; aucune donnée personnelle hors du serveur d'Aldoria.
 - **Erreurs du jeu** : tout ce qui passe par une exception, une promesse rejetée ou `console.error` remonte à l'exploitant
   (`core/errorReport.ts`, `app/errors.ts`). Ne jamais mettre de prénom, de question ni de réponse dans un message d'erreur ;

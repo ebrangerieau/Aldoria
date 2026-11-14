@@ -23,7 +23,7 @@ const today = (): string => new Date().toISOString().slice(0, 10)
 
 type Modal =
   | { kind: 'question'; item: Item; target: Interactable }
-  | { kind: 'dialog'; title: string; text: string; actions: { label: string; primary?: boolean; run: () => void }[] }
+  | { kind: 'dialog'; title: string; text: string; note?: string; actions: { label: string; primary?: boolean; run: () => void }[] }
   | { kind: 'options' }
   | null
 
@@ -53,6 +53,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
   useEffect(() => applyToDocument(accommodations), [accommodations])
   useEffect(() => {
     services.api.onOnlineChange = setOnline
+    services.voice.warm()
     const timer = window.setTimeout(() => setHelpVisible(false), 14_000)
     return () => window.clearTimeout(timer)
   }, [services])
@@ -174,13 +175,18 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
       if (accommodations.auto_read) void services.voice.say([WELCOME])
     } else if (target.place) {
       const place = target.place
+      // Le texte du seuil est celui que Maître Ysaline a enregistré (ElevenLabs) : il se lit seul et à l'identique.
+      // L'indication du nombre d'étapes s'affiche dessous sans être lue : elle n'a pas de voix enregistrée, et
+      // la lire avec Piper mettrait deux voix différentes dans une même réplique.
       const text = target.open
-        ? `${place.dungeon.threshold} ${place.dungeon.rooms.length} étapes, une énigme, et un Effaceur à vaincre.`
+        ? place.dungeon.threshold
         : `Ce chemin est encore fermé. Il s'ouvrira quand tu auras rapporté la page du lieu précédent de ${regionTitle(place.dungeon.region)}.`
+      const note = target.open ? `${place.dungeon.rooms.length} étapes, une énigme, et un Effaceur à vaincre.` : undefined
       setModal({
         kind: 'dialog',
         title: place.dungeon.title,
         text,
+        note,
         actions: target.open
           ? [
               { label: '🔊 Écouter', run: () => void services.voice.say([text]) },
@@ -285,7 +291,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
           onDone={(outcome) => onQuestionDone(outcome, modal.target)}
         />
       )}
-      {modal?.kind === 'dialog' && <Dialog title={modal.title} text={modal.text} actions={modal.actions} />}
+      {modal?.kind === 'dialog' && <Dialog title={modal.title} text={modal.text} note={modal.note} actions={modal.actions} />}
       {modal?.kind === 'options' && (
         <Options
           accommodations={accommodations}

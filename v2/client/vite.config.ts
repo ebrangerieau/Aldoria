@@ -1,4 +1,4 @@
-import { createReadStream, readFileSync } from 'node:fs'
+import { createReadStream, existsSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import react from '@vitejs/plugin-react'
 import type { Plugin } from 'vite'
@@ -51,8 +51,28 @@ function babylonTools(): Plugin {
   }
 }
 
+/**
+ * Voix enregistrées (ElevenLabs) de Maître Ysaline et du narrateur : deploy/voix/, servies sous /voix/
+ * (src/core/recordedVoices.ts). En production, l'image web les copie à côté du jeu (deploy/web.Dockerfile) ;
+ * ici, `npm run dev` et `npm run preview` (donc les parcours dans le navigateur) les lisent à la source.
+ */
+function recordedVoices(): Plugin {
+  const dir = fileURLToPath(new URL('../deploy/voix/', import.meta.url))
+  const serve = (req: { url?: string }, res: import('node:http').ServerResponse, next: () => void) => {
+    const name = decodeURIComponent((req.url ?? '').split('?')[0]!.slice(1))
+    if (!/^[\w.-]+\.(mp3|json)$/.test(name) || !existsSync(dir + name)) return next()
+    res.setHeader('Content-Type', name.endsWith('.mp3') ? 'audio/mpeg' : 'application/json')
+    createReadStream(dir + name).pipe(res)
+  }
+  return {
+    name: 'aldoria-voix',
+    configureServer: (server) => void server.middlewares.use('/voix/', serve),
+    configurePreviewServer: (server) => void server.middlewares.use('/voix/', serve),
+  }
+}
+
 export default defineConfig({
-  plugins: [react(), babylonTools()],
+  plugins: [react(), babylonTools(), recordedVoices()],
   resolve: { alias: { '@content': content } },
   server: {
     port: 5173,

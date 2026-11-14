@@ -145,6 +145,31 @@ try {
     await page.waitForTimeout(1500 * SLOW)
     await page.screenshot({ path: `${OUT}/07-citadelle.png` })
   })
+
+  await step('seuil d’un lieu : Maître Ysaline parle de sa voix enregistrée (ElevenLabs), pas de Piper', async () => {
+    const lieu = await page.evaluate(() => {
+      const i = window.__aldoria.world.interactables.find((x) => x.kind === 'lieu' && x.open)
+      return i ? { x: i.x, z: i.z, label: i.label } : null
+    })
+    if (!lieu) throw new Error('aucun lieu ouvert dans l’île')
+    await page.evaluate(({ x, z }) => window.__aldoria.world.teleport(x, z - 1, x, z), lieu)
+    await page.getByTestId('invite').waitFor({ timeout: 10_000 * SLOW })
+    await page.keyboard.press('KeyE')
+    await page.getByRole('dialog').waitFor()
+    await page.screenshot({ path: `${OUT}/08-seuil.png` })
+    const speech = []
+    page.on('request', (r) => { if (r.url().includes('/play/speech')) speech.push(r.url()) })
+    const sound = page.waitForResponse((r) => r.url().includes('/voix/seuil-'), { timeout: 15_000 * SLOW })
+    await page.getByRole('button', { name: /Écouter/ }).click()
+    const res = await sound
+    if (res.status() !== 200 || !(res.headers()['content-type'] ?? '').startsWith('audio/mpeg')) {
+      throw new Error(`son du seuil : ${res.status()} ${res.headers()['content-type']} ${res.url()}`)
+    }
+    await page.waitForTimeout(500 * SLOW)
+    if (speech.length > 0) throw new Error(`Piper appelé pour un texte enregistré : ${speech.join(' ')}`)
+    const note = await page.locator('.dialog .hint').innerText()
+    if (!/étapes, une énigme/.test(note)) throw new Error(`indication des étapes absente : ${note}`)
+  })
 } catch (error) {
   problems.push(String(error))
   await page.screenshot({ path: `${OUT}/echec.png` }).catch(() => {})
