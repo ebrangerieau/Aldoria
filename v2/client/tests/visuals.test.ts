@@ -4,16 +4,27 @@ import { isPlayable, SUPPORTED_VISUALS } from '../src/core/questionService'
 import type { Item } from '../src/core/items'
 import { PACK_6E } from './support'
 import pack2nde from './fixtures/pack_2nde.json'
+import samples from './fixtures/visual_samples.json'
 import {
+  arrowPoints,
   balanceFrom,
   canRemove,
+  cellCenter,
+  graphFrom,
+  graphPixel,
+  graphTicks,
   gridFrom,
   gridPixel,
+  mapFrom,
+  mapPixel,
+  mapRoute,
   nearestTick,
   nextSign,
   numberLineFrom,
   removeBoth,
+  robotFrom,
   sideText,
+  signed,
   signColumns,
   signsComplete,
   signTableFrom,
@@ -140,8 +151,8 @@ describe('questions jouables (registre des types et des visuels)', () => {
     expect(isPlayable(item({ type: 'sign_table', visual: { kind: 'sign_table' } }))).toBe(true)
   })
 
-  it('ne pose jamais une question dont le visuel manque (robot, carte, graphique…) ni un type inconnu', () => {
-    for (const kind of ['robot', 'map', 'graph', 'pont', 'rapporteur', 'repere_tir']) expect(isPlayable(item({ visual: { kind } }))).toBe(false)
+  it('ne pose jamais une question dont le visuel manque (pont, rapporteur, repère de tir) ni un type inconnu', () => {
+    for (const kind of ['pont', 'rapporteur', 'repere_tir']) expect(isPlayable(item({ visual: { kind } }))).toBe(false)
     expect(isPlayable(item({ visual: {} }))).toBe(false)
     expect(isPlayable(item({ type: 'drag' as never }))).toBe(false)
   })
@@ -157,6 +168,132 @@ describe('questions jouables (registre des types et des visuels)', () => {
   })
 
   it('ne déclare que des visuels que l’interface dessine', () => {
-    expect([...SUPPORTED_VISUALS].sort()).toEqual(['balance', 'grid', 'number_line', 'sign_table'])
+    expect([...SUPPORTED_VISUALS].sort()).toEqual(['balance', 'graph', 'grid', 'map', 'number_line', 'robot', 'sign_table'])
   })
 })
+
+// --- Carte, robot, courbe : calculs, puis questions réelles des générateurs ---------------------------
+
+type Sample = Item & { generator: string; meta: Record<string, unknown> }
+const SAMPLES = samples as unknown as Sample[]
+const of = (generators: string[]) => SAMPLES.filter((s) => generators.includes(s.generator ?? ''))
+
+describe('carte à l’échelle', () => {
+  it('lit la carte, avec des valeurs par défaut si le visuel est incomplet', () => {
+    const spec = mapFrom({ cols: 12, rows: 8, points: [{ label: 'Moulin', at: [2, 3] }, { label: 'Puits', at: [7, 3] }], scale: { cells: 2, text: '200 m' } })
+    expect(spec.points).toEqual([{ label: 'Moulin', at: [2, 3] }, { label: 'Puits', at: [7, 3] }])
+    expect(spec.scale).toEqual({ cells: 2, text: '200 m' })
+    expect(mapFrom({})).toMatchObject({ cols: 12, rows: 8, points: [], path: [], scale: { cells: 0, text: '' } })
+    expect(mapFrom({ scale: { ratio: 50000, text: 'Échelle 1/50 000' } }).scale).toEqual({ cells: 0, text: 'Échelle 1/50 000' })
+  })
+
+  it('place les points sur les intersections du quadrillage, et relie les deux lieux sans route', () => {
+    expect(mapPixel([2, 3], 40, 20)).toEqual([100, 140])
+    const spec = mapFrom({ points: [{ label: 'A', at: [1, 2] }, { label: 'B', at: [5, 2] }] })
+    expect(mapRoute(spec)).toEqual([[1, 2], [5, 2]])
+    expect(mapRoute(mapFrom({ points: [{ label: 'A', at: [1, 2] }, { label: 'B', at: [5, 6] }], path: [[1, 2], [5, 2], [5, 6]] }))).toHaveLength(3)
+    expect(mapRoute(mapFrom({}))).toEqual([])
+  })
+
+  it('dessine, pour chaque question réelle, une route dont la longueur est celle que dit la question', () => {
+    const maps = of(['6e.proportionnalite.carte'])
+    expect(maps).toHaveLength(20)
+    for (const s of maps) {
+      const spec = mapFrom(s.visual ?? {})
+      expect(spec.points).toHaveLength(2)
+      const route = mapRoute(spec)
+      const cells = route.slice(1).reduce((sum, p, i) => sum + Math.abs(p[0] - route[i]![0]) + Math.abs(p[1] - route[i]![1]), 0)
+      expect(cells).toBe(s.meta.cells)
+      for (const [x, y] of route) {
+        expect(x >= 0 && x <= spec.cols && y >= 0 && y <= spec.rows).toBe(true)
+      }
+      expect(spec.scale.text).not.toBe('')
+      expect(isPlayable(s)).toBe(true)
+    }
+  })
+})
+
+describe('robot sur une grille', () => {
+  it('lit la grille, le départ, la direction et les cases proposées dans l’ordre des lettres', () => {
+    const spec = robotFrom({ size: 6, start: [1, 4], facing: 'E', marks: { C: [0, 0], A: [3, 3], B: [5, 1] } })
+    expect(spec).toEqual({ size: 6, start: [1, 4], facing: 'E', marks: [{ letter: 'A', at: [3, 3] }, { letter: 'B', at: [5, 1] }, { letter: 'C', at: [0, 0] }] })
+    expect(robotFrom({ facing: 'Z' }).facing).toBe('N') // direction inconnue : vers le haut
+  })
+
+  it('centre une case et dirige la flèche du robot', () => {
+    expect(cellCenter([2, 1], 44)).toEqual([110, 66])
+    const tip = (h: 'N' | 'E' | 'S' | 'O') => arrowPoints([100, 100], h, 10)[0]
+    expect(tip('N')).toEqual([100, 90])
+    expect(tip('E')).toEqual([110, 100])
+    expect(tip('S')).toEqual([100, 110])
+    expect(tip('O')).toEqual([90, 100])
+    // Les deux autres sommets sont derrière la pointe, de part et d'autre de l’axe.
+    const [, a, b] = arrowPoints([100, 100], 'N', 10)
+    expect(a![1]).toBeGreaterThan(100)
+    expect(b![1]).toBeGreaterThan(100)
+    expect(a![0] + b![0]).toBeCloseTo(200)
+  })
+
+  it('montre, pour chaque question réelle, la case d’arrivée sous la bonne lettre', () => {
+    const robots = of(['6e.algorithmique.sequences', '6e.algorithmique.boucles'])
+    expect(robots).toHaveLength(40)
+    for (const s of robots) {
+      const spec = robotFrom(s.visual ?? {})
+      expect(spec.marks.map((m) => m.letter)).toEqual(s.choices)
+      const answer = s.answer as { kind: 'choice'; index: number }
+      const right = spec.marks[answer.index]!
+      expect(right.at).toEqual(s.meta.end)
+      expect(spec.start).toEqual(s.meta.start)
+      expect(spec.facing).toBe(s.meta.facing)
+      for (const m of spec.marks) expect(m.at.every((c) => c >= 0 && c < spec.size)).toBe(true)
+      expect(new Set(spec.marks.map((m) => m.at.join(','))).size).toBe(spec.marks.length) // une lettre par case
+      expect(spec.marks.some((m) => m.at.join(',') === spec.start.join(','))).toBe(false) // aucune lettre sur le départ
+      expect(isPlayable(s)).toBe(true)
+    }
+  })
+})
+
+describe('courbe (lecture graphique)', () => {
+  const SPEC = graphFrom({ xmin: -5, xmax: 5, ymin: -5, ymax: 5, points: [[-5, 2], [0, -1], [5, 4]] })
+
+  it('place les points dans le cadre : y vers le haut, bords aux marges', () => {
+    expect(graphPixel(SPEC, [-5, 5], 440, 360, 32)).toEqual([32, 32])
+    expect(graphPixel(SPEC, [5, -5], 440, 360, 32)).toEqual([408, 328])
+    expect(graphPixel(SPEC, [0, 0], 440, 360, 32)).toEqual([220, 180])
+    expect(graphTicks(-2, 2)).toEqual([-2, -1, 0, 1, 2])
+  })
+
+  it('écrit le vrai signe moins, et ne casse pas sur un visuel incomplet', () => {
+    expect(signed(-3)).toBe('−3')
+    expect(signed(4)).toBe('4')
+    expect(graphFrom({})).toEqual({ xmin: -5, xmax: 5, ymin: -5, ymax: 5, points: [] })
+    expect(graphFrom({ xmin: 3, xmax: 3 }).xmax).toBeGreaterThan(3)
+  })
+
+  it('dessine, pour chaque question réelle, une courbe qui passe par la réponse', () => {
+    const curves = of(['2nde.automatismes.lecture_graphique'])
+    expect(curves).toHaveLength(20)
+    const at = (points: [number, number][], x: number): number | null => {
+      for (let i = 1; i < points.length; i++) {
+        const [x1, y1] = points[i - 1]!
+        const [x2, y2] = points[i]!
+        if (x >= x1 && x <= x2) return y1 + ((y2 - y1) * (x - x1)) / (x2 - x1)
+      }
+      return null
+    }
+    for (const s of curves) {
+      const spec = graphFrom(s.visual ?? {})
+      expect(spec.points.length).toBeGreaterThanOrEqual(3)
+      expect(spec.points.every(([x, y], i) => x >= spec.xmin && x <= spec.xmax && y >= spec.ymin && y <= spec.ymax && (i === 0 || x > spec.points[i - 1]![0]))).toBe(true)
+      if (s.difficulty <= 2) expect(at(spec.points, Number(s.meta.x))).toBe(Number(s.meta.y)) // image d’un sommet
+      else for (const root of s.meta.solutions as string[]) expect(at(spec.points, Number(eval_(root)))).toBeCloseTo(Number(s.meta.k))
+      expect(isPlayable(s)).toBe(true)
+    }
+  })
+})
+
+/** « 3 » ou « 5/2 » (meta.solutions) en nombre. */
+function eval_(text: string): number {
+  const [n, d] = text.split('/')
+  return Number(n) / Number(d ?? 1)
+}

@@ -1,19 +1,30 @@
 /**
  * Visuels des questions, en SVG (la v1 les dessinait en Godot) : balance, droite graduée, repère
- * quadrillé. Tout le texte est du vrai texte (lecteur d'écran) et les couleurs viennent de la
+ * quadrillé, carte à l'échelle, robot sur une grille, courbe. Tout le texte est du vrai texte (lecteur d'écran) et les couleurs viennent de la
  * feuille de style (aucun style en ligne). Les calculs sont dans core/visuals.ts.
  */
 import { useState } from 'react'
 import type { Item, UserInput } from '../../core/items'
 import {
+  arrowPoints,
   balanceFrom,
   canRemove,
+  cellCenter,
+  graphFrom,
+  graphPixel,
+  graphTicks,
   gridFrom,
   gridPixel,
+  HEADING_NAMES,
+  mapFrom,
+  mapPixel,
+  mapRoute,
   nearestTick,
   numberLineFrom,
   removeBoth,
+  robotFrom,
   sideText,
+  signed,
   type NumberLineSpec,
   tickCount,
   tickFraction,
@@ -216,6 +227,135 @@ export function GridView({ item, revealed }: { item: Item; revealed: Revealed | 
   )
 }
 
+// --- Carte à l'échelle (Atelier des Balances) ----------------------------------------------------
+
+const MAP_CELL = 40
+const MAP_MARGIN = 20
+
+export function MapView({ item }: { item: Item }) {
+  const spec = mapFrom(item.visual ?? {})
+  const width = spec.cols * MAP_CELL + 2 * MAP_MARGIN
+  const height = spec.rows * MAP_CELL + 2 * MAP_MARGIN + (spec.scale.text ? 46 : 0)
+  const at = (p: readonly [number, number]) => mapPixel(p, MAP_CELL, MAP_MARGIN)
+  const route = mapRoute(spec).map(at)
+  const barY = spec.rows * MAP_CELL + 2 * MAP_MARGIN + 6
+  const barW = spec.scale.cells * MAP_CELL
+  const names = spec.points.map((p) => p.label).join(' et ')
+  return (
+    <figure className="visual map">
+      <svg viewBox={`0 0 ${width} ${height}`} role="img" aria-label={`Carte quadrillée de ${spec.cols} carreaux sur ${spec.rows}, avec ${names}. ${spec.scale.text}`}>
+        <rect x={MAP_MARGIN} y={MAP_MARGIN} width={spec.cols * MAP_CELL} height={spec.rows * MAP_CELL} className="v-map-bg" />
+        {Array.from({ length: spec.cols + 1 }, (_, i) => (
+          <line key={`c${i}`} x1={MAP_MARGIN + i * MAP_CELL} y1={MAP_MARGIN} x2={MAP_MARGIN + i * MAP_CELL} y2={MAP_MARGIN + spec.rows * MAP_CELL} className="v-grid-line" />
+        ))}
+        {Array.from({ length: spec.rows + 1 }, (_, i) => (
+          <line key={`r${i}`} x1={MAP_MARGIN} y1={MAP_MARGIN + i * MAP_CELL} x2={MAP_MARGIN + spec.cols * MAP_CELL} y2={MAP_MARGIN + i * MAP_CELL} className="v-grid-line" />
+        ))}
+        {route.length >= 2 && <polyline points={route.map((p) => p.join(',')).join(' ')} className="v-map-route" />}
+        {spec.points.map((p) => {
+          const [x, y] = at(p.at)
+          return (
+            <g key={p.label}>
+              <circle cx={x} cy={y} r={8} className="v-map-place" />
+              <text x={x} y={y - 14} textAnchor="middle" className="v-point-label">{p.label}</text>
+            </g>
+          )
+        })}
+        {spec.scale.text && (
+          <g>
+            {barW > 0 && (
+              <>
+                <line x1={MAP_MARGIN} y1={barY + 8} x2={MAP_MARGIN + barW} y2={barY + 8} className="v-map-bar" />
+                <line x1={MAP_MARGIN} y1={barY} x2={MAP_MARGIN} y2={barY + 16} className="v-map-bar" />
+                <line x1={MAP_MARGIN + barW} y1={barY} x2={MAP_MARGIN + barW} y2={barY + 16} className="v-map-bar" />
+              </>
+            )}
+            <text x={MAP_MARGIN + barW + (barW > 0 ? 12 : 0)} y={barY + 14} className="v-point-label">{spec.scale.text}</text>
+          </g>
+        )}
+      </svg>
+    </figure>
+  )
+}
+
+// --- Robot sur une grille ------------------------------------------------------------------------
+
+const ROBOT_CELL = 44
+
+export function RobotView({ item, revealed }: { item: Item; revealed: Revealed | null }) {
+  const spec = robotFrom(item.visual ?? {})
+  const side = spec.size * ROBOT_CELL
+  const start = cellCenter(spec.start, ROBOT_CELL)
+  const where = (at: readonly [number, number]) => `colonne ${at[0] + 1}, ligne ${at[1] + 1}`
+  const label = `Grille de ${spec.size} sur ${spec.size}. Le robot part de la case verte (${where(spec.start)}), tourné ${HEADING_NAMES[spec.facing]}. Cases proposées : ${spec.marks.map((m) => `${m.letter} (${where(m.at)})`).join(', ')}.`
+  return (
+    <figure className="visual robot">
+      <svg viewBox={`0 0 ${side} ${side}`} role="img" aria-label={label}>
+        <rect width={side} height={side} className="v-grid-bg" />
+        {Array.from({ length: spec.size + 1 }, (_, i) => (
+          <g key={i}>
+            <line x1={i * ROBOT_CELL} y1={0} x2={i * ROBOT_CELL} y2={side} className="v-grid-line" />
+            <line x1={0} y1={i * ROBOT_CELL} x2={side} y2={i * ROBOT_CELL} className="v-grid-line" />
+          </g>
+        ))}
+        <rect x={spec.start[0] * ROBOT_CELL + 3} y={spec.start[1] * ROBOT_CELL + 3} width={ROBOT_CELL - 6} height={ROBOT_CELL - 6} rx={6} className="v-robot-start" />
+        <polygon points={arrowPoints(start, spec.facing, 14).map((p) => p.join(',')).join(' ')} className="v-robot-arrow" />
+        {spec.marks.map((m) => {
+          const [x, y] = cellCenter(m.at, ROBOT_CELL)
+          const isAnswer = revealed !== null && revealed.answer === m.letter
+          return (
+            <g key={m.letter}>
+              <circle cx={x} cy={y} r={15} className={isAnswer ? 'v-robot-mark good' : 'v-robot-mark'} />
+              <text x={x} y={y + 6} textAnchor="middle" className="v-robot-letter">{m.letter}</text>
+            </g>
+          )
+        })}
+      </svg>
+    </figure>
+  )
+}
+
+// --- Courbe (lecture graphique) ------------------------------------------------------------------
+
+const GRAPH_W = 440
+const GRAPH_H = 360
+const GRAPH_MARGIN = 32
+
+export function GraphView({ item }: { item: Item }) {
+  const spec = graphFrom(item.visual ?? {})
+  const at = (p: readonly [number, number]) => graphPixel(spec, p, GRAPH_W, GRAPH_H, GRAPH_MARGIN)
+  const [x0, y0] = at([0, 0])
+  const [left, top] = at([spec.xmin, spec.ymax])
+  const [right, bottom] = at([spec.xmax, spec.ymin])
+  const curve = spec.points.map(at)
+  const description = spec.points.map((p) => `(${signed(p[0])} ; ${signed(p[1])})`).join(', ')
+  return (
+    <figure className="visual graph">
+      <svg viewBox={`0 0 ${GRAPH_W} ${GRAPH_H}`} role="img" aria-label={`Courbe de f, de x = ${signed(spec.xmin)} à x = ${signed(spec.xmax)}, qui relie les points ${description}.`}>
+        <rect x={left} y={top} width={right - left} height={bottom - top} className="v-grid-bg" />
+        {graphTicks(spec.xmin, spec.xmax).map((k) => {
+          const [x] = at([k, 0])
+          return <line key={`x${k}`} x1={x} y1={top} x2={x} y2={bottom} className={k === 0 ? 'v-grid-axis' : 'v-grid-line'} />
+        })}
+        {graphTicks(spec.ymin, spec.ymax).map((k) => {
+          const [, y] = at([0, k])
+          return <line key={`y${k}`} x1={left} y1={y} x2={right} y2={y} className={k === 0 ? 'v-grid-axis' : 'v-grid-line'} />
+        })}
+        {curve.length >= 2 && <polyline points={curve.map((p) => p.join(',')).join(' ')} className="v-graph-curve" />}
+        {curve.map((p, i) => (
+          <circle key={i} cx={p[0]} cy={p[1]} r={4} className="v-graph-dot" />
+        ))}
+        {graphTicks(spec.xmin, spec.xmax).filter((k) => k !== 0).map((k) => (
+          <text key={`tx${k}`} x={at([k, 0])[0]} y={Math.min(bottom + 20, y0 + 20)} textAnchor="middle" className="v-graph-tick">{signed(k)}</text>
+        ))}
+        {graphTicks(spec.ymin, spec.ymax).filter((k) => k !== 0).map((k) => (
+          <text key={`ty${k}`} x={x0 - 8} y={at([0, k])[1] + 5} textAnchor="end" className="v-graph-tick">{signed(k)}</text>
+        ))}
+      </svg>
+    </figure>
+  )
+}
+
 /** Visuel d'une question, au-dessus de sa réponse ; null si le type n'en a pas ou s'il ne sait pas le dessiner. */
 export function VisualFor({ item, revealed }: { item: Item; revealed: Revealed | null }) {
   const kind = item.visual?.kind
@@ -228,6 +368,12 @@ export function VisualFor({ item, revealed }: { item: Item; revealed: Revealed |
       return <BalanceView item={item} revealed={revealed} />
     case 'grid':
       return <GridView item={item} revealed={revealed} />
+    case 'map':
+      return <MapView item={item} />
+    case 'robot':
+      return <RobotView item={item} revealed={revealed} />
+    case 'graph':
+      return <GraphView item={item} />
     case 'number_line': {
       const v = item.visual ?? {}
       return <NumberLine spec={numberLineFrom(v)} point={v.point !== undefined ? String(v.point) : undefined} label={v.label !== undefined ? String(v.label) : 'A'} correctText={revealed?.answer} />

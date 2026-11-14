@@ -251,6 +251,23 @@ figure.visual.grid { max-width: 300px; }
 .v-beam-ray.good { stroke: #e0a100; }
 .v-beam-ray.bad { stroke: var(--bad-ink); stroke-dasharray: 8 6; }
 
+figure.visual.map { max-width: 600px; }
+figure.visual.robot { max-width: 300px; }
+figure.visual.graph { max-width: 460px; }
+.v-map-bg { fill: rgb(255 255 255 / 55%); stroke: var(--ink-soft); stroke-width: 2; }
+.v-map-route { fill: none; stroke: #b5651d; stroke-width: 5; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: 10 7; }
+.v-map-place { fill: var(--accent); stroke: #fff; stroke-width: 2.5; }
+.v-map-bar { stroke: var(--ink); stroke-width: 4; stroke-linecap: round; }
+.v-robot-start { fill: #8fd18f; stroke: var(--good-ink); stroke-width: 2; }
+.v-robot-arrow { fill: var(--ink); }
+.v-robot-mark { fill: var(--gold-light); stroke: var(--ink); stroke-width: 2; }
+.v-robot-mark.good { fill: var(--good-ink); }
+.v-robot-letter { fill: var(--ink); font-size: 20px; font-weight: 700; }
+.v-robot-mark.good + .v-robot-letter { fill: #fff; }
+.v-graph-tick { fill: var(--ink); font-size: 14px; font-family: var(--text-font); paint-order: stroke; stroke: #fff8e6; stroke-width: 4px; stroke-linejoin: round; }
+.v-graph-curve { fill: none; stroke: var(--accent); stroke-width: 4; stroke-linecap: round; stroke-linejoin: round; }
+.v-graph-dot { fill: var(--accent); stroke: #fff; stroke-width: 1.5; }
+
 .vector-answer { display: grid; gap: 0.7rem; margin: 0.8rem 0; justify-items: start; }
 .vector-row { display: flex; align-items: center; gap: 0.5rem; font-size: 2rem; }
 .vector-row .answer-input { width: 7rem; text-align: center; }

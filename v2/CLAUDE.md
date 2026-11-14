@@ -93,9 +93,12 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
 - **Visuels de questions** : une question n'est posée que si son type et son visuel sont dessinés (`core/questionService.ts` :
   `SUPPORTED_TYPES`, `SUPPORTED_VISUALS`, `isPlayable`), sinon l'énoncé serait incompréhensible. Calculs dans `core/visuals.ts`
   (testés), dessin SVG dans `ui/widgets/Visuals.tsx`, réponses dans `ui/widgets/Widgets.tsx`. Aujourd'hui : balance, droite
-  graduée, repère quadrillé (vecteurs), tableau de signes ; 24 lieux sur 30 n'ont pas besoin des autres. Restent (lieux de
-  maths et Clairval) : graph, robot, map, table, pont, rapporteur, repere_tir. Ajouter un visuel : le composant, son test, puis
-  son nom dans `SUPPORTED_VISUALS`.
+  graduée, repère quadrillé (vecteurs), tableau de signes, carte à l'échelle, robot sur une grille, courbe : **les 30 lieux sont
+  jouables** (chapitre et énigme, mesuré sur les vrais générateurs). Restent `pont`, `rapporteur`, `repere_tir` : leurs générateurs
+  (`combat=False`) ne servent qu'au pont des fractions et au stand de tir de la Citadelle, jamais dans un lieu ; les énigmes
+  d'enquête de Clairval (tableau, relevé) viendront avec le village. Ajouter un visuel : le composant, son calcul testé sur de
+  vraies questions (`tests/fixtures/visual_samples.json`, régénéré par `uv run --directory api python ../tools/export_visual_samples.py`),
+  puis son nom dans `SUPPORTED_VISUALS`.
 - **Voix enregistrées** (ElevenLabs : Maître Ysaline et le narrateur) : `deploy/voix/` (`manifest.json` : empreinte SHA-256 du
   texte exact vers un MP3), servies sous `/voix/` (image web ; `vite.config.ts` en dev et en preview). `core/voice.ts` joue le son
   d'un texte français dont l'empreinte est au manifeste (même sans compte), sinon Piper, sinon la voix du navigateur
