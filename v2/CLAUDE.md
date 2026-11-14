@@ -61,6 +61,15 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   règle se fait dans `core/`, avec son test, jamais dans la scène. XP, niveaux et PV du héros : `core/progression.ts`. Les questions
   d'un lieu viennent de sa session « donjon » (`app/placeSession.ts` : chapitres du lieu, comme dans la v1 ; en mode découverte, le
   paquet de test restreint à la matière) : sans elle, un combat poserait des questions de toute matière.
+- **Jamais deux fois la même question dans un parcours** (`core/questionService.ts`, tests `questions-uniques.test.ts`) : un parcours va d'un `reset`
+  à l'autre (un lieu, l'île, le défi du jour). « La même » se juge sur le **contenu** (`questionSignature` : type, énoncé, visuel, propositions dans le
+  désordre, texte de la bonne réponse), jamais sur l'identifiant : deux tirages d'un générateur à petit espace de valeurs peuvent poser le même énoncé
+  (le serveur les écarte aussi, `session_pack.content_key`). Un rôle qui n'a plus de question inédite emprunte l'autre (automatisme ↔ chapitre : qui ne
+  fait que frapper vide les automatismes en vingt coups) ; une énigme toutes posées rend `null` (le piédestal prend alors une question du chapitre, jamais
+  une énigme reposée) ; une notion ratée ne revient que sous une question inédite. Seul un paquet **entièrement** posé reprend la plus ancienne (jamais celle
+  qu'on vient de poser), et `QuestionService.repeats` le compte : un lieu n'y arrive pas, son paquet fait 100 questions (`tracking.DUNGEON_PACK_SIZE`, une
+  soixantaine consommées au plus par une enfant en difficulté, mesuré sur `lieux.json` ; au plus 237 Ko et 0,14 s à générer, maths de 2nde, contre 148 Ko à 60 questions : l'appareil en garde un par lieu visité, `Store.set` avale un dépassement de quota). D'un parcours à l'autre de la même séance, on préfère aussi le
+  contenu pas encore vu. Une nouvelle source de questions passe par `QuestionService.next`, jamais par le paquet directement. Seules les maths ont des automatismes (28 sur 100) : ailleurs, ou une fois les 28 posés, « Frappe » reçoit une question du chapitre un cran plus facile.
 - **Mini-carte** (`ui/Minimap.tsx`) : elle ne recalcule aucune position, elle lit les repères posés par le monde
   (`GameWorld.mapInfo`, événements `hero` et `markers`). Un repère d'une sorte nouvelle (habitant, gardien…) passe par
   `mapMarkers` (`core/world/minimap.ts`, avec son test) ; un lieu secret n'y figure jamais. Touche M : `event.key`, pas

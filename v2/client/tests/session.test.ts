@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import { ApiClient } from '../src/core/api'
-import { QuestionService } from '../src/core/questionService'
+import { isPlayable, QuestionService } from '../src/core/questionService'
 import { SaveGame } from '../src/core/save'
 import { Session } from '../src/core/session'
 import { MemoryStore } from '../src/core/storage'
@@ -103,8 +103,8 @@ describe('QuestionService', () => {
     const { questions } = service()
     for (let i = 0; i < 40; i += 1) {
       const item = questions.next('automatisme')!
-      expect(['mcq', 'numeric', 'expression', 'text', 'order', 'true_false']).toContain(item.type)
-      expect(item.visual ?? null).toBeNull()
+      expect(isPlayable(item)).toBe(true) // les automatismes épuisés, des questions du chapitre prennent le relais
+      expect(item.role).not.toBe('enigme')
     }
   })
 

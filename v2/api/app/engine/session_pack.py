@@ -7,6 +7,7 @@ ensuite ±1 au fil des réponses de la session.
 
 from __future__ import annotations
 
+import json
 import random
 import statistics
 from datetime import UTC, datetime
@@ -20,6 +21,24 @@ from app.engine.items import Item
 # Part des emplacements confiés à une question de la banque quand la notion en a une
 # de difficulté proche (les générateurs gardent l'essentiel : variété infinie).
 BANK_SHARE = 0.4
+# Nouveaux tirages d'un générateur qui retombe sur une question déjà dans le paquet
+# (même énoncé, autre graine).
+MAX_REDRAWS = 8
+
+
+def content_key(data: dict[str, Any]) -> str:
+    """Ce qui fait « la même question » pour l'enfant : type, énoncé, visuel, texte lu
+    (écoute), propositions (dans le désordre) et bonne réponse (le texte de la bonne
+    proposition, pas son rang). Mêmes critères que `questionSignature` du client."""
+    choices = data.get("choices")
+    answer = data["answer"]
+    if answer.get("kind") == "choice" and choices:
+        answer = choices[answer["index"]]
+    parts = [
+        data["type"], data["prompt"], data.get("latex"), data.get("visual"),
+        (data.get("listen") or {}).get("text"), sorted(choices) if choices else None, answer,
+    ]
+    return json.dumps(parts, sort_keys=True, ensure_ascii=False, default=str)
 
 
 def build_items(
@@ -32,6 +51,7 @@ def build_items(
     items: list[dict[str, Any]] = []
     formulas: dict[str, str] = {}
     used: set[str] = set()
+    seen: set[str] = set()
     for slot in slots:
         generators = [g for g in for_notion(slot.notion) if g.combat]
         written = [
@@ -42,11 +62,21 @@ def build_items(
         if written and (not generators or rng.random() < BANK_SHARE):
             entry = rng.choice(written)
             used.add(entry["id"])
-            items.append(item_data(Item(**entry), slot.category, formulas))
+            item = Item(**entry)
+            seen.add(content_key(item.model_dump(exclude={"meta"})))
+            items.append(item_data(item, slot.category, formulas))
             continue
         if not generators:
             continue
-        item = rng.choice(generators).item(slot.difficulty, rng.randrange(1_000_000_000))
+        # Un générateur à petit espace de valeurs retombe sur la même question : on retire
+        # (au plus MAX_REDRAWS fois) pour que le paquet compte autant de questions
+        # différentes que d'emplacements. Le client écarte de toute façon les jumeaux.
+        for _ in range(MAX_REDRAWS):
+            item = rng.choice(generators).item(slot.difficulty, rng.randrange(1_000_000_000))
+            key = content_key(item.model_dump(exclude={"meta"}))
+            if key not in seen:
+                break
+        seen.add(key)
         items.append(item_data(item, slot.category, formulas))
     return {"items": items, "formulas": formulas, "start_levels": _start_levels(items)}
 

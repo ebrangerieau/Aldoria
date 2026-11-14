@@ -147,6 +147,10 @@ async def _chapter_context(db: AsyncSession, profile: Profile) -> dict[str, Any]
 
 
 DAILY_PACK_SIZE = 24
+# Un lieu (cinq combats, l'Effaceur, l'énigme) pose jusqu'à une soixantaine de questions à
+# un enfant en difficulté, sans en reposer aucune : le paquet doit dépasser cette
+# consommation (le client ne repose rien dans un parcours).
+DUNGEON_PACK_SIZE = 100
 
 
 async def _combat_pack(
@@ -206,7 +210,7 @@ async def _combat_pack(
         if (st := states.get(n.id)) is not None
     }
     ratios = (profile.ratio_chapter, profile.ratio_review, profile.ratio_automatisms)
-    size = selector.PACK_SIZE
+    size = DUNGEON_PACK_SIZE if focus else selector.PACK_SIZE
     if daily:
         ratios, statuses, size = (0.0, 0.0, 1.0), {}, DAILY_PACK_SIZE
     slots = selector.select(

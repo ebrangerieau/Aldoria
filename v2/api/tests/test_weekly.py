@@ -11,6 +11,13 @@ ADDITION = "6e.maths.fractions.addition"
 ANGLES = "6e.maths.angles.vocabulaire"
 
 
+def _today_only(minutes_ago: int) -> int:
+    """Des réponses « d'il y a N minutes » sans passer sur la veille, à l'heure de Paris :
+    juste après minuit (le lundi, sur la semaine d'avant), elles compteraient un jour de plus."""
+    local = datetime.now(UTC).astimezone(weekly.TZ)
+    return min(minutes_ago, local.hour * 60 + local.minute)
+
+
 def test_week_starts_on_monday_in_paris():
     # Dimanche 25 octobre 2026, 23 h 30 à Paris (22 h 30 UTC, heure d'hiver depuis la nuit).
     sunday_night = datetime(2026, 10, 25, 22, 30, tzinfo=UTC)
@@ -25,9 +32,9 @@ def test_week_starts_on_monday_in_paris():
 async def test_week_summary_tells_what_the_child_did(client, login, profiles, curriculum):
     headers = await login("jules", "1234")
     session_id = (await client.post(f"{PLAY}/session/start", headers=headers)).json()["session_id"]
-    batch = [_attempt(session_id, notion=ADDITION, correct=True, minutes_ago=20 - i)
+    batch = [_attempt(session_id, notion=ADDITION, correct=True, minutes_ago=_today_only(20 - i))
              for i in range(4)]
-    batch += [_attempt(session_id, notion=ANGLES, correct=i == 0, minutes_ago=10 - i)
+    batch += [_attempt(session_id, notion=ANGLES, correct=i == 0, minutes_ago=_today_only(10 - i))
               for i in range(4)]
     await client.post(f"{PLAY}/attempts", json={"attempts": batch}, headers=headers)
     await client.post(

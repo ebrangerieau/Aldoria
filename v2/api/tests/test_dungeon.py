@@ -201,6 +201,45 @@ async def test_dungeon_pack_with_several_chapters(client, login, curriculum):
     assert all(i["generator"] != "6e.proportionnalite.carte" for i in chapter_items)
 
 
+async def test_dungeon_pack_outlasts_a_whole_visit_without_twins(client, login, curriculum):
+    """Un lieu pose jusqu'à une soixantaine de questions sans en reposer aucune : le paquet
+    est plus grand que celui de l'île, et un même énoncé n'y figure qu'une fois (ou presque)."""
+    from app.engine.session_pack import content_key
+
+    headers = await login("jules", "1234")
+    body = (
+        await client.post(
+            f"{API}/session/start",
+            json={
+                "mode": "donjon",
+                "focus_chapters": ["6e.maths.prealgebre", "6e.maths.proportionnalite"],
+            },
+            headers=headers,
+        )
+    ).json()
+    items = [i for i in body["items"] if i["role"] != "enigme"]
+    assert len(items) >= 90
+    keys = [content_key(i) for i in items]
+    # Des jumeaux seulement si un générateur n'a presque pas de valeurs (le tirage est aléatoire :
+    # la borne est large), toujours bien au-delà des soixante questions qu'un lieu peut demander.
+    assert len(set(keys)) >= 85
+
+
+def test_content_key_ignores_seed_and_choice_order():
+    from app.engine.session_pack import content_key
+
+    def mcq(choices, index, **more):
+        answer = {"kind": "choice", "index": index}
+        prompt = "Combien font 7 × 8 ?"
+        return {"type": "mcq", "prompt": prompt, "choices": choices, "answer": answer} | more
+
+    a = mcq(["54", "56", "63"], 1)
+    b = mcq(["63", "56", "54"], 1, seed=9)
+    c = mcq(["63", "56", "54"], 0)
+    assert content_key(a) == content_key(b)  # même question, propositions mélangées autrement
+    assert content_key(a) != content_key(c)  # autre bonne réponse : autre question
+
+
 async def test_unknown_chapter_among_several_is_refused(client, login, curriculum):
     headers = await login("tom", "9876")
     response = await client.post(
