@@ -51,6 +51,7 @@ export function QuestionPanel({ services, item: first, title, gameMode, accommod
     const elapsed = performance.now() - shownAt.current
     const res = services.questions.submit(item, input, elapsed, hintShown, gameMode)
     setResult(res)
+    services.sfx.play(res.correct ? 'correct' : 'wrong')
     if (!res.correct && accommodations.auto_read) void services.voice.say([speech.explanation ?? item.explanation])
   }
 

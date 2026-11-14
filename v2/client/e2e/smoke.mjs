@@ -264,6 +264,9 @@ try {
       throw new Error(`type de réponse non géré par le test : ${item.answer.kind}`)
     }
     await page.locator('.feedback.good').waitFor({ timeout: 5000 })
+    // Effets sonores (Web Audio, chargés au premier geste) : les dix sons sont décodés et « bonne réponse » vient de jouer.
+    const sfx = await page.evaluate(() => window.__aldoria.services.sfx.state())
+    if (!sfx.enabled || sfx.loaded.length !== 10 || sfx.last !== 'correct' || sfx.played < 1) throw new Error(`effets sonores : ${JSON.stringify(sfx)}`)
     await page.screenshot({ path: `${OUT}/05-juste.png` })
     await page.getByRole('button', { name: 'Continuer' }).click()
     await page.getByRole('dialog').waitFor({ state: 'detached' })

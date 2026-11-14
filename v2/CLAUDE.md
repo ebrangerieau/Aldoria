@@ -42,7 +42,7 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
 `&qualite=haut|moyen|bas`, `&perf` (compteur), `&e2e` (crochet `window.__aldoria` : `world.teleport(x, z, versX, versZ)`,
 `world.frame(alpha, beta, distance)`, `world.heroPosition()`, `question`, `services`), `&interface=0`, `&moteur=webgpu`,
 `&renard=0` (sans le renard), `&erreurs=0|1` (remontée des erreurs ; active par défaut dans le jeu construit seulement),
-`&erreur_test=1` (erreur d'essai au démarrage), `&musique=0` (sans musique ni bouton).
+`&erreur_test=1` (erreur d'essai au démarrage), `&musique=0` (sans musique ni bouton), `&sons=0` (sans effets sonores).
 
 ## Règles
 
@@ -76,6 +76,9 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   une question et baisse sous une voix (`Voice.isSpeaking`) ; `&musique=0` la désactive (ni lecture ni bouton : captures,
   mesures). Ajouter un morceau : `python tools/encode_musique.py`, procédure dans `docs/exploitation.md`. Une scène qui
   pose une question ou un dialogue sans passer par `GameScreen` doit prévenir `services.music.setFocus`.
+- **Effets sonores** (`core/sfx.ts` : les dix sons de `public/ressources/sfx`, volume de la v1 ; `app/sfx.ts` : lecteur Web Audio créé au
+  premier geste, `services.sfx.play('correct')`) : bonne et mauvaise réponse dans `QuestionPanel` ; les coups, le soin et la victoire du
+  combat s'appellent de la même façon. Jamais d'effet lié à la vitesse de réponse ; `&sons=0` les désactive (captures, mesures).
 - **CSP stricte** : aucun style en ligne dans le HTML (classes et attributs `data-*` ; l'objet `style` de React est permis),
   aucun fichier en `data:` produit par Vite, aucune ressource hors du site (pas de CDN : décodeurs, polices, twgsl). La même
   CSP est posée par `vite preview` : le parcours navigateur échoue sur toute violation.
