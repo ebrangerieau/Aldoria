@@ -75,7 +75,7 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   (`v1_at`, sans miroir), tournés vers l'ouest, leur obstacle retiré à leur chute. Ennemis : squelettes KayKit (même rig que le héros)
   et monstres Quaternius, dont l'échelle est mesurée une fois (`content/monde/monstres.json`, `node tools/mesurer_monstres.mjs` avec
   la prévisualisation lancée : une boîte au repos ne dit rien d'une armature à l'échelle 100). `&e2e` : `world.enterPlace(code)`,
-  `world.interior` (`teleport(x, z)`, `frame(écart, beta, distance)`, `heroPosition()`, `enemies`, `fighting`), `world.places`,
+  `world.interior` (`teleport(x, z)`, `frame(écart, beta, distance)`, `heroPosition()`, `enemies`, `fighting`, `pedestals`, `riddling`, `solvePedestal(p)`), `world.places`,
   `world.measureMonster(modèle)`, et `encounter` (le combat en cours : `hero.hp`…).
 - **Effaceur, coffre et page** (étape 1.4) : le gardien de la dernière salle de chaque lieu (`core/quest/boss.ts`, `Enemy.boss` dans `game/interior.ts`)
   se combat avec `Encounter` en mode `boss` : huit sceaux (`sealsLeft(hp, maxHp)`, **dérivés des PV**, jamais comptés à part : un indice ou un

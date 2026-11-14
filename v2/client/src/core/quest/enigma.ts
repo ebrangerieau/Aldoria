@@ -34,9 +34,12 @@ export function enigmaXp(def: Pick<DungeonData, 'enigma'>, difficulty: number): 
   return Math.max(0, Math.round(def.enigma.xp)) + answerXp(difficulty)
 }
 
-/** La question d'un piédestal : une énigme de la session, à défaut une question du chapitre ; null si le paquet est vide. */
+/**
+ * La question d'un piédestal : une énigme de la session, à défaut une question du chapitre, à défaut n'importe laquelle (comme le combat) ;
+ * null seulement si le paquet est vide. La porte attend les trois cristaux : une question manquante ne doit jamais la fermer pour de bon.
+ */
 export function riddleItem(questions: Pick<QuestionService, 'next'>): Item | null {
-  return questions.next('enigme') ?? questions.next('chapitre')
+  return questions.next('enigme') ?? questions.next('chapitre') ?? questions.next()
 }
 
 export interface Found {

@@ -120,8 +120,9 @@ export function useFight(options: FightOptions) {
   }, [])
 
   /**
-   * Un dialogue à un bouton ; avec `voice`, un bouton « Écouter » lit ce texte enregistré (seul et à l'identique : sa voix en dépend), et
-   * l'aménagement « lecture automatique » le lit d'office. Rend la main quand l'enfant a répondu.
+   * Un dialogue à un bouton ; avec `voice`, un bouton « Écouter » lit ce texte (seul et à l'identique : un texte enregistré perd sa voix
+   * sinon ; un texte sans enregistrement passe par Piper), et l'aménagement « lecture automatique » le lit d'office. Rend la main quand
+   * l'enfant a répondu.
    */
   const speak = useCallback(
     (title: string, text: string, label: string, voice?: string) =>
@@ -322,7 +323,8 @@ export function useFight(options: FightOptions) {
     visited.current.add(index)
     if (lieu.dungeon.rooms[index]?.kind !== 'enigme' || interior.pedestalsLeft(index) === 0) return
     interior.setInputEnabled(false)
-    await speak(lieu.dungeon.enigma.title, enigmaIntro(lieu.dungeon), "C'est parti")
+    const intro = enigmaIntro(lieu.dungeon)
+    await speak(lieu.dungeon.enigma.title, intro, "C'est parti", intro)
     if (worldRef.current?.interior === interior) interior.setInputEnabled(true)
   }
 

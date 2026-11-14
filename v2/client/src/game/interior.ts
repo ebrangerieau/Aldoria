@@ -225,7 +225,7 @@ export class InteriorWorld {
     shadows.darkness = 0.3
 
     this.shadows = shadows
-    // Les portes de sortie des salles de combat sont fermées jusqu'à la victoire (l'entrée et l'énigme s'ouvrent d'elles-mêmes).
+    // Les portes de sortie sont fermées : celles des salles de combat jusqu'à la victoire, celle de l'énigme jusqu'au troisième cristal (seule l'entrée s'ouvre d'elle-même).
     dungeon.lockDoors(place.dungeon.rooms.map((r) => r.kind))
     this.progress('Les salles', 0.1)
     await this.buildPieces(shadows)

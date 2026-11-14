@@ -43,6 +43,9 @@ describe('énigme à trois piédestaux : règles', () => {
     expect(riddleItem(questions as never)).toBe(item)
     expect(asked).toEqual(['enigme', 'chapitre'])
     expect(riddleItem({ next: () => null } as never)).toBeNull()
+    // Ni énigme ni chapitre dans le paquet : n'importe quelle question, la porte ne reste jamais fermée faute de question.
+    const any = { next: (role?: string) => (role === undefined ? item : null) }
+    expect(riddleItem(any as never)).toBe(item)
     const direct = { next: (role?: string) => (role === 'enigme' ? item : null) }
     expect(riddleItem(direct as never)).toBe(item)
   })

@@ -44,6 +44,6 @@
   },
   "enigme_introductions": {
     "description": "Introduction de la salle-énigme quand celle de lieux.json décrit un décor que la v2 n'a pas encore (balance géante : phase 2). Clé : le mode d'énigme du lieu.",
-    "balance": "Trois cristaux bloquent la porte. Devant chacun, une balance : trouve ce que pèse la boîte. Éveille les trois cristaux pour ouvrir la porte."
+    "balance": "Trois cristaux bloquent la porte. Devant chacun, une balance en équilibre. Trouve la masse qu'on ne connaît pas. Éveille les trois cristaux pour ouvrir la porte."
   }
 }
