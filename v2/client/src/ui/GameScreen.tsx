@@ -8,6 +8,7 @@ import type { Services } from '../app/services'
 import { reloadPending } from '../app/staleBuild'
 import { type Accommodations, applyToDocument, fromServer, withChildPrefs } from '../core/accessibility'
 import type { Item } from '../core/items'
+import lignes from '@content/voix/lignes.json'
 import { today as localDay } from '../core/dailyChallenge'
 import { DEFAULT_VOLUME, volumeOf } from '../core/music'
 import { EMPTY_SAVE, SaveGame, type SaveData } from '../core/save'
@@ -35,8 +36,8 @@ type Modal =
   | { kind: 'daily' }
   | null
 
-const WELCOME =
-  "Te voilà enfin, Archiviste ! Malvrek a volé les pages de la Grande Chronique. Ses Effaceurs les gardent dans les lieux de l'île. Cherche les pierres de savoir qui brillent : chacune s'éveille quand tu réponds juste. Et quand tu te sens prêt, approche-toi d'un lieu qui brille."
+/** Accueil de Maître Ysaline : le texte et sa voix enregistrée sont dans content/voix/lignes.json (un seul endroit : modifier ce texte demande de le réenregistrer). */
+const WELCOME = lignes.find((l) => l.id === 'ile-accueil')!.texte
 
 export function GameScreen({ services, demo, onQuit }: { services: Services; demo: boolean; onQuit: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)

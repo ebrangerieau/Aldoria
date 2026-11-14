@@ -50,13 +50,19 @@
   {
     "groupe": "prologue",
     "id": "prologue-quete-lumineux",
-    "texte": "Va retrouver les pages, une à une. Chaque Effaceur vaincu t'en rendra une. Avant chaque chemin, je te dirai ce qui t'attend. Je t'attends ici, à la Citadelle, au centre de la carte. En route, jeune Archiviste !",
+    "texte": "Va retrouver les pages, une à une. Chaque Effaceur vaincu t'en rendra une. Avant chaque chemin, je te dirai ce qui t'attend. Je t'attends ici, à la Citadelle, au centre de l'île. En route, jeune Archiviste !",
     "voix": "ysaline"
   },
   {
     "groupe": "prologue",
     "id": "prologue-quete-brouillard",
-    "texte": "Retrouve les pages, une à une. Chaque Effaceur vaincu t'en rendra une. Avant chaque chemin, je te dirai ce qui t'attend. La Citadelle sera ton point de départ, au centre de la carte. La Chronique compte sur toi.",
+    "texte": "Retrouve les pages, une à une. Chaque Effaceur vaincu t'en rendra une. Avant chaque chemin, je te dirai ce qui t'attend. La Citadelle sera ton point de départ, au centre de l'île. La Chronique compte sur toi.",
+    "voix": "ysaline"
+  },
+  {
+    "groupe": "ile",
+    "id": "ile-accueil",
+    "texte": "Te voilà enfin, Archiviste ! Malvrek a volé les pages de la Grande Chronique. Ses Effaceurs les gardent dans les lieux de l'île. Cherche les pierres de savoir qui brillent : chacune s'éveille quand tu réponds juste. Et quand tu te sens prêt, approche-toi d'un lieu qui brille.",
     "voix": "ysaline"
   },
   {
@@ -140,7 +146,7 @@
   {
     "groupe": "carte",
     "id": "page-labyrinthe_vecteurs",
-    "texte": "Tu as rapporté la page des Vecteurs ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « La Forge de l'Algèbre » s'éclaire sur la carte.",
+    "texte": "Tu as rapporté la page des Vecteurs ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « La Forge de l'Algèbre » s'éclaire sur l'île.",
     "voix": "ysaline"
   },
   {
@@ -152,7 +158,7 @@
   {
     "groupe": "carte",
     "id": "page-forge_algebre",
-    "texte": "Tu as rapporté la page du Calcul ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « La Citadelle des Fonctions » s'éclaire sur la carte.",
+    "texte": "Tu as rapporté la page du Calcul ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « La Citadelle des Fonctions » s'éclaire sur l'île.",
     "voix": "ysaline"
   },
   {
@@ -188,7 +194,7 @@
   {
     "groupe": "carte",
     "id": "page-bibliotheque_engloutie",
-    "texte": "Tu as rapporté la page de la Grammaire anglaise ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « Le Port des Couronnes » s'éclaire sur la carte.",
+    "texte": "Tu as rapporté la page de la Grammaire anglaise ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « Le Port des Couronnes » s'éclaire sur l'île.",
     "voix": "ysaline"
   },
   {
@@ -212,7 +218,7 @@
   {
     "groupe": "carte",
     "id": "page-porte_empires",
-    "texte": "Tu as rapporté la page de l'Histoire moderne ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « La Porte des Transitions » s'éclaire sur la carte.",
+    "texte": "Tu as rapporté la page de l'Histoire moderne ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « La Porte des Transitions » s'éclaire sur l'île.",
     "voix": "ysaline"
   },
   {
@@ -236,7 +242,7 @@
   {
     "groupe": "carte",
     "id": "page-alambic_elements",
-    "texte": "Tu as rapporté la page de la Matière ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « Le Laboratoire foudroyé » s'éclaire sur la carte.",
+    "texte": "Tu as rapporté la page de la Matière ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « Le Laboratoire foudroyé » s'éclaire sur l'île.",
     "voix": "ysaline"
   },
   {
@@ -260,7 +266,7 @@
   {
     "groupe": "carte",
     "id": "page-pont_paquets",
-    "texte": "Tu as rapporté la page des Messages ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « L'Atelier des Automates » s'éclaire sur la carte.",
+    "texte": "Tu as rapporté la page des Messages ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « L'Atelier des Automates » s'éclaire sur l'île.",
     "voix": "ysaline"
   },
   {
@@ -296,7 +302,7 @@
   {
     "groupe": "carte",
     "id": "page-conservatoire_vivant",
-    "texte": "Tu as rapporté la page du Vivant ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « Le Puits de la Vallée » s'éclaire sur la carte.",
+    "texte": "Tu as rapporté la page du Vivant ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « Le Puits de la Vallée » s'éclaire sur l'île.",
     "voix": "ysaline"
   },
   {
@@ -332,7 +338,7 @@
   {
     "groupe": "carte",
     "id": "page-marche_forum",
-    "texte": "Tu as rapporté la page de l'Économie ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « La Maison Commune » s'éclaire sur la carte.",
+    "texte": "Tu as rapporté la page de l'Économie ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « La Maison Commune » s'éclaire sur l'île.",
     "voix": "ysaline"
   },
   {
@@ -362,7 +368,7 @@
   {
     "groupe": "carte",
     "id": "page-tour_fractions",
-    "texte": "Tu as rapporté la page des Fractions ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « L'Atelier des Balances » s'éclaire sur la carte.",
+    "texte": "Tu as rapporté la page des Fractions ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « L'Atelier des Balances » s'éclaire sur l'île.",
     "voix": "ysaline"
   },
   {
@@ -374,7 +380,7 @@
   {
     "groupe": "carte",
     "id": "page-atelier_balances",
-    "texte": "Tu as rapporté la page des Mesures ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « L'Observatoire des Angles » s'éclaire sur la carte.",
+    "texte": "Tu as rapporté la page des Mesures ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « L'Observatoire des Angles » s'éclaire sur l'île.",
     "voix": "ysaline"
   },
   {
@@ -410,7 +416,7 @@
   {
     "groupe": "carte",
     "id": "page-porte_origines",
-    "texte": "Tu as rapporté la page de l'Histoire ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « La Porte des Horizons » s'éclaire sur la carte.",
+    "texte": "Tu as rapporté la page de l'Histoire ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « La Porte des Horizons » s'éclaire sur l'île.",
     "voix": "ysaline"
   },
   {
@@ -434,7 +440,7 @@
   {
     "groupe": "carte",
     "id": "page-moulin_phrases",
-    "texte": "Tu as rapporté la page de la Grammaire ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « Le Puits aux Contes » s'éclaire sur la carte.",
+    "texte": "Tu as rapporté la page de la Grammaire ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « Le Puits aux Contes » s'éclaire sur l'île.",
     "voix": "ysaline"
   },
   {
@@ -458,7 +464,7 @@
   {
     "groupe": "carte",
     "id": "page-tour_experiences",
-    "texte": "Tu as rapporté la page des Sciences ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « La Maison du Naturaliste » s'éclaire sur la carte.",
+    "texte": "Tu as rapporté la page des Sciences ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « La Maison du Naturaliste » s'éclaire sur l'île.",
     "voix": "ysaline"
   },
   {
@@ -482,7 +488,7 @@
   {
     "groupe": "carte",
     "id": "page-tribune_conseil",
-    "texte": "Tu as rapporté la page du Conseil ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « Le Palais des Libertés » s'éclaire sur la carte.",
+    "texte": "Tu as rapporté la page du Conseil ! Elle a repris sa place dans la Grande Chronique. Regarde : le chemin vers « Le Palais des Libertés » s'éclaire sur l'île.",
     "voix": "ysaline"
   },
   {

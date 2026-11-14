@@ -156,7 +156,7 @@ def voice_ids(manifest: dict) -> dict[str, str]:
 def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")  # accents lisibles dans la console Windows
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--groupe", choices=["prologue", "carte", "tout"], default="tout")
+    parser.add_argument("--groupe", choices=["prologue", "carte", "ile", "tout"], default="tout")
     parser.add_argument("--essai", action="store_true", help="ce qui serait généré, sans appel")
     parser.add_argument("--voix", action="store_true", help="voix disponibles sur le compte")
     parser.add_argument("--exemple", choices=sorted(VOICE_ENV), help="une réplique d'essai")
