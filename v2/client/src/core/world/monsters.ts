@@ -20,6 +20,8 @@ const table = data as unknown as {
 
 /** Hauteur du héros dans le jeu, en mètres. */
 export const HERO_HEIGHT = table.hauteur_heros
+/** Rapport des hauteurs du héros, v2 sur v1 : ce qui était à l'échelle du héros de la v1 (un coffre, un décor) se réduit d'autant. */
+export const V1_TO_V2 = table.hauteur_heros / table.hauteur_heros_v1
 
 export const isSkeleton = (model: string): boolean => table.squelettes.includes(model)
 

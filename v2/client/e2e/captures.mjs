@@ -36,6 +36,23 @@ const VIEWS = {
   'interieur-brouillard': { query: '&monde=brouillard&classe=2nde', lieu: 'labyrinthe_vecteurs', salle: 2, at: [8, 9], turn: -0.25, beta: 1.05, radius: 12, interface: true },
 }
 
+// Salle de l'Effaceur : `boss` « loin » (le héros à 7 m, l'Effaceur endormi) ou « combat » (à la distance du combat, 4,8 m) ; `chest` : le coffre
+// « ferme » (apparu) ou « ouvert ». Un lieu par modèle d'Effaceur (celui de plus grande échelle) : de 1,1 à 1,8 fois la taille de base.
+const BOSSES = {
+  mushnub: ['tour_fractions', ''], goleling: ['atelier_balances', ''], dragon: ['observatoire_angles', ''], mage: ['bibliotheque_langues', ''],
+  yeti: ['porte_transitions', '&classe=2nde'], ghost: ['port_couronnes', '&classe=2nde'], bluedemon: ['labyrinthe_vecteurs', '&classe=2nde'],
+  demon: ['forge_algebre', '&classe=2nde'], orc: ['puits_contes', ''], blob: ['alambic_elements', '&classe=2nde'], guerrier: ['bibliotheque_engloutie', '&classe=2nde'],
+}
+for (const [name, [lieu, query]] of Object.entries(BOSSES)) {
+  VIEWS[`boss-${name}`] = { query, lieu, salle: 5, boss: 'loin', turn: 0, beta: 1.05, radius: 12, interface: true }
+}
+for (const name of ['blob', 'dragon', 'ghost', 'yeti', 'guerrier']) {
+  const [lieu, query] = BOSSES[name]
+  VIEWS[`boss-combat-${name}`] = { query, lieu, salle: 5, boss: 'combat', turn: 0, beta: 1.0, radius: 10, interface: true }
+}
+VIEWS['coffre'] = { query: '', lieu: 'tour_fractions', salle: 5, chest: 'ferme', turn: -0.2, beta: 1.0, radius: 8, interface: true }
+VIEWS['coffre-ouvert'] = { query: '', lieu: 'tour_fractions', salle: 5, chest: 'ouvert', turn: -0.2, beta: 1.0, radius: 8, interface: true }
+
 const wanted = process.argv.slice(2).filter((v) => v in VIEWS)
 const views = wanted.length > 0 ? wanted : Object.keys(VIEWS)
 const browser = await chromium.launch({
@@ -57,8 +74,21 @@ for (const name of views) {
     await page.evaluate(async (v) => {
       const w = window.__aldoria.world
       await w.enterPlace(v.lieu)
-      w.interior.teleport(16 * v.salle + v.at[0], -v.at[1])
-      w.interior.frame(v.turn, v.beta, v.radius)
+      const interior = w.interior
+      if (v.boss) {
+        // L'Effaceur de la salle : le héros se place à l'ouest de lui, hors de portée d'engagement (3,6 m).
+        const boss = interior.enemies.find((e) => e.boss)
+        interior.teleport(boss.x - (v.boss === 'combat' ? 4.8 : 7), boss.z)
+      } else if (v.chest) {
+        // Le coffre apparaît (comme après la défaite de l'Effaceur), puis s'ouvre ; le héros est à 3 m à l'ouest.
+        const at = interior.dungeon.chestPoint(v.salle)
+        interior.teleport(at.x - 3, at.z)
+        interior.revealChest()
+        if (v.chest === 'ouvert') interior.openChest()
+      } else {
+        interior.teleport(16 * v.salle + v.at[0], -v.at[1])
+      }
+      interior.frame(v.turn, v.beta, v.radius)
     }, view)
   } else {
     await page.evaluate((v) => {

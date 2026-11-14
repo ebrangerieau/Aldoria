@@ -4,6 +4,7 @@
 // victoire, porte qui s'ouvre) → pierre d'éveil → question → bonne réponse → la pierre s'éveille. Échoue sur toute
 // erreur de la page ou toute ressource introuvable. Captures dans $E2E_OUT (défaut : e2e/captures).
 //   npm run build && npm run preview &   puis   npm run e2e
+import { currentQuestion, solve } from './answers.mjs'
 import { mkdirSync } from 'node:fs'
 import { createRequire } from 'node:module'
 
@@ -43,32 +44,11 @@ if (MUSIC_DELAY > 0) {
   })
 }
 
-/** Répond à la question ouverte (celle de `window.__aldoria.question`), juste ou faux, puis « Continuer ». */
+/** Répond à la question ouverte (celle de `window.__aldoria.question`), juste ou fausse, puis « Continuer ». */
 const answerQuestion = async (correct) => {
   await page.getByRole('dialog').waitFor({ timeout: 10_000 * SLOW })
-  const item = await page.evaluate(() => window.__aldoria.question)
-  if (!correct) {
-    // Faux : un autre choix que le bon, ou un nombre absurde.
-    if (item.answer.kind === 'choice') await page.locator('.choice').nth((item.answer.index + 1) % (await page.locator('.choice').count())).click()
-    else {
-      await page.getByLabel('Ta réponse').fill('99999')
-      await page.getByRole('button', { name: 'Valider' }).click()
-    }
-    await page.locator('.feedback.bad').waitFor({ timeout: 5000 * SLOW })
-  } else {
-    if (item.answer.kind === 'choice') await page.locator('.choice').nth(item.answer.index).click()
-    else if (item.answer.kind === 'number' || item.answer.kind === 'fraction') {
-      await page.getByLabel('Ta réponse').fill(String(item.answer.value).replace('.', ','))
-      await page.getByRole('button', { name: 'Valider' }).click()
-    } else if (item.answer.kind === 'text') {
-      await page.getByLabel('Ta réponse').fill(item.answer.value[0])
-      await page.getByRole('button', { name: 'Valider' }).click()
-    } else if (item.answer.kind === 'order') {
-      for (const i of item.answer.value) await page.locator('.choices .choice').nth(i).click()
-      await page.getByRole('button', { name: 'Valider' }).click()
-    } else throw new Error(`type de réponse non géré par le test : ${item.answer.kind}`)
-    await page.locator('.feedback.good').waitFor({ timeout: 5000 * SLOW })
-  }
+  await solve(page, await currentQuestion(page, 10_000 * SLOW), correct)
+  await page.locator(correct ? '.feedback.good' : '.feedback.bad').waitFor({ timeout: 5000 * SLOW })
   await page.getByRole('button', { name: 'Continuer' }).click()
 }
 
@@ -332,6 +312,109 @@ try {
     await page.getByTestId('carte').waitFor({ timeout: 10_000 * SLOW })
   })
 
+  await step('le boss : l’Effaceur parle de sa voix enregistrée, huit sceaux, le coffre, la page rendue, le lieu suivant s’ouvre, Maître Ysaline salue', async () => {
+    const heard = (url) => page.waitForResponse((r) => r.url().includes(url), { timeout: 15_000 * SLOW })
+    const soundOk = async (pending, what) => {
+      const res = await pending
+      // 200 sur l'aperçu local, 206 en production (nginx sert le son par morceaux).
+      if (![200, 206].includes(res.status()) || !(res.headers()['content-type'] ?? '').startsWith('audio/mpeg')) throw new Error(`${what} : ${res.status()} ${res.headers()['content-type']} ${res.url()}`)
+    }
+    const xp = async () => Number(((await page.locator('.badge').innerText()).match(/(\d+) XP/) ?? [])[1] ?? 0)
+    /** Entre dans la Tour des Fractions, bat l'Effaceur, ouvre le coffre. `first` : première fois (page rendue, salut de Maître Ysaline). */
+    const run = async (first) => {
+      await page.evaluate(() => {
+        const w = window.__aldoria.world
+        const it = w.interactables.find((i) => i.id === 'tour_fractions')
+        w.teleport(it.x, it.z - 1.5, it.x, it.z)
+      })
+      await page.getByTestId('invite').filter({ hasText: 'Approcher' }).waitFor({ timeout: 10_000 * SLOW })
+      await page.keyboard.press('KeyE')
+      await page.getByRole('button', { name: "J'y vais" }).click()
+      await page.getByTestId('etage').waitFor({ timeout: 60_000 * SLOW })
+      // Les salles d'avant ont leur propre test : on ouvre les portes et on va droit à la salle de l'Effaceur.
+      const boss = await page.evaluate(() => {
+        const i = window.__aldoria.world.interior
+        for (let d = 0; d < 5; d += 1) i.openDoor(d, false)
+        const b = i.enemies.find((e) => e.boss)
+        i.teleport(b.x - 6, b.z)
+        return { x: b.x, z: b.z, name: b.spec.name, max: b.combatant.maxHp }
+      })
+      if (boss.name !== 'Le Grand Diviseur') throw new Error(`l’Effaceur de la Tour : ${boss.name}`)
+      const xpBefore = await xp()
+      await page.getByTestId('monde').click({ position: { x: 640, y: 120 } })
+      await page.keyboard.down('KeyD')
+      // L'Effaceur se présente (une fois) : titre à son nom, son texte, sa voix enregistrée au bouton « Écouter ».
+      await page.getByRole('heading', { name: boss.name }).waitFor({ timeout: 30_000 * SLOW })
+      await page.keyboard.up('KeyD')
+      const heardIntro = heard('/voix/boss-intro-tour_fractions-')
+      await page.getByRole('button', { name: /Écouter/ }).click()
+      await soundOk(heardIntro, 'voix de l’entrée de l’Effaceur')
+      await page.screenshot({ path: `${OUT}/03e-boss.png` })
+      await page.getByRole('button', { name: 'En garde !' }).click()
+      await page.getByTestId('actions').waitFor({ timeout: 30_000 * SLOW })
+      const seals = Number(await page.getByTestId('sceaux').getAttribute('data-left'))
+      if (seals !== 8) throw new Error(`les sceaux de l’Effaceur : ${seals} au lieu de 8`)
+      await page.screenshot({ path: `${OUT}/03e2-sceaux.png` })
+      // Pour aller vite : il ne lui reste qu'un sceau (20 PV sur 200, 25 PV par sceau) ; le prochain tour le met à terre.
+      await page.evaluate(() => { window.__aldoria.encounter.foe.hp = 20 })
+      await page.keyboard.press('2')
+      await answerQuestion(true)
+      // Il a le dernier mot, de sa voix, puis le coffre apparaît.
+      await page.getByRole('heading', { name: boss.name }).waitFor({ timeout: 30_000 * SLOW })
+      const heardDefeat = heard('/voix/boss-defeat-tour_fractions-')
+      await page.getByRole('button', { name: /Écouter/ }).click()
+      await soundOk(heardDefeat, 'voix de la défaite de l’Effaceur')
+      await page.getByRole('button', { name: 'Reprendre la page' }).click()
+      await page.waitForFunction(() => window.__aldoria.world.interior.chestReady, null, { timeout: 15_000 * SLOW })
+      await page.screenshot({ path: `${OUT}/03f-coffre.png` })
+      // Le héros va au coffre (E l'ouvre) : le lieu est terminé.
+      await page.evaluate(() => {
+        const i = window.__aldoria.world.interior
+        const c = i.dungeon.chestPoint(5)
+        i.teleport(c.x - 1.6, c.z)
+      })
+      await page.getByTestId('invite').filter({ hasText: 'Ouvrir le coffre' }).waitFor({ timeout: 10_000 * SLOW })
+      await page.keyboard.press('KeyE')
+      await page.getByRole('heading', { name: first ? 'La page des Fractions retrouvée !' : 'La Tour des Fractions : terminé !' }).waitFor({ timeout: 15_000 * SLOW })
+      const message = await page.getByRole('dialog').innerText()
+      for (const attendu of first ? ['les parts se remettent en ordre', '+100 XP dans le coffre'] : ['La Tour des Fractions brille à nouveau', '+100 XP dans le coffre']) {
+        if (!message.includes(attendu)) throw new Error(`message du coffre sans « ${attendu} » : ${message}`)
+      }
+      if (!/Dans ton sac : /.test(message)) throw new Error(`le coffre devrait rendre deux objets : ${message}`)
+      await page.screenshot({ path: `${OUT}/03g-page.png` })
+      await page.getByRole('button', { name: "Retour sur l'île" }).click()
+      await page.getByTestId('carte').waitFor({ timeout: 15_000 * SLOW })
+      const gained = (await xp()) - xpBefore
+      if (gained < 100 + 150) throw new Error(`XP du boss et du coffre : +${gained} au lieu de 250 au moins`)
+      return message
+    }
+
+    await run(true)
+    // Première fois : Maître Ysaline salue le héros de sa voix enregistrée et annonce le chemin qui s'ouvre sur l'île.
+    await page.getByRole('heading', { name: 'Maître Ysaline' }).waitFor({ timeout: 10_000 * SLOW })
+    const greeting = await page.getByRole('dialog').innerText()
+    if (!greeting.includes('Tu as rapporté la page des Fractions') || !greeting.includes("sur l'île")) throw new Error(`salut de Maître Ysaline : ${greeting}`)
+    const heardPage = heard('/voix/page-tour_fractions-')
+    await page.getByRole('button', { name: /Écouter/ }).click()
+    await soundOk(heardPage, 'voix du salut de Maître Ysaline')
+    await page.screenshot({ path: `${OUT}/03h-salut.png` })
+    await page.getByRole('button', { name: 'Merci !' }).click()
+    await page.getByRole('dialog').waitFor({ state: 'detached' })
+    // L'île a suivi : le lieu suivant de la région s'ouvre, sa balise et la mini-carte aussi.
+    const state = await page.evaluate(() => {
+      const it = window.__aldoria.world.interactables
+      return { tour: it.find((i) => i.id === 'tour_fractions').open, atelier: it.find((i) => i.id === 'atelier_balances').open }
+    })
+    if (!state.tour || !state.atelier) throw new Error(`après la page rendue, les deux lieux devraient être ouverts : ${JSON.stringify(state)}`)
+    await page.locator('[data-id="tour_fractions"].mark-termine').waitFor({ state: 'attached', timeout: 5000 * SLOW })
+    await page.locator('[data-id="atelier_balances"].mark-ouvert').waitFor({ state: 'attached', timeout: 5000 * SLOW })
+
+    // Une seconde fois : le mot de la fin, l'XP du coffre, et plus de salut (la page n'est rendue qu'une fois).
+    await run(false)
+    await page.waitForTimeout(1500 * SLOW)
+    if ((await page.getByRole('heading', { name: 'Maître Ysaline' }).count()) > 0) throw new Error('Maître Ysaline ne devrait pas saluer une seconde fois')
+  })
+
   let xpBefore = 0
   const xpOf = async () => Number(((await page.locator('.badge').innerText()).match(/(\d+) XP/) ?? [])[1] ?? 0)
   await step("question de la pierre d'éveil", async () => {
@@ -352,22 +435,8 @@ try {
 
   /** Répond juste à la question affichée (lue par le crochet ?e2e), sans cliquer sur « Continuer ». */
   async function answerRight() {
-    const item = await page.evaluate(() => window.__aldoria.question)
-    if (item.answer.kind === 'choice') {
-      await page.locator('.choice').nth(item.answer.index).click()
-    } else if (item.answer.kind === 'number' || item.answer.kind === 'fraction') {
-      await page.getByLabel('Ta réponse').fill(String(item.answer.value).replace('.', ','))
-      await page.getByRole('button', { name: 'Valider' }).click()
-    } else if (item.answer.kind === 'text') {
-      await page.getByLabel('Ta réponse').fill(item.answer.value[0])
-      await page.getByRole('button', { name: 'Valider' }).click()
-    } else if (item.answer.kind === 'order') {
-      for (const i of item.answer.value) await page.locator('.choices .choice').nth(i).click()
-      await page.getByRole('button', { name: 'Valider' }).click()
-    } else {
-      throw new Error(`type de réponse non géré par le test : ${item.answer.kind}`)
-    }
-    await page.locator('.feedback.good').waitFor({ timeout: 5000 })
+    await solve(page, await currentQuestion(page, 10_000 * SLOW), true)
+    await page.locator('.feedback.good').waitFor({ timeout: 5000 * SLOW })
   }
 
   await step('bonne réponse, la pierre s’éveille', async () => {

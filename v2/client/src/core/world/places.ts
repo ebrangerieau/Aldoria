@@ -8,6 +8,19 @@ import regions from '@content/monde/regions.json'
 import type { DungeonDecor } from './dungeon'
 import type { Point, Terrain } from './terrain'
 
+/** Un ennemi de `lieux.json` (salle de combat, ou Effaceur dans la salle du boss). */
+export interface EnemySpec {
+  model: string
+  name: string
+  hp: number
+  tier: number
+  xp: number
+  /** Sa place dans la salle, dans le repère de la v1 (x vers l'est, profondeur vers le fond). */
+  v1_at: [number, number]
+  /** Étirement propre à cet ennemi (1 par défaut ; les Effaceurs vont de 1,1 à 1,8). */
+  scale?: number
+}
+
 export interface DungeonData {
   code: string
   level: string
@@ -26,7 +39,7 @@ export interface DungeonData {
   boss_defeat: string
   enigma: { generator: string; mode: string; title: string; intro: string; xp: number }
   chest_xp: number
-  rooms: { kind: string; title: string; enemies?: { model: string; name: string; hp: number; tier: number; xp: number; scale: number }[] }[]
+  rooms: { kind: string; title: string; enemies?: EnemySpec[] }[]
   v1_map_piece: string
   /** Décor des salles (sol, murs, bannières, objets, couleur des torches) ; vide : décor par défaut. */
   v1_decor: DungeonDecor

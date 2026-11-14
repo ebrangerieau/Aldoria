@@ -77,6 +77,19 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   la prévisualisation lancée : une boîte au repos ne dit rien d'une armature à l'échelle 100). `&e2e` : `world.enterPlace(code)`,
   `world.interior` (`teleport(x, z)`, `frame(écart, beta, distance)`, `heroPosition()`, `enemies`, `fighting`), `world.places`,
   `world.measureMonster(modèle)`, et `encounter` (le combat en cours : `hero.hp`…).
+- **Effaceur, coffre et page** (étape 1.4) : le gardien de la dernière salle de chaque lieu (`core/quest/boss.ts`, `Enemy.boss` dans `game/interior.ts`)
+  se combat avec `Encounter` en mode `boss` : huit sceaux (`sealsLeft(hp, maxHp)`, **dérivés des PV**, jamais comptés à part : un indice ou un
+  coup critique change le nombre de sceaux brisés), difficulté qui monte, héros aux forces rendues avant le combat. L'Effaceur se présente une
+  fois par visite (pas après un repli) puis a le dernier mot ; ses répliques (`boss_intro`, `boss_defeat` de `lieux.json`) s'affichent avec le
+  bouton « Écouter » de sa voix enregistrée (lues d'office avec « lecture automatique »), comme les seuils. Sa chute fait apparaître le coffre doré
+  (`chest_gold.glb`, chargé avec le lieu : `revealChest` puis `openChest`, le couvercle est un nœud à part) ; E l'ouvre. `core/quest/chest.ts` :
+  `completePlace(save, lieu)` rend une **nouvelle** partie (lieu terminé +1, XP du coffre, deux objets du sac, `page-<code>` dans `story` la première
+  fois), `chestMessage` (« La page des X retrouvée ! » la première fois, le mot de la fin ensuite), `pageGreeting` (le salut enregistré de
+  Maître Ysaline). Le coffre ouvert ramène sur l'île ; **la première fois seulement**, Maître Ysaline salue le héros en annonçant le chemin qui
+  s'ouvre. `GameWorld.placeCompleted(places)` allume le lieu suivant et son repère de la mini-carte : le monde garde la partie de sa création, il
+  faut le prévenir. Vérifier un Effaceur : captures `boss-*`, `boss-combat-*`, `coffre`, `coffre-ouvert` (`npm run captures`). Les modèles de
+  Quaternius sont sombres par construction (couleurs de base très foncées : la gelée verte et le dragon paraissent presque noirs) : ce n'est pas
+  un défaut d'éclairage. Reste à faire : la note de plaisir de 1 à 5 avant de sortir (étape 1.5), le déblocage d'apparence annoncé au coffre.
 - **Musique** (`app/music.ts` joue, `core/music.ts` décide du volume, testé) : morceaux de `deploy/musique/` listés dans
   `content/monde/musique.json` (ordre de lecture, crédit des Options), servis sous `/musique/` par nginx ; `npm run dev` et
   `vite preview` les servent depuis le même dossier (`vite.config.ts`, requêtes `Range` comprises). Elle démarre à l'entrée
@@ -133,13 +146,14 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   Les pages rapportées et le prologue parlent de l'île (« le chemin s'éclaire sur l'île »), jamais d'une carte du royaume, que la v2 n'a
   pas ; les `seuil-*` parlent, eux, de vraies cartes (atlas, plans) : ne pas les « corriger ». Les 60 répliques des
   Effaceurs (`boss_intro`, `boss_defeat` de `lieux.json`) sont enregistrées d'une voix unique pour les 30 (rôle « effaceur »,
-  `ELEVENLABS_VOIX_EFFACEUR`), mais pas encore jouées : l'écran du boss (étape 1.4) les lira par `services.voice.say`, et le test
+  `ELEVENLABS_VOIX_EFFACEUR`), et jouées par l'écran du boss (étape 1.4, `services.voice.say`) ; le test
   `recordedVoices` les lie à `lieux.json`. Modifier une de ces répliques : la changer dans `lieux.json`, puis
   `python tools/voix_elevenlabs.py --lieux` la reporte dans `lignes.json`, puis le script la génère. Le script tourne aussi dans la session
   cloud : la clé s'enregistre par `request_credential` (hôte `api.elevenlabs.io`, en-tête `xi-api-key`, jamais dans le dépôt) et le script
   reçoit `ELEVENLABS_API_KEY=proxy-injected` ; une clé limitée à la synthèse n'a pas le droit `voices_read` (inutile : les voix sont au manifeste).
 - **Logiques de la v1 portées, pas encore branchées à l'écran** (pures, testées, `core/`) : sac d'objets (`inventory.ts` : plume,
-  parchemin, bouclier, potion, 5 au plus de chaque ; le combat applique déjà les deux derniers), voix du héros entre les salles
+  parchemin, bouclier, potion, 5 au plus de chaque ; le coffre de l'Effaceur et le coffre de la semaine en donnent, le combat applique déjà
+  bouclier et potion mais le bouton « Sac » viendra plus tard), voix du héros entre les salles
   (`heroVoice.ts` et `content/monde/heros.json`), apparence du héros et du renard
   (`wardrobe.ts`, `content/monde/apparence.json`), île du Sphinx (`sphinx/board.ts` : jeu de blocs ; `sphinx/island.ts` : passages de barque, paliers, aide du Sphinx ;
   180 énigmes dans `content/monde/sphinx_niveaux.json`, converties de `game/worlds/shared/sphinx_levels.gd` de la v1 ;

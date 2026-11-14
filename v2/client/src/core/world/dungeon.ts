@@ -40,6 +40,12 @@ export const AGGRO_DISTANCE = 3.6
 export const FIGHT_MARGIN = 1.2
 /** Rayon de l'obstacle d'un ennemi (v1 : 0,5). */
 export const ENEMY_RADIUS = 0.5
+/** Où apparaît le coffre de l'Effaceur dans sa salle : x dans la salle et profondeur, comme dans la v1 (CHEST_AT). */
+export const CHEST_AT: [number, number] = [12.5, 10]
+/** Le héros ouvre le coffre (touche E) à cette distance (v1 : 1,9, un peu plus ici : on n'attend pas le contact). */
+export const CHEST_REACH = 2.4
+/** Rayon de l'obstacle du coffre. */
+export const CHEST_RADIUS = 0.9
 /** Salles dont la porte de sortie n'attend rien : l'entrée, et l'énigme tant qu'elle n'est pas portée (étape 1.5). */
 export const OPEN_KINDS = new Set(['entree', 'enigme'])
 
@@ -181,6 +187,11 @@ export class Dungeon {
   /** Où se met le héros pour combattre un ennemi : FIGHT_GAP à sa gauche (à l'ouest), sans sortir de la salle. */
   fightSpot(room: number, enemy: { x: number; z: number }): { x: number; z: number } {
     return { x: Math.max(enemy.x - FIGHT_GAP, room * ROOM_W + FIGHT_MARGIN), z: enemy.z }
+  }
+
+  /** Où apparaît le coffre dans la salle de l'Effaceur. */
+  chestPoint(room: number): { x: number; z: number } {
+    return this.point(room, CHEST_AT[0], CHEST_AT[1])
   }
 
   // --- Sol ----------------------------------------------------------------------------

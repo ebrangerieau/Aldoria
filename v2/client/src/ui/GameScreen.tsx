@@ -14,6 +14,7 @@ import { today as localDay } from '../core/dailyChallenge'
 import { DEFAULT_VOLUME, volumeOf } from '../core/music'
 import { levelForXp } from '../core/progression'
 import { EMPTY_SAVE, SaveGame, type SaveData } from '../core/save'
+import { pageGreeting } from '../core/quest/chest'
 import { regionTitle } from '../core/world/places'
 import type { GameWorld, Interactable, WorldEvents } from '../game/GameWorld'
 import type { WorldName } from '../game/theme'
@@ -80,6 +81,8 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
     accommodations,
     grantXp,
     currentXp: () => dataRef.current.xp,
+    getSave: () => dataRef.current,
+    persist,
   })
 
   useEffect(() => applyToDocument(accommodations), [accommodations])
@@ -243,6 +246,8 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
         return
       }
       setModal({ kind: 'question', item, target })
+    } else if (target.kind === 'coffre') {
+      void openChest()
     } else if (target.kind === 'jour') {
       setModal({ kind: 'daily' })
     } else if (target.kind === 'ysaline') {
@@ -308,6 +313,36 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
           : "L'intérieur n'a pas pu s'ouvrir. Reviens sur l'île et réessaie.",
       actions: [{ label: 'D’accord', primary: true, run: close }],
     })
+  }
+
+  /**
+   * Le coffre de l'Effaceur : le lieu est terminé, retour sur l'île ; la première fois, Maître Ysaline salue l'Archiviste (sa voix
+   * enregistrée) en annonçant le chemin qui s'ouvre.
+   */
+  async function openChest() {
+    const result = await fight.openChest()
+    if (!result?.first) return
+    const text = pageGreeting(result.code)
+    const world = worldRef.current
+    if (!text || !world) return
+    world.setInputEnabled(false)
+    setModal({
+      kind: 'dialog',
+      title: 'Maître Ysaline',
+      text,
+      actions: [
+        { label: '🔊 Écouter', run: () => void services.voice.say([text]) },
+        {
+          label: 'Merci !',
+          primary: true,
+          run: () => {
+            services.voice.stop()
+            close()
+          },
+        },
+      ],
+    })
+    if (accommodations.auto_read) void services.voice.say([text])
   }
 
   /** La porte de sortie : retour sur l'île, devant le lieu. */
@@ -408,11 +443,13 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
             ? `Toucher ${focus.label.toLowerCase()}`
             : focus.kind === 'jour'
               ? 'Relever le défi du jour'
-              : focus.kind === 'ysaline'
-                ? 'Parler à Maître Ysaline'
-                : focus.kind === 'sortie'
-                  ? focus.label
-                  : `Approcher : ${focus.label}`}
+              : focus.kind === 'coffre'
+                ? 'Ouvrir le coffre'
+                : focus.kind === 'ysaline'
+                  ? 'Parler à Maître Ysaline'
+                  : focus.kind === 'sortie'
+                    ? focus.label
+                    : `Approcher : ${focus.label}`}
         </div>
       )}
 

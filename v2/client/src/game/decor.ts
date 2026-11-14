@@ -196,11 +196,18 @@ export function beacon(scene: Scene, name: string, position: Vector3, color: str
   const ring = MeshBuilder.CreateTorus(`${name}-anneau`, { diameter: 3.2, thickness: 0.16, tessellation: 48 }, scene)
   ring.position = position.add(new Vector3(0, 0.15, 0))
   const material = new StandardMaterial(`${name}-lueur`, scene)
-  const c = Color3.FromHexString(color)
-  material.emissiveColor = open ? c : c.scale(0.25)
   material.diffuseColor = Color3.Black()
   material.disableLighting = true
   ring.material = material
   ring.isPickable = false
+  setBeacon(scene, name, color, open)
   return ring
+}
+
+/** Change l'éclat d'un repère déjà posé : allumé (couleur pleine) ou éteint (un quart). */
+export function setBeacon(scene: Scene, name: string, color: string, open: boolean): void {
+  const material = scene.getMaterialByName(`${name}-lueur`) as StandardMaterial | null
+  if (!material) return
+  const c = Color3.FromHexString(color)
+  material.emissiveColor = open ? c : c.scale(0.25)
 }

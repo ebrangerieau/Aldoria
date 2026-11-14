@@ -36,14 +36,16 @@ import {
 } from '@babylonjs/core'
 import { Combatant, type CombatEvent } from '../core/combat/encounter'
 import { Emitter } from '../core/events'
+import { bossOf } from '../core/quest/boss'
 import type { SaveData } from '../core/save'
-import { AGGRO_DISTANCE, Dungeon, ENEMY_RADIUS, type Piece } from '../core/world/dungeon'
-import { HERO_HEIGHT, isSkeleton, monsterFit } from '../core/world/monsters'
+import { AGGRO_DISTANCE, CHEST_RADIUS, CHEST_REACH, Dungeon, ENEMY_RADIUS, type Piece } from '../core/world/dungeon'
+import { HERO_HEIGHT, isSkeleton, monsterFit, V1_TO_V2 } from '../core/world/monsters'
 import { angleDelta, RUN_SPEED, step, WALK_SPEED } from '../core/world/movement'
 import { Obstacles } from '../core/world/obstacles'
-import type { Place } from '../core/world/places'
+import type { EnemySpec, Place } from '../core/world/places'
 import { loadContainer } from './assets'
 import { type Character, loadHero, loadMonster, loadSkeleton, settleOnGround } from './characters'
+import { sparkle } from './effects'
 import type { Interactable } from './GameWorld'
 import type { Quality } from './quality'
 import { INTERIORS, type WorldName } from './theme'
@@ -59,17 +61,6 @@ const TORCH_REACH = 1
 /** Arc de la caméra autour du sud (radians de part et d'autre). */
 const ARC = 0.55
 
-/** Un ennemi de `lieux.json` (salle de combat). */
-export interface EnemySpec {
-  model: string
-  name: string
-  hp: number
-  tier: number
-  xp: number
-  v1_at: [number, number]
-  scale?: number
-}
-
 export interface Enemy {
   id: string
   room: number
@@ -77,6 +68,8 @@ export interface Enemy {
   character: Character
   /** Ses points de vie : un combat repris après un repli le retrouve blessé (rien n'est perdu). */
   combatant: Combatant
+  /** L'Effaceur du lieu (salle du boss) : combat de synthèse à sceaux. */
+  boss: boolean
   defeated: boolean
   /** Désarmé après un repli : il ne se réengage qu'une fois le héros éloigné. */
   armed: boolean
@@ -129,6 +122,15 @@ export class InteriorWorld {
   /** Battants de porte : la porte k est dans le mur ouest de la salle k + 1. */
   private leaves = new Map<number, { mesh: AbstractMesh; closed: Quaternion; open: Quaternion }>()
   enemies: Enemy[] = []
+  private chest: {
+    root: TransformNode
+    lid: TransformNode | null
+    at: { x: number; z: number }
+    closed: Quaternion
+    obstacle: { x: number; z: number; r: number } | null
+    shown: boolean
+    opened: boolean
+  } | null = null
   /** L'ennemi du combat en cours : le héros ne marche plus. */
   fighting: Enemy | null = null
   private shadows!: CascadedShadowGenerator
@@ -213,6 +215,7 @@ export class InteriorWorld {
     for (const m of this.hero.meshes) shadows.addShadowCaster(m, false)
     this.progress('Les ennemis', 0.9)
     await this.buildEnemies()
+    await this.buildChest()
 
     // La sortie : la porte du mur ouest de la première salle.
     this.interactables.push({ id: 'sortie', kind: 'sortie', label: `Sortir : ${place.dungeon.title}`, x: 1, z: start.z, radius: 1.4 })
@@ -276,12 +279,11 @@ export class InteriorWorld {
 
   // --- Ennemis ----------------------------------------------------------------------------
 
-  /** Les ennemis des salles de combat (le boss : étape 1.4) : un modèle chacun, endormi à sa place de la v1, tourné vers l'ouest. */
+  /** Les ennemis des salles de combat et l'Effaceur de la dernière salle : un modèle chacun, endormi à sa place de la v1, tourné vers l'ouest. */
   private async buildEnemies(): Promise<void> {
     const jobs: Promise<void>[] = []
     this.options.place.dungeon.rooms.forEach((room, index) => {
-      if (room.kind === 'boss') return
-      for (const [k, spec] of ((room.enemies ?? []) as EnemySpec[]).entries()) jobs.push(this.spawn(index, k, spec))
+      for (const [k, spec] of (room.enemies ?? []).entries()) jobs.push(this.spawn(index, k, spec))
     })
     await Promise.all(jobs)
     const monsters = this.enemies.filter((e) => !isSkeleton(e.spec.model)).map((e) => e.character)
@@ -303,13 +305,93 @@ export class InteriorWorld {
     const obstacle = { x: at.x, z: at.z, r: ENEMY_RADIUS }
     this.obstacles.add(obstacle)
     this.enemies.push({
-      id: name, room, spec, character, combatant: new Combatant(spec.name, spec.hp), defeated: false, armed: true, obstacle, x: at.x, z: at.z,
+      id: name, room, spec, character, combatant: new Combatant(spec.name, spec.hp), boss: this.options.place.dungeon.rooms[room]?.kind === 'boss',
+      defeated: false, armed: true, obstacle, x: at.x, z: at.z,
     })
   }
 
   /** Les ennemis de la salle encore debout. */
   enemiesLeft(room: number): number {
     return this.enemies.filter((e) => e.room === room && !e.defeated).length
+  }
+
+  // --- Le coffre de l'Effaceur ------------------------------------------------------------
+
+  /** Taille du coffre à l'échelle du héros de la v1 (1,3), ramenée à celle du héros de la v2. */
+  private static readonly CHEST_SCALE = 1.3 * V1_TO_V2
+
+  /**
+   * Prépare le coffre doré dans la salle de l'Effaceur, caché : il se charge avec le lieu (pas d'à-coup à la victoire) et
+   * n'apparaît (`revealChest`) qu'une fois l'Effaceur vaincu et son dernier mot dit.
+   */
+  private async buildChest(): Promise<void> {
+    const boss = bossOf(this.options.place.dungeon)
+    if (!boss) return
+    const container = await loadContainer(this.scene, 'kaykit/dungeon/chest_gold.glb')
+    const entries = container.instantiateModelsToScene((name) => `coffre-${name}`, false)
+    const inner = entries.rootNodes[0] as TransformNode
+    const root = new TransformNode('coffre', this.scene)
+    inner.parent = root
+    const at = this.dungeon.chestPoint(boss.room)
+    root.position.set(at.x, this.dungeon.heightAt(at.x, at.z), at.z)
+    root.rotation.y = -Math.PI / 2 // de face vers l'ouest, d'où vient le héros
+    root.scaling.setAll(0.01)
+    root.setEnabled(false)
+    for (const m of inner.getChildMeshes(false)) {
+      m.receiveShadows = true
+      m.isPickable = false
+      this.shadows.addShadowCaster(m, false)
+    }
+    const lid = inner.getChildTransformNodes(false).find((n) => n.name.endsWith('chest_gold_lid')) ?? null
+    this.chest = { root, lid, at, closed: lid?.rotationQuaternion?.clone() ?? Quaternion.Identity(), obstacle: null, shown: false, opened: false }
+  }
+
+  /** Le coffre est apparu (l'Effaceur est vaincu) et n'est pas encore ouvert. */
+  get chestReady(): boolean {
+    return this.chest !== null && this.chest.shown && !this.chest.opened
+  }
+
+  /** Le coffre apparaît : il grandit en rebondissant, une gerbe d'étincelles ; E l'ouvre (`interact`, id « coffre »). */
+  revealChest(): void {
+    const chest = this.chest
+    if (!chest || chest.shown) return
+    chest.shown = true
+    chest.root.setEnabled(true)
+    chest.obstacle = { x: chest.at.x, z: chest.at.z, r: CHEST_RADIUS }
+    this.obstacles.add(chest.obstacle)
+    this.interactables.push({ id: 'coffre', kind: 'coffre', label: 'Ouvrir le coffre', x: chest.at.x, z: chest.at.z, radius: CHEST_REACH })
+    sparkle(this.scene, new Vector3(chest.at.x, chest.root.position.y + 0.9, chest.at.z), this.options.calm)
+    const target = InteriorWorld.CHEST_SCALE
+    let t = 0
+    const observer = this.scene.onBeforeRenderObservable.add(() => {
+      t = Math.min(1, t + this.engine.getDeltaTime() / 500)
+      chest.root.scaling.setAll(Math.max(0.01, target * (0.2 + 0.8 * easeOutBack(t))))
+      if (t >= 1) this.scene.onBeforeRenderObservable.remove(observer)
+    })
+  }
+
+  /** Le héros ouvre le coffre : le couvercle se lève, étincelles ; le coffre n'est plus une cible (il reste ouvert). */
+  openChest(): void {
+    const chest = this.chest
+    if (!chest || !chest.shown || chest.opened) return
+    chest.opened = true
+    this.interactables = this.interactables.filter((it) => it.id !== 'coffre')
+    if (this.focused?.id === 'coffre') {
+      this.focused = null
+      this.events.emit('focus', null)
+    }
+    if (chest.lid) {
+      const open = Quaternion.RotationAxis(Vector3.Right(), 1.9).multiply(chest.closed)
+      const lid = chest.lid
+      let t = 0
+      const observer = this.scene.onBeforeRenderObservable.add(() => {
+        t = Math.min(1, t + this.engine.getDeltaTime() / 600)
+        lid.rotationQuaternion = Quaternion.Slerp(chest.closed, open, easeOutBack(t))
+        if (t >= 1) this.scene.onBeforeRenderObservable.remove(observer)
+      })
+    }
+    sparkle(this.scene, new Vector3(chest.at.x, chest.root.position.y + 1.1, chest.at.z), this.options.calm)
+    void this.hero.playOnce('cheer', 'idle')
   }
 
   // --- Portes -----------------------------------------------------------------------------

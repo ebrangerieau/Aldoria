@@ -12,11 +12,8 @@ import {
   AnimationPropertiesOverride,
   ArcRotateCamera,
   Color3,
-  Color4,
-  DynamicTexture,
   type Mesh,
   MeshBuilder,
-  ParticleSystem,
   PointerEventTypes,
   Scene,
   SceneInstrumentation,
@@ -36,13 +33,14 @@ import { type Atmosphere, createAtmosphere } from './atmosphere'
 import { type Character, loadFox, loadHero, loadMonster, loadNpc, settleOnGround, skinnedHeights } from './characters'
 import { type Enemy, type FloatTone, InteriorWorld } from './interior'
 import { today as localDay } from '../core/dailyChallenge'
-import { beacon, buildDecor } from './decor'
+import { beacon, buildDecor, setBeacon } from './decor'
+import { sparkle } from './effects'
 import { createEngine, type EngineKind } from './engine'
 import { buildGround, buildSea } from './island'
 import { chooseQuality, type Quality } from './quality'
 import { THEMES, type WorldName } from './theme'
 
-export type InteractableKind = 'lieu' | 'pierre' | 'ysaline' | 'sortie' | 'jour'
+export type InteractableKind = 'lieu' | 'pierre' | 'ysaline' | 'sortie' | 'jour' | 'coffre'
 
 export interface Interactable {
   id: string
@@ -121,12 +119,13 @@ export class GameWorld {
   private inputEnabled = true
   private interactables: Interactable[] = []
   private dayCrystal: Mesh | null = null
+  /** Lieux terminés (code → nombre de fois) : la partie du monde est celle de sa création, celle-ci suit les fins de lieu. */
+  private placesDone: Record<string, number>
   private dayRing: Mesh | null = null
   private focused: Interactable | null = null
   private region: string | null = null
   private lastCameraInput = 0
   private stones = new Map<string, Mesh>()
-  private sparkTexture: DynamicTexture | null = null
   private disposers: (() => void)[] = []
   private statsTimer = 0
   private regionTimer = 0
@@ -144,6 +143,7 @@ export class GameWorld {
     private readonly params: URLSearchParams,
   ) {
     this.quality = chooseQuality(params)
+    this.placesDone = { ...options.save.places }
   }
 
   static async create(canvas: HTMLCanvasElement, options: WorldOptions, params = new URLSearchParams(location.search)): Promise<GameWorld> {
@@ -433,7 +433,7 @@ export class GameWorld {
   // --- Ce qu'on peut faire dans l'île ---------------------------------------------------
 
   private buildInteractables(places: Place[]): void {
-    const done = this.options.save.places
+    const done = this.placesDone
     for (const place of places) {
       const open = isOpen(place, done)
       const y = this.grid.heightAt(place.x, place.z)
@@ -527,6 +527,21 @@ export class GameWorld {
     this.setDayLook(!done)
   }
 
+  /**
+   * Un lieu vient d'être terminé : les lieux qui s'ouvrent (le suivant de sa région) s'allument, leur repère sur la mini-carte aussi.
+   * Le monde garde la partie de sa création : sans cet appel, le lieu suivant n'apparaîtrait ouvert qu'après un rechargement.
+   */
+  placeCompleted(done: Record<string, number>): void {
+    this.placesDone = { ...done }
+    for (const it of this.interactables) {
+      if (it.kind !== 'lieu' || !it.place) continue
+      const open = isOpen(it.place, this.placesDone)
+      it.open = open
+      setBeacon(this.scene, `seuil-${it.place.dungeon.code}`, open ? '#ffd27a' : '#7a7f8c', open)
+    }
+    this.events.emit('markers', this.mapMarkers())
+  }
+
   /** Le défi du jour vient d'être relevé (ou ne l'est pas encore) : l'éclat de la pierre et son repère sur la carte suivent. */
   setDayChallenge(todo: boolean): void {
     const target = this.interactables.find((it) => it.id === 'pierre-jour')
@@ -600,7 +615,7 @@ export class GameWorld {
   }
 
   private mapMarkers(): MapMarker[] {
-    return mapMarkers(layout, this.options.level, this.interactables, this.options.save.places)
+    return mapMarkers(layout, this.options.level, this.interactables, this.placesDone)
   }
 
   mapInfo(): MapInfo {
@@ -616,43 +631,7 @@ export class GameWorld {
 
   /** Gerbe d'étincelles (plus discrète en mode calme). */
   private sparkle(at: Vector3): void {
-    if (!this.sparkTexture) {
-      const texture = new DynamicTexture('etincelle', 64, this.scene, false)
-      const ctx = texture.getContext()
-      const gradient = ctx.createRadialGradient(32, 32, 0, 32, 32, 32)
-      gradient.addColorStop(0, 'rgba(255,255,255,1)')
-      gradient.addColorStop(0.4, 'rgba(255,230,160,0.8)')
-      gradient.addColorStop(1, 'rgba(255,200,80,0)')
-      ctx.fillStyle = gradient
-      ctx.fillRect(0, 0, 64, 64)
-      texture.hasAlpha = true
-      texture.update()
-      this.sparkTexture = texture
-    }
-    const calm = this.options.calm
-    const ps = new ParticleSystem('etincelles', calm ? 80 : 400, this.scene)
-    ps.particleTexture = this.sparkTexture
-    ps.emitter = at
-    ps.minEmitBox = new Vector3(-0.3, 0, -0.3)
-    ps.maxEmitBox = new Vector3(0.3, 0.4, 0.3)
-    ps.color1 = new Color4(1, 0.92, 0.6, 1)
-    ps.color2 = new Color4(0.6, 0.85, 1, 1)
-    ps.colorDead = new Color4(1, 0.8, 0.3, 0)
-    ps.minSize = 0.08
-    ps.maxSize = calm ? 0.18 : 0.3
-    ps.minLifeTime = 0.6
-    ps.maxLifeTime = 1.4
-    ps.emitRate = calm ? 120 : 600
-    ps.manualEmitCount = calm ? 60 : 300
-    ps.gravity = new Vector3(0, -2, 0)
-    ps.direction1 = new Vector3(-2, 4, -2)
-    ps.direction2 = new Vector3(2, 7, 2)
-    ps.minEmitPower = 1
-    ps.maxEmitPower = calm ? 1.5 : 3
-    ps.blendMode = ParticleSystem.BLENDMODE_ADD
-    ps.disposeOnStop = true
-    ps.targetStopDuration = 1.6
-    ps.start()
+    sparkle(this.scene, at, this.options.calm)
   }
 
   // --- Outils de test et de capture (?e2e) ------------------------------------------------
