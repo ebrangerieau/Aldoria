@@ -43,6 +43,15 @@ export const STREAK_FOR_CRIT = 3
 /** Dégâts de base de la riposte (avant la force de l'ennemi), inclusifs. */
 export const FOE_DAMAGE: Record<World, [number, number]> = { lumineux: [6, 10], brouillard: [9, 14] }
 
+/**
+ * Sceaux encore intacts d'un Effaceur : chacun représente `BOSS_HITS` fois moins de PV que le maximum. Dérivés des PV, jamais
+ * comptés à part : ils ne peuvent donc pas s'écarter des dégâts réellement infligés (critique, indice, récompense réduite).
+ */
+export function sealsLeft(hp: number, maxHp: number): number {
+  if (hp <= 0 || maxHp <= 0) return 0
+  return Math.ceil(hp / Math.ceil(maxHp / BOSS_HITS))
+}
+
 /** Un combattant : points de vie bornés entre 0 et le maximum. */
 export class Combatant {
   hp: number

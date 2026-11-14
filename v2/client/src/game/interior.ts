@@ -41,7 +41,7 @@ import { AGGRO_DISTANCE, Dungeon, ENEMY_RADIUS, type Piece } from '../core/world
 import { HERO_HEIGHT, isSkeleton, monsterFit } from '../core/world/monsters'
 import { angleDelta, RUN_SPEED, step, WALK_SPEED } from '../core/world/movement'
 import { Obstacles } from '../core/world/obstacles'
-import type { Place } from '../core/world/places'
+import type { EnemySpec, Place } from '../core/world/places'
 import { loadContainer } from './assets'
 import { type Character, loadHero, loadMonster, loadSkeleton, settleOnGround } from './characters'
 import type { Interactable } from './GameWorld'
@@ -58,17 +58,6 @@ const DOOR_OPEN_ANGLE = -1.75
 const TORCH_REACH = 1
 /** Arc de la caméra autour du sud (radians de part et d'autre). */
 const ARC = 0.55
-
-/** Un ennemi de `lieux.json` (salle de combat). */
-export interface EnemySpec {
-  model: string
-  name: string
-  hp: number
-  tier: number
-  xp: number
-  v1_at: [number, number]
-  scale?: number
-}
 
 export interface Enemy {
   id: string
@@ -281,7 +270,7 @@ export class InteriorWorld {
     const jobs: Promise<void>[] = []
     this.options.place.dungeon.rooms.forEach((room, index) => {
       if (room.kind === 'boss') return
-      for (const [k, spec] of ((room.enemies ?? []) as EnemySpec[]).entries()) jobs.push(this.spawn(index, k, spec))
+      for (const [k, spec] of (room.enemies ?? []).entries()) jobs.push(this.spawn(index, k, spec))
     })
     await Promise.all(jobs)
     const monsters = this.enemies.filter((e) => !isSkeleton(e.spec.model)).map((e) => e.character)
