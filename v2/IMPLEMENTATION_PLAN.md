@@ -148,6 +148,7 @@ Dans l'ordre que les enfants choisiront à la séance de la phase 1 :
 - prologue en cinq tableaux joués dans l'île, voix enregistrées de Maître Ysaline (`deploy/voix/manifest.json` ; **seuils faits le 14 novembre** : les 30 textes de lieu sont lus de
   sa vraie voix ; **l'accueil dans l'île et les textes des pages et du prologue réenregistrés le 14 novembre** (« sur l'île », plus de carte du royaume) ; restent à brancher les pages rendues, le prologue, le brouillard, Clairval et la Tour de l'Oubli quand ces
   moments existent dans l'île, **les 60 répliques des Effaceurs enregistrées le 14 novembre** (une voix pour les 30) **et jouées depuis l'étape 1.4**, ainsi que les pages rapportées (salut de Maître Ysaline au retour) ; reste à enregistrer ses répliques nouvelles de la v2), musique ;
+- objets à ramasser dans l'île et dans les lieux, **liés entre eux** (un objet en appelle un autre : fragments qui s'assemblent, clés et serrures, pièces d'un mécanisme) pour servir un jeu de logique ou de réflexion ; ils se rangent dans la partie, à côté du sac, et rejoignent l'île du Sphinx quand elle sera branchée (demande d'Eric du 14 novembre) ;
 - Archives (étoiles par notion : **fait le 14 novembre**, bouton « Archives » de l'île, `core/archives.ts`), bestiaire (avec les rencontres) ; brouillard des régions pas encore au programme, qui recule page après page.
 
 **Critère de passage** : deux semaines d'usage spontané (au moins deux séances par semaine et par enfant, sans relance).
@@ -172,6 +173,17 @@ L'API et la base sont communes depuis l'étape 0.6 (D11) : la bascule ne touche 
 3. Le dossier `game/` (Godot) est archivé, puis retiré du dépôt ; `v2/` remonte à la racine, avec le Compose de production.
 
 **Critère de passage** : plus aucune séance sur la v1 pendant trois semaines.
+
+## Phase 5 : suite possible, une fois tout migré en v2
+
+À ne commencer que lorsque la phase 4 est finie (demande d'Eric du 14 novembre) : de nouveaux programmes, qui n'ont besoin d'aucun
+changement du jeu (une classe est « disponible » dès que `content/seed/<classe>/` existe, `api/app/engine/levels.py`).
+
+1. **Questions de 5ème** (`5e`) : programme officiel vérifié, une matière à la fois (`content/seed/5e/<matière>.json`, générateurs, lecture à
+   voix haute, lieux dans `lieux.json`), selon la procédure de la v1 (skills `nouvelle-matiere` et `nouveau-donjon`).
+2. **Questions de Première** (`1ere`), avec l'option **NSI** (numérique et sciences informatiques : programmation en Python, structures de données,
+   algorithmique, bases de données, réseaux, architecture) : d'abord les matières communes, puis la spécialité ; les questions de code suivent la règle
+   de la v1 (code Python sur des lignes séparées, lu par `engine/speech.py`), avec un widget de réponse adapté (trace d'exécution, valeur d'une variable).
 
 ## Questions à poser aux enfants dès la première séance
 
