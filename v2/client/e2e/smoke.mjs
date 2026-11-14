@@ -4,6 +4,7 @@
 // victoire, porte qui s'ouvre) → pierre d'éveil → question → bonne réponse → la pierre s'éveille. Échoue sur toute
 // erreur de la page ou toute ressource introuvable. Captures dans $E2E_OUT (défaut : e2e/captures).
 //   npm run build && npm run preview &   puis   npm run e2e
+import { currentQuestion, solve } from './answers.mjs'
 import { mkdirSync } from 'node:fs'
 import { createRequire } from 'node:module'
 
@@ -43,32 +44,11 @@ if (MUSIC_DELAY > 0) {
   })
 }
 
-/** Répond à la question ouverte (celle de `window.__aldoria.question`), juste ou faux, puis « Continuer ». */
+/** Répond à la question ouverte (celle de `window.__aldoria.question`), juste ou fausse, puis « Continuer ». */
 const answerQuestion = async (correct) => {
   await page.getByRole('dialog').waitFor({ timeout: 10_000 * SLOW })
-  const item = await page.evaluate(() => window.__aldoria.question)
-  if (!correct) {
-    // Faux : un autre choix que le bon, ou un nombre absurde.
-    if (item.answer.kind === 'choice') await page.locator('.choice').nth((item.answer.index + 1) % (await page.locator('.choice').count())).click()
-    else {
-      await page.getByLabel('Ta réponse').fill('99999')
-      await page.getByRole('button', { name: 'Valider' }).click()
-    }
-    await page.locator('.feedback.bad').waitFor({ timeout: 5000 * SLOW })
-  } else {
-    if (item.answer.kind === 'choice') await page.locator('.choice').nth(item.answer.index).click()
-    else if (item.answer.kind === 'number' || item.answer.kind === 'fraction') {
-      await page.getByLabel('Ta réponse').fill(String(item.answer.value).replace('.', ','))
-      await page.getByRole('button', { name: 'Valider' }).click()
-    } else if (item.answer.kind === 'text') {
-      await page.getByLabel('Ta réponse').fill(item.answer.value[0])
-      await page.getByRole('button', { name: 'Valider' }).click()
-    } else if (item.answer.kind === 'order') {
-      for (const i of item.answer.value) await page.locator('.choices .choice').nth(i).click()
-      await page.getByRole('button', { name: 'Valider' }).click()
-    } else throw new Error(`type de réponse non géré par le test : ${item.answer.kind}`)
-    await page.locator('.feedback.good').waitFor({ timeout: 5000 * SLOW })
-  }
+  await solve(page, await currentQuestion(page, 10_000 * SLOW), correct)
+  await page.locator(correct ? '.feedback.good' : '.feedback.bad').waitFor({ timeout: 5000 * SLOW })
   await page.getByRole('button', { name: 'Continuer' }).click()
 }
 
@@ -455,22 +435,8 @@ try {
 
   /** Répond juste à la question affichée (lue par le crochet ?e2e), sans cliquer sur « Continuer ». */
   async function answerRight() {
-    const item = await page.evaluate(() => window.__aldoria.question)
-    if (item.answer.kind === 'choice') {
-      await page.locator('.choice').nth(item.answer.index).click()
-    } else if (item.answer.kind === 'number' || item.answer.kind === 'fraction') {
-      await page.getByLabel('Ta réponse').fill(String(item.answer.value).replace('.', ','))
-      await page.getByRole('button', { name: 'Valider' }).click()
-    } else if (item.answer.kind === 'text') {
-      await page.getByLabel('Ta réponse').fill(item.answer.value[0])
-      await page.getByRole('button', { name: 'Valider' }).click()
-    } else if (item.answer.kind === 'order') {
-      for (const i of item.answer.value) await page.locator('.choices .choice').nth(i).click()
-      await page.getByRole('button', { name: 'Valider' }).click()
-    } else {
-      throw new Error(`type de réponse non géré par le test : ${item.answer.kind}`)
-    }
-    await page.locator('.feedback.good').waitFor({ timeout: 5000 })
+    await solve(page, await currentQuestion(page, 10_000 * SLOW), true)
+    await page.locator('.feedback.good').waitFor({ timeout: 5000 * SLOW })
   }
 
   await step('bonne réponse, la pierre s’éveille', async () => {
