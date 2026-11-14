@@ -130,6 +130,8 @@ function MarkerShape({ marker }: { marker: MapMarker }) {
       )
     case 'pierre':
       return <circle r={marker.state === 'eveillee' ? 3.6 : 3.2} />
+    case 'table':
+      return <path d="M-5.5 -2.5 H5.5 V0.5 H3 V5.5 H1.4 V0.5 H-1.4 V5.5 H-3 V0.5 H-5.5 Z" />
     case 'jour':
       return <path d="M0 -6 L1.7 -1.9 L6 -1.7 L2.6 1 L3.7 5.2 L0 2.8 L-3.7 5.2 L-2.6 1 L-6 -1.7 L-1.7 -1.9 Z" />
   }

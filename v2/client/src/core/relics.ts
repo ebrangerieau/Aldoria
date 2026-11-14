@@ -227,6 +227,15 @@ export const startBoard = (puzzle: Puzzle): Board => puzzle.fixed
 
 export const holesOf = (puzzle: Puzzle): number[] => puzzle.fixed.flatMap((id, cell) => (id === null ? [cell] : []))
 
+/** Ce que lit un lecteur d'écran sur une case : sa place, ce qu'elle porte, et si elle est gravée ou libre. */
+export function describeCell(puzzle: Puzzle, board: Board, cell: number): string {
+  const where = `Rangée ${rowOf(cell) + 1}, colonne ${columnOf(cell) + 1}`
+  const id = board[cell]
+  const relic = id ? relicOf(id) : null
+  if (puzzle.fixed[cell] !== null) return `${where} : ${relic?.name ?? 'sceau'}, gravé dans la pierre.`
+  return relic ? `${where} : ${relic.name}.` : `${where} : case libre.`
+}
+
 /** Les reliques à placer qui ne sont pas encore sur la table, dans l'ordre. */
 export const tray = (puzzle: Puzzle, board: Board): string[] => puzzle.pool.filter((id) => !board.includes(id))
 

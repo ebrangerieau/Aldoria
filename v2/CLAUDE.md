@@ -141,7 +141,15 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   les suivants sont de l'entraînement. **Dans l'île** (`game/GameWorld.ts` : `buildRelics`, `relicCollected`) : un éclat de la forme et de la couleur de l'élément sur un anneau lumineux
   (interaction `kind: 'relique'`, rayon 2,4 m ; **jamais sur la mini-carte** : on les trouve en se promenant) ; E la ramasse (`GameScreen.collectRelic` : la partie la
   garde, l'éclat disparaît, « Relique trouvée ! … sur 16 »). Celles que la partie possède déjà ne sont pas posées. Captures `relique-flamme`, `-onde`, `-feuille`,
-  `-etoile`, `-brouillard`. Fait : la logique, la partie, le coffre, l'île. Reste à faire : l'écran de la Table (Citadelle).
+  `-etoile`, `-brouillard`. **L'écran de la Table** (`ui/RelicTable.tsx`, plateau de pierre sur le plateau de la Citadelle : `table_reliques` de `ile.json`, `GameWorld.buildRelicTable`, interaction
+  `kind: 'table'`, repère sur la mini-carte, anneau allumé tant qu'une table du jour attend : `setTableState`) : le carré à gauche, à droite le message (lu par
+  `role="status"`), les reliques à placer, l'indice et « Recommencer ». On choisit une relique en bas (ou 1 à 9) puis une case libre ; toucher une relique posée la reprend ;
+  flèches, Entrée, Échap au clavier ; une case en conflit porte un « ! » et une bordure rouge (jamais la couleur seule), chaque élément sa forme, chaque case un libellé
+  pour lecteur d'écran (`describeCell`). **Aucune table sans deux reliques** (message qui dit où en trouver). Le premier carré du jour rapporte (`claimTable`, la partie est
+  rangée par `onSave`), une table déjà récompensée s'ouvre directement en entraînement ; « Une autre table » en donne une autre. Crochets `&e2e` : `table` (la table en
+  cours : `fixed`, `pool`, `solution`), `save()`, et en découverte `giveRelics(ids)` et `give`. Parcours navigateur : table vide, conflit signalé, indice, carré résolu, récompense
+  une seule fois, entraînement au clavier ; captures `table`, `table-brouillard`. Reste à faire : brancher la Table à l'île du Sphinx quand son écran existera ; un indice de Maître Ysaline vers
+  la première relique ; un bestiaire des reliques (chaque sceau avec son histoire).
 - **Musique** (`app/music.ts` joue, `core/music.ts` décide du volume, testé) : morceaux de `deploy/musique/` listés dans
   `content/monde/musique.json` (ordre de lecture, crédit des Options), servis sous `/musique/` par nginx ; `npm run dev` et
   `vite preview` les servent depuis le même dossier (`vite.config.ts`, requêtes `Range` comprises). Elle démarre à l'entrée

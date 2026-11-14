@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import ile from '@content/monde/ile.json'
 import { completePlace, chestMessage } from '../src/core/quest/chest'
 import {
-  applyHint, CELLS, chestRelic, claimTable, clashes, dailySeed, ELEMENTS, grantRelic, hint, holesOf, ISLAND_RELICS, isSolved, knownSquare,
+  applyHint, CELLS, describeCell, chestRelic, claimTable, clashes, dailySeed, ELEMENTS, grantRelic, hint, holesOf, ISLAND_RELICS, isSolved, knownSquare,
   lift, makePuzzle, MAX_HOLES, MIN_RELICS, normalizeRelics, place, placesDone, type Board, type Puzzle, randomSquare, RELICS, relicOf, seeded, share,
   tableReward, tray,
 } from '../src/core/relics'
@@ -92,6 +92,17 @@ describe('Les reliques de l’île', () => {
       expect(walkable.has(`${x / 2},${z / 2}`), `${relic.id} inatteignable à pied`).toBe(true)
       for (const other of [...fixed, ...places]) expect(Math.hypot(other.x - x, other.z - z), `${relic.id} trop près`).toBeGreaterThan(12)
     }
+  })
+
+  it('la Table des Reliques est sur le plateau de la Citadelle : à plat, atteignable à pied, à l’écart de tout', () => {
+    const table = layout.table_reliques
+    expect(terrain.heightAt(table.x, table.z)).toBeGreaterThan(SEA_LEVEL + 2)
+    expect(terrain.slopeAt(table.x, table.z)).toBeLessThan(0.05)
+    expect(reachable().has(`${table.x / 2},${table.z / 2}`)).toBe(true)
+    for (const other of [layout.depart, layout.pierre_eveil, layout.pierre_jour, layout.ysaline, ...placesFor('6e', terrain), ...placesFor('2nde', terrain)]) {
+      expect(Math.hypot(other.x - table.x, other.z - table.z)).toBeGreaterThan(14)
+    }
+    expect(Math.hypot(layout.citadelle.x - table.x, layout.citadelle.z - table.z)).toBeGreaterThan(18) // pas dans le bâtiment
   })
 
   it('sont toutes distinctes les unes des autres', () => {
@@ -294,6 +305,17 @@ describe('La table', () => {
     }
     expect(two, 'aucune table à deux solutions trouvée en 400 graines').not.toBeNull()
     for (const board of solutionsOf(two!)) expect(isSolved(board)).toBe(true)
+  })
+
+  it('décrit chaque case pour un lecteur d’écran : sa place, sa relique, gravée ou libre', () => {
+    const puzzle = makePuzzle(owned8, 9)!
+    const hole = holesOf(puzzle)[0]!
+    const engraved = puzzle.fixed.findIndex((id) => id !== null)
+    expect(describeCell(puzzle, puzzle.fixed, hole)).toBe(`Rangée ${Math.floor(hole / 4) + 1}, colonne ${(hole % 4) + 1} : case libre.`)
+    const mine = puzzle.pool[0]!
+    expect(describeCell(puzzle, place(puzzle, puzzle.fixed, hole, mine)!, hole)).toContain(relicOf(mine)!.name)
+    expect(describeCell(puzzle, puzzle.fixed, engraved)).toMatch(/gravé dans la pierre\.$/)
+    expect(describeCell(puzzle, puzzle.fixed, engraved)).toContain(relicOf(puzzle.fixed[engraved]!)!.name)
   })
 
   it('l’indice met la bonne relique à la bonne case, et mène à la solution en autant d’indices que de cases', () => {

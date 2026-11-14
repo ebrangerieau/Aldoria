@@ -30,6 +30,9 @@ const VIEWS = {
   sphinx: { query: '', at: [318, 10], face: [345, 15], beta: 1.3, radius: 11, turn: 0.3 },
   brouillard: { query: '&monde=brouillard&classe=2nde', at: [0, -30], face: [0, 30], beta: 1.25, radius: 12, turn: 0.3 },
   carte: { query: '', at: [70, 60], face: [120, 105], beta: 1.32, radius: 9, turn: 0.15, interface: true },
+  // La Table des Reliques (plateau de la Citadelle, `table_reliques` de ile.json), vue de trois quarts, puis dans le Brouillard.
+  table: { query: '', at: [-22.2, 8.4], face: [-18, 12], beta: 1.2, radius: 7, turn: 0.45 },
+  'table-brouillard': { query: '&monde=brouillard&classe=2nde', at: [-22.2, 8.4], face: [-18, 12], beta: 1.2, radius: 7, turn: 0.45 },
   // Une relique de l'île par élément (reliques.json) : le héros à 2,6 m, l'éclat et son anneau devant lui.
   'relique-flamme': { query: '', at: [-62.6, -42], face: [-60, -42], beta: 1.3, radius: 6, turn: 0.35 },
   'relique-onde': { query: '', at: [-148.6, 132], face: [-146, 132], beta: 1.3, radius: 6, turn: 0.35 },
