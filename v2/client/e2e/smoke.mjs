@@ -310,6 +310,22 @@ try {
     const note = await page.locator('.dialog .hint').innerText()
     if (!/étapes, une énigme/.test(note)) throw new Error(`indication des étapes absente : ${note}`)
   })
+
+  await step('fin de séance fixée par le parent : l’île se fige, on peut terminer, l’écran titre revient', async () => {
+    // Mode découverte : pas de parent, donc pas de limite. On fait comme si l'enfant était connecté (rien n'est
+    // envoyé : aucune réponse n'est donnée) avec une séance de 5 minutes déjà jouée à 6,7.
+    await page.evaluate(() => {
+      const s = window.__aldoria.services.session
+      s.demo = false
+      s.clock.sync({ session_max_minutes: 5, break_minutes: 30, played_seconds: 400, idle_seconds: 0 })
+    })
+    await page.getByRole('heading', { name: 'Belle séance !' }).waitFor({ timeout: 10_000 * SLOW })
+    await page.screenshot({ path: `${OUT}/10-fin-seance.png` })
+    const text = (await page.getByTestId('fin-seance').textContent()) ?? ''
+    if (!/Tu as joué 7 minutes/.test(text) || !/Ta progression est sauvegardée/.test(text)) throw new Error(`phrase de fin de séance : ${text}`)
+    await page.getByRole('button', { name: 'Terminer' }).click()
+    await page.getByTestId('decouvrir').waitFor({ timeout: 10_000 * SLOW })
+  })
 } catch (error) {
   problems.push(String(error))
   await page.screenshot({ path: `${OUT}/echec.png` }).catch(() => {})

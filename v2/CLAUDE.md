@@ -85,6 +85,11 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   le décor répété passe en *thin instances*. Tout asset ajouté est inscrit dans `client/public/ressources/LICENSES.md`.
 - **Sauvegarde** : partie v2 dans l'emplacement `v2` (`core/save.ts`). La maîtrise des notions n'est jamais calculée par le
   client. Aucune migration ne doit casser la v1 tant qu'elle est en service.
+- **Temps de jeu fixé par le parent** (PRD US-11) : `core/playTime.ts` (`PlayClock`, testé) tenu par `Session.clock` : le serveur
+  fait foi (`play_time` de la connexion et de `session/start`), le client compte les secondes jouées ; une pause de 30 minutes
+  ouvre une nouvelle séance. `ui/PlayTimeGuard.tsx` (monté dans `GameScreen`) fige le monde et propose de terminer à la fin de
+  la séance, ou la pause aux intervalles réglés (`pause_minutes`). Un combat ou une activité vérifie `session.timeOver()` **entre
+  deux actions**, jamais au milieu d'une question : rien n'est coupé, la progression est sauvegardée. Jamais en mode découverte.
 - **Visuels de questions** : une question n'est posée que si son type et son visuel sont dessinés (`core/questionService.ts` :
   `SUPPORTED_TYPES`, `SUPPORTED_VISUALS`, `isPlayable`), sinon l'énoncé serait incompréhensible. Calculs dans `core/visuals.ts`
   (testés), dessin SVG dans `ui/widgets/Visuals.tsx`, réponses dans `ui/widgets/Widgets.tsx`. Aujourd'hui : balance, droite

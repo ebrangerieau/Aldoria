@@ -130,6 +130,11 @@ par ce qui se teste sans moteur.
 | 1.5 | **Énigme à trois piédestaux, héros qui parle, note de 1 à 5** (`session/end`, `rating`) | |
 | 1.6 | **Widgets** : vecteur, droite graduée, tableau de signes (Tom en a besoin dès le Labyrinthe des Vecteurs) ; fait aussi : la balance et le repère quadrillé (énigmes des deux premiers lieux) et `isPlayable` (une question dont le visuel manque n'est jamais posée) : `core/visuals.ts`, `ui/widgets/Visuals.tsx`. 24 lieux sur 30 n'ont besoin d'aucun autre visuel ; restent graph, robot, map, table, pont, rapporteur, repère de tir | ✅ |
 
+> ✅ **Temps de jeu fixé par le parent** (14 novembre 2026), absent de la v2 jusque-là (PRD : « limite du parent, rappel de pause ») :
+> `core/playTime.ts` (11 tests), `Session.clock`, `ui/PlayTimeGuard.tsx` (fin de séance : l'île se fige et propose de terminer, avec la
+> phrase de la v1 ; rappel de pause aux intervalles réglés). Reste à brancher : le combat et les lieux vérifient `session.timeOver()`
+> avant chaque tour (étapes 1.3 et suivantes).
+
 ## Phase 2 : reprendre ce que les enfants aimaient dans la v1
 
 Dans l'ordre que les enfants choisiront à la séance de la phase 1 :

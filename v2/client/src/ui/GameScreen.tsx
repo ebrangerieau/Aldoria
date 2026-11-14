@@ -13,6 +13,7 @@ import { EMPTY_SAVE, SaveGame, type SaveData } from '../core/save'
 import { regionTitle } from '../core/world/places'
 import type { GameWorld, Interactable, WorldEvents } from '../game/GameWorld'
 import type { WorldName } from '../game/theme'
+import { PlayTimeGuard } from './PlayTimeGuard'
 import { QuestionPanel, type QuestionOutcome } from './QuestionPanel'
 import { Dialog, Options } from './Dialogs'
 import { Minimap } from './Minimap'
@@ -410,6 +411,14 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
         />
       )}
       {modal?.kind === 'dialog' && <Dialog title={modal.title} text={modal.text} note={modal.note} actions={modal.actions} />}
+
+      {/* Fin de séance et rappel de pause fixés par le parent : par-dessus tout, le monde se fige. */}
+      <PlayTimeGuard
+        services={services}
+        pauseMinutes={accommodations.pause_minutes}
+        onBlock={(blocked) => worldRef.current?.setInputEnabled(!blocked)}
+        onEnd={onQuit}
+      />
       {modal?.kind === 'options' && (
         <Options
           accommodations={accommodations}

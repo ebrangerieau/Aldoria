@@ -6,6 +6,7 @@
  */
 import type { ApiClient } from './api'
 import type { Item, Pack } from './items'
+import { PlayClock, type PlayTimeInfo } from './playTime'
 import type { QuestionSource } from './questionService'
 import type { Store } from './storage'
 
@@ -48,6 +49,8 @@ export class Session implements QuestionSource {
   answered = 0
   activeSeconds = 0
   onQueueChange: (pending: number) => void = () => {}
+  /** Temps de la séance et limite fixée par le parent (PRD US-11) ; absent en mode découverte. */
+  readonly clock = new PlayClock()
 
   private queue: Attempt[]
   private asideQueue: { profile_id: number; notion: string }[]
@@ -85,7 +88,7 @@ export class Session implements QuestionSource {
   }
 
   async login(profileId: number, pin: string) {
-    const res = await this.api.post<{ token: string; profile: Profile; accommodations?: Record<string, unknown> }>(
+    const res = await this.api.post<{ token: string; profile: Profile; accommodations?: Record<string, unknown>; play_time?: PlayTimeInfo }>(
       '/play/login',
       { profile_id: profileId, pin },
       false,
@@ -94,6 +97,7 @@ export class Session implements QuestionSource {
       this.api.token = res.data.token
       this.profile = { ...res.data.profile, accommodations: res.data.accommodations ?? {} }
       this.store.set('auth', { token: this.api.token, profile: this.profile })
+      this.clock.sync(res.data.play_time)
     }
     return res
   }
@@ -112,12 +116,14 @@ export class Session implements QuestionSource {
 
   /** Ouvre une session et charge le paquet. Sans réseau, reprend le dernier paquet gardé. */
   async start(mode: SessionMode, params: Record<string, unknown> = {}, cacheKey = ''): Promise<{ ok: boolean; offline?: boolean }> {
+    this.clock.checkBreak(this.sessionId !== '') // une pause assez longue remet la séance à zéro
     this.mode = mode
     this.answered = 0
     const key = `pack.${cacheKey || mode}`
     const res = await this.api.post<Pack>('/play/session/start', { ...params, mode })
     if (res.ok) {
       this.applyPack(res.data)
+      this.clock.sync({ session_max_minutes: res.data.settings?.session_max_minutes, ...res.data.settings?.play_time })
       this.store.set(key, res.data)
       this.aside = new Set(this.ownAside().map((a) => a.notion))
       return { ok: true }
@@ -146,7 +152,14 @@ export class Session implements QuestionSource {
 
   /** Temps actif (le navigateur suspend le rendu d'un onglet caché : rien n'est compté). */
   tick(seconds: number): void {
-    if (this.sessionId || this.mode) this.activeSeconds += seconds
+    if (!this.sessionId && !this.mode) return
+    this.activeSeconds += seconds
+    if (!this.demo) this.clock.tick(seconds)
+  }
+
+  /** Durée maximale de la séance atteinte (jamais en mode découverte : pas de parent, pas de limite). */
+  timeOver(): boolean {
+    return !this.demo && this.clock.timeOver(this.sessionId !== '')
   }
 
   // --- QuestionSource -------------------------------------------------------------------
