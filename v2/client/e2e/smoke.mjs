@@ -247,7 +247,8 @@ try {
     await page.screenshot({ path: `${OUT}/04-question.png` })
   })
 
-  await step('bonne réponse, la pierre s’éveille', async () => {
+  /** Répond juste à la question affichée (lue par le crochet ?e2e), sans cliquer sur « Continuer ». */
+  async function answerRight() {
     const item = await page.evaluate(() => window.__aldoria.question)
     if (item.answer.kind === 'choice') {
       await page.locator('.choice').nth(item.answer.index).click()
@@ -264,6 +265,13 @@ try {
       throw new Error(`type de réponse non géré par le test : ${item.answer.kind}`)
     }
     await page.locator('.feedback.good').waitFor({ timeout: 5000 })
+  }
+
+  await step('bonne réponse, la pierre s’éveille', async () => {
+    await answerRight()
+    // Effets sonores (Web Audio, chargés au premier geste) : les dix sons sont décodés et « bonne réponse » vient de jouer.
+    const sfx = await page.evaluate(() => window.__aldoria.services.sfx.state())
+    if (!sfx.enabled || sfx.loaded.length !== 10 || sfx.last !== 'correct' || sfx.played < 1) throw new Error(`effets sonores : ${JSON.stringify(sfx)}`)
     await page.screenshot({ path: `${OUT}/05-juste.png` })
     await page.getByRole('button', { name: 'Continuer' }).click()
     await page.getByRole('dialog').waitFor({ state: 'detached' })
@@ -276,6 +284,78 @@ try {
     await page.screenshot({ path: `${OUT}/06-eveillee.png` })
   })
 
+  await step('Pierre du Jour : dix questions, bilan, puis le défi suivant n’est qu’un entraînement', async () => {
+    const stone = await page.evaluate(() => {
+      const i = window.__aldoria.world.interactables.find((x) => x.id === 'pierre-jour')
+      return i ? { x: i.x, z: i.z } : null
+    })
+    if (!stone) throw new Error('la Pierre du Jour manque dans l’île')
+    const xpBefore = Number((await page.locator('.badge').innerText()).match(/(\d+) XP/)?.[1])
+    await page.evaluate(({ x, z }) => window.__aldoria.world.teleport(x, z - 1.5, x, z), stone)
+    // L'invite de la pierre d'éveil (où l'on se trouvait) peut rester une image : on attend celle de la Pierre du Jour.
+    await page.getByTestId('invite').filter({ hasText: 'défi du jour' }).waitFor({ timeout: 10_000 * SLOW })
+    await page.keyboard.press('KeyE')
+    await page.getByRole('heading', { name: 'Défi du jour' }).waitFor()
+    await page.getByRole('button', { name: "C'est parti !" }).click()
+    for (let i = 1; i <= 10; i += 1) {
+      await page.getByRole('heading', { name: new RegExp(`question ${i} sur 10`) }).waitFor({ timeout: 8000 * SLOW })
+      await answerRight()
+      if (i === 1) await page.screenshot({ path: `${OUT}/05c-defi.png` })
+      await page.getByRole('button', { name: 'Continuer' }).click()
+    }
+    await page.getByRole('heading', { name: 'Défi réussi !' }).waitFor({ timeout: 8000 * SLOW })
+    const bilan = await page.getByTestId('defi').innerText()
+    for (const attendu of ['10 bonnes réponses sur 10', "Premier défi : c'est ton record à battre !", "Série : 1 jour d'affilée.", 'Coffre de la semaine : 1 / 5 défis.']) {
+      if (!bilan.includes(attendu)) throw new Error(`bilan du défi sans « ${attendu} » : ${bilan}`)
+    }
+    await page.screenshot({ path: `${OUT}/05d-bilan.png` })
+    await page.getByRole('button', { name: "Retour à l'île" }).click()
+    await page.getByTestId('defi').waitFor({ state: 'detached' })
+    const xpAfter = Number((await page.locator('.badge').innerText()).match(/(\d+) XP/)?.[1])
+    if (xpAfter < xpBefore + 40 + 10) throw new Error(`XP après le défi : ${xpBefore} → ${xpAfter}`)
+    // La mini-carte montre la pierre relevée ; un second défi le même jour est un entraînement, sans bonus ni série de plus.
+    await page.locator('[data-id="pierre-jour"].mark-faite').waitFor({ state: 'attached', timeout: 3000 })
+    await page.keyboard.press('KeyE')
+    await page.getByRole('heading', { name: 'Défi du jour' }).waitFor()
+    const intro = await page.getByTestId('defi').innerText()
+    if (!intro.includes("celui-ci est pour t'entraîner")) throw new Error(`second défi du jour : ${intro}`)
+    await page.getByRole('button', { name: 'Plus tard' }).click()
+    await page.getByTestId('defi').waitFor({ state: 'detached' })
+  })
+
+  await step('Archives : étoiles par notion (réponse du serveur simulée), fermeture à Échap', async () => {
+    const payload = {
+      chapters: [
+        {
+          code: '6e.fractions',
+          title: 'Les fractions',
+          subject: { code: 'maths', label: 'Mathématiques' },
+          status: 'en_cours',
+          notions: [
+            { code: 'a', label: 'Lire une fraction', playable: true, stars: 3, state: 'acquise', mastery: 90, seen: 9, set_aside: null },
+            { code: 'b', label: 'Comparer', playable: true, stars: 1, state: 'en cours', mastery: 30, seen: 3, set_aside: null },
+          ],
+        },
+      ],
+    }
+    await page.route('**/api/v1/play/progress', (route) => route.fulfill({ json: payload }))
+    // Découverte : pas de jeton. On en pose un le temps de la lecture (sinon la voix du serveur serait appelée par la suite).
+    await page.evaluate(() => (window.__aldoria.services.api.token = 'e2e'))
+    try {
+      await page.getByTestId('bouton-archives').click()
+      await page.getByTestId('archives').waitFor()
+      await page.getByText('1 notion acquise ★★★ · 0 fragile · 1 en cours · 0 à découvrir').waitFor({ timeout: 5000 * SLOW })
+      const stars = await page.locator('.archives-stars').allTextContents()
+      if (stars.join('|') !== '★★★|★☆☆') throw new Error(`étoiles des Archives : ${stars.join('|')}`)
+      await page.screenshot({ path: `${OUT}/05b-archives.png` })
+      await page.keyboard.press('Escape')
+      await page.getByTestId('archives').waitFor({ state: 'detached' })
+    } finally {
+      await page.evaluate(() => (window.__aldoria.services.api.token = ''))
+      await page.unroute('**/api/v1/play/progress')
+    }
+  })
+
   await step('vue de la Citadelle et des montagnes', async () => {
     await page.evaluate(() => {
       const w = window.__aldoria.world
@@ -284,6 +364,47 @@ try {
     })
     await page.waitForTimeout(1500 * SLOW)
     await page.screenshot({ path: `${OUT}/07-citadelle.png` })
+  })
+
+  await step('seuil d’un lieu : Maître Ysaline parle de sa voix enregistrée (ElevenLabs), pas de Piper', async () => {
+    const lieu = await page.evaluate(() => {
+      const i = window.__aldoria.world.interactables.find((x) => x.kind === 'lieu' && x.open)
+      return i ? { x: i.x, z: i.z, label: i.label } : null
+    })
+    if (!lieu) throw new Error('aucun lieu ouvert dans l’île')
+    await page.evaluate(({ x, z }) => window.__aldoria.world.teleport(x, z - 1, x, z), lieu)
+    await page.getByTestId('invite').waitFor({ timeout: 10_000 * SLOW })
+    await page.keyboard.press('KeyE')
+    await page.getByRole('dialog').waitFor()
+    await page.screenshot({ path: `${OUT}/08-seuil.png` })
+    const speech = []
+    page.on('request', (r) => { if (r.url().includes('/play/speech')) speech.push(r.url()) })
+    const sound = page.waitForResponse((r) => r.url().includes('/voix/seuil-'), { timeout: 15_000 * SLOW })
+    await page.getByRole('button', { name: /Écouter/ }).click()
+    const res = await sound
+    if (res.status() !== 200 || !(res.headers()['content-type'] ?? '').startsWith('audio/mpeg')) {
+      throw new Error(`son du seuil : ${res.status()} ${res.headers()['content-type']} ${res.url()}`)
+    }
+    await page.waitForTimeout(500 * SLOW)
+    if (speech.length > 0) throw new Error(`Piper appelé pour un texte enregistré : ${speech.join(' ')}`)
+    const note = await page.locator('.dialog .hint').innerText()
+    if (!/étapes, une énigme/.test(note)) throw new Error(`indication des étapes absente : ${note}`)
+  })
+
+  await step('fin de séance fixée par le parent : l’île se fige, on peut terminer, l’écran titre revient', async () => {
+    // Mode découverte : pas de parent, donc pas de limite. On fait comme si l'enfant était connecté (rien n'est
+    // envoyé : aucune réponse n'est donnée) avec une séance de 5 minutes déjà jouée à 6,7.
+    await page.evaluate(() => {
+      const s = window.__aldoria.services.session
+      s.demo = false
+      s.clock.sync({ session_max_minutes: 5, break_minutes: 30, played_seconds: 400, idle_seconds: 0 })
+    })
+    await page.getByRole('heading', { name: 'Belle séance !' }).waitFor({ timeout: 10_000 * SLOW })
+    await page.screenshot({ path: `${OUT}/10-fin-seance.png` })
+    const text = (await page.getByTestId('fin-seance').textContent()) ?? ''
+    if (!/Tu as joué 7 minutes/.test(text) || !/Ta progression est sauvegardée/.test(text)) throw new Error(`phrase de fin de séance : ${text}`)
+    await page.getByRole('button', { name: 'Terminer' }).click()
+    await page.getByTestId('decouvrir').waitFor({ timeout: 10_000 * SLOW })
   })
 } catch (error) {
   problems.push(String(error))

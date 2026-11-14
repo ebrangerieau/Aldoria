@@ -1,0 +1,316 @@
+{
+ "source": "porté de game/core/progression/wardrobe.gd (v1) ; ce fichier fait foi pour la v2",
+ "silhouettes": [
+  {
+   "model": "Knight",
+   "name": "Chevalier",
+   "level": 1
+  },
+  {
+   "model": "Rogue_Hooded",
+   "name": "Rôdeur",
+   "level": 1
+  },
+  {
+   "model": "Rogue",
+   "name": "Voleur",
+   "level": 2
+  },
+  {
+   "model": "Barbarian",
+   "name": "Barbare",
+   "level": 3
+  },
+  {
+   "model": "Mage",
+   "name": "Mage",
+   "level": 5
+  }
+ ],
+ "parts": {
+  "Knight": {
+   "main": [
+    [
+     "1H_Sword",
+     "Épée"
+    ],
+    [
+     "2H_Sword",
+     "Grande épée"
+    ]
+   ],
+   "off": [
+    [
+     "",
+     "Rien"
+    ],
+    [
+     "Round_Shield",
+     "Bouclier rond"
+    ],
+    [
+     "Badge_Shield",
+     "Bouclier à blason"
+    ],
+    [
+     "Rectangle_Shield",
+     "Bouclier carré"
+    ],
+    [
+     "Spike_Shield",
+     "Bouclier à pointes"
+    ],
+    [
+     "1H_Sword_Offhand",
+     "Deuxième épée"
+    ]
+   ],
+   "head": "Knight_Helmet",
+   "cape": "Knight_Cape",
+   "default_off": "Round_Shield"
+  },
+  "Barbarian": {
+   "main": [
+    [
+     "1H_Axe",
+     "Hache"
+    ],
+    [
+     "2H_Axe",
+     "Grande hache"
+    ],
+    [
+     "Mug",
+     "Chope"
+    ]
+   ],
+   "off": [
+    [
+     "",
+     "Rien"
+    ],
+    [
+     "Barbarian_Round_Shield",
+     "Bouclier"
+    ],
+    [
+     "1H_Axe_Offhand",
+     "Deuxième hache"
+    ]
+   ],
+   "head": "Barbarian_Hat",
+   "cape": "Barbarian_Cape",
+   "default_off": "Barbarian_Round_Shield"
+  },
+  "Mage": {
+   "main": [
+    [
+     "1H_Wand",
+     "Baguette"
+    ],
+    [
+     "2H_Staff",
+     "Bâton"
+    ]
+   ],
+   "off": [
+    [
+     "",
+     "Rien"
+    ],
+    [
+     "Spellbook",
+     "Grimoire fermé"
+    ],
+    [
+     "Spellbook_open",
+     "Grimoire ouvert"
+    ]
+   ],
+   "head": "Mage_Hat",
+   "cape": "Mage_Cape",
+   "default_off": "Spellbook"
+  },
+  "Rogue": {
+   "main": [
+    [
+     "Knife",
+     "Dague"
+    ],
+    [
+     "1H_Crossbow",
+     "Arbalète"
+    ],
+    [
+     "2H_Crossbow",
+     "Grande arbalète"
+    ]
+   ],
+   "off": [
+    [
+     "",
+     "Rien"
+    ],
+    [
+     "Knife_Offhand",
+     "Deuxième dague"
+    ],
+    [
+     "Throwable",
+     "Bombe fumigène"
+    ]
+   ],
+   "head": "",
+   "cape": "Rogue_Cape",
+   "default_off": "Knife_Offhand"
+  },
+  "Rogue_Hooded": {
+   "main": [
+    [
+     "Knife",
+     "Dague"
+    ],
+    [
+     "1H_Crossbow",
+     "Arbalète"
+    ],
+    [
+     "2H_Crossbow",
+     "Grande arbalète"
+    ]
+   ],
+   "off": [
+    [
+     "",
+     "Rien"
+    ],
+    [
+     "Knife_Offhand",
+     "Deuxième dague"
+    ],
+    [
+     "Throwable",
+     "Bombe fumigène"
+    ]
+   ],
+   "head": "",
+   "cape": "Rogue_Cape",
+   "default_off": "Knife_Offhand"
+  }
+ },
+ "cape_colors": [
+  {
+   "id": "origine",
+   "name": "D'origine",
+   "color": "#ffffff",
+   "dungeons": 0
+  },
+  {
+   "id": "rouge",
+   "name": "Rouge",
+   "color": "#d64545",
+   "dungeons": 0
+  },
+  {
+   "id": "bleu",
+   "name": "Bleu",
+   "color": "#3f6fd8",
+   "dungeons": 0
+  },
+  {
+   "id": "vert",
+   "name": "Vert forêt",
+   "color": "#3a9a52",
+   "dungeons": 1
+  },
+  {
+   "id": "violet",
+   "name": "Violet",
+   "color": "#8a52d0",
+   "dungeons": 2
+  },
+  {
+   "id": "or",
+   "name": "Or",
+   "color": "#e8b030",
+   "dungeons": 3
+  }
+ ],
+ "pet_furs": [
+  {
+   "id": "roux",
+   "name": "Roux",
+   "main": "#a5602a",
+   "light": "#f2e6d0",
+   "dungeons": 0
+  },
+  {
+   "id": "sable",
+   "name": "Sable",
+   "main": "#d6b07a",
+   "light": "#fbf3e4",
+   "dungeons": 0
+  },
+  {
+   "id": "arctique",
+   "name": "Arctique",
+   "main": "#e9edf2",
+   "light": "#ffffff",
+   "dungeons": 1
+  },
+  {
+   "id": "nuit",
+   "name": "Nuit",
+   "main": "#3d4258",
+   "light": "#9aa0ba",
+   "dungeons": 2
+  },
+  {
+   "id": "dore",
+   "name": "Doré",
+   "main": "#f0b52e",
+   "light": "#fff2c2",
+   "dungeons": 3
+  }
+ ],
+ "pet_names": [
+  "Roux",
+  "Noisette",
+  "Filou",
+  "Biscuit",
+  "Plume",
+  "Comète",
+  "Pixel",
+  "Zéphyr"
+ ],
+ "attacks": {
+  "1H": [
+   "1H_Melee_Attack_Chop",
+   "1H_Melee_Attack_Slice_Diagonal"
+  ],
+  "dual": [
+   "Dualwield_Melee_Attack_Chop",
+   "1H_Melee_Attack_Chop"
+  ],
+  "2H": [
+   "2H_Melee_Attack_Chop",
+   "2H_Melee_Attack_Slice"
+  ],
+  "magic": [
+   "Spellcast_Shoot",
+   "Spellcast_Raise"
+  ],
+  "1H_ranged": [
+   "1H_Ranged_Shoot",
+   "1H_Melee_Attack_Chop"
+  ],
+  "2H_ranged": [
+   "2H_Ranged_Shoot",
+   "2H_Melee_Attack_Chop"
+  ],
+  "unarmed": [
+   "Unarmed_Melee_Attack_Punch_A",
+   "Unarmed_Melee_Attack_Kick"
+  ]
+ }
+}

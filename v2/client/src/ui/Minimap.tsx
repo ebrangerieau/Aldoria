@@ -42,6 +42,8 @@ const STATE_TEXT: Record<MapMarker['state'], string> = {
   termine: 'terminé',
   endormie: 'endormie',
   eveillee: 'éveillée',
+  a_faire: 'à relever',
+  faite: 'relevé aujourd’hui',
 }
 
 export function Minimap({ world, place }: { world: GameWorld; place: string }) {
@@ -128,5 +130,7 @@ function MarkerShape({ marker }: { marker: MapMarker }) {
       )
     case 'pierre':
       return <circle r={marker.state === 'eveillee' ? 3.6 : 3.2} />
+    case 'jour':
+      return <path d="M0 -6 L1.7 -1.9 L6 -1.7 L2.6 1 L3.7 5.2 L0 2.8 L-3.7 5.2 L-2.6 1 L-6 -1.7 L-1.7 -1.9 Z" />
   }
 }

@@ -23,7 +23,7 @@ describe('Terrain', () => {
   })
 
   it('met le départ, la Citadelle et le village sur la terre ferme et à plat', () => {
-    for (const p of [layout.depart, layout.citadelle, layout.village, layout.pierre_eveil, layout.ysaline]) {
+    for (const p of [layout.depart, layout.citadelle, layout.village, layout.pierre_eveil, layout.pierre_jour, layout.ysaline]) {
       expect(terrain.heightAt(p.x, p.z)).toBeGreaterThan(SEA_LEVEL + 1)
     }
     expect(terrain.slopeAt(layout.citadelle.x, layout.citadelle.z)).toBeLessThan(0.05)

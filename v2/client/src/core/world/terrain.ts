@@ -29,6 +29,8 @@ export interface IslandLayout {
   citadelle: Point & { rayon_plat: number }
   depart: Point & { cap: number }
   pierre_eveil: Point
+  /** Pierre du Jour (défi quotidien), sur le chemin de la Citadelle. */
+  pierre_jour: Point
   ysaline: Point
   village: Point & { rayon_plat: number }
   regions: Record<string, RegionLayout>

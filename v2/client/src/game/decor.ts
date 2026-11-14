@@ -101,6 +101,7 @@ export async function buildDecor(
     { x: layout.depart.x, z: layout.depart.z, r: 14 },
     { x: layout.ysaline.x, z: layout.ysaline.z, r: 8 },
     { x: layout.pierre_eveil.x, z: layout.pierre_eveil.z, r: 6 },
+    { x: layout.pierre_jour.x, z: layout.pierre_jour.z, r: 6 },
     ...terrain.pads.map((p) => ({ x: p.x, z: p.z, r: p.radius + 7 })),
   ]
   const STEP = 6.5

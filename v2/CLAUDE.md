@@ -42,7 +42,7 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
 `&qualite=haut|moyen|bas`, `&perf` (compteur), `&e2e` (crochet `window.__aldoria` : `world.teleport(x, z, versX, versZ)`,
 `world.frame(alpha, beta, distance)`, `world.heroPosition()`, `question`, `services`), `&interface=0`, `&moteur=webgpu`,
 `&renard=0` (sans le renard), `&erreurs=0|1` (remontée des erreurs ; active par défaut dans le jeu construit seulement),
-`&erreur_test=1` (erreur d'essai au démarrage), `&musique=0` (sans musique ni bouton).
+`&erreur_test=1` (erreur d'essai au démarrage), `&musique=0` (sans musique ni bouton), `&sons=0` (sans effets sonores).
 
 ## Règles
 
@@ -76,6 +76,20 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   une question et baisse sous une voix (`Voice.isSpeaking`) ; `&musique=0` la désactive (ni lecture ni bouton : captures,
   mesures). Ajouter un morceau : `python tools/encode_musique.py`, procédure dans `docs/exploitation.md`. Une scène qui
   pose une question ou un dialogue sans passer par `GameScreen` doit prévenir `services.music.setFocus`.
+- **Pierre du Jour** (défi quotidien, `ile.json` : `pierre_jour`, sur le chemin de la Citadelle ; interaction `kind: 'jour'`) : dix automatismes
+  d'affilée, **sans compte à rebours à l'écran**, puis un bilan (bonnes réponses, temps de réponse cumulé, record, série de jours, coffre de la
+  semaine). `core/dailyChallenge.ts` (série, rattrapage d'un jour manqué, record, coffre) et `core/dailyRun.ts` (déroulé et textes du bilan)
+  sont purs et testés ; `app/dailySession.ts` ferme la session « monde » et ouvre une session « defi » (automatismes seulement, côté API),
+  puis rouvre l'île ; `ui/DailyChallenge.tsx` enchaîne les écrans avec `QuestionPanel` (`gameMode` « defi », `timeMs` rendu avec la réponse).
+  Un défi interrompu ne compte pas ; un second défi le même jour est un entraînement (pas de bonus, pas de série de plus). L'état (`daily`)
+  et le sac (`items`) sont rangés dans la partie (`core/save.ts`, `normalizeSave` relit une ancienne partie). Sans pénalité de lenteur
+  (`no_speed`) : aucun temps n'est écrit.
+- **Archives** (`core/archives.ts` : lecture de `GET /play/progress`, résumé, dernier état gardé sur l'appareil pour la consultation hors
+  connexion ; `ui/Archives.tsx`, bouton « Archives » de l'île) : une à trois étoiles par notion, groupées par matière puis par chapitre. La
+  maîtrise vient toujours du serveur, jamais calculée par le client. Le bestiaire (créatures vaincues) vient avec les rencontres.
+- **Effets sonores** (`core/sfx.ts` : les dix sons de `public/ressources/sfx`, volume de la v1 ; `app/sfx.ts` : lecteur Web Audio créé au
+  premier geste, `services.sfx.play('correct')`) : bonne et mauvaise réponse dans `QuestionPanel` ; les coups, le soin et la victoire du
+  combat s'appellent de la même façon. Jamais d'effet lié à la vitesse de réponse ; `&sons=0` les désactive (captures, mesures).
 - **CSP stricte** : aucun style en ligne dans le HTML (classes et attributs `data-*` ; l'objet `style` de React est permis),
   aucun fichier en `data:` produit par Vite, aucune ressource hors du site (pas de CDN : décodeurs, polices, twgsl). La même
   CSP est posée par `vite preview` : le parcours navigateur échoue sur toute violation.
@@ -85,6 +99,36 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   le décor répété passe en *thin instances*. Tout asset ajouté est inscrit dans `client/public/ressources/LICENSES.md`.
 - **Sauvegarde** : partie v2 dans l'emplacement `v2` (`core/save.ts`). La maîtrise des notions n'est jamais calculée par le
   client. Aucune migration ne doit casser la v1 tant qu'elle est en service.
+- **Temps de jeu fixé par le parent** (PRD US-11) : `core/playTime.ts` (`PlayClock`, testé) tenu par `Session.clock` : le serveur
+  fait foi (`play_time` de la connexion et de `session/start`), le client compte les secondes jouées ; une pause de 30 minutes
+  ouvre une nouvelle séance. `ui/PlayTimeGuard.tsx` (monté dans `GameScreen`) fige le monde et propose de terminer à la fin de
+  la séance, ou la pause aux intervalles réglés (`pause_minutes`). Un combat ou une activité vérifie `session.timeOver()` **entre
+  deux actions**, jamais au milieu d'une question : rien n'est coupé, la progression est sauvegardée. Jamais en mode découverte.
+- **Visuels de questions** : une question n'est posée que si son type et son visuel sont dessinés (`core/questionService.ts` :
+  `SUPPORTED_TYPES`, `SUPPORTED_VISUALS`, `isPlayable`), sinon l'énoncé serait incompréhensible. Calculs dans `core/visuals.ts`
+  (testés), dessin SVG dans `ui/widgets/Visuals.tsx`, réponses dans `ui/widgets/Widgets.tsx`. Aujourd'hui : balance, droite
+  graduée, repère quadrillé (vecteurs), tableau de signes, carte à l'échelle, robot sur une grille, courbe : **les 30 lieux sont
+  jouables** (chapitre et énigme, mesuré sur les vrais générateurs). Restent `pont`, `rapporteur`, `repere_tir` : leurs générateurs
+  (`combat=False`) ne servent qu'au pont des fractions et au stand de tir de la Citadelle, jamais dans un lieu ; les énigmes
+  d'enquête de Clairval (tableau, relevé) viendront avec le village. Ajouter un visuel : le composant, son calcul testé sur de
+  vraies questions (`tests/fixtures/visual_samples.json`, régénéré par `uv run --directory api python ../tools/export_visual_samples.py`),
+  puis son nom dans `SUPPORTED_VISUALS`.
+- **Voix enregistrées** (ElevenLabs : Maître Ysaline et le narrateur) : `deploy/voix/` (`manifest.json` : empreinte SHA-256 du
+  texte exact vers un MP3), servies sous `/voix/` (image web ; `vite.config.ts` en dev et en preview). `core/voice.ts` joue le son
+  d'un texte français dont l'empreinte est au manifeste (même sans compte), sinon Piper, sinon la voix du navigateur
+  (`core/recordedVoices.ts`). Un texte enregistré se lit **seul et à l'identique** : une phrase collée à côté lui ferait perdre sa
+  voix, donc l'afficher à part (`note` du `Dialog`, non lue). Modifier un texte de `content/voix/lignes.json` ou le `threshold`
+  d'un lieu fait échouer `tests/recordedVoices.test.ts` : relancer `python tools/voix_elevenlabs.py` (clé ElevenLabs dans
+  l'environnement, jamais dans le dépôt ; `--essai` liste ce qui serait généré, sans clé). Un nouveau texte de Maître Ysaline
+  s'ajoute à `lignes.json` (groupe, id, texte, voix), puis le script génère son son. Crédit ElevenLabs dans les Options.
+- **Logiques de la v1 portées, pas encore branchées à l'écran** (pures, testées, `core/`) : sac d'objets (`inventory.ts` : plume,
+  parchemin, bouclier, potion, 5 au plus de chaque ; le combat applique déjà les deux derniers), voix du héros entre les salles
+  (`heroVoice.ts` et `content/monde/heros.json`), apparence du héros et du renard
+  (`wardrobe.ts`, `content/monde/apparence.json`), île du Sphinx (`sphinx/board.ts` : jeu de blocs ; `sphinx/island.ts` : passages de barque, paliers, aide du Sphinx ;
+  180 énigmes dans `content/monde/sphinx_niveaux.json`, converties de `game/worlds/shared/sphinx_levels.gd` de la v1 ;
+  `python tools/make_sphinx_levels.py` les régénère (graine fixe, mais le palier 6 est très long à calculer : relancé jusqu'au
+  palier 5 seulement, jamais comparé en entier à la v1). Leur état se range dans
+  la partie (`core/save.ts`) et leur écran vient avec les étapes 1.x : un état se rend toujours neuf (jamais modifié sur place).
 - **Textes visibles par les enfants en français**, tutoiement ; aucune donnée personnelle hors du serveur d'Aldoria.
 - **Erreurs du jeu** : tout ce qui passe par une exception, une promesse rejetée ou `console.error` remonte à l'exploitant
   (`core/errorReport.ts`, `app/errors.ts`). Ne jamais mettre de prénom, de question ni de réponse dans un message d'erreur ;

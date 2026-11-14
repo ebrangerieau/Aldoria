@@ -8,11 +8,16 @@ import type { Services } from '../app/services'
 import { reloadPending } from '../app/staleBuild'
 import { type Accommodations, applyToDocument, fromServer, withChildPrefs } from '../core/accessibility'
 import type { Item } from '../core/items'
+import { today as localDay } from '../core/dailyChallenge'
 import { DEFAULT_VOLUME, volumeOf } from '../core/music'
 import { EMPTY_SAVE, SaveGame, type SaveData } from '../core/save'
 import { regionTitle } from '../core/world/places'
 import type { GameWorld, Interactable, WorldEvents } from '../game/GameWorld'
 import type { WorldName } from '../game/theme'
+import { PlayTimeGuard } from './PlayTimeGuard'
+import { Archives } from './Archives'
+import { DailyChallenge } from './DailyChallenge'
+import { E2eQuestion } from './E2eQuestion'
 import { QuestionPanel, type QuestionOutcome } from './QuestionPanel'
 import { Dialog, Options } from './Dialogs'
 import { Minimap } from './Minimap'
@@ -24,8 +29,10 @@ const today = (): string => new Date().toISOString().slice(0, 10)
 
 type Modal =
   | { kind: 'question'; item: Item; target: Interactable }
-  | { kind: 'dialog'; title: string; text: string; actions: { label: string; primary?: boolean; run: () => void }[] }
+  | { kind: 'dialog'; title: string; text: string; note?: string; actions: { label: string; primary?: boolean; run: () => void }[] }
   | { kind: 'options' }
+  | { kind: 'archives' }
+  | { kind: 'daily' }
   | null
 
 const WELCOME =
@@ -60,6 +67,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
   useEffect(() => applyToDocument(accommodations), [accommodations])
   useEffect(() => {
     services.api.onOnlineChange = setOnline
+    services.voice.warm()
     const timer = window.setTimeout(() => setHelpVisible(false), 14_000)
     return () => window.clearTimeout(timer)
   }, [services])
@@ -163,7 +171,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
 
   // Musique : à l'écran quand l'île est prête, réglée par l'enfant, muette pendant une question.
   const calm = accommodations.calm
-  const musicQuestion = modal?.kind === 'question'
+  const musicQuestion = modal?.kind === 'question' || modal?.kind === 'daily'
   useEffect(() => {
     services.music.configure({ muted: !musicOn, volume: musicVolume, calm })
   }, [services, musicOn, musicVolume, calm])
@@ -205,6 +213,8 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
         return
       }
       setModal({ kind: 'question', item, target })
+    } else if (target.kind === 'jour') {
+      setModal({ kind: 'daily' })
     } else if (target.kind === 'ysaline') {
       setModal({
         kind: 'dialog',
@@ -218,13 +228,18 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
       if (accommodations.auto_read) void services.voice.say([WELCOME])
     } else if (target.place) {
       const place = target.place
+      // Le texte du seuil est celui que Maître Ysaline a enregistré (ElevenLabs) : il se lit seul et à l'identique.
+      // L'indication du nombre d'étapes s'affiche dessous sans être lue : elle n'a pas de voix enregistrée, et
+      // la lire avec Piper mettrait deux voix différentes dans une même réplique.
       const text = target.open
-        ? `${place.dungeon.threshold} ${place.dungeon.rooms.length} étapes, une énigme, et un Effaceur à vaincre.`
+        ? place.dungeon.threshold
         : `Ce chemin est encore fermé. Il s'ouvrira quand tu auras rapporté la page du lieu précédent de ${regionTitle(place.dungeon.region)}.`
+      const note = target.open ? `${place.dungeon.rooms.length} étapes, une énigme, et un Effaceur à vaincre.` : undefined
       setModal({
         kind: 'dialog',
         title: place.dungeon.title,
         text,
+        note,
         actions: target.open
           ? [
               { label: '🔊 Écouter', run: () => void services.voice.say([text]) },
@@ -342,6 +357,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
                 Musique
               </button>
             )}
+            <button type="button" className="secondary small" data-testid="bouton-archives" onClick={() => { worldRef.current?.setInputEnabled(false); setModal({ kind: 'archives' }) }}>Archives</button>
             <button type="button" className="secondary small" onClick={() => { worldRef.current?.setInputEnabled(false); setModal({ kind: 'options' }) }}>Options</button>
             <button type="button" className="secondary small" onClick={onQuit}>Quitter</button>
           </div>
@@ -357,11 +373,13 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
           <kbd>E</kbd>{' '}
           {focus.kind === 'pierre'
             ? `Toucher ${focus.label.toLowerCase()}`
-            : focus.kind === 'ysaline'
-              ? 'Parler à Maître Ysaline'
-              : focus.kind === 'sortie'
-                ? focus.label
-                : `Approcher : ${focus.label}`}
+            : focus.kind === 'jour'
+              ? 'Relever le défi du jour'
+              : focus.kind === 'ysaline'
+                ? 'Parler à Maître Ysaline'
+                : focus.kind === 'sortie'
+                  ? focus.label
+                  : `Approcher : ${focus.label}`}
         </div>
       )}
 
@@ -403,7 +421,29 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
           onDone={(outcome) => onQuestionDone(outcome, modal.target)}
         />
       )}
-      {modal?.kind === 'dialog' && <Dialog title={modal.title} text={modal.text} actions={modal.actions} />}
+      {modal?.kind === 'dialog' && <Dialog title={modal.title} text={modal.text} note={modal.note} actions={modal.actions} />}
+
+      {/* Fin de séance et rappel de pause fixés par le parent : par-dessus tout, le monde se fige. */}
+      <PlayTimeGuard
+        services={services}
+        pauseMinutes={accommodations.pause_minutes}
+        onBlock={(blocked) => worldRef.current?.setInputEnabled(!blocked)}
+        onEnd={onQuit}
+      />
+      {modal?.kind === 'archives' && <Archives services={services} onClose={close} />}
+      {modal?.kind === 'daily' && (
+        <DailyChallenge
+          services={services}
+          accommodations={accommodations}
+          demo={demo}
+          data={data}
+          onSave={(next) => {
+            persist(next)
+            worldRef.current?.setDayChallenge(!next.daily.days.includes(localDay()))
+          }}
+          onClose={close}
+        />
+      )}
       {modal?.kind === 'options' && (
         <Options
           accommodations={accommodations}
@@ -416,13 +456,4 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
       )}
     </div>
   )
-}
-
-/** Tests dans le navigateur (?e2e) : la question affichée, pour y répondre juste. */
-function E2eQuestion({ item }: { item: Item }) {
-  useEffect(() => {
-    const handle = (window as unknown as { __aldoria?: Record<string, unknown> }).__aldoria
-    if (handle) handle.question = item
-  }, [item])
-  return null
 }

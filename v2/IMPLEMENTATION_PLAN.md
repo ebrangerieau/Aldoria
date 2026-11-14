@@ -128,7 +128,12 @@ par ce qui se teste sans moteur.
 | 1.3 | **Rencontres dans le décor** : monstres Quaternius et squelettes KayKit, monde figé pendant la question, barre d'actions (Frappe, Sort, Soin, Sac) et panneau de question, repli sans perte ; brancher l'aménagement `no_speed` (déjà dans `Accommodations`) sur `EncounterSettings.noSpeed`, et le sac d'objets (phase 2) sur `useShield` / `usePotion` | |
 | 1.4 | **Effaceur, coffre, page** : sceaux du boss, répliques d'entrée et de défaite, coffre et page rendue, lieu suivant qui s'ouvre, salut de Maître Ysaline au retour | |
 | 1.5 | **Énigme à trois piédestaux, héros qui parle, note de 1 à 5** (`session/end`, `rating`) | |
-| 1.6 | **Widgets** : vecteur, droite graduée, tableau de signes (Tom en a besoin dès le Labyrinthe des Vecteurs) | |
+| 1.6 | **Widgets** : vecteur, droite graduée, tableau de signes (Tom en a besoin dès le Labyrinthe des Vecteurs) ; fait aussi : la balance et le repère quadrillé (énigmes des deux premiers lieux) et `isPlayable` (une question dont le visuel manque n'est jamais posée) : `core/visuals.ts`, `ui/widgets/Visuals.tsx`. puis la carte à l'échelle, le robot et la courbe (énigmes de l'Atelier des Balances, de l'Observatoire et de la Citadelle des Fonctions) : **les 30 lieux sont jouables**. Restent pont, rapporteur et repère de tir (Pont des fractions et stand de tir de la Citadelle, jamais dans un lieu) et le tableau de l'enquête de Clairval (phase 2) | ✅ |
+
+> ✅ **Temps de jeu fixé par le parent** (14 novembre 2026), absent de la v2 jusque-là (PRD : « limite du parent, rappel de pause ») :
+> `core/playTime.ts` (11 tests), `Session.clock`, `ui/PlayTimeGuard.tsx` (fin de séance : l'île se fige et propose de terminer, avec la
+> phrase de la v1 ; rappel de pause aux intervalles réglés). Reste à brancher : le combat et les lieux vérifient `session.timeOver()`
+> avant chaque tour (étapes 1.3 et suivantes).
 
 ## Phase 2 : reprendre ce que les enfants aimaient dans la v1
 
@@ -137,11 +142,13 @@ Dans l'ordre que les enfants choisiront à la séance de la phase 1 :
 - les 28 autres lieux (contenu déjà prêt dans `lieux.json`), région par région ;
 - balance géante, stand de tir (Lice), pont des fractions : comme des lieux de l'île, plus des panneaux posés sur une salle ;
 - Clairval en plein air et ses habitants (`villages.json`), quêtes du jour ;
-- Pierre du Jour (défi quotidien, série, coffre de la semaine, sans compte à rebours) ;
+- Pierre du Jour (défi quotidien, série, coffre de la semaine, sans compte à rebours) : **faite le 14 novembre**, pierre sur le chemin de la Citadelle (`core/dailyRun.ts`, `ui/DailyChallenge.tsx`) ;
 - île du Sphinx : barque, passages, blocs du temple (niveaux de `tools/make_sphinx_levels.py` sortis en JSON) ;
 - apparence du héros (silhouettes, armes, capes, déblocages) et sac d'objets ;
-- prologue en cinq tableaux joués dans l'île, voix enregistrées de Maître Ysaline (`deploy/voix/manifest.json`), musique ;
-- Archives (étoiles par notion), bestiaire ; brouillard des régions pas encore au programme, qui recule page après page.
+- prologue en cinq tableaux joués dans l'île, voix enregistrées de Maître Ysaline (`deploy/voix/manifest.json` ; **seuils faits le 14 novembre** : les 30 textes de lieu sont lus de
+  sa vraie voix ; restent à brancher les pages rendues, le prologue, le brouillard, Clairval et la Tour de l'Oubli quand ces
+  moments existent dans l'île, et à enregistrer ses répliques nouvelles de la v2), musique ;
+- Archives (étoiles par notion : **fait le 14 novembre**, bouton « Archives » de l'île, `core/archives.ts`), bestiaire (avec les rencontres) ; brouillard des régions pas encore au programme, qui recule page après page.
 
 **Critère de passage** : deux semaines d'usage spontané (au moins deux séances par semaine et par enfant, sans relance).
 

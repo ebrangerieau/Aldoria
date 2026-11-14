@@ -2,9 +2,11 @@ import { VERSION } from '../app/buildInfo'
 import type { Accommodations } from '../core/accessibility'
 import { creditLines, TRACKS } from '../core/music'
 
-export function Dialog({ title, text, actions }: {
+export function Dialog({ title, text, note, actions }: {
   title: string
   text: string
+  /** Précision affichée sous le texte, jamais lue par la voix de Maître Ysaline. */
+  note?: string
   actions: { label: string; primary?: boolean; run: () => void }[]
 }) {
   return (
@@ -12,6 +14,7 @@ export function Dialog({ title, text, actions }: {
       <section className="panel dialog">
         <h2 id="dialogue-titre">{title}</h2>
         {text.split(/(?<=[.!?])\s+/).map((sentence, i) => <p key={i}>{sentence}</p>)}
+        {note && <p className="hint">{note}</p>}
         <div className="actions">
           {actions.map((a, i) => (
             <button key={a.label} type="button" className={a.primary ? 'primary' : 'secondary'} autoFocus={i === actions.length - 1} onClick={a.run}>
@@ -75,7 +78,8 @@ export function Options({ accommodations, textSize, onTextSize, musicVolume, onM
         <p className="hint">Les autres réglages (police lisible, lecture à voix haute, mode calme…) se choisissent dans l'espace parent.</p>
         <p className="credits">
           Modèles 3D : Kay Lousberg (KayKit) et Quaternius, CC0. Icônes : game-icons.net, CC BY 3.0. Polices : Cinzel et
-          Atkinson Hyperlegible, SIL OFL. Voix du serveur : Piper (Rhasspy), CC BY 4.0.
+          Atkinson Hyperlegible, SIL OFL. Voix du serveur : Piper (Rhasspy), CC BY 4.0. Voix de Maître Ysaline et du narrateur :
+          ElevenLabs.
         </p>
         <p className="credits">Musique : {creditLines(TRACKS).join(' ')}</p>
         <p className="credits">Version du jeu : {VERSION.slice(0, 7)}</p>
