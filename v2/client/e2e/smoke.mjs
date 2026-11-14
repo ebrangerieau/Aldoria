@@ -454,9 +454,17 @@ try {
   })
 
   await step('le boss : l’Effaceur parle de sa voix enregistrée, huit sceaux, le coffre, la page rendue, le lieu suivant s’ouvre, Maître Ysaline salue', async () => {
+    // Les demandes de son vues depuis le début de l'étape : si une attente expire, le message dit lesquelles sont parties (aucune : le jeu n'a
+    // rien demandé ; une demande sans réponse : le réseau ou le serveur) et quel dialogue était ouvert.
+    const voixVues = []
+    page.on('request', (r) => { if (r.url().includes('/voix/')) voixVues.push(`${r.method()} ${r.url().split('/voix/')[1]}`) })
+    page.on('requestfailed', (r) => { if (r.url().includes('/voix/')) voixVues.push(`ÉCHEC ${r.url().split('/voix/')[1]} : ${r.failure()?.errorText}`) })
     const heard = (url) => page.waitForResponse((r) => r.url().includes(url), { timeout: 15_000 * SLOW })
     const soundOk = async (pending, what) => {
-      const res = await pending
+      const res = await pending.catch(async (error) => {
+        const dialog = await page.getByRole('dialog').first().innerText({ timeout: 2000 }).catch(() => '(aucun dialogue ouvert)')
+        throw new Error(`${what} : ${error.message.split('\n')[0]} ; demandes de son vues : ${voixVues.slice(-6).join(' | ') || 'aucune'} ; dialogue : ${dialog.replace(/\s+/g, ' ').slice(0, 140)}`)
+      })
       // 200 sur l'aperçu local, 206 en production (nginx sert le son par morceaux).
       if (![200, 206].includes(res.status()) || !(res.headers()['content-type'] ?? '').startsWith('audio/mpeg')) throw new Error(`${what} : ${res.status()} ${res.headers()['content-type']} ${res.url()}`)
     }
