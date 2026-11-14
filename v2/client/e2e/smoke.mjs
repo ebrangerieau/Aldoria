@@ -205,6 +205,34 @@ try {
     await page.waitForFunction(() => window.__aldoria.services.music.audio.currentTime > 0.3, null, { timeout: 8000 * SLOW })
   })
 
+  await step('une relique de l’île : on la ramasse (E), elle rejoint la partie et son éclat disparaît', async () => {
+    const spot = await page.evaluate(() => {
+      const w = window.__aldoria.world
+      const it = w.interactables.find((i) => i.kind === 'relique' && i.relic === 'flamme-1')
+      if (!it) return null
+      w.teleport(it.x - 1.4, it.z, it.x, it.z)
+      return { x: it.x, z: it.z }
+    })
+    if (!spot) throw new Error('la relique flamme-1 devrait être dans l’île')
+    await page.getByTestId('invite').filter({ hasText: 'Ramasser : Sceau de Flamme I' }).waitFor({ timeout: 10_000 * SLOW })
+    if (!(await page.evaluate(() => !!window.__aldoria.world.scene.getMeshByName('flamme-1-eclat')))) throw new Error('l’éclat de la relique devrait être visible')
+    await page.screenshot({ path: `${OUT}/02b-relique.png` })
+    if ((await page.evaluate(() => window.__aldoria.save().relics.length)) !== 0) throw new Error('aucune relique avant de ramasser')
+    await page.keyboard.press('KeyE')
+    await page.getByRole('heading', { name: 'Relique trouvée !' }).waitFor({ timeout: 10_000 * SLOW })
+    const text = await page.getByRole('dialog').innerText()
+    if (!text.includes('Sceau de Flamme I') || !text.includes('1 relique sur 16')) throw new Error(`le message de la relique : ${text}`)
+    const relics = await page.evaluate(() => window.__aldoria.save().relics)
+    if (relics.join() !== 'flamme-1') throw new Error(`la partie devrait garder flamme-1 : ${relics}`)
+    await page.getByRole('button', { name: 'Continuer' }).click()
+    const gone = await page.evaluate(() => {
+      const w = window.__aldoria.world
+      return !w.scene.getMeshByName('flamme-1-eclat') && !w.interactables.some((i) => i.relic === 'flamme-1')
+    })
+    if (!gone) throw new Error('la relique ramassée devrait avoir disparu de l’île')
+    if ((await page.getByTestId('invite').count()) !== 0) throw new Error('plus d’invitation à ramasser une fois la relique prise')
+  })
+
   await step('un lieu de quête : on entre par le seuil, on monte à l’étage 2 au clavier, on sort', async () => {
     // Devant la porte de la Tour des Fractions (le premier lieu de maths de la 6e), face à elle.
     const door = await page.evaluate(() => {

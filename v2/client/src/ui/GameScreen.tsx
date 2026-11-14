@@ -13,6 +13,7 @@ import lignes from '@content/voix/lignes.json'
 import { today as localDay } from '../core/dailyChallenge'
 import { DEFAULT_VOLUME, volumeOf } from '../core/music'
 import { levelForXp } from '../core/progression'
+import { grantRelic, relicOf, RELICS } from '../core/relics'
 import { EMPTY_SAVE, SaveGame, type SaveData } from '../core/save'
 import { pageGreeting } from '../core/quest/chest'
 import { regionTitle } from '../core/world/places'
@@ -135,7 +136,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
         world.events.on('stats', setStats)
         world.events.on('interact', (target) => interactRef.current(target))
         setLoading(null)
-        if (params.has('e2e')) (window as unknown as { __aldoria: unknown }).__aldoria = { world, services, ...(demo ? { give: (id: ItemId, n = 1) => giveItems(id, n) } : {}) }
+        if (params.has('e2e')) (window as unknown as { __aldoria: unknown }).__aldoria = { world, services, save: () => dataRef.current, ...(demo ? { give: (id: ItemId, n = 1) => giveItems(id, n) } : {}) }
       } catch (error) {
         if (reloadPending()) return // nouvelle version du jeu : la page se recharge
         console.error(error)
@@ -228,6 +229,22 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
     persist({ ...dataRef.current, items: give(dataRef.current.items, Array<ItemId>(n).fill(id)) })
   }
 
+  /** Le héros ramasse une relique de l'île : elle rejoint la partie (jamais deux fois), l'éclat disparaît, l'enfant sait où il en est. */
+  function collectRelic(id: string) {
+    const relic = relicOf(id)
+    const before = dataRef.current
+    const next = grantRelic(before, id)
+    if (next !== before) persist(next)
+    worldRef.current?.relicCollected(id)
+    if (!relic) return close()
+    setModal({
+      kind: 'dialog',
+      title: 'Relique trouvée !',
+      text: `${relic.name}. Tu as ${next.relics.length} relique${next.relics.length > 1 ? 's' : ''} sur ${RELICS.length}. Chacune répond aux autres par son élément ou par son rang.`,
+      actions: [{ label: 'Continuer', primary: true, run: close }],
+    })
+  }
+
   function persist(next: SaveData) {
     dataRef.current = next
     setData({ ...next })
@@ -253,6 +270,8 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
         return
       }
       setModal({ kind: 'question', item, target })
+    } else if (target.kind === 'relique' && target.relic) {
+      collectRelic(target.relic)
     } else if (target.kind === 'coffre') {
       void openChest()
     } else if (target.kind === 'jour') {
@@ -450,13 +469,15 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
             ? `Toucher ${focus.label.toLowerCase()}`
             : focus.kind === 'jour'
               ? 'Relever le défi du jour'
-              : focus.kind === 'coffre'
-                ? 'Ouvrir le coffre'
-                : focus.kind === 'ysaline'
-                  ? 'Parler à Maître Ysaline'
-                  : focus.kind === 'sortie'
-                    ? focus.label
-                    : `Approcher : ${focus.label}`}
+              : focus.kind === 'relique'
+                ? `Ramasser : ${focus.label}`
+                : focus.kind === 'coffre'
+                  ? 'Ouvrir le coffre'
+                  : focus.kind === 'ysaline'
+                    ? 'Parler à Maître Ysaline'
+                    : focus.kind === 'sortie'
+                      ? focus.label
+                      : `Approcher : ${focus.label}`}
         </div>
       )}
 

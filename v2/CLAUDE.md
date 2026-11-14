@@ -85,7 +85,7 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   et monstres Quaternius, dont l'échelle est mesurée une fois (`content/monde/monstres.json`, `node tools/mesurer_monstres.mjs` avec
   la prévisualisation lancée : une boîte au repos ne dit rien d'une armature à l'échelle 100). `&e2e` : `world.enterPlace(code)`,
   `world.interior` (`teleport(x, z)`, `frame(écart, beta, distance)`, `heroPosition()`, `enemies`, `fighting`, `pedestals`, `riddling`, `solvePedestal(p)`), `world.places`,
-  `world.measureMonster(modèle)`, et `encounter` (le combat en cours : `hero.hp`…).
+  `world.measureMonster(modèle)`, `encounter` (le combat en cours : `hero.hp`…) et `save()` (la partie en cours, lecture seule).
 - **Effaceur, coffre et page** (étape 1.4) : le gardien de la dernière salle de chaque lieu (`core/quest/boss.ts`, `Enemy.boss` dans `game/interior.ts`)
   se combat avec `Encounter` en mode `boss` : huit sceaux (`sealsLeft(hp, maxHp)`, **dérivés des PV**, jamais comptés à part : un indice ou un
   coup critique change le nombre de sceaux brisés), difficulté qui monte, héros aux forces rendues avant le combat. L'Effaceur se présente une
@@ -138,7 +138,10 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   sont gravées dans la pierre ; `makePuzzle(owned, graine)` part d'un carré complet (`randomSquare`), donc **toujours soluble** (une seule solution jusqu'à huit
   cases, parfois deux à neuf : `isSolved` juge la règle, pas le carré d'origine). `place` / `lift` / `hint` / `applyHint` rendent une nouvelle table ; l'indice
   coûtera un parchemin du sac. `claimTable` : le premier carré du jour rapporte l'XP (`TABLE_XP_PER_HOLE` par case) et, à partir de cinq cases, un objet ;
-  les suivants sont de l'entraînement. Fait : la logique, la partie, le coffre. Reste à faire : les lueurs à ramasser dans l'île, l'écran de la Table (Citadelle).
+  les suivants sont de l'entraînement. **Dans l'île** (`game/GameWorld.ts` : `buildRelics`, `relicCollected`) : un éclat de la forme et de la couleur de l'élément sur un anneau lumineux
+  (interaction `kind: 'relique'`, rayon 2,4 m ; **jamais sur la mini-carte** : on les trouve en se promenant) ; E la ramasse (`GameScreen.collectRelic` : la partie la
+  garde, l'éclat disparaît, « Relique trouvée ! … sur 16 »). Celles que la partie possède déjà ne sont pas posées. Captures `relique-flamme`, `-onde`, `-feuille`,
+  `-etoile`, `-brouillard`. Fait : la logique, la partie, le coffre, l'île. Reste à faire : l'écran de la Table (Citadelle).
 - **Musique** (`app/music.ts` joue, `core/music.ts` décide du volume, testé) : morceaux de `deploy/musique/` listés dans
   `content/monde/musique.json` (ordre de lecture, crédit des Options), servis sous `/musique/` par nginx ; `npm run dev` et
   `vite preview` les servent depuis le même dossier (`vite.config.ts`, requêtes `Range` comprises). Elle démarre à l'entrée

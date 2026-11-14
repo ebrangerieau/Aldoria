@@ -22,6 +22,7 @@ import {
 } from '@babylonjs/core'
 import ile from '@content/monde/ile.json'
 import { Emitter } from '../core/events'
+import { elementOf, ISLAND_RELICS } from '../core/relics'
 import type { SaveData } from '../core/save'
 import type { HeightGrid } from '../core/world/heightGrid'
 import type { Obstacles } from '../core/world/obstacles'
@@ -40,7 +41,7 @@ import { buildGround, buildSea } from './island'
 import { chooseQuality, type Quality } from './quality'
 import { THEMES, type WorldName } from './theme'
 
-export type InteractableKind = 'lieu' | 'pierre' | 'ysaline' | 'sortie' | 'jour' | 'coffre'
+export type InteractableKind = 'lieu' | 'pierre' | 'ysaline' | 'sortie' | 'jour' | 'coffre' | 'relique'
 
 export interface Interactable {
   id: string
@@ -51,6 +52,8 @@ export interface Interactable {
   radius: number
   place?: Place
   open?: boolean
+  /** Une relique à ramasser (core/relics.ts) : son identifiant. */
+  relic?: string
 }
 
 export type WorldEvents = {
@@ -128,6 +131,8 @@ export class GameWorld {
   private region: string | null = null
   private lastCameraInput = 0
   private stones = new Map<string, Mesh>()
+  /** Les reliques encore à ramasser : leur éclat et leur anneau, par identifiant. */
+  private relicMeshes = new Map<string, { gem: Mesh; ring: Mesh }>()
   private disposers: (() => void)[] = []
   private statsTimer = 0
   private regionTimer = 0
@@ -486,13 +491,64 @@ export class GameWorld {
       this.interactables.push({ id: stone.id, kind: 'pierre', label: stone.label, x: stone.x, z: stone.z, radius: 2.8, open: !awake })
     }
     this.buildDayStone()
+    this.buildRelics()
     // Les cristaux tournent doucement sur eux-mêmes (immobiles en mode calme).
     if (!this.options.calm) {
       this.scene.onBeforeRenderObservable.add(() => {
         const dt = this.engine.getDeltaTime() / 1000
         for (const crystal of this.stones.values()) crystal.rotation.y += dt * 0.8
         if (this.dayCrystal) this.dayCrystal.rotation.y += dt * 0.8
+        for (const { gem } of this.relicMeshes.values()) gem.rotation.y += dt * 1.1
       })
+    }
+  }
+
+  /**
+   * Les reliques de l'île (core/relics.ts, positions de reliques.json) : un éclat flottant de la couleur et de la forme de leur élément,
+   * sur un anneau lumineux. Celles que la partie possède déjà ne sont pas posées. Elles ne figurent pas sur la mini-carte : on les trouve
+   * en se promenant.
+   */
+  private buildRelics(): void {
+    const owned = new Set(this.options.save.relics)
+    for (const relic of ISLAND_RELICS) {
+      if (owned.has(relic.id)) continue
+      const { x, z } = relic.source
+      const y = this.grid.heightAt(x, z)
+      if (y < 1) continue
+      const element = elementOf(relic)
+      const gem =
+        element.forme === 'cercle'
+          ? MeshBuilder.CreateSphere(`${relic.id}-eclat`, { diameter: 0.7, segments: 8 }, this.scene)
+          : MeshBuilder.CreatePolyhedron(`${relic.id}-eclat`, { type: element.forme === 'triangle' ? 0 : element.forme === 'losange' ? 1 : 3, size: 0.42 }, this.scene)
+      if (element.forme === 'losange') gem.scaling.y = 1.5
+      gem.position.set(x, y + 1.3, z)
+      const glow = new StandardMaterial(`${relic.id}-eclat`, this.scene)
+      glow.disableLighting = true
+      glow.diffuseColor = Color3.Black()
+      glow.emissiveColor = Color3.FromHexString(element.couleur).scale(1.1)
+      gem.material = glow
+      gem.isPickable = false
+      const ring = beacon(this.scene, `relique-${relic.id}`, new Vector3(x, y, z), element.couleur, true)
+      this.relicMeshes.set(relic.id, { gem, ring })
+      this.interactables.push({ id: `relique-${relic.id}`, kind: 'relique', label: relic.name, x, z, radius: 2.4, relic: relic.id })
+    }
+  }
+
+  /** Une relique vient d'être ramassée : elle disparaît de l'île dans une gerbe d'étincelles. */
+  relicCollected(id: string): void {
+    const mesh = this.relicMeshes.get(id)
+    const at = this.interactables.findIndex((it) => it.relic === id)
+    if (at >= 0) this.interactables.splice(at, 1)
+    if (mesh) {
+      this.sparkle(mesh.gem.position.clone())
+      mesh.gem.dispose(false, true)
+      mesh.ring.dispose(false, true)
+      this.relicMeshes.delete(id)
+    }
+    this.hero.playOnce('cheer')
+    if (this.focused?.relic === id) {
+      this.focused = null
+      this.events.emit('focus', null)
     }
   }
 
