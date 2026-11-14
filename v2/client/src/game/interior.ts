@@ -9,8 +9,8 @@
  * le « vide » que le déplacement refuse. Les modèles KayKit « dungeon » sont posés à leur taille
  * d'origine (instances, un appel de dessin par modèle et par matériau).
  *
- * Cette étape (1.2) : traverser les six salles et en sortir. Les ennemis, le boss, l'énigme et le
- * coffre arrivent aux étapes suivantes (IMPLEMENTATION_PLAN.md).
+ * Dedans : les ennemis (combat au contact), l'Effaceur et son coffre, et les trois piédestaux de la salle-énigme
+ * (le héros qui s'en approche reçoit une question, l'interface la pose : `riddle`, `solvePedestal`, `retryPedestal`).
  */
 import {
   type AbstractEngine,
@@ -38,7 +38,9 @@ import { Combatant, type CombatEvent } from '../core/combat/encounter'
 import { Emitter } from '../core/events'
 import { bossOf } from '../core/quest/boss'
 import type { SaveData } from '../core/save'
-import { AGGRO_DISTANCE, CHEST_RADIUS, CHEST_REACH, Dungeon, ENEMY_RADIUS, type Piece } from '../core/world/dungeon'
+import {
+  AGGRO_DISTANCE, CHEST_RADIUS, CHEST_REACH, Dungeon, ENEMY_RADIUS, PEDESTAL_DISTANCE, PEDESTAL_RADIUS, PEDESTAL_REARM, type Piece,
+} from '../core/world/dungeon'
 import { HERO_HEIGHT, isSkeleton, monsterFit, V1_TO_V2 } from '../core/world/monsters'
 import { angleDelta, RUN_SPEED, step, WALK_SPEED } from '../core/world/movement'
 import { Obstacles } from '../core/world/obstacles'
@@ -60,6 +62,8 @@ const DOOR_OPEN_ANGLE = -1.75
 const TORCH_REACH = 1
 /** Arc de la caméra autour du sud (radians de part et d'autre). */
 const ARC = 0.55
+/** Couleur des cristaux endormis : un or chaud dans le monde lumineux, un bleu froid dans le Brouillard. */
+const CRYSTAL_COLORS: Record<WorldName, string> = { lumineux: '#ffcf4d', brouillard: '#8fb4ff' }
 
 export interface Enemy {
   id: string
@@ -79,6 +83,21 @@ export interface Enemy {
   z: number
 }
 
+/** Un des trois piédestaux de la salle-énigme : un cristal qui s'éveille à la bonne réponse. */
+export interface Pedestal {
+  id: string
+  room: number
+  x: number
+  z: number
+  solved: boolean
+  /** Prêt à poser sa question ; après une erreur, il ne se réarme qu'une fois le héros éloigné de PEDESTAL_REARM. */
+  armed: boolean
+  crystal: AbstractMesh
+  material: StandardMaterial
+  /** Hauteur du cristal au-dessus du sol (le cristal flotte un peu, tant qu'il n'est pas éveillé). */
+  baseY: number
+}
+
 export type FloatTone = 'good' | 'bad' | 'crit' | 'plain'
 
 export type InteriorEvents = {
@@ -87,6 +106,8 @@ export type InteriorEvents = {
   room: { index: number; label: string }
   /** Le héros a approché un ennemi : l'interface lance le combat (`beginFight`, `present`, `endFight`). */
   fight: Enemy
+  /** Le héros a approché un piédestal : l'interface pose la question (`solvePedestal` si la réponse est juste, `retryPedestal` sinon). */
+  riddle: Pedestal
   /** Nombre flottant (dégâts, soin), en pixels de l'écran. */
   float: { text: string; tone: FloatTone; x: number; y: number }
   /** La porte `index` (entre la salle `index` et la suivante) s'ouvre. */
@@ -133,6 +154,10 @@ export class InteriorWorld {
   } | null = null
   /** L'ennemi du combat en cours : le héros ne marche plus. */
   fighting: Enemy | null = null
+  pedestals: Pedestal[] = []
+  /** Le piédestal dont la question est ouverte : le héros ne marche plus. */
+  riddling: Pedestal | null = null
+  private crystalTime = 0
   private shadows!: CascadedShadowGenerator
   private focusTarget: Vector3 | null = null
   private radiusGoal: number | null = null
@@ -215,6 +240,7 @@ export class InteriorWorld {
     for (const m of this.hero.meshes) shadows.addShadowCaster(m, false)
     this.progress('Les ennemis', 0.9)
     await this.buildEnemies()
+    this.buildPedestals()
     await this.buildChest()
 
     // La sortie : la porte du mur ouest de la première salle.
@@ -313,6 +339,94 @@ export class InteriorWorld {
   /** Les ennemis de la salle encore debout. */
   enemiesLeft(room: number): number {
     return this.enemies.filter((e) => e.room === room && !e.defeated).length
+  }
+
+  // --- L'énigme : trois piédestaux ----------------------------------------------------------
+
+  /** Un cristal par piédestal (3 par salle-énigme) : colonne de pierre partagée, cristal à facettes qui tourne. */
+  private buildPedestals(): void {
+    const { scene, dungeon } = this
+    const rooms = this.options.place.dungeon.rooms
+    const accent = Color3.FromHexString(CRYSTAL_COLORS[this.options.world])
+    const stone = new StandardMaterial('piedestal-pierre', scene)
+    stone.diffuseColor = new Color3(0.42, 0.4, 0.46)
+    stone.specularColor = Color3.Black()
+    for (const [room, spec] of rooms.entries()) {
+      if (spec.kind !== 'enigme') continue
+      for (const [k, at] of dungeon.pedestalPoints(room).entries()) {
+        const y = dungeon.heightAt(at.x, at.z)
+        const column = MeshBuilder.CreateCylinder(`piedestal-${room}-${k}`, { diameterTop: 0.84, diameterBottom: 1.1, height: 1, tessellation: 20 }, scene)
+        column.material = stone
+        column.position.set(at.x, y + 0.5, at.z)
+        column.receiveShadows = true
+        column.isPickable = false
+        this.shadows.addShadowCaster(column, false)
+        const crystal = MeshBuilder.CreateSphere(`cristal-${room}-${k}`, { diameterX: 0.44, diameterY: 0.7, diameterZ: 0.44, segments: 6 }, scene)
+        const material = new StandardMaterial(`cristal-${room}-${k}`, scene)
+        material.disableLighting = true
+        material.emissiveColor = accent
+        material.diffuseColor = Color3.Black()
+        crystal.material = material
+        crystal.isPickable = false
+        const baseY = y + 1.45
+        crystal.position.set(at.x, baseY, at.z)
+        const obstacle = { x: at.x, z: at.z, r: PEDESTAL_RADIUS }
+        this.obstacles.add(obstacle)
+        this.pedestals.push({ id: `piedestal-${room}-${k}`, room, x: at.x, z: at.z, solved: false, armed: true, crystal, material, baseY })
+      }
+    }
+  }
+
+  /** Les piédestaux de la salle dont le cristal dort encore. */
+  pedestalsLeft(room: number): number {
+    return this.pedestals.filter((p) => p.room === room && !p.solved).length
+  }
+
+  /** Ce que le héros aborde : le piédestal endormi de sa salle le plus proche, à portée, s'il est armé. */
+  private nearestPedestal(): Pedestal | null {
+    const p = this.hero.root.position
+    let best: Pedestal | null = null
+    let bestD = PEDESTAL_DISTANCE
+    for (const ped of this.pedestals) {
+      if (ped.solved) continue
+      const d = Math.hypot(p.x - ped.x, p.z - ped.z)
+      if (!ped.armed) {
+        ped.armed = ped.room !== this.room || d > PEDESTAL_REARM // s'éloigner (ou quitter la salle) pour réessayer après une erreur
+        continue
+      }
+      if (ped.room !== this.room) continue
+      if (d < bestD) {
+        best = ped
+        bestD = d
+      }
+    }
+    return best
+  }
+
+  /** Le héros se tourne vers le piédestal et lève la main ; la caméra reste. L'interface pose alors la question. */
+  private beginRiddle(ped: Pedestal): void {
+    this.riddling = ped
+    this.keys.clear()
+    this.hero.yaw = Math.atan2(ped.x - this.hero.root.position.x, ped.z - this.hero.root.position.z)
+    void this.hero.playOnce('interact')
+    this.events.emit('riddle', ped)
+  }
+
+  /** Mauvaise réponse (ou question abandonnée) : le héros reprend la main, le piédestal repose jusqu'à ce qu'il s'éloigne. */
+  retryPedestal(ped: Pedestal): void {
+    ped.armed = false
+    if (this.riddling === ped) this.riddling = null
+  }
+
+  /** Bonne réponse : le cristal s'éveille (vert, plus grand, il ne tourne plus), étincelles ; le héros reprend la main. */
+  solvePedestal(ped: Pedestal): void {
+    ped.solved = true
+    if (this.riddling === ped) this.riddling = null
+    ped.material.emissiveColor = Color3.FromHexString('#8df0a4')
+    ped.crystal.scaling.setAll(1.25)
+    ped.crystal.rotation.y = 0
+    sparkle(this.scene, new Vector3(ped.x, ped.baseY, ped.z), this.options.calm)
+    void this.hero.playOnce('cheer', 'idle')
   }
 
   // --- Le coffre de l'Effaceur ------------------------------------------------------------
@@ -713,7 +827,7 @@ export class InteriorWorld {
   }
 
   private update(dt: number): void {
-    const free = this.inputEnabled && !this.fighting
+    const free = this.inputEnabled && !this.fighting && !this.riddling
     const dir = free ? this.direction() : { x: 0, z: 0, walk: false }
     const p = this.hero.root.position
     const s = step({ x: p.x, z: p.z }, dir, dir.walk ? WALK_SPEED : RUN_SPEED, dt, this.dungeon, this.obstacles)
@@ -742,11 +856,17 @@ export class InteriorWorld {
       this.shake *= Math.exp(-9 * dt)
     }
     this.updateRoom(false)
-    if (!this.fighting) {
+    this.spinCrystals(dt)
+    if (!this.fighting && !this.riddling) {
       const foe = this.nearestFoe()
       if (foe) {
         this.fighting = foe // posé tout de suite : un seul combat à la fois
         this.events.emit('fight', foe)
+        return
+      }
+      const ped = this.inputEnabled ? this.nearestPedestal() : null
+      if (ped) {
+        this.beginRiddle(ped)
         return
       }
       this.updateFocus()
@@ -754,6 +874,17 @@ export class InteriorWorld {
     if (this.flames && !this.options.calm) {
       this.flameTime += dt
       this.flames.visibility = 0.9 + 0.1 * Math.sin(this.flameTime * 14)
+    }
+  }
+
+  /** Les cristaux endormis tournent et flottent un peu (immobiles en mode calme). */
+  private spinCrystals(dt: number): void {
+    if (this.options.calm) return
+    this.crystalTime += dt
+    for (const ped of this.pedestals) {
+      if (ped.solved) continue
+      ped.crystal.rotation.y += dt * 1.57
+      ped.crystal.position.y = ped.baseY + Math.sin(this.crystalTime * 2 + ped.x) * 0.06
     }
   }
 

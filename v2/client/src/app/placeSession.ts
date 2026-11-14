@@ -19,8 +19,8 @@ export function demoPackFor(pack: Pack, dungeon: Pick<DungeonData, 'level' | 'su
 }
 
 export interface PlaceSession {
-  /** Referme la session du lieu et reprend celle de l'île. */
-  end(): Promise<void>
+  /** Referme la session du lieu et reprend celle de l'île ; `rating` : la note de plaisir de 1 à 5 (0 : pas de note). */
+  end(rating?: number): Promise<void>
 }
 
 /** Ouvre la session du lieu ; null si le serveur la refuse et qu'il n'y a pas de paquet gardé. */
@@ -46,8 +46,8 @@ export async function startPlaceSession(services: Services, dungeon: DungeonData
     questions.reset(easy)
   }
   const leaving: PlaceSession = {
-    end: async () => {
-      await session.end() // ferme celle du lieu (son temps actif, ses réponses)
+    end: async (rating = 0) => {
+      await session.end(rating) // ferme celle du lieu (son temps actif, ses réponses, la note)
       await back()
     },
   }

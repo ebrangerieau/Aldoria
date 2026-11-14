@@ -50,6 +50,10 @@ for (const name of ['blob', 'dragon', 'ghost', 'yeti', 'guerrier']) {
   const [lieu, query] = BOSSES[name]
   VIEWS[`boss-combat-${name}`] = { query, lieu, salle: 5, boss: 'combat', turn: 0, beta: 1.0, radius: 10, interface: true }
 }
+// Salle-énigme (quatrième salle) : les trois cristaux endormis, puis `cristaux` d'entre eux éveillés (verts, plus grands, immobiles).
+VIEWS['enigme'] = { query: '', lieu: 'tour_fractions', salle: 3, at: [6, 10], turn: 0, beta: 1.05, radius: 12, interface: true }
+VIEWS['enigme-eveillee'] = { query: '', lieu: 'tour_fractions', salle: 3, at: [6, 10], cristaux: 2, turn: 0, beta: 1.05, radius: 12, interface: true }
+VIEWS['enigme-brouillard'] = { query: '&monde=brouillard&classe=2nde', lieu: 'labyrinthe_vecteurs', salle: 3, at: [6, 10], turn: 0, beta: 1.05, radius: 12, interface: true }
 VIEWS['coffre'] = { query: '', lieu: 'tour_fractions', salle: 5, chest: 'ferme', turn: -0.2, beta: 1.0, radius: 8, interface: true }
 VIEWS['coffre-ouvert'] = { query: '', lieu: 'tour_fractions', salle: 5, chest: 'ouvert', turn: -0.2, beta: 1.0, radius: 8, interface: true }
 
@@ -87,6 +91,7 @@ for (const name of views) {
         if (v.chest === 'ouvert') interior.openChest()
       } else {
         interior.teleport(16 * v.salle + v.at[0], -v.at[1])
+        for (const ped of interior.pedestals.slice(0, v.cristaux ?? 0)) interior.solvePedestal(ped)
       }
       interior.frame(v.turn, v.beta, v.radius)
     }, view)

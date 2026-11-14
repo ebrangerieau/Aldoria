@@ -374,3 +374,19 @@ figure.visual.graph { max-width: 460px; }
 
 /* Captures sans interface (?interface=0, e2e/captures.mjs). */
 .sans-interface .hud-top, .sans-interface .controls-help, .sans-interface .region-banner, .sans-interface .prompt-bar, .sans-interface .floor-label { visibility: hidden; }
+
+/* --- Note de fin de lieu (ui/Rating.tsx) et voix du héros (ui/useFight.tsx) ---------------------- */
+.rating { text-align: center; }
+.stars { display: flex; justify-content: center; gap: 0.6rem; margin: 0.6rem 0 0.2rem; }
+.star { min-width: 4.2rem; min-height: 4.2rem; font-size: 2.4rem; line-height: 1; padding: 0; color: var(--ink-soft); }
+.star.lit { color: #c98a00; background: linear-gradient(#fff3c4, #f3d58b); border-color: var(--gold); }
+.rating-word { font-family: var(--title-font); font-size: 1.4rem; color: var(--ink); min-height: 1.9rem; margin: 0.2rem 0 0.8rem; }
+.hero-bubble {
+  position: absolute; bottom: 22px; left: 14px; max-width: min(460px, 52vw); padding: 0.55rem 0.9rem; border-radius: 14px;
+  background: rgb(251 244 228 / 94%); color: var(--ink); border: 2px solid var(--gold); font-size: 1.05rem; line-height: 1.35;
+  pointer-events: none; animation: bubble 6s ease forwards;
+}
+@keyframes bubble { 0% { opacity: 0; transform: translateY(6px); } 6%, 90% { opacity: 1; transform: none; } 100% { opacity: 0; } }
+html[data-calm='true'] .hero-bubble { animation: bubble-calm 6s linear forwards; }
+@keyframes bubble-calm { 0%, 92% { opacity: 1; } 100% { opacity: 0; } }
+.sans-interface .hero-bubble { visibility: hidden; }

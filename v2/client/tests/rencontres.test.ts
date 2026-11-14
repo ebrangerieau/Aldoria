@@ -122,11 +122,11 @@ const decorOf = (d: unknown) => (d as { v1_decor: DungeonDecor }).v1_decor
 describe('Portes d’un lieu', () => {
   const kinds = ['entree', 'combat', 'combat', 'enigme', 'combat', 'boss']
 
-  it('ferme la sortie des salles de combat et du boss, ouvre celle de l’entrée et de l’énigme', () => {
+  it('ferme la sortie des salles de combat, de l’énigme et du boss, ouvre celle de l’entrée', () => {
     const tower = new Dungeon(6)
     tower.lockDoors(kinds)
-    expect(tower.lockedDoors).toEqual([1, 2, 4])
-    expect([...OPEN_KINDS].sort()).toEqual(['enigme', 'entree'])
+    expect(tower.lockedDoors).toEqual([1, 2, 3, 4])
+    expect([...OPEN_KINDS].sort()).toEqual(['entree'])
     expect(tower.isDoorOpen(0)).toBe(true)
     expect(tower.isDoorOpen(1)).toBe(false)
   })
@@ -144,7 +144,7 @@ describe('Portes d’un lieu', () => {
     expect(blocked.x).toBeLessThan(2 * ROOM_W) // la porte 1 est fermée
     expect(blocked.y).toBeGreaterThan(2 * CLIMB_RISE - 1.2) // en haut de l'escalier de la salle 1, à un rayon de héros de la porte
     tower.openDoor(1)
-    expect(tower.lockedDoors).toEqual([2, 4])
+    expect(tower.lockedDoors).toEqual([2, 3, 4])
     expect(run(start, 10).x).toBeGreaterThan(2 * ROOM_W + 1)
   })
 

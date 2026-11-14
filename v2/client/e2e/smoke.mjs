@@ -312,6 +312,85 @@ try {
     await page.getByTestId('carte').waitFor({ timeout: 10_000 * SLOW })
   })
 
+  await step('l’énigme : trois piédestaux, une erreur qui réarme, la porte s’ouvre au troisième cristal, le héros parle', async () => {
+    await page.evaluate(() => {
+      const w = window.__aldoria.world
+      const it = w.interactables.find((i) => i.id === 'tour_fractions')
+      w.teleport(it.x, it.z - 1.5, it.x, it.z)
+    })
+    await page.getByTestId('invite').filter({ hasText: 'Approcher' }).waitFor({ timeout: 10_000 * SLOW })
+    await page.keyboard.press('KeyE')
+    await page.getByRole('button', { name: "J'y vais" }).click()
+    await page.getByTestId('etage').waitFor({ timeout: 60_000 * SLOW })
+    // Le héros se lance : sa phrase de départ s'affiche en bulle (le texte vient de heros.json, entre guillemets).
+    await page.getByTestId('heros-dit').waitFor({ timeout: 10_000 * SLOW })
+    const hello = await page.getByTestId('heros-dit').innerText()
+    if (!/^«.+»$/s.test(hello.trim())) throw new Error(`la bulle du héros : ${hello}`)
+    // Les salles d'avant ont leur propre test : on ouvre leurs portes et on va dans la salle de l'énigme (la quatrième).
+    const ped = () => page.evaluate(() => window.__aldoria.world.interior.pedestals.map((p) => ({ x: p.x, z: p.z, solved: p.solved })))
+    await page.evaluate(() => {
+      const i = window.__aldoria.world.interior
+      for (let d = 0; d < 3; d += 1) i.openDoor(d, false)
+      const e = i.dungeon.entryPoint(3)
+      i.teleport(e.x, e.z)
+    })
+    await page.getByRole('heading', { name: 'Les Balances du Gardien' }).waitFor({ timeout: 10_000 * SLOW })
+    await page.screenshot({ path: `${OUT}/03e0-enigme-intro.png` })
+    await page.getByRole('button', { name: "C'est parti" }).click()
+    await page.getByRole('dialog').waitFor({ state: 'detached' })
+    const start = await ped()
+    if (start.length !== 3 || start.some((p) => p.solved)) throw new Error(`trois piédestaux endormis attendus : ${JSON.stringify(start)}`)
+    if (await page.evaluate(() => window.__aldoria.world.interior.dungeon.isDoorOpen(3))) throw new Error('la porte de l’énigme devrait être fermée tant que les cristaux dorment')
+    const xp = async () => Number(((await page.locator('.badge').innerText()).match(/(\d+) XP/) ?? [])[1] ?? 0)
+    const xpBefore = await xp()
+    /** Le héros se place à portée du piédestal `k` (à sa gauche) : sa question s'ouvre toute seule. */
+    const approach = (k) => page.evaluate((k) => {
+      const i = window.__aldoria.world.interior
+      const p = i.pedestals[k]
+      i.teleport(p.x - 1.3, p.z)
+    }, k)
+
+    // Premier piédestal : une erreur. Pas de « Pas vu en classe » sur une énigme ; le piédestal repose tant que le héros reste là.
+    await approach(0)
+    await page.getByRole('dialog').waitFor({ timeout: 10_000 * SLOW })
+    if ((await page.getByRole('button', { name: 'Pas vu en classe' }).count()) > 0) throw new Error('« Pas vu en classe » ne doit pas être proposé sur une énigme')
+    await page.screenshot({ path: `${OUT}/03e1-enigme-question.png` })
+    await answerQuestion(false)
+    await page.waitForTimeout(800 * SLOW)
+    if ((await page.getByRole('dialog').count()) > 0) throw new Error('le piédestal ne doit pas reposer sa question tant que le héros reste devant')
+    if ((await ped())[0].solved) throw new Error('une erreur ne doit pas éveiller le cristal')
+    // Le héros s'éloigne, puis revient : le piédestal pose une autre question.
+    await page.evaluate(() => {
+      const i = window.__aldoria.world.interior
+      i.teleport(i.pedestals[0].x - 1.3, i.pedestals[0].z - 4) // plus loin que PEDESTAL_REARM, dans la même salle
+    })
+    await page.waitForTimeout(300 * SLOW)
+    await approach(0)
+    await page.getByRole('dialog').waitFor({ timeout: 10_000 * SLOW })
+    await answerQuestion(true)
+    await page.waitForFunction(() => window.__aldoria.world.interior.pedestals[0].solved, null, { timeout: 10_000 * SLOW })
+    await page.screenshot({ path: `${OUT}/03e1b-un-cristal.png` })
+    if (await page.evaluate(() => window.__aldoria.world.interior.dungeon.isDoorOpen(3))) throw new Error('un seul cristal ne doit pas ouvrir la porte')
+    for (const k of [1, 2]) {
+      await approach(k)
+      await page.getByRole('dialog').waitFor({ timeout: 10_000 * SLOW })
+      await answerQuestion(true)
+      await page.waitForFunction((k) => window.__aldoria.world.interior.pedestals[k].solved, k, { timeout: 10_000 * SLOW })
+    }
+    // Le troisième cristal ouvre la porte, et le héros dit un mot sur la salle suivante.
+    await page.waitForFunction(() => window.__aldoria.world.interior.dungeon.isDoorOpen(3), null, { timeout: 15_000 * SLOW })
+    await page.screenshot({ path: `${OUT}/03e1c-porte-ouverte.png` })
+    await page.getByTestId('heros-dit').waitFor({ timeout: 10_000 * SLOW })
+    const gained = (await xp()) - xpBefore
+    if (gained < 3 * 10) throw new Error(`les trois bonnes réponses devraient rapporter de l’XP : +${gained}`)
+    // La sortie, pour la suite du parcours.
+    await page.evaluate(() => window.__aldoria.world.interior.teleport(1.9, -10))
+    await page.getByTestId('invite').filter({ hasText: 'Sortir' }).waitFor({ timeout: 10_000 * SLOW })
+    await page.keyboard.press('KeyE')
+    await page.getByRole('button', { name: 'Sortir' }).click()
+    await page.getByTestId('carte').waitFor({ timeout: 10_000 * SLOW })
+  })
+
   await step('le boss : l’Effaceur parle de sa voix enregistrée, huit sceaux, le coffre, la page rendue, le lieu suivant s’ouvre, Maître Ysaline salue', async () => {
     const heard = (url) => page.waitForResponse((r) => r.url().includes(url), { timeout: 15_000 * SLOW })
     const soundOk = async (pending, what) => {
@@ -382,7 +461,17 @@ try {
       }
       if (!/Dans ton sac : /.test(message)) throw new Error(`le coffre devrait rendre deux objets : ${message}`)
       await page.screenshot({ path: `${OUT}/03g-page.png` })
-      await page.getByRole('button', { name: "Retour sur l'île" }).click()
+      await page.getByRole('button', { name: 'Continuer' }).click()
+      // La note de plaisir, facultative : la première fois on donne quatre étoiles, la seconde on passe.
+      await page.getByTestId('note').waitFor({ timeout: 10_000 * SLOW })
+      if (first) {
+        await page.getByTestId('etoile-4').click()
+        const word = await page.getByTestId('note-mot').innerText()
+        if (word !== 'Très bien') throw new Error(`le mot de la note : ${word}`)
+        await page.screenshot({ path: `${OUT}/03g2-note.png` })
+      } else {
+        await page.getByRole('button', { name: 'Passer' }).click()
+      }
       await page.getByTestId('carte').waitFor({ timeout: 15_000 * SLOW })
       const gained = (await xp()) - xpBefore
       if (gained < 100 + 150) throw new Error(`XP du boss et du coffre : +${gained} au lieu de 250 au moins`)

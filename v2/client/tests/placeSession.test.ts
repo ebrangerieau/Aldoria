@@ -18,8 +18,8 @@ function fake(start: (mode: string) => { ok: boolean } = () => ({ ok: true }), o
       calls.push(`start ${mode} ${JSON.stringify(params)} ${key ?? ''}`.trim())
       return start(mode)
     },
-    end: async () => {
-      calls.push('end')
+    end: async (rating?: number) => {
+      calls.push(rating ? `end ${rating}` : 'end')
     },
   }
   const questions = { reset: (easy: boolean) => calls.push(`reset ${easy}`) }
@@ -45,6 +45,14 @@ describe('Session d’un lieu', () => {
     calls.length = 0
     await opened!.end()
     expect(calls).toEqual(['end', 'start monde undefined', 'reset false'])
+  })
+
+  it('la note de plaisir part avec la fin de la session du lieu, et seulement elle', async () => {
+    const { services, calls } = fake()
+    const opened = await startPlaceSession(services, tower, false)
+    calls.length = 0
+    await opened!.end(4)
+    expect(calls).toEqual(['end 4', 'start monde undefined', 'reset false'])
   })
 
   it('rend null si le serveur refuse la session, et rouvre celle de l’île : on n’entre pas dans le lieu', async () => {

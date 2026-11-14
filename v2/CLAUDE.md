@@ -71,7 +71,7 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   sont du « vide » pour le déplacement (`heightAt` rend `VOID_HEIGHT`), pas des collisions du moteur. Scène à part, même moteur :
   `GameWorld.enterPlace(code)` met l'île en pause, `leavePlace()` la reprend ; un modèle se charge par scène (`loadContainer`).
   Un chiffre de géométrie change ici avec son test, jamais dans la scène. Portes : fermées jusqu'à la victoire dans la salle (sauf
-  l'entrée et l'énigme : `OPEN_KINDS`), du « vide » pour le déplacement tant qu'elles le sont ; ennemis à leur place de la v1
+  l'entrée seulement : `OPEN_KINDS` ; la porte de l'énigme s'ouvre au troisième cristal), du « vide » pour le déplacement tant qu'elles le sont ; ennemis à leur place de la v1
   (`v1_at`, sans miroir), tournés vers l'ouest, leur obstacle retiré à leur chute. Ennemis : squelettes KayKit (même rig que le héros)
   et monstres Quaternius, dont l'échelle est mesurée une fois (`content/monde/monstres.json`, `node tools/mesurer_monstres.mjs` avec
   la prévisualisation lancée : une boîte au repos ne dit rien d'une armature à l'échelle 100). `&e2e` : `world.enterPlace(code)`,
@@ -89,7 +89,23 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   s'ouvre. `GameWorld.placeCompleted(places)` allume le lieu suivant et son repère de la mini-carte : le monde garde la partie de sa création, il
   faut le prévenir. Vérifier un Effaceur : captures `boss-*`, `boss-combat-*`, `coffre`, `coffre-ouvert` (`npm run captures`). Les modèles de
   Quaternius sont sombres par construction (couleurs de base très foncées : la gelée verte et le dragon paraissent presque noirs) : ce n'est pas
-  un défaut d'éclairage. Reste à faire : la note de plaisir de 1 à 5 avant de sortir (étape 1.5), le déblocage d'apparence annoncé au coffre.
+  un défaut d'éclairage. Le coffre se referme sur la note de plaisir (étape 1.5, ci-dessous) ; reste à faire : le déblocage d'apparence annoncé au coffre.
+- **Énigme, héros qui parle, note de plaisir** (étape 1.5) : la quatrième salle de chaque lieu a **trois piédestaux** (`PEDESTAL_SPOTS` de
+  `core/world/dungeon.ts`, positions de la v1, `Dungeon.pedestalPoints`), un cristal chacun (`game/interior.ts` : `Pedestal`, `buildPedestals`,
+  événement `riddle`). Le héros qui s'approche à `PEDESTAL_DISTANCE` reçoit une question et ne marche plus (`riddling`) ; `ui/useFight.tsx`
+  la pose (`core/quest/enigma.ts` : `riddleItem` = une énigme de la session, à défaut une question du chapitre, jamais « Pas vu en classe »,
+  `gameMode` « enigme »). Juste : le cristal s'éveille (vert, plus grand, immobile), XP du lieu et de la question (`enigmaXp`). Faux : l'explication
+  s'affiche, le piédestal repose jusqu'à ce que le héros s'éloigne de `PEDESTAL_REARM` puis revienne (autre question). Les trois cristaux éveillés
+  ouvrent la porte (`openDoor`, « La porte s'ouvre ! ») et un objet attendait au sac (`findItems`, `ENIGMA_ITEMS`). L'introduction de la salle se
+  dit la première fois (`enigmaIntro` : celle de `lieux.json`, sauf pour le mode « balance » dont le texte parle d'une balance géante que la v2 n'a
+  pas encore : `enigme_introductions` de `combat.json`). Aucune salle n'est sauvegardée : les cristaux se rendorment à la visite suivante.
+  **Le héros parle** (`core/heroVoice.ts`, `content/monde/heros.json`, `HeroVoice` gardé par appareil : les dernières phrases ne reviennent pas) :
+  bulle `.hero-bubble` en bas à gauche (`data-testid="heros-dit"`, effacée dès qu'une question, un dialogue ou un combat s'ouvre), lue avec la
+  « lecture automatique » ; une phrase de départ à l'entrée dans le lieu, puis un mot sur la salle suivante à chaque porte qui s'ouvre (combat
+  vaincu, énigme résolue). **Note de plaisir** (`core/quest/rating.ts`, `ui/Rating.tsx`) : après le message du coffre, « Comment as-tu trouvé ce lieu ? »,
+  cinq étoiles (touches 1 à 5, « Passer » ou Échap : pas de note), envoyée avec la fin de la session du lieu (`PlaceSession.end(rating)` →
+  `Session.end(rating)` → `session/end`, champ `rating`) ; elle sert d'indicateur au parent (critère de la phase 1 : note ≥ 4). Vérifier :
+  captures `enigme`, `enigme-eveillee`, `enigme-brouillard` ; parcours `e2e/smoke.mjs` (erreur, réarmement, trois cristaux, porte, bulle, étoiles).
 - **Musique** (`app/music.ts` joue, `core/music.ts` décide du volume, testé) : morceaux de `deploy/musique/` listés dans
   `content/monde/musique.json` (ordre de lecture, crédit des Options), servis sous `/musique/` par nginx ; `npm run dev` et
   `vite preview` les servent depuis le même dossier (`vite.config.ts`, requêtes `Range` comprises). Elle démarre à l'entrée
@@ -153,8 +169,7 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   reçoit `ELEVENLABS_API_KEY=proxy-injected` ; une clé limitée à la synthèse n'a pas le droit `voices_read` (inutile : les voix sont au manifeste).
 - **Logiques de la v1 portées, pas encore branchées à l'écran** (pures, testées, `core/`) : sac d'objets (`inventory.ts` : plume,
   parchemin, bouclier, potion, 5 au plus de chaque ; le coffre de l'Effaceur et le coffre de la semaine en donnent, le combat applique déjà
-  bouclier et potion mais le bouton « Sac » viendra plus tard), voix du héros entre les salles
-  (`heroVoice.ts` et `content/monde/heros.json`), apparence du héros et du renard
+  bouclier et potion mais le bouton « Sac » viendra plus tard), apparence du héros et du renard
   (`wardrobe.ts`, `content/monde/apparence.json`), île du Sphinx (`sphinx/board.ts` : jeu de blocs ; `sphinx/island.ts` : passages de barque, paliers, aide du Sphinx ;
   180 énigmes dans `content/monde/sphinx_niveaux.json`, converties de `game/worlds/shared/sphinx_levels.gd` de la v1 ;
   `python tools/make_sphinx_levels.py` les régénère (graine fixe, mais le palier 6 est très long à calculer : relancé jusqu'au

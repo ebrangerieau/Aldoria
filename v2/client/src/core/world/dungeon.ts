@@ -46,8 +46,16 @@ export const CHEST_AT: [number, number] = [12.5, 10]
 export const CHEST_REACH = 2.4
 /** Rayon de l'obstacle du coffre. */
 export const CHEST_RADIUS = 0.9
-/** Salles dont la porte de sortie n'attend rien : l'entrée, et l'énigme tant qu'elle n'est pas portée (étape 1.5). */
-export const OPEN_KINDS = new Set(['entree', 'enigme'])
+/** Salles dont la porte de sortie n'attend rien : l'entrée seulement (les autres s'ouvrent à la victoire, ou quand l'énigme est résolue). */
+export const OPEN_KINDS = new Set(['entree'])
+/** Les trois piédestaux de la salle-énigme : x dans la salle et profondeur, comme dans la v1 (PEDESTALS). */
+export const PEDESTAL_SPOTS: readonly (readonly [number, number])[] = [[4, 6], [8, 5], [12, 6]]
+/** Le héros qui s'approche d'un piédestal à cette distance reçoit son énigme (v1 : PEDESTAL_DISTANCE). */
+export const PEDESTAL_DISTANCE = 1.7
+/** Après une erreur, le piédestal ne se redéclenche qu'une fois le héros éloigné de cette distance (v1 : PEDESTAL_REARM). */
+export const PEDESTAL_REARM = 2.6
+/** Rayon de l'obstacle d'un piédestal (colonne de pierre). */
+export const PEDESTAL_RADIUS = 0.55
 
 export type Vec3 = [number, number, number]
 
@@ -187,6 +195,11 @@ export class Dungeon {
   /** Où se met le héros pour combattre un ennemi : FIGHT_GAP à sa gauche (à l'ouest), sans sortir de la salle. */
   fightSpot(room: number, enemy: { x: number; z: number }): { x: number; z: number } {
     return { x: Math.max(enemy.x - FIGHT_GAP, room * ROOM_W + FIGHT_MARGIN), z: enemy.z }
+  }
+
+  /** Les trois piédestaux de la salle `room` (position de la v1, sans miroir). */
+  pedestalPoints(room: number): { x: number; z: number }[] {
+    return PEDESTAL_SPOTS.map(([x, depth]) => this.point(room, x, depth))
   }
 
   /** Où apparaît le coffre dans la salle de l'Effaceur. */

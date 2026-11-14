@@ -3,8 +3,11 @@
  * l'action, question, verdict, récit) avec core/combat/flow.ts, tenir les barres de PV et les nombres flottants, annoncer la
  * victoire, le niveau gagné et la porte qui s'ouvre. Le monde 3D (game/interior.ts) met en scène ; ce crochet décide.
  *
- * Il rend deux morceaux d'interface à poser dans l'écran de jeu : `hud` (barres, actions, nombres flottants, annonce) et
- * `overlay` (la question, le texte du repli).
+ * Il mène aussi le reste du déroulé d'un lieu : l'énigme à trois piédestaux (une question chacun, la porte s'ouvre au troisième
+ * cristal), le héros qui parle entre les salles (core/heroVoice.ts) et la note de 1 à 5 avant de quitter le lieu.
+ *
+ * Il rend deux morceaux d'interface à poser dans l'écran de jeu : `hud` (barres, actions, nombres flottants, annonce, bulle du héros) et
+ * `overlay` (la question, le texte du repli, la note).
  */
 import { type ReactNode, type MutableRefObject, useCallback, useEffect, useRef, useState } from 'react'
 import { startPlaceSession, type PlaceSession } from '../app/placeSession'
@@ -12,21 +15,27 @@ import type { Services } from '../app/services'
 import { type Action, type Answer, Combatant, Encounter } from '../core/combat/encounter'
 import { applyEvent, type FightHost, type FightView, runFight, viewOf } from '../core/combat/flow'
 import { combatTexts, pickOne } from '../core/combat/texts'
+import { HeroVoice } from '../core/heroVoice'
 import { chestMessage, completePlace } from '../core/quest/chest'
+import { enigmaIntro, enigmaXp, ENIGMA_ITEMS, findItems, foundBanner, riddleItem } from '../core/quest/enigma'
+import { normalizeRating } from '../core/quest/rating'
 import type { SaveData } from '../core/save'
 import type { Accommodations } from '../core/accessibility'
 import type { Item } from '../core/items'
 import { heroMaxHp, levelForXp } from '../core/progression'
 import type { Place } from '../core/world/places'
 import type { GameWorld } from '../game/GameWorld'
-import type { Enemy } from '../game/interior'
+import type { Enemy, Pedestal } from '../game/interior'
 import type { WorldName } from '../game/theme'
 import { ActionBar, FightBars, type Floating, Floats } from './Combat'
 import { Dialog } from './Dialogs'
 import { QuestionPanel, type QuestionOutcome } from './QuestionPanel'
+import { Rating } from './Rating'
 
 const FLOAT_MS = 1400
 const NOTICE_MS = 2400
+/** Le héros parle plus ou moins longtemps selon la longueur de sa phrase (v1 : de 3,5 à 9 secondes). */
+const bubbleMs = (text: string): number => Math.min(9000, Math.max(3500, 2500 + text.length * 60))
 
 type Phase = 'actions' | 'busy'
 
@@ -52,7 +61,17 @@ export function useFight(options: FightOptions) {
   const { services, worldRef, world, demo, worldName, heroName, accommodations } = options
   const [view, setView] = useState<FightView | null>(null)
   const [phase, setPhase] = useState<Phase>('busy')
-  const [question, setQuestion] = useState<{ item: Item; title: string; success: string; resolve: (o: QuestionOutcome) => void } | null>(null)
+  const [question, setQuestion] = useState<{
+    item: Item
+    title: string
+    success: string
+    gameMode: string
+    /** « Pas vu en classe » : jamais sur une énigme (la porte attend la réponse). */
+    aside: boolean
+    resolve: (o: QuestionOutcome) => void
+  } | null>(null)
+  const [rating, setRating] = useState<{ title: string; resolve: (value: number) => void } | null>(null)
+  const [bubble, setBubble] = useState<{ id: number; text: string } | null>(null)
   const [dialog, setDialog] = useState<{ title: string; text: string; actions: { label: string; primary?: boolean; run: () => void }[] } | null>(null)
   const [floats, setFloats] = useState<Floating[]>([])
   const [notice, setNotice] = useState<{ id: number; text: string } | null>(null)
@@ -61,6 +80,9 @@ export function useFight(options: FightOptions) {
   const place = useRef<Place | null>(null)
   /** Effaceurs qui se sont déjà présentés dans cette visite : après un repli, ils ne se présentent pas deux fois. */
   const taunted = useRef(new Set<string>())
+  /** Salles déjà visitées dans cette visite : l'introduction de l'énigme ne se redit pas. */
+  const visited = useRef(new Set<number>())
+  const heroVoice = useRef<HeroVoice | null>(null)
   const viewRef = useRef<FightView | null>(null)
   const actionResolver = useRef<((action: Action) => void) | null>(null)
   const nextId = useRef(1)
@@ -77,6 +99,24 @@ export function useFight(options: FightOptions) {
     const id = nextId.current++
     setNotice({ id, text })
     window.setTimeout(() => setNotice((current) => (current?.id === id ? null : current)), NOTICE_MS)
+  }, [])
+
+  /** Le héros parle (bulle sous la vue, lue à voix haute avec « lecture automatique ») : un mot sur la salle suivante, ou le départ. */
+  const sayHero = useCallback((text: string) => {
+    if (!text) return
+    const id = nextId.current++
+    setBubble({ id, text })
+    window.setTimeout(() => setBubble((current) => (current?.id === id ? null : current)), bubbleMs(text))
+    const { services: s, accommodations: acc } = latest.current
+    if (acc.auto_read) void s.voice.say([text])
+  }, [])
+
+  /** Ce que dit le héros en abordant la salle `next` du lieu courant. */
+  const heroBefore = useCallback((next: number, start = false): string => {
+    const lieu = place.current
+    if (!lieu) return ''
+    heroVoice.current ??= new HeroVoice(latest.current.services.store)
+    return heroVoice.current.beforeRoom(latest.current.worldName, lieu.dungeon.rooms, next, start)
   }, [])
 
   /**
@@ -157,7 +197,7 @@ export function useFight(options: FightOptions) {
           return null
         }
         const outcome = await new Promise<QuestionOutcome>((resolve) => {
-          setQuestion({ item, title: combatTexts(latest.current.worldName).actions[action], success: pickOne(texts.encouragements), resolve })
+          setQuestion({ item, title: combatTexts(latest.current.worldName).actions[action], success: pickOne(texts.encouragements), gameMode: 'combat', aside: true, resolve })
         })
         setQuestion(null)
         if (!outcome.result) return null // « pas vu en classe », sans question de remplacement
@@ -212,6 +252,7 @@ export function useFight(options: FightOptions) {
         window.setTimeout(() => {
           interior.openDoor(enemy.room)
           announce("La porte s'ouvre !")
+          sayHero(heroBefore(enemy.room + 1))
         }, 900)
       }
     } else {
@@ -221,6 +262,74 @@ export function useFight(options: FightOptions) {
       await interior.endFight('retreat')
     }
   }
+
+  // --- L'énigme : trois piédestaux ----------------------------------------------------------
+
+  const riddleRef = useRef<(ped: Pedestal) => Promise<void>>(async () => {})
+  riddleRef.current = async (ped: Pedestal) => {
+    const current = worldRef.current
+    const interior = current?.interior
+    const lieu = place.current
+    if (!current || !interior || !lieu) return
+    const { services: s } = latest.current
+    const def = lieu.dungeon
+    const item = riddleItem(s.questions)
+    if (!item) {
+      announce('Énigme indisponible hors connexion')
+      interior.retryPedestal(ped)
+      return
+    }
+    const outcome = await new Promise<QuestionOutcome>((resolve) => {
+      setQuestion({ item, title: def.enigma.title, success: pickOne(texts.encouragements), gameMode: 'enigme', aside: false, resolve })
+    })
+    setQuestion(null)
+    if (worldRef.current?.interior !== interior) return // écran quitté pendant la question
+    if (!outcome.result?.correct) {
+      interior.retryPedestal(ped)
+      return
+    }
+    interior.solvePedestal(ped)
+    s.sfx.play('crit')
+    announce(pickOne(texts.encouragements))
+    const gained = enigmaXp(def, outcome.item.difficulty)
+    const level = latest.current.grantXp(gained)
+    if (level) {
+      encounter.current?.hero.raiseMax(heroMaxHp(level))
+      window.setTimeout(() => announce(`Niveau ${level} !`), 1300)
+    }
+    if (interior.pedestalsLeft(ped.room) > 0) return
+    // Le troisième cristal est éveillé : la porte s'ouvre, et un objet attendait sur le dernier piédestal.
+    window.setTimeout(() => {
+      if (worldRef.current?.interior !== interior) return
+      interior.openDoor(ped.room)
+      s.sfx.play('spell')
+      announce("La porte s'ouvre !")
+      const { found, save } = findItems(latest.current.getSave(), ENIGMA_ITEMS)
+      if (found.length > 0) {
+        latest.current.persist(save)
+        window.setTimeout(() => announce(foundBanner(found)), NOTICE_MS - 200)
+      }
+      sayHero(heroBefore(ped.room + 1))
+    }, 1100)
+  }
+
+  /** On entre dans une salle : l'énigme se présente la première fois (v1 : le titre et l'introduction du lieu). */
+  const roomRef = useRef<(index: number) => Promise<void>>(async () => {})
+  roomRef.current = async (index: number) => {
+    const interior = worldRef.current?.interior
+    const lieu = place.current
+    if (!interior || !lieu || visited.current.has(index)) return
+    visited.current.add(index)
+    if (lieu.dungeon.rooms[index]?.kind !== 'enigme' || interior.pedestalsLeft(index) === 0) return
+    interior.setInputEnabled(false)
+    await speak(lieu.dungeon.enigma.title, enigmaIntro(lieu.dungeon), "C'est parti")
+    if (worldRef.current?.interior === interior) interior.setInputEnabled(true)
+  }
+
+  // Le héros se tait quand une question, un dialogue ou la note s'ouvre (comme dans la v1).
+  useEffect(() => {
+    if (question || dialog || rating || view) setBubble(null)
+  }, [question, dialog, rating, view])
 
   // Tests dans le navigateur (?e2e) : la question d'un combat, pour y répondre juste.
   useEffect(() => {
@@ -232,6 +341,8 @@ export function useFight(options: FightOptions) {
     if (!world) return
     const offs = [
       world.events.on('fight', (enemy) => void fightRef.current(enemy)),
+      world.events.on('riddle', (ped) => void riddleRef.current(ped)),
+      world.events.on('floor', ({ index }) => void roomRef.current(index)),
       world.events.on('float', (f) => addFloat(f)),
     ]
     return () => {
@@ -260,6 +371,7 @@ export function useFight(options: FightOptions) {
       }
       place.current = target
       taunted.current = new Set()
+      visited.current = new Set()
       const level = levelForXp(latest.current.currentXp())
       encounter.current = new Encounter(new Combatant(heroName, heroMaxHp(level)), {
         world: worldName,
@@ -267,21 +379,29 @@ export function useFight(options: FightOptions) {
       })
       const handle = (window as unknown as { __aldoria?: Record<string, unknown> }).__aldoria
       if (handle) handle.encounter = encounter.current // tests dans le navigateur (?e2e)
+      // Le héros se lance (l'écran de chargement se retire juste après).
+      window.setTimeout(() => {
+        if (place.current === target) sayHero(heroBefore(1, true))
+      }, 900)
       return 'ok'
     },
-    [services, demo, worldRef, heroName, worldName, accommodations.no_speed],
+    [services, demo, worldRef, heroName, worldName, accommodations.no_speed, sayHero, heroBefore],
   )
 
-  /** Sort du lieu : l'île reprend, la session de l'île aussi. */
-  const leave = useCallback(async () => {
-    worldRef.current?.leavePlace()
-    encounter.current = null
-    place.current = null
-    show(null)
-    const closing = placeSession.current
-    placeSession.current = null
-    await closing?.end()
-  }, [worldRef, show])
+  /** Sort du lieu : l'île reprend, la session de l'île aussi. `rating` : la note de plaisir de 1 à 5, envoyée avec la fin de la session. */
+  const leave = useCallback(
+    async (rating = 0) => {
+      worldRef.current?.leavePlace()
+      encounter.current = null
+      place.current = null
+      show(null)
+      setBubble(null)
+      const closing = placeSession.current
+      placeSession.current = null
+      await closing?.end(normalizeRating(rating))
+    },
+    [worldRef, show],
+  )
 
   /**
    * Le héros ouvre le coffre de l'Effaceur : le lieu est terminé (XP du coffre, deux objets, page rendue la première fois), l'île s'allume
@@ -304,8 +424,11 @@ export function useFight(options: FightOptions) {
     const level = levelForXp(done.save.xp)
     const text = level > levelForXp(before.xp) ? `${message.text}\nNiveau ${level} !` : message.text
     const code = lieu.dungeon.code
-    await speak(message.title, text, "Retour sur l'île")
-    await leave()
+    await speak(message.title, text, 'Continuer')
+    // La note de plaisir, facultative : « Passer » ne note rien.
+    const note = await new Promise<number>((resolve) => setRating({ title: lieu.dungeon.title, resolve }))
+    setRating(null)
+    await leave(note)
     return { first: done.first, code }
   }, [worldRef, speak, leave])
 
@@ -321,6 +444,11 @@ export function useFight(options: FightOptions) {
       {view && <FightBars view={view} heroName={heroName} />}
       {view && phase === 'actions' && !question && !dialog && <ActionBar world={worldName} canHeal={view.canHeal} onChoose={choose} />}
       <Floats items={floats} />
+      {bubble && (
+        <p key={bubble.id} className="hero-bubble" role="status" data-testid="heros-dit">
+          « {bubble.text} »
+        </p>
+      )}
       {notice && (
         <div key={notice.id} className="notice" data-testid="annonce">
           {notice.text}
@@ -336,15 +464,17 @@ export function useFight(options: FightOptions) {
           services={services}
           item={question.item}
           title={question.title}
-          gameMode="combat"
+          gameMode={question.gameMode}
+          aside={question.aside}
           success={question.success}
           accommodations={accommodations}
           onDone={question.resolve}
         />
       )}
       {dialog && <Dialog title={dialog.title} text={dialog.text} actions={dialog.actions} />}
+      {rating && <Rating title={rating.title} onRated={rating.resolve} />}
     </>
   )
 
-  return { hud, overlay, enter, leave, openChest, active: view !== null || dialog !== null, questionOpen: question !== null, overlayOpen: question !== null || dialog !== null }
+  return { hud, overlay, enter, leave, openChest, active: view !== null || dialog !== null, questionOpen: question !== null, overlayOpen: question !== null || dialog !== null || rating !== null }
 }

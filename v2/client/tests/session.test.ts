@@ -41,6 +41,22 @@ describe('Session', () => {
     expect(sent.attempts[0]!.answered_at).toBe('2026-11-07T10:00:00Z')
   })
 
+  it('la note de plaisir (1 à 5) part avec la fin de session, absente sans note', async () => {
+    const { api, session, server } = setup({
+      'POST /play/session/start': () => ({ status: 200, body: { ...PACK_6E, session_id: 's-1' } }),
+      'POST /play/session/end': () => ({ status: 200, body: {} }),
+    })
+    api.token = 'jeton'
+    await session.start('donjon', {}, 'tour_fractions')
+    await session.end(4)
+    await session.start('donjon', {}, 'tour_fractions')
+    await session.end()
+    const ends = server.calls.filter((c) => c.path === '/play/session/end').map((c) => c.body as Record<string, unknown>)
+    expect(ends).toHaveLength(2)
+    expect(ends[0]).toMatchObject({ session_id: 's-1', rating: 4 })
+    expect(ends[1]).not.toHaveProperty('rating')
+  })
+
   it('écarte un lot refusé pour de bon au lieu de bloquer la file', async () => {
     const { api, session } = setup({ 'POST /play/attempts': () => ({ status: 422 }) })
     api.token = 'jeton'
