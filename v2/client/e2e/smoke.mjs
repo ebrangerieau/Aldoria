@@ -44,10 +44,32 @@ if (MUSIC_DELAY > 0) {
   })
 }
 
-/** Répond à la question ouverte (celle de `window.__aldoria.question`), juste ou fausse, puis « Continuer ». */
-const answerQuestion = async (correct) => {
+/**
+ * Répond à la question ouverte (celle de `window.__aldoria.question`), juste ou fausse, puis « Continuer ». `useAids` : se sert d'abord du
+ * parchemin et de la plume du sac quand la question les propose (le parchemin s'il y a un indice, la plume sur un QCM d'au moins trois choix).
+ */
+const answerQuestion = async (correct, useAids = false) => {
   await page.getByRole('dialog').waitFor({ timeout: 10_000 * SLOW })
-  await solve(page, await currentQuestion(page, 10_000 * SLOW), correct)
+  const item = await currentQuestion(page, 10_000 * SLOW)
+  if (useAids) {
+    const scroll = page.getByTestId('objet-parchemin')
+    if ((await scroll.count()) > 0) {
+      await scroll.click()
+      await page.locator('.hint-text').waitFor({ timeout: 5000 * SLOW })
+      if ((await scroll.count()) > 0) throw new Error('le parchemin dépensé ne devrait plus être proposé')
+      if (!(await page.getByRole('button', { name: 'Un indice ?' }).isDisabled())) throw new Error('« Un indice ? » devrait être grisé après le parchemin')
+    }
+    const feather = page.getByTestId('objet-plume')
+    if ((await feather.count()) > 0) {
+      const n = await page.locator('.choice').count()
+      await feather.click()
+      const gone = await page.locator('.choice.gone').count()
+      if (gone !== Math.min(2, n - 2)) throw new Error(`la plume devrait cacher ${Math.min(2, n - 2)} propositions sur ${n}, pas ${gone}`)
+      if (n > 0 && (await page.locator('.choice.gone').nth(0).isEnabled())) throw new Error('une proposition cachée doit être grisée')
+      await page.screenshot({ path: `${OUT}/03c3-plume.png` })
+    }
+  }
+  await solve(page, item, correct)
   await page.locator(correct ? '.feedback.good' : '.feedback.bad').waitFor({ timeout: 5000 * SLOW })
   await page.getByRole('button', { name: 'Continuer' }).click()
 }
@@ -266,15 +288,55 @@ try {
     await page.getByTestId('actions').waitFor({ timeout: 20_000 * SLOW })
     await page.keyboard.up('KeyD')
     await page.screenshot({ path: `${OUT}/03c-combat.png` })
-    const turn = async (key, correct) => {
+    const turn = async (key, correct, useAids = false) => {
       await page.getByTestId('actions').waitFor({ timeout: 30_000 * SLOW })
       await page.keyboard.press(key)
-      await answerQuestion(correct)
+      await answerQuestion(correct, useAids)
       await page.waitForFunction(() => !document.querySelector('[data-testid=pv-ennemi]') || document.querySelector('[data-testid=actions]') || document.querySelector('[role=dialog]'), null, { timeout: 30_000 * SLOW })
     }
-    // Un coup porté, puis le héros n'a plus qu'un point de vie : une erreur le replie, l'ennemi garde ses blessures.
-    await turn('1', true)
+    // Le sac (touche 4) : sans question et sans perdre son tour. Un bouclier levé, une potion bue, puis les objets d'une question.
+    await page.evaluate(() => {
+      const w = window.__aldoria
+      w.give('potion', 1)
+      w.give('bouclier', 1)
+      w.give('parchemin', 1)
+      w.give('plume', 1)
+      w.encounter.hero.hp = 40
+    })
+    await page.getByTestId('actions').waitFor({ timeout: 30_000 * SLOW })
+    const asked = await page.evaluate(() => window.__aldoria.encounter.questions)
+    if (!/2 objets|3 objets|4 objets/.test(await page.getByTestId('action-sac').innerText())) throw new Error(`le sac devrait annoncer ses objets : ${await page.getByTestId('action-sac').innerText()}`)
+    await page.keyboard.press('4')
+    await page.getByTestId('sac').waitFor({ timeout: 5000 * SLOW })
+    await page.screenshot({ path: `${OUT}/03c2-sac.png` })
+    await page.getByTestId('sac-bouclier').click()
+    await page.getByTestId('bouclier').waitFor({ timeout: 10_000 * SLOW })
+    await page.getByTestId('actions').waitFor({ timeout: 10_000 * SLOW })
+    if (!(await page.evaluate(() => window.__aldoria.encounter.shieldUp))) throw new Error('le bouclier devrait être levé')
+    // Il est déjà levé : le sac le refuse. La potion, elle, rend toute la vie.
+    await page.keyboard.press('4')
+    await page.getByTestId('sac').waitFor({ timeout: 5000 * SLOW })
+    if (!(await page.getByTestId('sac-bouclier').isDisabled())) throw new Error('un bouclier déjà levé ne doit pas se redépenser')
+    await page.getByTestId('sac-potion').click()
+    await page.getByTestId('actions').waitFor({ timeout: 10_000 * SLOW })
+    const drunk = await page.evaluate(() => ({ hp: window.__aldoria.encounter.hero.hp, max: window.__aldoria.encounter.hero.maxHp, questions: window.__aldoria.encounter.questions }))
+    if (drunk.hp !== drunk.max) throw new Error(`la potion devrait rendre toute la vie : ${drunk.hp}/${drunk.max}`)
+    if (drunk.questions !== asked) throw new Error('le sac ne doit pas poser de question ni faire perdre le tour')
+    // Plus rien d'utilisable : tout est grisé, Échap revient aux actions.
+    await page.keyboard.press('4')
+    await page.getByTestId('sac').waitFor({ timeout: 5000 * SLOW })
+    if (!(await page.getByTestId('sac-potion').isDisabled())) throw new Error('la potion dépensée ne doit plus être utilisable')
+    await page.screenshot({ path: `${OUT}/03c4-sac-vide.png` })
+    if (!(await page.getByTestId('sac-questions').innerText()).includes('Plume ×1')) throw new Error('le sac devrait rappeler la plume et le parchemin gardés pour les questions')
+    await page.keyboard.press('Escape')
+    await page.getByTestId('sac').waitFor({ state: 'detached', timeout: 5000 * SLOW })
+    await page.getByTestId('actions').waitFor({ timeout: 10_000 * SLOW })
+    // Un coup porté (avec les objets de la question, si elle les propose) : l'ennemi riposte, le bouclier encaisse.
+    // Puis le héros n'a plus qu'un point de vie : une erreur le replie, l'ennemi garde ses blessures.
+    await turn('1', true, true)
     const hurt = await interior()
+    if (hurt.heroHp !== hurt.heroMax) throw new Error(`le bouclier aurait dû parer la riposte : ${hurt.heroHp}/${hurt.heroMax}`)
+    if (await page.getByTestId('bouclier').count()) throw new Error('le bouclier doit retomber après le coup paré')
     if (hurt.foeHp >= hurt.foeMax) throw new Error('le coup n’a pas blessé l’ennemi')
     await page.evaluate(() => { window.__aldoria.encounter.hero.hp = 1 })
     await page.getByTestId('actions').waitFor({ timeout: 30_000 * SLOW })

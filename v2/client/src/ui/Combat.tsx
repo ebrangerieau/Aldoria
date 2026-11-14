@@ -55,19 +55,31 @@ export function FightBars({ view, heroName }: { view: FightView; heroName: strin
       </div>
       <div className="fight-hero">
         <Bar label={heroName} hp={view.hero.hp} max={view.hero.maxHp} tone="hero" testId="pv-heros" />
+        {view.shield && (
+          <div className="shield-badge" role="status" data-testid="bouclier">
+            <span aria-hidden="true">🛡️</span> Bouclier levé
+          </div>
+        )}
       </div>
     </>
   )
 }
 
-const ACTIONS: { action: Action; key: string; hint: string }[] = [
+/** Un choix de la barre : une des trois actions (chacune demande une question) ou le sac (aucune question, le tour n'est pas perdu). */
+export type Choice = Action | 'sac'
+
+const ACTIONS: { action: Choice; key: string; hint: string }[] = [
   { action: 'automatisme', key: '1', hint: 'question rapide' },
   { action: 'chapitre', key: '2', hint: 'question du chapitre' },
   { action: 'soin', key: '3', hint: 'reprendre des forces' },
+  { action: 'sac', key: '4', hint: '' },
 ]
 
-/** Les trois actions ; les touches 1, 2 et 3 les choisissent aussi. */
-export function ActionBar({ world, canHeal, onChoose }: { world: WorldName; canHeal: boolean; onChoose: (action: Action) => void }) {
+/** « 2 objets » ou « rien pour le combat » : ce que le sac promet ici (potion et bouclier ; plume et parchemin servent sous une question). */
+const bagHint = (n: number): string => (n > 0 ? `${n} objet${n > 1 ? 's' : ''}` : 'rien pour le combat')
+
+/** Les quatre choix ; les touches 1 à 4 les choisissent aussi. `bagCount` : potions et boucliers du sac. */
+export function ActionBar({ world, canHeal, bagCount, onChoose }: { world: WorldName; canHeal: boolean; bagCount: number; onChoose: (choice: Choice) => void }) {
   const names = combatTexts(world).actions
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -85,13 +97,13 @@ export function ActionBar({ world, canHeal, onChoose }: { world: WorldName; canH
         <button
           key={action}
           type="button"
-          className="primary action"
+          className={action === 'sac' ? 'secondary action' : 'primary action'}
           disabled={action === 'soin' && !canHeal}
           data-testid={`action-${action}`}
           onClick={() => onChoose(action)}
         >
-          <span className="action-name"><kbd>{key}</kbd> {names[action]}</span>
-          <span className="action-hint">{hint}</span>
+          <span className="action-name"><kbd>{key}</kbd> {action === 'sac' ? 'Sac' : names[action]}</span>
+          <span className="action-hint">{action === 'sac' ? bagHint(bagCount) : hint}</span>
         </button>
       ))}
     </div>

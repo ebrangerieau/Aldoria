@@ -16,6 +16,8 @@ export interface FightView {
   canHeal: boolean
   /** Questions posées dans ce combat. */
   questions: number
+  /** Le bouclier est levé : le prochain coup de l'ennemi ne touche pas. */
+  shield: boolean
 }
 
 export interface FightHost {
@@ -38,8 +40,10 @@ export function applyEvent(view: FightView, event: CombatEvent): FightView {
     case 'hero_heal':
     case 'potion':
       return { ...view, hero: { ...view.hero, hp: Math.min(view.hero.maxHp, view.hero.hp + event.healed) } }
+    case 'shield_up':
+      return { ...view, shield: true }
     case 'foe_attack':
-      return { ...view, hero: { ...view.hero, hp: Math.max(0, view.hero.hp - event.damage) } }
+      return { ...view, shield: false, hero: { ...view.hero, hp: Math.max(0, view.hero.hp - event.damage) } }
     default:
       return view
   }
@@ -53,6 +57,7 @@ export function viewOf(encounter: Encounter): FightView {
     boss: encounter.isBoss,
     canHeal: encounter.canHeal,
     questions: encounter.questions,
+    shield: encounter.shieldUp,
   }
 }
 

@@ -8,13 +8,20 @@ import type { Item, UserInput } from '../../core/items'
 import { nextSign, signColumns, signsComplete, signTableFrom, type Sign } from '../../core/visuals'
 import { NumberLineAnswer } from './Visuals'
 
-type Props = { item: Item; onAnswer: (input: UserInput) => void; disabled: boolean }
+type Props = { item: Item; onAnswer: (input: UserInput) => void; disabled: boolean; /** Propositions retirées par la plume du sage (QCM seulement). */ hidden?: number[] }
 
-export function Choices({ item, onAnswer, disabled }: Props) {
+export function Choices({ item, onAnswer, disabled, hidden = [] }: Props) {
   return (
     <div className="choices" role="group" aria-label="Propositions">
       {(item.choices ?? []).map((choice, i) => (
-        <button key={i} type="button" className="choice" disabled={disabled} onClick={() => onAnswer(i)} lang={item.choices_lang ?? undefined}>
+        <button
+          key={i}
+          type="button"
+          className={hidden.includes(i) ? 'choice gone' : 'choice'}
+          disabled={disabled || hidden.includes(i)}
+          onClick={() => onAnswer(i)}
+          lang={item.choices_lang ?? undefined}
+        >
           <span className="choice-key">{i + 1}</span> {choice}
         </button>
       ))}

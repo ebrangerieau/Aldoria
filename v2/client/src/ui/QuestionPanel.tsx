@@ -7,6 +7,8 @@ import { useEffect, useRef, useState } from 'react'
 import type { Services } from '../app/services'
 import type { Accommodations } from '../core/accessibility'
 import { answerText } from '../core/answerText'
+import { featherHides, helpCounted, questionAids } from '../core/bag'
+import { count, ITEMS, type ItemId, type Owned } from '../core/inventory'
 import type { Item, UserInput } from '../core/items'
 import type { SubmitResult } from '../core/questionService'
 import { Formula } from './Formula'
@@ -22,7 +24,18 @@ export interface QuestionOutcome {
   timeMs?: number
 }
 
-export function QuestionPanel({ services, item: first, title, gameMode, accommodations, success = 'Bravo !', aside = true, onDone }: {
+/**
+ * Les objets du sac proposés sous une question (plume, parchemin) : `owned` rend le sac à jour, `spend` en dépense un (et le range dans
+ * la partie) et dit si c'était possible. Absent : aucun objet (défi du jour, Pierre du Jour).
+ */
+export interface QuestionAids {
+  owned: () => Owned
+  spend: (id: ItemId) => boolean
+}
+
+const AID_ICONS: Record<'plume' | 'parchemin', string> = { plume: '🪶', parchemin: '📜' }
+
+export function QuestionPanel({ services, item: first, title, gameMode, accommodations, success = 'Bravo !', aside = true, aids, onDone }: {
   services: Services
   item: Item
   title: string
@@ -31,6 +44,8 @@ export function QuestionPanel({ services, item: first, title, gameMode, accommod
   success?: string
   /** « Pas vu en classe » proposé (jamais sur une énigme : la porte attend la réponse). */
   aside?: boolean
+  /** Plume et parchemin du sac ; une aide d'objet compte comme indice pour le suivi, jamais comme baisse de puissance. */
+  aids?: QuestionAids
   accommodations: Accommodations
   onDone: (outcome: QuestionOutcome) => void
 }) {
@@ -38,6 +53,10 @@ export function QuestionPanel({ services, item: first, title, gameMode, accommod
   const [hintShown, setHintShown] = useState(false)
   const [result, setResult] = useState<SubmitResult | null>(null)
   const [asideArmed, setAsideArmed] = useState(false)
+  /** Objets du sac déjà dépensés sur cette question (un de chaque au plus, comme dans la v1). */
+  const [spent, setSpent] = useState<ItemId[]>([])
+  /** Propositions retirées par la plume. */
+  const [hidden, setHidden] = useState<number[]>([])
   const shownAt = useRef(performance.now())
   const answeredIn = useRef(0)
   const Widget = widgetFor(item)
@@ -57,7 +76,8 @@ export function QuestionPanel({ services, item: first, title, gameMode, accommod
   function answer(input: UserInput) {
     const elapsed = performance.now() - shownAt.current
     answeredIn.current = elapsed
-    const res = services.questions.submit(item, input, elapsed, hintShown, gameMode)
+    // Pour le suivi, une aide d'objet compte comme indice ; au combat, seul l'indice ordinaire baisse la puissance (outcome.hintUsed).
+    const res = services.questions.submit(item, input, elapsed, helpCounted(hintShown, spent).tracking, gameMode)
     setResult(res)
     services.sfx.play(res.correct ? 'correct' : 'wrong')
     if (!res.correct && accommodations.auto_read) void services.voice.say([speech.explanation ?? item.explanation])
@@ -74,9 +94,21 @@ export function QuestionPanel({ services, item: first, title, gameMode, accommod
       setItem(replacement)
       setHintShown(false)
       setAsideArmed(false)
+      setSpent([])
+      setHidden([])
     } else {
       onDone({ item, result: null, hintUsed: false })
     }
+  }
+
+  const parchment = spent.includes('parchemin')
+  const offered = aids ? questionAids(item, aids.owned()).filter((id) => !spent.includes(id) && !(id === 'parchemin' && hintShown)) : []
+
+  function spendAid(id: ItemId) {
+    if (result || !aids || !aids.spend(id)) return
+    services.sfx.play('spell')
+    setSpent((list) => [...list, id])
+    if (id === 'plume') setHidden(featherHides(item))
   }
 
   return (
@@ -91,12 +123,17 @@ export function QuestionPanel({ services, item: first, title, gameMode, accommod
 
         <VisualFor key={`visuel-${item.id}`} item={item} revealed={result ? { correct: result.correct, answer: answerText(item) } : null} />
 
-        {!result && Widget && <Widget key={item.id} item={item} onAnswer={answer} disabled={false} />}
+        {!result && Widget && <Widget key={item.id} item={item} onAnswer={answer} disabled={false} hidden={hidden} />}
         {!result && !Widget && <p className="error">Ce type de question arrivera bientôt.</p>}
 
         {!result && (
           <footer className="question-tools">
-            <button type="button" className="secondary" disabled={hintShown} onClick={() => setHintShown(true)}>Un indice ?</button>
+            <button type="button" className="secondary" disabled={hintShown || parchment} onClick={() => setHintShown(true)}>Un indice ?</button>
+            {offered.map((id) => (
+              <button key={id} type="button" className="secondary" title={ITEMS[id].help} data-testid={`objet-${id}`} onClick={() => spendAid(id)}>
+                <span aria-hidden="true">{AID_ICONS[id as 'plume' | 'parchemin']}</span> {ITEMS[id].short} ×{count(aids!.owned(), id)}
+              </button>
+            ))}
             {aside && (
               <button type="button" className={asideArmed ? 'warning' : 'secondary'} onClick={setAside}>
                 {asideArmed ? 'Sûr ? Appuie encore' : 'Pas vu en classe'}
@@ -104,7 +141,7 @@ export function QuestionPanel({ services, item: first, title, gameMode, accommod
             )}
           </footer>
         )}
-        {!result && hintShown && <p className="hint-text" role="note">💡 {item.hint}</p>}
+        {!result && (hintShown || parchment) && <p className="hint-text" role="note">💡 {item.hint}</p>}
 
         {result && (
           <div className={result.correct ? 'feedback good' : 'feedback bad'} role="status">
@@ -122,7 +159,7 @@ export function QuestionPanel({ services, item: first, title, gameMode, accommod
               </>
             )}
             <div className="actions">
-              <button type="button" className="primary" autoFocus onClick={() => onDone({ item, result, hintUsed: hintShown, timeMs: answeredIn.current })}>Continuer</button>
+              <button type="button" className="primary" autoFocus onClick={() => onDone({ item, result, hintUsed: helpCounted(hintShown, spent).power, timeMs: answeredIn.current })}>Continuer</button>
             </div>
           </div>
         )}
