@@ -104,6 +104,12 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   d'un lieu fait échouer `tests/recordedVoices.test.ts` : relancer `python tools/voix_elevenlabs.py` (clé ElevenLabs dans
   l'environnement, jamais dans le dépôt ; `--essai` liste ce qui serait généré, sans clé). Un nouveau texte de Maître Ysaline
   s'ajoute à `lignes.json` (groupe, id, texte, voix), puis le script génère son son. Crédit ElevenLabs dans les Options.
+- **Logiques de la v1 portées, pas encore branchées à l'écran** (pures, testées, `core/`) : apparence du héros et du renard
+  (`wardrobe.ts`, `content/monde/apparence.json`), défi quotidien (`dailyChallenge.ts` : série, rattrapage, record, coffre de la
+  semaine), île du Sphinx (`sphinx/board.ts` : jeu de blocs ; `sphinx/island.ts` : passages de barque, paliers, aide du Sphinx ;
+  180 énigmes dans `content/monde/sphinx_niveaux.json`, générées par `python tools/make_sphinx_levels.py` : le palier 6 demande
+  plus d'une demi-heure, et la sortie est identique à `game/worlds/shared/sphinx_levels.gd` de la v1). Leur état se range dans
+  la partie (`core/save.ts`) et leur écran vient avec les étapes 1.x : un état se rend toujours neuf (jamais modifié sur place).
 - **Textes visibles par les enfants en français**, tutoiement ; aucune donnée personnelle hors du serveur d'Aldoria.
 - **Erreurs du jeu** : tout ce qui passe par une exception, une promesse rejetée ou `console.error` remonte à l'exploitant
   (`core/errorReport.ts`, `app/errors.ts`). Ne jamais mettre de prénom, de question ni de réponse dans un message d'erreur ;
