@@ -382,7 +382,8 @@ try {
     const sound = page.waitForResponse((r) => r.url().includes('/voix/seuil-'), { timeout: 15_000 * SLOW })
     await page.getByRole('button', { name: /Écouter/ }).click()
     const res = await sound
-    if (res.status() !== 200 || !(res.headers()['content-type'] ?? '').startsWith('audio/mpeg')) {
+    // 200 sur l'aperçu local, 206 (contenu partiel) en production : nginx sert un son par morceaux quand le lecteur le demande.
+    if (![200, 206].includes(res.status()) || !(res.headers()['content-type'] ?? '').startsWith('audio/mpeg')) {
       throw new Error(`son du seuil : ${res.status()} ${res.headers()['content-type']} ${res.url()}`)
     }
     await page.waitForTimeout(500 * SLOW)
