@@ -1,13 +1,22 @@
 /**
- * Lecture à voix haute. Enfant connecté et en ligne : voix neuronale du serveur (Piper,
- * POST /play/speech, même voix sur tous les PC, sons gardés en cache par l'API). Sinon :
- * voix du navigateur (speechSynthesis). Les morceaux (énoncé, propositions) se lisent l'un
- * après l'autre ; un nouvel appel interrompt la lecture en cours.
+ * Lecture à voix haute. Un texte français qui a sa voix enregistrée (Maître Ysaline, narrateur :
+ * ElevenLabs, core/recordedVoices.ts) est joué tel quel, même sans compte ni réseau autre que le
+ * site. Sinon, enfant connecté et en ligne : voix neuronale du serveur (Piper, POST /play/speech,
+ * même voix sur tous les PC, sons gardés en cache par l'API). Sinon : voix du navigateur
+ * (speechSynthesis). Les morceaux (énoncé, propositions) se lisent l'un après l'autre ; un
+ * nouvel appel interrompt la lecture en cours.
  */
 import type { ApiClient } from './api'
+import { RecordedVoices } from './recordedVoices'
 
 const SERVER_LANGS = ['fr', 'en', 'es']
 const RETRY_AFTER_MS = 60_000
+
+/** Manifeste des voix enregistrées, servi à côté du jeu (deploy/voix/ dans l'image web). */
+async function fetchManifest(): Promise<unknown> {
+  const res = await fetch('/voix/manifest.json')
+  return res.ok ? ((await res.json()) as unknown) : null
+}
 
 export class Voice {
   private audio: HTMLAudioElement | null = null
@@ -16,7 +25,15 @@ export class Voice {
   private cache = new Map<string, string>()
   private speaking = false
 
-  constructor(private readonly api: ApiClient) {}
+  constructor(
+    private readonly api: ApiClient,
+    private readonly recordings = new RecordedVoices(fetchManifest),
+  ) {}
+
+  /** À l'entrée dans l'île : charge le manifeste des voix enregistrées avant la première réplique. */
+  warm(): void {
+    void this.recordings.warm()
+  }
 
   /** Une lecture est en cours : la musique se fait plus discrète. */
   get isSpeaking(): boolean {
@@ -38,12 +55,36 @@ export class Voice {
     try {
       for (const text of parts.map((p) => p.trim()).filter(Boolean)) {
         if (generation !== this.generation) return
+        // Le texte a sa voix enregistrée (français seulement) : pas de Piper, pas de voix de l'appareil.
+        if (lang.startsWith('fr') && (await this.playRecorded(text, generation))) continue
+        if (generation !== this.generation) return
         const played = this.canUseServer(lang) ? await this.playServer(text, lang, rate, generation) : false
         if (!played && generation === this.generation) await this.playDevice(text, lang, rate)
       }
     } finally {
       if (generation === this.generation) this.speaking = false // sinon, une lecture plus récente a pris le relais
     }
+  }
+
+  /** Vrai si le son enregistré a été joué (ou si la lecture a été interrompue entre-temps). */
+  private async playRecorded(text: string, generation: number): Promise<boolean> {
+    const url = await this.recordings.urlFor(text)
+    if (!url) return false
+    if (generation !== this.generation) return true
+    const audio = new Audio(url)
+    this.audio = audio
+    let started = false
+    await new Promise<void>((resolve) => {
+      audio.onplaying = () => {
+        started = true
+      }
+      audio.onended = () => resolve()
+      audio.onpause = () => resolve() // stop() : la lecture en cours s'interrompt
+      audio.onerror = () => resolve()
+      audio.play().catch(() => resolve())
+    })
+    // Fichier absent ou illisible avant le moindre son : Piper prend le relais pour ce morceau.
+    return started || generation !== this.generation
   }
 
   private canUseServer(lang: string): boolean {

@@ -57,6 +57,36 @@ const music = (): Plugin => ({
   configurePreviewServer: (server) => void server.middlewares.use(serveMusic),
 })
 
+/**
+ * Voix enregistrées (ElevenLabs) de Maître Ysaline et du narrateur : deploy/voix/, servies sous /voix/
+ * (src/core/recordedVoices.ts). En production, l'image web les copie à côté du jeu (deploy/web.Dockerfile) ;
+ * ici, `npm run dev` et `npm run preview` (donc les parcours dans le navigateur) les lisent à la source.
+ */
+const voiceDir = fileURLToPath(new URL('../deploy/voix/', import.meta.url))
+
+function serveVoices(req: IncomingMessage, res: ServerResponse, next: () => void): void {
+  let name = ''
+  try {
+    name = decodeURIComponent((req.url ?? '').split('?')[0]!.replace(/^\/voix\//, ''))
+  } catch {
+    return next() // adresse mal encodée : pas un de nos fichiers
+  }
+  if (!req.url?.startsWith('/voix/') || !/^[\w.-]+\.(mp3|json)$/.test(name) || !existsSync(voiceDir + name)) return next()
+  res.writeHead(200, {
+    'Content-Type': name.endsWith('.mp3') ? 'audio/mpeg' : 'application/json',
+    'Content-Length': statSync(voiceDir + name).size,
+    'Cache-Control': 'no-cache',
+  })
+  if (req.method === 'HEAD') res.end()
+  else createReadStream(voiceDir + name).pipe(res)
+}
+
+const recordedVoices = (): Plugin => ({
+  name: 'aldoria-voix',
+  configureServer: (server) => void server.middlewares.use(serveVoices),
+  configurePreviewServer: (server) => void server.middlewares.use(serveVoices),
+})
+
 /** CSP du jeu, identique à celle de deploy/nginx/web.conf. */
 export const CSP = [
   "default-src 'self'",
@@ -73,7 +103,7 @@ export const CSP = [
 ].join('; ')
 
 export default defineConfig({
-  plugins: [react(), music()],
+  plugins: [react(), music(), recordedVoices()],
   resolve: { alias: { '@content': content } },
   server: {
     port: 5173,

@@ -1,5 +1,5 @@
 """Énigmes de blocs du temple du Sphinx (jeu de logique, type Sokoban) : génère
-`game/worlds/shared/sphinx_levels.gd`.
+`content/monde/sphinx_niveaux.json`.
 
 Chaque niveau part de sa solution : les blocs posés sur les dalles gravées, le héros les tire
 à reculons (on ne peut jamais tirer en jeu, seulement pousser). Le niveau obtenu a donc
@@ -15,12 +15,13 @@ Tirage reproductible (graine fixe) : relancer le script redonne les mêmes nivea
 from __future__ import annotations
 
 import argparse
+import json
 import random
 from collections import deque
 from pathlib import Path
 
-ROOT = Path(__file__).resolve().parent.parent
-OUT = ROOT / "game" / "worlds" / "shared" / "sphinx_levels.gd"
+ROOT = Path(__file__).resolve().parent.parent  # v2/
+OUT = ROOT / "content" / "monde" / "sphinx_niveaux.json"
 
 # Paliers : (largeur, hauteur, blocs, part de murs intérieurs, poussées min, poussées max, essais)
 TIERS = [
@@ -324,26 +325,24 @@ def make_level(rng: random.Random, tier: tuple, seen_layouts: set) -> dict:
     return {"rows": layout.split("\n"), "pushes": pushes, "solution": solution}
 
 
-HEADER = [
-    "## Énigmes de blocs du temple du Sphinx, par palier de difficulté.",
-    "## Généré par tools/make_sphinx_levels.py : ne pas modifier à la main.",
-    "## Lignes : # mur, espace dalle, . dalle gravée, $ bloc, * bloc sur une dalle",
-    "## gravée, @ héros, + héros sur une dalle gravée, ~ sable (hors du temple).",
-    "## Solution : marche en minuscules, poussées en majuscules (l r u d).",
-]
+COMMENT = (
+    "Énigmes de blocs du temple du Sphinx, par palier de difficulté. Généré par tools/make_sphinx_levels.py : "
+    "ne pas modifier à la main. Lignes : # mur, espace dalle, . dalle gravée, $ bloc, * bloc sur une dalle "
+    "gravée, @ héros, + héros sur une dalle gravée, ~ sable (hors du temple). "
+    "Solution : marche en minuscules, poussées en majuscules (l r u d)."
+)
 
 
 def write(levels: list[list[dict]]) -> None:
-    lines = ["class_name SphinxLevels", "extends RefCounted", *HEADER, "", "const TIERS := ["]
+    """Un niveau par ligne : le fichier se relit et se compare facilement."""
+    tiers = []
     for tier in levels:
-        lines.append("\t[")
-        for level in tier:
-            body = ", ".join(f'"{r}"' for r in level["rows"])
-            rest = f'"pushes": {level["pushes"]}, "solution": "{level["solution"]}"'
-            lines.append(f'\t\t{{"rows": [{body}], {rest}}},')
-        lines.append("\t],")
-    lines.append("]")
-    OUT.write_text("\n".join(lines) + "\n", encoding="utf-8", newline="\n")
+        lines = [json.dumps(level, ensure_ascii=False, separators=(",", ":")) for level in tier]
+        tiers.append("[\n" + ",\n".join(lines) + "\n]")
+    text = (
+        '{"_commentaire":' + json.dumps(COMMENT, ensure_ascii=False) + ',"tiers":[\n' + ",\n".join(tiers) + "\n]}\n"
+    )
+    OUT.write_text(text, encoding="utf-8", newline="\n")
 
 
 def main() -> None:

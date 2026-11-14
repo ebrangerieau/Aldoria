@@ -10,6 +10,7 @@ import { answerText } from '../core/answerText'
 import type { Item, UserInput } from '../core/items'
 import type { SubmitResult } from '../core/questionService'
 import { Formula } from './Formula'
+import { VisualFor } from './widgets/Visuals'
 import { widgetFor } from './widgets/Widgets'
 
 export interface QuestionOutcome {
@@ -17,6 +18,8 @@ export interface QuestionOutcome {
   result: SubmitResult | null // null : question mise de côté sans réponse
   /** L'indice a servi (il réduit la puissance d'un coup : core/combat/encounter.ts). */
   hintUsed: boolean
+  /** Temps de réponse en millisecondes (sans la lecture de l'explication) ; 0 si la question n'a pas été répondue. */
+  timeMs?: number
 }
 
 export function QuestionPanel({ services, item: first, title, gameMode, accommodations, success = 'Bravo !', onDone }: {
@@ -34,6 +37,7 @@ export function QuestionPanel({ services, item: first, title, gameMode, accommod
   const [result, setResult] = useState<SubmitResult | null>(null)
   const [asideArmed, setAsideArmed] = useState(false)
   const shownAt = useRef(performance.now())
+  const answeredIn = useRef(0)
   const Widget = widgetFor(item)
   const speech = item.speech ?? {}
 
@@ -50,8 +54,10 @@ export function QuestionPanel({ services, item: first, title, gameMode, accommod
 
   function answer(input: UserInput) {
     const elapsed = performance.now() - shownAt.current
+    answeredIn.current = elapsed
     const res = services.questions.submit(item, input, elapsed, hintShown, gameMode)
     setResult(res)
+    services.sfx.play(res.correct ? 'correct' : 'wrong')
     if (!res.correct && accommodations.auto_read) void services.voice.say([speech.explanation ?? item.explanation])
   }
 
@@ -80,6 +86,8 @@ export function QuestionPanel({ services, item: first, title, gameMode, accommod
         </header>
         <p className="prompt">{item.prompt}</p>
         {item.latex && <Formula latex={item.latex} svg={item.latex_hash ? services.session.pack?.formulas[item.latex_hash] : undefined} />}
+
+        <VisualFor key={`visuel-${item.id}`} item={item} revealed={result ? { correct: result.correct, answer: answerText(item) } : null} />
 
         {!result && Widget && <Widget key={item.id} item={item} onAnswer={answer} disabled={false} />}
         {!result && !Widget && <p className="error">Ce type de question arrivera bientôt.</p>}
@@ -110,7 +118,7 @@ export function QuestionPanel({ services, item: first, title, gameMode, accommod
               </>
             )}
             <div className="actions">
-              <button type="button" className="primary" autoFocus onClick={() => onDone({ item, result, hintUsed: hintShown })}>Continuer</button>
+              <button type="button" className="primary" autoFocus onClick={() => onDone({ item, result, hintUsed: hintShown, timeMs: answeredIn.current })}>Continuer</button>
             </div>
           </div>
         )}

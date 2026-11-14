@@ -66,6 +66,7 @@ describe('Mini-carte : repères', () => {
     { id: 'lieu-fait', kind: 'lieu', label: 'Un lieu terminé', x: 130, z: 120, open: true },
     { id: 'pierre-eveil', kind: 'pierre', label: "La Pierre d'éveil", x: 9, z: -22, open: true },
     { id: 'pierre-maths', kind: 'pierre', label: 'La Pierre des Cimes', x: 111, z: 112, open: false },
+    { id: 'pierre-jour', kind: 'jour', label: 'La Pierre du Jour', x: 14, z: 8, open: true },
     { id: 'ysaline', kind: 'ysaline', label: 'Maître Ysaline', x: -6, z: -12 },
   ]
   const markers = mapMarkers(layout, '6e', sources, { 'lieu-fait': 1 })
@@ -84,6 +85,12 @@ describe('Mini-carte : repères', () => {
     expect(byId('lieu-fait')?.state).toBe('termine')
     expect(byId('pierre-eveil')?.state).toBe('endormie')
     expect(byId('pierre-maths')?.state).toBe('eveillee')
+  })
+
+  it('montre la Pierre du Jour à relever, puis relevée', () => {
+    expect(byId('pierre-jour')).toMatchObject({ kind: 'jour', state: 'a_faire', label: 'La Pierre du Jour', x: 14, z: 8 })
+    const done = mapMarkers(layout, '6e', sources.map((s) => (s.id === 'pierre-jour' ? { ...s, open: false } : s)), {})
+    expect(done.find((m) => m.id === 'pierre-jour')?.state).toBe('faite')
   })
 
   it('ne révèle pas les lieux secrets et laisse les personnages de côté', () => {

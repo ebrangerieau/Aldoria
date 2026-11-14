@@ -5,6 +5,8 @@
  */
 import { useState } from 'react'
 import type { Item, UserInput } from '../../core/items'
+import { nextSign, signColumns, signsComplete, signTableFrom, type Sign } from '../../core/visuals'
+import { NumberLineAnswer } from './Visuals'
 
 type Props = { item: Item; onAnswer: (input: UserInput) => void; disabled: boolean }
 
@@ -117,8 +119,103 @@ export function TrueFalse({ item, onAnswer, disabled }: Props) {
   )
 }
 
+const VECTOR_KEYS = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '−', '0', ',']
+
+/** Coordonnées d'un vecteur ou d'un point : ( x ; y ). Les touches écrivent dans la case choisie. */
+export function VectorAnswer({ onAnswer, disabled }: Props) {
+  const [values, setValues] = useState<[string, string]>(['', ''])
+  const [slot, setSlot] = useState<0 | 1>(0)
+  const insert = (k: string) =>
+    setValues((v) => {
+      const next: [string, string] = [v[0], v[1]]
+      next[slot] = (next[slot] + (k === '−' ? '-' : k)).slice(0, 6)
+      return next
+    })
+  const set = (i: 0 | 1, text: string) =>
+    setValues((v) => {
+      const next: [string, string] = [v[0], v[1]]
+      next[i] = text.replace('−', '-').slice(0, 6)
+      return next
+    })
+  const ready = values[0].trim() !== '' && values[1].trim() !== ''
+  return (
+    <form
+      className="vector-answer"
+      onSubmit={(e) => {
+        e.preventDefault()
+        if (ready) onAnswer(values)
+      }}
+    >
+      <div className="vector-row">
+        <span aria-hidden="true">(</span>
+        <input className="answer-input number" value={values[0]} onChange={(e) => set(0, e.target.value)} onFocus={() => setSlot(0)} inputMode="decimal" autoComplete="off" aria-label="Première coordonnée, x" disabled={disabled} autoFocus />
+        <span aria-hidden="true">;</span>
+        <input className="answer-input number" value={values[1]} onChange={(e) => set(1, e.target.value)} onFocus={() => setSlot(1)} inputMode="decimal" autoComplete="off" aria-label="Deuxième coordonnée, y" disabled={disabled} />
+        <span aria-hidden="true">)</span>
+      </div>
+      <div className="keys number">
+        {VECTOR_KEYS.map((k) => (
+          <button key={k} type="button" disabled={disabled} onClick={() => insert(k)}>{k}</button>
+        ))}
+        <button type="button" disabled={disabled} onClick={() => setValues((v) => (slot === 0 ? [v[0].slice(0, -1), v[1]] : [v[0], v[1].slice(0, -1)]))} aria-label="Effacer">⌫</button>
+      </div>
+      <button type="submit" className="primary" disabled={disabled || !ready}>Valider</button>
+    </form>
+  )
+}
+
+/** Tableau de signes : une case passe de vide à « + », puis « − », puis « + »… ; « Valider » quand tout est rempli. */
+export function SignTableAnswer({ item, onAnswer, disabled }: Props) {
+  const { roots, rows, columns } = signTableFrom(item.visual ?? {})
+  const [signs, setSigns] = useState<Sign[]>(() => Array<Sign>(rows.length * columns).fill(''))
+  const heads = signColumns(roots)
+  return (
+    <div className="sign-table-answer">
+      <table className="sign-table">
+        <thead>
+          <tr>
+            <th scope="col">x</th>
+            {heads.map((h) => <th key={h} scope="col">{h}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((row, r) => (
+            <tr key={row}>
+              <th scope="row">{row}</th>
+              {Array.from({ length: columns }, (_, c) => {
+                const sign = signs[r * columns + c] ?? ''
+                return (
+                  <td key={c}>
+                    <button
+                      type="button"
+                      className="sign-cell"
+                      disabled={disabled}
+                      aria-label={`${row}, ${heads[c]} : ${sign === '' ? 'vide' : sign === '+' ? 'plus' : 'moins'}`}
+                      onClick={() => setSigns((all) => all.map((s, i) => (i === r * columns + c ? nextSign(s) : s)))}
+                    >
+                      {sign === '-' ? '−' : sign}
+                    </button>
+                  </td>
+                )
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <p className="hint">Touche une case pour mettre « + » ou « − ».</p>
+      <button type="button" className="primary" disabled={disabled || !signsComplete(signs)} onClick={() => onAnswer(signs)}>Valider</button>
+    </div>
+  )
+}
+
 export function widgetFor(item: Item) {
   switch (item.type) {
+    case 'vector':
+      return VectorAnswer
+    case 'number_line':
+      return NumberLineAnswer
+    case 'sign_table':
+      return SignTableAnswer
     case 'mcq':
       return Choices
     case 'numeric':
