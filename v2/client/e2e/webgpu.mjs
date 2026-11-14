@@ -1,11 +1,12 @@
 // Parcours WebGPU dans un vrai navigateur, sous la CSP de production (décision D9) :
 //   npm run build && npm run preview &   puis   npm run e2e:webgpu
-// Vérifie que l'île se charge en WebGPU sans rien demander hors du site, que le héros avance, que les
-// outils de traduction des shaders (glslang, twgsl) sont servis par le site avec le bon type, que le
-// banc de mesure (?mesure) va au bout, et que sans WebGPU le jeu repart en WebGL 2.
-// Navigateur sans WebGPU (pas d'adaptateur) : le parcours le dit et s'arrête sans échec.
-// Captures dans $E2E_OUT (défaut : e2e/captures).
-import { mkdirSync } from 'node:fs'
+// 1. Avec WebGPU : l'île se charge en WebGPU sans rien demander hors du site, le héros avance, les outils
+//    de traduction des shaders (glslang, twgsl) sont servis par le site avec le bon type, le banc de
+//    mesure (?mesure) va au bout. Navigateur sans adaptateur WebGPU : cette partie est ignorée, et le
+//    dit haut et fort (sortie et $GITHUB_STEP_SUMMARY) pour qu'un vert ne passe pas pour une couverture.
+// 2. Toujours : sans WebGPU, `?moteur=webgpu` repart en WebGL 2 (c'est ce qui protège les vrais PC).
+// Captures dans $E2E_OUT (défaut : e2e/captures). CHROMIUM_PATH : navigateur à utiliser.
+import { appendFileSync, mkdirSync } from 'node:fs'
 import { createRequire } from 'node:module'
 
 const require = createRequire(import.meta.url)
@@ -25,7 +26,13 @@ mkdirSync(OUT, { recursive: true })
 // WebGPU sans carte graphique : Vulkan logiciel (SwiftShader). Sans ces options, le contexte WebGPU
 // se perd dès la création (« A valid external Instance reference no longer exists »).
 const SOFTWARE_GPU = ['--enable-unsafe-webgpu', '--enable-features=Vulkan', '--use-vulkan=swiftshader', '--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist']
-const launch = (args) => chromium.launch({ executablePath: process.env.CHROMIUM_PATH || undefined, args })
+const launch = (args) =>
+  chromium.launch({
+    executablePath: process.env.CHROMIUM_PATH || undefined,
+    // Chromium complet en nouveau mode sans tête : le « headless shell » n'a pas toujours WebGPU.
+    channel: process.env.CHROMIUM_PATH ? undefined : 'chromium',
+    args,
+  })
 
 const problems = []
 const watch = (page) => {
@@ -43,27 +50,16 @@ const open = async (page, query) => {
   await page.goto(`${BASE}/?decouverte&e2e&qualite=bas&erreurs=0&${query}`)
   await page.waitForFunction(() => window.__aldoria?.world, null, { timeout: 180_000 * SLOW })
 }
+const summary = (text) => {
+  if (process.env.GITHUB_STEP_SUMMARY) appendFileSync(process.env.GITHUB_STEP_SUMMARY, `${text}\n`)
+}
 
-const browser = await launch(SOFTWARE_GPU)
-try {
-  const page = await browser.newPage({ viewport: { width: 1280, height: 720 } })
-  watch(page)
-
-  await page.goto(`${BASE}/`)
-  const gpu = await page.evaluate(async () => {
-    if (!navigator.gpu) return 'pas de navigator.gpu'
-    return (await navigator.gpu.requestAdapter()) ? 'ok' : 'pas d’adaptateur'
-  })
-  if (gpu !== 'ok') {
-    console.log(`WebGPU indisponible dans ce navigateur (${gpu}) : parcours WebGPU ignoré.`)
-    await browser.close()
-    process.exit(0)
-  }
-
+/** Partie 1 : tout ce qui demande un adaptateur WebGPU. */
+async function withWebGPU(page) {
   await step("l'île se charge en WebGPU", async () => {
     await open(page, 'moteur=webgpu')
-    const kind = await page.evaluate(() => ({ kind: window.__aldoria.world.engineKind, fallback: window.__aldoria.world.engineFallback ?? null }))
-    if (kind.kind !== 'webgpu') throw new Error(`moteur : ${kind.kind} (repli : ${kind.fallback})`)
+    const r = await page.evaluate(() => ({ kind: window.__aldoria.world.engineKind, fallback: window.__aldoria.world.engineFallback ?? null }))
+    if (r.kind !== 'webgpu') throw new Error(`moteur : ${r.kind} (repli : ${r.fallback})`)
     await page.waitForTimeout(2500 * SLOW)
     await page.screenshot({ path: `${OUT}/webgpu-01-depart.png` })
   })
@@ -105,13 +101,32 @@ try {
     await page.getByTestId('mesure').waitFor()
     await page.screenshot({ path: `${OUT}/webgpu-02-mesure.png` })
   })
+}
+
+let ignored = ''
+const browser = await launch(SOFTWARE_GPU)
+try {
+  const page = await browser.newPage({ viewport: { width: 1280, height: 720 } })
+  watch(page)
+  await page.goto(`${BASE}/`)
+  const gpu = await page.evaluate(async () => {
+    if (!navigator.gpu) return 'pas de navigator.gpu'
+    return (await navigator.gpu.requestAdapter()) ? 'ok' : 'pas d’adaptateur'
+  })
+  if (gpu === 'ok') {
+    await withWebGPU(page)
+  } else {
+    ignored = gpu
+    console.log(`\n⚠ WebGPU INDISPONIBLE dans ce navigateur (${gpu}) : partie WebGPU IGNORÉE, rien n'a été vérifié en WebGPU.\n`)
+  }
 } catch (error) {
   problems.push(String(error))
 } finally {
   await browser.close()
 }
 
-// Sans WebGPU (navigateur lancé sans l'option), `?moteur=webgpu` doit donner un jeu qui marche en WebGL 2.
+// Partie 2, toujours : sans WebGPU (navigateur lancé sans l'option), `?moteur=webgpu` doit donner un
+// jeu qui marche en WebGL 2.
 const plain = await launch(['--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'])
 try {
   const page = await plain.newPage({ viewport: { width: 1280, height: 720 } })
@@ -132,7 +147,14 @@ try {
 }
 
 if (problems.length > 0) {
+  summary(`### Parcours WebGPU : ÉCHEC\n\n${problems.join('\n')}`)
   console.error('\n✗ Parcours WebGPU en échec :\n  ' + problems.join('\n  '))
   process.exit(1)
 }
-console.log(`\nParcours WebGPU réussi. Captures : ${OUT}`)
+if (ignored) {
+  summary(`### Parcours WebGPU : partie WebGPU IGNORÉE (${ignored})\n\nSeul le repli sur WebGL 2 a été vérifié. Un vert ici ne prouve rien en WebGPU.`)
+  console.log(`\nParcours WebGPU : partie WebGPU ignorée (${ignored}), repli sur WebGL 2 vérifié. Captures : ${OUT}`)
+} else {
+  summary('### Parcours WebGPU : réussi (WebGPU et repli sur WebGL 2)')
+  console.log(`\nParcours WebGPU réussi. Captures : ${OUT}`)
+}

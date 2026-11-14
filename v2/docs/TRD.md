@@ -17,7 +17,7 @@ sont repris sans changement de fond ; ce document décrit ce qui est nouveau ou 
 | Production | une seule API (construite depuis `v2/api`) et une seule base pour les deux jeux ; le jeu v2 sur `aldoria2.bandtrack.fr` | D11 |
 | Contenu du monde | JSON dans `content/monde/`, jamais dans le code | D7 |
 | Déplacement | règles pures (eau, pentes, cercles d'obstacles) sans moteur physique | D8 |
-| Rendu | WebGL 2 par défaut ; WebGPU évalué en phase 0 | D9 |
+| Rendu | WebGL 2 par défaut ; WebGPU prêt (outils servis par le site, repli automatique), défaut à choisir après mesure | D9 |
 | CSP | stricte (`style-src 'self'`, rien hors du site), vérifiée par les tests navigateur | D10 |
 
 ## 1. Architecture
@@ -95,11 +95,21 @@ client/
 Profils (`?qualite=`, `game/quality.ts`) : `haut` (défaut), `moyen`, `bas`. Ils ne changent que des réglages (taille des
 ombres, cascades, MSAA, SSAO, halo, densité de végétation, résolution), jamais le code d'une scène.
 
-### 2.3 Moteur : WebGL 2 puis WebGPU
+### 2.3 Moteur : WebGL 2 par défaut, WebGPU prêt
 
-`game/engine.ts` crée un moteur WebGL 2. `?moteur=webgpu` essaie WebGPU : Babylon.js a besoin de convertir certains shaders
-(twgsl), d'ordinaire chargé depuis un CDN que la CSP interdit. Étape 0.4 du plan : servir ces fichiers depuis le site, mesurer,
-puis choisir le moteur par défaut. Tout le code de rendu passe par l'API commune de Babylon.js et ne dépend pas du moteur.
+`game/engine.ts` crée un moteur WebGL 2 par défaut ; `?moteur=webgpu` demande WebGPU, `?moteur=webgl2` force l'autre. Si WebGPU
+manque ou échoue à l'initialisation, le jeu repart en WebGL 2 (`world.engineFallback` dit pourquoi, le compteur `?perf` et le banc
+`?mesure` affichent « WebGL 2 (repli) »). Tout le code de rendu passe par l'API commune de Babylon.js et ne dépend pas du moteur.
+
+Babylon.js charge à la demande, depuis son CDN, glslang et twgsl (traduction d'un shader GLSL en WGSL) : la CSP l'interdit.
+`vite.config.ts` les copie de `node_modules/@babylonjs/core/assets/` vers `/ressources/babylon/` (build et `npm run dev`, même
+version que le moteur), `Tools.ScriptBaseUrl` y pointe, et nginx sert `.wasm` en `application/wasm` (type obligatoire avec
+`nosniff`). Les shaders de l'île ont tous leur version WGSL : ces fichiers (2,6 Mo, 0,9 Mo compressés) ne sont téléchargés que si
+un shader GLSL sans équivalent apparaît. Le choix du moteur par défaut attend les mesures de l'étape 0.5 : voir D9, avec la
+condition à remplir avant de passer WebGPU par défaut.
+
+Mesure : `?mesure` (`core/perf.ts`, `GameWorld.measure`) fait faire un tour fixe de l'île et rend une ligne pour
+`docs/perf-log.md` ; protocole dans ce journal.
 
 ### 2.4 Déplacement et caméra
 

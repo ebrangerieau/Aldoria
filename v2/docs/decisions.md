@@ -62,10 +62,29 @@ nouvelle qui la remplace, avec la date. D1 à D6 et D11 ont été prises avec Er
 - **Raison** : prévisible, testable sans navigateur, rien à charger (Havok est un module WASM de plus).
 - **Implique** : un jeu qui a besoin de physique (blocs à pousser du Sphinx, objets à lancer) pourra ajouter Havok pour lui seul.
 
-## D9 : WebGL 2 d'abord (7 novembre 2026)
+## D9 : WebGL 2 par défaut, WebGPU prêt et optionnel (7 novembre 2026, complétée le 14 novembre 2026)
 
-- **Choix** : moteur WebGL 2 par défaut ; WebGPU derrière `?moteur=webgpu` jusqu'à l'étape 0.4 du plan.
-- **Raison** : WebGPU demande de servir soi-même twgsl (traduction de shaders) sous notre CSP ; WebGL 2 fonctionne partout.
+- **Choix** : moteur WebGL 2 par défaut. WebGPU est prêt derrière `?moteur=webgpu`, avec repli automatique sur WebGL 2 s'il
+  manque ou s'il échoue à l'initialisation. `?moteur=webgl2` force l'autre sens.
+- **Fait (étape 0.4)** :
+  - glslang et twgsl (traduction de shaders GLSL en WGSL) sont copiés de `@babylonjs/core` vers `/ressources/babylon/` au build
+    et par `npm run dev` (`vite.config.ts`) ; `Tools.ScriptBaseUrl` y pointe ; nginx sert `.wasm` en `application/wasm`. Aucun
+    CDN : la CSP n'a pas changé.
+  - Vérifié dans Chromium 153 (WebGPU sur Vulkan logiciel), sous la CSP de production : l'île se charge, le héros avance, et
+    aux trois profils (`bas`, `moyen`, `haut`, bloom, occlusion ambiante et halo compris) **aucun de ces outils n'est téléchargé**,
+    tous les shaders de l'île ayant leur version WGSL. Ils ne viennent que si un shader GLSL sans équivalent apparaît (2,6 Mo,
+    0,9 Mo compressés) ; testé : ils se chargent depuis le site et traduisent un shader.
+  - Banc de mesure `?mesure` (`core/perf.ts`) et parcours `npm run e2e:webgpu`.
+- **Pas décidé** : le moteur par défaut. Il se choisira d'après `?mesure` dans les deux moteurs, aux trois profils, sur le PC
+  familial et celui de Tom (étape 0.5). Le conteneur de développement n'a pas de carte graphique : ses relevés (2 à 50 images,
+  rendu logiciel) ne comparent rien. Hypothèse à vérifier : à environ 300 appels de dessin, WebGPU gagnera peu ; il pèsera
+  davantage avec l'herbe, l'eau animée et les nuages de la phase 3.
+- **Avant de passer WebGPU par défaut** : (1) au profil `haut`, au moins aussi fluide que WebGL 2 (images par seconde, saccades,
+  chargement), sur les deux PC. (2) Une garde après l'initialisation : dans le conteneur, sans les options Vulkan logicielles,
+  l'appareil WebGPU a été créé puis perdu, restauré, reperdu, et le moteur s'est arrêté sur une erreur fatale. Le repli actuel ne
+  couvre qu'un échec de `initAsync` : sur une perte fatale de l'appareil, il faudra recharger en `?moteur=webgl2` ou mémoriser le
+  choix sur le poste.
+- **Raison** : WebGL 2 fonctionne partout (Firefox compris) et le jeu y est mesuré ; WebGPU n'apporte rien de visible aujourd'hui.
 
 ## D10 : CSP stricte, vérifiée par les tests (7 novembre 2026)
 

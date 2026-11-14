@@ -28,6 +28,7 @@ npm --prefix client test               # Vitest : logique, vecteurs partagés, r
 npm --prefix client run typecheck
 npm --prefix client run build          # puis : npm --prefix client run preview (port 4173, CSP de production)
 npm --prefix client run e2e            # parcours dans Chromium contre la prévisualisation
+npm --prefix client run e2e:webgpu     # idem en WebGPU (partie WebGPU ignorée, bien signalée, sans adaptateur ; le repli sur WebGL 2 est toujours vérifié)
 npm --prefix client run captures       # vues de l'île dans e2e/captures (E2E_QUALITE=moyen en rendu logiciel)
 uv run --directory api pytest -q
 uv run --directory api ruff check .
@@ -36,7 +37,9 @@ npm --prefix admin run build
 
 Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&classe=2nde`, `&monde=brouillard`,
 `&qualite=haut|moyen|bas`, `&perf` (compteur), `&e2e` (crochet `window.__aldoria` : `world.teleport(x, z, versX, versZ)`,
-`world.frame(alpha, beta, distance)`, `world.heroPosition()`, `question`, `services`), `&interface=0`, `&moteur=webgpu`,
+`world.frame(alpha, beta, distance)`, `world.heroPosition()`, `question`, `services`, `mesure`, `world.engineKind`,
+`world.engineFallback`), `&interface=0`, `&moteur=webgl2|webgpu` (WebGL 2 par défaut ; repli automatique si WebGPU manque, D9),
+`&mesure[=secondes]` (banc de mesure : tour fixe de l'île, ligne à recopier dans `docs/perf-log.md`, 40 s par défaut),
 `&renard=0` (sans le renard), `&erreurs=0|1` (remontée des erreurs ; active par défaut dans le jeu construit seulement),
 `&erreur_test=1` (erreur d'essai au démarrage).
 
@@ -77,5 +80,9 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
 - Un matériau PBR métallique sans carte d'environnement paraît noir : `characters.ts` rend les personnages mats.
 - `SceneLoaderFlags.ShowLoadingScreen` doit rester à `false` (style injecté, refusé par la CSP).
 - Vite intègre les petits fichiers en `data:` : `assetsInlineLimit: 0` (polices de KaTeX).
+- WebGPU : glslang et twgsl viennent du site (`/ressources/babylon/`, copiés par `vite.config.ts`, `Tools.ScriptBaseUrl`), jamais du
+  CDN ; nginx doit servir `.wasm` en `application/wasm`. Un test WebGPU sans carte graphique exige
+  `--enable-unsafe-webgpu --enable-features=Vulkan --use-vulkan=swiftshader --use-angle=swiftshader` : sans eux, l'appareil se perd
+  (« A valid external Instance reference no longer exists ») ; `navigator.gpu` n'existe pas sur `about:blank` (contexte non sûr).
 - En rendu logiciel (CI, conteneur sans carte graphique), le profil `haut` peut dépasser les délais de capture : `bas` pour
   le parcours, `moyen` pour les captures.

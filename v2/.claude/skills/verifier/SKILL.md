@@ -15,6 +15,9 @@ Dans l'ordre, depuis la racine du dépôt :
    `npm --prefix v2/client run e2e`. Le parcours échoue sur toute erreur de la page, toute violation de la CSP et tout 404 :
    lire le message (une violation nomme la directive), corriger la cause, jamais la CSP.
    Hors du poste, si le Chromium de `playwright-core` n'est pas installé : `CHROMIUM_PATH=/chemin/vers/chromium`.
+   Si le moteur, le rendu ou `vite.config.ts` ont changé : aussi `npm --prefix v2/client run e2e:webgpu` (WebGPU et repli sur
+   WebGL 2). Il dit « WebGPU INDISPONIBLE » et ignore sa partie WebGPU si le navigateur n'a pas d'adaptateur : ce vert ne prouve
+   rien en WebGPU, le dire dans le compte rendu.
 4. Si le monde ou l'interface ont changé : skill `captures`.
 5. Espace parent modifié : `npm --prefix v2/admin run build`, et le guide (`v2/admin/src/Guide.tsx`) à jour.
 6. Mettre à jour `v2/IMPLEMENTATION_PLAN.md` (fait / reste), `v2/docs/perf-log.md` si les chiffres de rendu ont bougé, et

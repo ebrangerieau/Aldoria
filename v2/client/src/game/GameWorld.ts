@@ -607,7 +607,7 @@ export class GameWorld {
     return {
       date: new Date().toISOString().slice(0, 10),
       browser: browserLabel(navigator.userAgent),
-      gpu: (this.engineKind === 'webgpu' ? [info.vendor, info.version] : [info.renderer]).filter((v) => v && !v.startsWith('unknown')).join(' '),
+      gpu: (this.engineKind === 'webgpu' ? [info.vendor, info.renderer, info.version] : [info.renderer]).filter((v) => v && !v.startsWith('unknown')).join(' '),
       engine: this.engineLabel(),
       quality: this.quality.name,
       width: this.engine.getRenderWidth(),
