@@ -40,6 +40,23 @@ export class Voice {
     return this.speaking
   }
 
+  /**
+   * Jeton de la lecture en cours : il change à chaque `say` et à chaque `stop`. Juste après `void say(...)`, il désigne cette lecture
+   * (le début de `say` s'exécute tout de suite) : un composant le garde pour ne couper plus tard que ce qu'il a lancé (`stopIf`).
+   */
+  get token(): number {
+    return this.generation
+  }
+
+  /**
+   * N'arrête la lecture que si personne n'a parlé depuis ce jeton. Un panneau de question qui se ferme ne doit pas couper la voix du
+   * dialogue qui s'ouvre au même moment (le dernier mot d'un Effaceur, lu d'office ou à l'appui sur « Écouter ») : son nettoyage
+   * s'exécute après coup, et un `stop()` aveugle annulait cette lecture avant même que le son soit demandé.
+   */
+  stopIf(token: number): void {
+    if (token === this.generation) this.stop()
+  }
+
   stop(): void {
     this.generation += 1
     this.speaking = false

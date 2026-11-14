@@ -62,15 +62,24 @@ export function QuestionPanel({ services, item: first, title, gameMode, accommod
   const Widget = widgetFor(item)
   const speech = item.speech ?? {}
 
+  /** Jeton de la dernière lecture lancée par ce panneau : à la fermeture, on ne coupe que celle-là (jamais la voix d'un dialogue qui s'ouvre). */
+  const spoke = useRef<number | null>(null)
+  const say = (parts: string[], lang?: string) => {
+    void services.voice.say(parts, lang)
+    spoke.current = services.voice.token
+  }
+
   const listen = () => {
-    if (item.listen) void services.voice.say([item.listen.text], item.listen.lang)
-    else void services.voice.say([speech.prompt ?? item.prompt, ...(speech.choices ?? item.choices ?? [])])
+    if (item.listen) say([item.listen.text], item.listen.lang)
+    else say([speech.prompt ?? item.prompt, ...(speech.choices ?? item.choices ?? [])])
   }
 
   useEffect(() => {
     shownAt.current = performance.now()
     if (accommodations.auto_read || item.listen) listen()
-    return () => services.voice.stop()
+    return () => {
+      if (spoke.current !== null) services.voice.stopIf(spoke.current)
+    }
   }, [item])
 
   function answer(input: UserInput) {
@@ -80,7 +89,7 @@ export function QuestionPanel({ services, item: first, title, gameMode, accommod
     const res = services.questions.submit(item, input, elapsed, helpCounted(hintShown, spent).tracking, gameMode)
     setResult(res)
     services.sfx.play(res.correct ? 'correct' : 'wrong')
-    if (!res.correct && accommodations.auto_read) void services.voice.say([speech.explanation ?? item.explanation])
+    if (!res.correct && accommodations.auto_read) say([speech.explanation ?? item.explanation])
   }
 
   function setAside() {
@@ -152,7 +161,7 @@ export function QuestionPanel({ services, item: first, title, gameMode, accommod
             {!result.correct && (
               <>
                 <p className="explanation">{item.explanation}</p>
-                <button type="button" className="icon-button" onClick={() => void services.voice.say([speech.explanation ?? item.explanation])}>
+                <button type="button" className="icon-button" onClick={() => say([speech.explanation ?? item.explanation])}>
                   🔊 Écouter l'explication
                 </button>
                 <p className="hint">Pas de souci : cette notion reviendra un peu plus tard.</p>

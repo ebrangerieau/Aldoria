@@ -29,9 +29,13 @@ await page.goto(`${BASE}/?decouverte&e2e&qualite=bas&musique=0&sons=0`)
 await page.waitForFunction(() => window.__aldoria?.world, null, { timeout: 300_000 })
 await page.evaluate(() => {
   const html = document.documentElement
-  html.setAttribute('data-text-size', '2')
-  html.setAttribute('data-readable-font', 'true')
-  html.setAttribute('data-big-targets', 'true')
+  // L'écran réapplique à chaque rendu les aménagements de l'enfant (découverte : aucun) : un observateur remet ceux de ce test.
+  const wanted = { 'data-text-size': '2', 'data-readable-font': 'true', 'data-big-targets': 'true' }
+  const apply = () => {
+    for (const [name, value] of Object.entries(wanted)) if (html.getAttribute(name) !== value) html.setAttribute(name, value)
+  }
+  new MutationObserver(apply).observe(html, { attributes: true })
+  apply()
   window.__aldoria.giveRelics(['flamme-1', 'onde-1', 'feuille-1', 'etoile-1', 'flamme-3', 'onde-3', 'feuille-3'])
   window.__aldoria.give('parchemin', 2)
   const w = window.__aldoria.world

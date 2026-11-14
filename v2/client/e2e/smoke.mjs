@@ -32,6 +32,13 @@ const browser = await chromium.launch({
   args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'],
 })
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } })
+// E2E_CPU=<facteur> : le processeur de la page est ralenti de ce facteur (4 à 6 : un PC chargé ou le runner de la CI), pour retrouver les
+// courses entre un nettoyage de React et un clic (la voix coupée par le panneau de question qui se ferme, vue en production).
+const CPU_SLOWDOWN = Number(process.env.E2E_CPU ?? 0)
+if (CPU_SLOWDOWN > 1) {
+  const cdp = await page.context().newCDPSession(page)
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: CPU_SLOWDOWN })
+}
 // Seule tolérée : l'erreur d'essai levée exprès par `?erreur_test=1` (remontée des erreurs).
 const TEST_ERROR = "Erreur d'essai (erreur_test=1)"
 page.on('pageerror', (e) => { if (!e.message.includes(TEST_ERROR)) problems.push(`erreur de la page : ${e.message}`) })
