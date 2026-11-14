@@ -44,6 +44,13 @@ export function bagEntries(owned: Owned, fight: Pick<Fighter, 'hero' | 'shieldUp
   })
 }
 
+/** « Plume ×2, Parchemin ×1 » : ce que le sac garde pour les questions (vide s'il n'y en a pas) ; le panneau du combat le rappelle. */
+export function questionItemsText(owned: Owned): string {
+  return QUESTION_ITEMS.filter((id) => count(owned, id) > 0)
+    .map((id) => `${ITEMS[id].short} ×${count(owned, id)}`)
+    .join(', ')
+}
+
 /** Le sac contient de quoi servir en combat (potion ou bouclier), même si rien n'est utilisable à cet instant. */
 export const hasCombatItems = (owned: Owned): boolean => COMBAT_ITEMS.some((id) => count(owned, id) > 0)
 
@@ -55,7 +62,7 @@ export interface Used {
 }
 
 /** Utilise un objet en plein combat ; null s'il n'est pas utilisable (absent, vie pleine, bouclier déjà levé). Le tour n'est pas perdu. */
-export function useInCombat(owned: Owned, fight: Fighter, id: ItemId): Used | null {
+export function spendInCombat(owned: Owned, fight: Fighter, id: ItemId): Used | null {
   const entry = bagEntries(owned, fight).find((e) => e.id === id)
   if (!entry?.usable) return null
   const next = use(owned, id)

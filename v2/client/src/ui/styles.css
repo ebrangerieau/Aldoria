@@ -398,7 +398,10 @@ html[data-calm='true'] .hero-bubble { animation: bubble-calm 6s linear forwards;
 .bag-text { display: grid; gap: 0.1rem; }
 .bag-name { font-size: 1.2rem; font-weight: 700; }
 .bag-help { font-size: 0.95rem; font-weight: 400; color: var(--ink-soft); }
-.bag-item:disabled .bag-help { color: var(--ink-soft); }
+/* Un objet inutilisable garde son encre pleine (la raison est tout le message) : pas d'opacité réduite, un fond de parchemin et un pointillé. */
+.bag-item:disabled { opacity: 1; background: #ece0c4; border-style: dashed; color: var(--ink); }
+.bag-item:disabled .bag-icon { filter: grayscale(1); opacity: 0.55; }
+.bag-item:disabled .bag-help { color: var(--ink); }
 .shield-badge {
   display: inline-block; margin-top: 0.3rem; padding: 0.2rem 0.7rem; border-radius: 999px; background: rgb(251 244 228 / 94%); color: var(--ink);
   border: 2px solid var(--gold); font-size: 0.95rem; font-weight: 700;

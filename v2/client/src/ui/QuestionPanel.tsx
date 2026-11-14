@@ -25,12 +25,12 @@ export interface QuestionOutcome {
 }
 
 /**
- * Les objets du sac proposés sous une question (plume, parchemin) : `owned` rend le sac à jour, `use` en dépense un (et le range dans
+ * Les objets du sac proposés sous une question (plume, parchemin) : `owned` rend le sac à jour, `spend` en dépense un (et le range dans
  * la partie) et dit si c'était possible. Absent : aucun objet (défi du jour, Pierre du Jour).
  */
 export interface QuestionAids {
   owned: () => Owned
-  use: (id: ItemId) => boolean
+  spend: (id: ItemId) => boolean
 }
 
 const AID_ICONS: Record<'plume' | 'parchemin', string> = { plume: '🪶', parchemin: '📜' }
@@ -104,8 +104,8 @@ export function QuestionPanel({ services, item: first, title, gameMode, accommod
   const parchment = spent.includes('parchemin')
   const offered = aids ? questionAids(item, aids.owned()).filter((id) => !spent.includes(id) && !(id === 'parchemin' && hintShown)) : []
 
-  function useAid(id: ItemId) {
-    if (result || !aids || !aids.use(id)) return
+  function spendAid(id: ItemId) {
+    if (result || !aids || !aids.spend(id)) return
     services.sfx.play('spell')
     setSpent((list) => [...list, id])
     if (id === 'plume') setHidden(featherHides(item))
@@ -130,7 +130,7 @@ export function QuestionPanel({ services, item: first, title, gameMode, accommod
           <footer className="question-tools">
             <button type="button" className="secondary" disabled={hintShown || parchment} onClick={() => setHintShown(true)}>Un indice ?</button>
             {offered.map((id) => (
-              <button key={id} type="button" className="secondary" title={ITEMS[id].help} data-testid={`objet-${id}`} onClick={() => useAid(id)}>
+              <button key={id} type="button" className="secondary" title={ITEMS[id].help} data-testid={`objet-${id}`} onClick={() => spendAid(id)}>
                 <span aria-hidden="true">{AID_ICONS[id as 'plume' | 'parchemin']}</span> {ITEMS[id].short} ×{count(aids!.owned(), id)}
               </button>
             ))}

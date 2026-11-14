@@ -75,8 +75,8 @@ const ACTIONS: { action: Choice; key: string; hint: string }[] = [
   { action: 'sac', key: '4', hint: '' },
 ]
 
-/** « 2 objets » ou « vide » : ce que le sac promet pour le combat (potion et bouclier). */
-const bagHint = (n: number): string => (n > 0 ? `${n} objet${n > 1 ? 's' : ''}` : 'vide')
+/** « 2 objets » ou « rien pour le combat » : ce que le sac promet ici (potion et bouclier ; plume et parchemin servent sous une question). */
+const bagHint = (n: number): string => (n > 0 ? `${n} objet${n > 1 ? 's' : ''}` : 'rien pour le combat')
 
 /** Les quatre choix ; les touches 1 à 4 les choisissent aussi. `bagCount` : potions et boucliers du sac. */
 export function ActionBar({ world, canHeal, bagCount, onChoose }: { world: WorldName; canHeal: boolean; bagCount: number; onChoose: (choice: Choice) => void }) {

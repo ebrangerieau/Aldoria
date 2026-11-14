@@ -135,7 +135,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
         world.events.on('stats', setStats)
         world.events.on('interact', (target) => interactRef.current(target))
         setLoading(null)
-        if (params.has('e2e')) (window as unknown as { __aldoria: unknown }).__aldoria = { world, services, give: (id: ItemId, n = 1) => giveItems(id, n) }
+        if (params.has('e2e')) (window as unknown as { __aldoria: unknown }).__aldoria = { world, services, ...(demo ? { give: (id: ItemId, n = 1) => giveItems(id, n) } : {}) }
       } catch (error) {
         if (reloadPending()) return // nouvelle version du jeu : la page se recharge
         console.error(error)
@@ -223,7 +223,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
     worldRef.current?.setInputEnabled(true)
   }
 
-  /** Tests dans le navigateur (?e2e) : met des objets dans le sac. */
+  /** Tests dans le navigateur (?e2e, mode découverte seulement : jamais dans la vraie partie d'un enfant) : met des objets dans le sac. */
   function giveItems(id: ItemId, n: number) {
     persist({ ...dataRef.current, items: give(dataRef.current.items, Array<ItemId>(n).fill(id)) })
   }

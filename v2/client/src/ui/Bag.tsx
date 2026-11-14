@@ -9,7 +9,7 @@ import type { ItemId } from '../core/inventory'
 
 const ICONS: Record<ItemId, string> = { plume: '🪶', parchemin: '📜', bouclier: '🛡️', potion: '🧪' }
 
-export function BagPanel({ entries, onUse, onClose }: { entries: BagEntry[]; onUse: (id: ItemId) => void; onClose: () => void }) {
+export function BagPanel({ entries, forQuestions, onUse, onClose }: { entries: BagEntry[]; forQuestions: string; onUse: (id: ItemId) => void; onClose: () => void }) {
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.repeat || e.ctrlKey || e.altKey || e.metaKey) return
@@ -43,6 +43,7 @@ export function BagPanel({ entries, onUse, onClose }: { entries: BagEntry[]; onU
             </span>
           </button>
         ))}
+        {forQuestions && <p className="hint" data-testid="sac-questions">Pour les questions : {forQuestions} (ils se proposent sous la question).</p>}
         <div className="actions">
           <button type="button" className="secondary" autoFocus onClick={onClose}>Fermer</button>
         </div>

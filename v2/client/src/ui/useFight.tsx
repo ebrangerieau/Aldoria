@@ -12,7 +12,7 @@
 import { type ReactNode, type MutableRefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { startPlaceSession, type PlaceSession } from '../app/placeSession'
 import type { Services } from '../app/services'
-import { bagEntries, useInCombat, type BagEntry } from '../core/bag'
+import { bagEntries, questionItemsText, spendInCombat, type BagEntry } from '../core/bag'
 import { type Answer, type CombatEvent, Combatant, Encounter } from '../core/combat/encounter'
 import { applyEvent, type FightHost, type FightView, runFight, viewOf } from '../core/combat/flow'
 import { combatTexts, pickOne } from '../core/combat/texts'
@@ -76,7 +76,7 @@ export function useFight(options: FightOptions) {
   } | null>(null)
   const [rating, setRating] = useState<{ title: string; resolve: (value: number) => void } | null>(null)
   /** Le sac ouvert en plein combat : ce qu'il propose, et la réponse (l'objet choisi, ou null : fermé). */
-  const [bag, setBag] = useState<{ entries: BagEntry[]; resolve: (id: ItemId | null) => void } | null>(null)
+  const [bag, setBag] = useState<{ entries: BagEntry[]; forQuestions: string; resolve: (id: ItemId | null) => void } | null>(null)
   const [bubble, setBubble] = useState<{ id: number; text: string } | null>(null)
   const [dialog, setDialog] = useState<{ title: string; text: string; actions: { label: string; primary?: boolean; run: () => void }[] } | null>(null)
   const [floats, setFloats] = useState<Floating[]>([])
@@ -216,10 +216,10 @@ export function useFight(options: FightOptions) {
     const openBag = async (): Promise<void> => {
       setPhase('busy')
       const owned = latest.current.getSave().items
-      const picked = await new Promise<ItemId | null>((resolve) => setBag({ entries: bagEntries(owned, enc), resolve }))
+      const picked = await new Promise<ItemId | null>((resolve) => setBag({ entries: bagEntries(owned, enc), forQuestions: questionItemsText(owned), resolve }))
       setBag(null)
       if (!picked) return
-      const used = useInCombat(latest.current.getSave().items, enc, picked)
+      const used = spendInCombat(latest.current.getSave().items, enc, picked)
       if (!used) return
       const save = latest.current.getSave()
       latest.current.persist({ ...save, items: used.owned })
@@ -510,7 +510,7 @@ export function useFight(options: FightOptions) {
       )}
       {dialog && <Dialog title={dialog.title} text={dialog.text} actions={dialog.actions} />}
       {rating && <Rating title={rating.title} onRated={rating.resolve} />}
-      {bag && <BagPanel entries={bag.entries} onUse={(id) => bag.resolve(id)} onClose={() => bag.resolve(null)} />}
+      {bag && <BagPanel entries={bag.entries} forQuestions={bag.forQuestions} onUse={(id) => bag.resolve(id)} onClose={() => bag.resolve(null)} />}
     </>
   )
 

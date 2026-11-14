@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { bagEntries, COMBAT_ITEMS, featherHides, hasCombatItems, helpCounted, questionAids, useInCombat } from '../src/core/bag'
+import { bagEntries, COMBAT_ITEMS, featherHides, hasCombatItems, helpCounted, questionAids, questionItemsText, spendInCombat } from '../src/core/bag'
 import { Combatant, Encounter } from '../src/core/combat/encounter'
 import type { Item } from '../src/core/items'
 import { PACK_6E } from './support'
@@ -31,7 +31,7 @@ describe('sac en combat', () => {
   it('la potion rend toute la vie et coûte un objet, sans modifier le sac d’origine', () => {
     const enc = fight(30)
     const owned = { potion: 2 }
-    const used = useInCombat(owned, enc, 'potion')!
+    const used = spendInCombat(owned, enc, 'potion')!
     expect(used.event).toEqual({ kind: 'potion', healed: 70 })
     expect(enc.hero.hp).toBe(100)
     expect(used.owned).toEqual({ potion: 1 })
@@ -40,11 +40,11 @@ describe('sac en combat', () => {
 
   it('le bouclier se lève une fois, fait manquer le prochain coup, puis retombe', () => {
     const enc = fight(80)
-    const used = useInCombat({ bouclier: 3 }, enc, 'bouclier')!
+    const used = spendInCombat({ bouclier: 3 }, enc, 'bouclier')!
     expect(used.event).toEqual({ kind: 'shield_up' })
     expect(used.owned).toEqual({ bouclier: 2 })
     expect(enc.shieldUp).toBe(true)
-    expect(useInCombat(used.owned, enc, 'bouclier')).toBeNull() // déjà levé : rien n'est dépensé
+    expect(spendInCombat(used.owned, enc, 'bouclier')).toBeNull() // déjà levé : rien n'est dépensé
     const turn = enc.answer('automatisme', { correct: false, speedRatio: 1, rewardFactor: 1, hintUsed: false, difficulty: 1 })
     expect(turn.events.find((e) => e.kind === 'foe_attack')).toMatchObject({ damage: 0, blocked: true })
     expect(enc.hero.hp).toBe(80)
@@ -52,9 +52,9 @@ describe('sac en combat', () => {
   })
 
   it('refuse sans rien changer : plus d’objet, vie pleine, objet qui n’est pas du combat', () => {
-    expect(useInCombat({}, fight(10), 'potion')).toBeNull()
-    expect(useInCombat({ potion: 1 }, fight(100), 'potion')).toBeNull()
-    expect(useInCombat({ plume: 1 }, fight(10), 'plume')).toBeNull()
+    expect(spendInCombat({}, fight(10), 'potion')).toBeNull()
+    expect(spendInCombat({ potion: 1 }, fight(100), 'potion')).toBeNull()
+    expect(spendInCombat({ plume: 1 }, fight(10), 'plume')).toBeNull()
     expect(hasCombatItems({ plume: 4 })).toBe(false)
     expect(hasCombatItems({ potion: 1 })).toBe(true)
   })
@@ -100,6 +100,15 @@ describe('plume et parchemin dans une question', () => {
       expect(hidden).toHaveLength(Math.min(2, (item.choices?.length ?? 0) - 2))
       expect(hidden).not.toContain((item.answer as { index: number }).index)
     }
+  })
+})
+
+describe('rappel des objets de question', () => {
+  it('dit ce que le sac garde pour les questions, rien s’il n’y en a pas', () => {
+    expect(questionItemsText({ plume: 2, parchemin: 1, potion: 3 })).toBe('Plume ×2, Parchemin ×1')
+    expect(questionItemsText({ parchemin: 4 })).toBe('Parchemin ×4')
+    expect(questionItemsText({ potion: 3, bouclier: 1 })).toBe('')
+    expect(questionItemsText({})).toBe('')
   })
 })
 

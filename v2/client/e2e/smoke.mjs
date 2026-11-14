@@ -326,6 +326,8 @@ try {
     await page.keyboard.press('4')
     await page.getByTestId('sac').waitFor({ timeout: 5000 * SLOW })
     if (!(await page.getByTestId('sac-potion').isDisabled())) throw new Error('la potion dépensée ne doit plus être utilisable')
+    await page.screenshot({ path: `${OUT}/03c4-sac-vide.png` })
+    if (!(await page.getByTestId('sac-questions').innerText()).includes('Plume ×1')) throw new Error('le sac devrait rappeler la plume et le parchemin gardés pour les questions')
     await page.keyboard.press('Escape')
     await page.getByTestId('sac').waitFor({ state: 'detached', timeout: 5000 * SLOW })
     await page.getByTestId('actions').waitFor({ timeout: 10_000 * SLOW })
