@@ -27,16 +27,16 @@ MAX_REDRAWS = 8
 
 
 def content_key(data: dict[str, Any]) -> str:
-    """Ce qui fait « la même question » pour l'enfant : type, énoncé, visuel, propositions
-    (dans le désordre) et bonne réponse (le texte de la bonne proposition, pas son rang).
-    Même définition que `questionSignature` du client."""
+    """Ce qui fait « la même question » pour l'enfant : type, énoncé, visuel, texte lu
+    (écoute), propositions (dans le désordre) et bonne réponse (le texte de la bonne
+    proposition, pas son rang). Mêmes critères que `questionSignature` du client."""
     choices = data.get("choices")
     answer = data["answer"]
     if answer.get("kind") == "choice" and choices:
         answer = choices[answer["index"]]
     parts = [
         data["type"], data["prompt"], data.get("latex"), data.get("visual"),
-        sorted(choices) if choices else None, answer,
+        (data.get("listen") or {}).get("text"), sorted(choices) if choices else None, answer,
     ]
     return json.dumps(parts, sort_keys=True, ensure_ascii=False, default=str)
 

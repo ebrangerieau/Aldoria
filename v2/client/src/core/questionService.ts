@@ -44,14 +44,14 @@ export function isPlayable(item: Item): boolean {
 }
 
 /**
- * Ce qui fait « la même question » pour l'enfant : le type, l'énoncé, le visuel, les propositions (dans le désordre) et la
+ * Ce qui fait « la même question » pour l'enfant : le type, l'énoncé, le visuel, le texte lu (exercice d'écoute), les propositions (dans le désordre) et la
  * bonne réponse (le texte de la bonne proposition, pas son rang : un QCM mélangé autrement reste le même QCM). Ni
  * l'identifiant, ni la graine, ni l'indice, ni l'explication.
  */
 export function questionSignature(item: Item): string {
   const choices = item.choices ? [...item.choices].sort() : null
   const answer = item.answer.kind === 'choice' ? (item.choices?.[item.answer.index] ?? item.answer.index) : item.answer
-  return JSON.stringify([item.type, item.prompt, item.latex ?? null, item.visual ?? null, choices, answer])
+  return JSON.stringify([item.type, item.prompt, item.latex ?? null, item.visual ?? null, item.listen?.text ?? null, choices, answer])
 }
 
 export interface SubmitResult {

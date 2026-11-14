@@ -68,8 +68,8 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   fait que frapper vide les automatismes en vingt coups) ; une énigme toutes posées rend `null` (le piédestal prend alors une question du chapitre, jamais
   une énigme reposée) ; une notion ratée ne revient que sous une question inédite. Seul un paquet **entièrement** posé reprend la plus ancienne (jamais celle
   qu'on vient de poser), et `QuestionService.repeats` le compte : un lieu n'y arrive pas, son paquet fait 100 questions (`tracking.DUNGEON_PACK_SIZE`, une
-  soixantaine consommées au plus par une enfant en difficulté, mesuré sur `lieux.json`). D'un parcours à l'autre de la même séance, on préfère aussi le
-  contenu pas encore vu. Une nouvelle source de questions passe par `QuestionService.next`, jamais par le paquet directement.
+  soixantaine consommées au plus par une enfant en difficulté, mesuré sur `lieux.json` ; au plus 237 Ko et 0,14 s à générer, maths de 2nde, contre 148 Ko à 60 questions : l'appareil en garde un par lieu visité, `Store.set` avale un dépassement de quota). D'un parcours à l'autre de la même séance, on préfère aussi le
+  contenu pas encore vu. Une nouvelle source de questions passe par `QuestionService.next`, jamais par le paquet directement. Seules les maths ont des automatismes (28 sur 100) : ailleurs, ou une fois les 28 posés, « Frappe » reçoit une question du chapitre un cran plus facile.
 - **Mini-carte** (`ui/Minimap.tsx`) : elle ne recalcule aucune position, elle lit les repères posés par le monde
   (`GameWorld.mapInfo`, événements `hero` et `markers`). Un repère d'une sorte nouvelle (habitant, gardien…) passe par
   `mapMarkers` (`core/world/minimap.ts`, avec son test) ; un lieu secret n'y figure jamais. Touche M : `event.key`, pas

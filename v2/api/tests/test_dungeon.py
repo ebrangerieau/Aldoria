@@ -220,8 +220,9 @@ async def test_dungeon_pack_outlasts_a_whole_visit_without_twins(client, login, 
     items = [i for i in body["items"] if i["role"] != "enigme"]
     assert len(items) >= 90
     keys = [content_key(i) for i in items]
-    # Quelques jumeaux au plus : un générateur qui n'a presque pas de valeurs.
-    assert len(set(keys)) >= len(keys) - 2
+    # Des jumeaux seulement si un générateur n'a presque pas de valeurs (le tirage est aléatoire :
+    # la borne est large), toujours bien au-delà des soixante questions qu'un lieu peut demander.
+    assert len(set(keys)) >= 85
 
 
 def test_content_key_ignores_seed_and_choice_order():

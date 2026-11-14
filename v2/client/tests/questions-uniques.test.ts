@@ -83,6 +83,12 @@ describe('Jamais deux fois la même question dans un parcours', () => {
     expect(questions.repeats).toBe(0)
   })
 
+  it('un texte lu différent fait une autre question d’écoute, même énoncé et mêmes propositions', () => {
+    const heard = (id: string, text: string) => item(id, { prompt: 'Qu’as-tu entendu ?', listen: { text, lang: 'en-GB' } })
+    expect(questionSignature(heard('a', 'the cat'))).not.toBe(questionSignature(heard('b', 'the dog')))
+    expect(questionSignature(heard('a', 'the cat'))).toBe(questionSignature(heard('c', 'the cat')))
+  })
+
   it('un visuel différent fait une autre question, même énoncé (les balances d’une énigme)', () => {
     const balance = (n: number) => item(`e${n}`, { role: 'enigme', prompt: 'Trouve la masse.', visual: { kind: 'balance', units: n } })
     const { questions } = serviceOf([balance(8), balance(12), balance(8)])
