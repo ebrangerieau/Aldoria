@@ -107,8 +107,9 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
 - **Logiques de la v1 portées, pas encore branchées à l'écran** (pures, testées, `core/`) : apparence du héros et du renard
   (`wardrobe.ts`, `content/monde/apparence.json`), défi quotidien (`dailyChallenge.ts` : série, rattrapage, record, coffre de la
   semaine), île du Sphinx (`sphinx/board.ts` : jeu de blocs ; `sphinx/island.ts` : passages de barque, paliers, aide du Sphinx ;
-  180 énigmes dans `content/monde/sphinx_niveaux.json`, générées par `python tools/make_sphinx_levels.py` : le palier 6 demande
-  plus d'une demi-heure, et la sortie est identique à `game/worlds/shared/sphinx_levels.gd` de la v1). Leur état se range dans
+  180 énigmes dans `content/monde/sphinx_niveaux.json`, converties de `game/worlds/shared/sphinx_levels.gd` de la v1 ;
+  `python tools/make_sphinx_levels.py` les régénère (graine fixe, mais le palier 6 est très long à calculer : relancé jusqu'au
+  palier 5 seulement, jamais comparé en entier à la v1). Leur état se range dans
   la partie (`core/save.ts`) et leur écran vient avec les étapes 1.x : un état se rend toujours neuf (jamais modifié sur place).
 - **Textes visibles par les enfants en français**, tutoiement ; aucune donnée personnelle hors du serveur d'Aldoria.
 - **Erreurs du jeu** : tout ce qui passe par une exception, une promesse rejetée ou `console.error` remonte à l'exploitant
