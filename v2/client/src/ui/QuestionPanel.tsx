@@ -22,13 +22,15 @@ export interface QuestionOutcome {
   timeMs?: number
 }
 
-export function QuestionPanel({ services, item: first, title, gameMode, accommodations, success = 'Bravo !', onDone }: {
+export function QuestionPanel({ services, item: first, title, gameMode, accommodations, success = 'Bravo !', aside = true, onDone }: {
   services: Services
   item: Item
   title: string
   gameMode: string
   /** Ce que la bonne réponse déclenche dans le jeu (« la pierre s'éveille »). */
   success?: string
+  /** « Pas vu en classe » proposé (jamais sur une énigme : la porte attend la réponse). */
+  aside?: boolean
   accommodations: Accommodations
   onDone: (outcome: QuestionOutcome) => void
 }) {
@@ -95,9 +97,11 @@ export function QuestionPanel({ services, item: first, title, gameMode, accommod
         {!result && (
           <footer className="question-tools">
             <button type="button" className="secondary" disabled={hintShown} onClick={() => setHintShown(true)}>Un indice ?</button>
-            <button type="button" className={asideArmed ? 'warning' : 'secondary'} onClick={setAside}>
-              {asideArmed ? 'Sûr ? Appuie encore' : 'Pas vu en classe'}
-            </button>
+            {aside && (
+              <button type="button" className={asideArmed ? 'warning' : 'secondary'} onClick={setAside}>
+                {asideArmed ? 'Sûr ? Appuie encore' : 'Pas vu en classe'}
+              </button>
+            )}
           </footer>
         )}
         {!result && hintShown && <p className="hint-text" role="note">💡 {item.hint}</p>}
