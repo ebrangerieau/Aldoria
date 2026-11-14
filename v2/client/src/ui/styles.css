@@ -213,7 +213,7 @@ html[data-calm='true'] .hp-fill { transition: none; }
 .hp-fill[data-part='100'] { width: 100%; }
 
 .fight-actions { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 0.7rem; }
-.fight-actions .action { display: grid; gap: 0.1rem; min-width: 11rem; text-align: center; padding: 0.5rem 1rem; }
+.fight-actions .action { display: grid; gap: 0.1rem; min-width: 9.5rem; text-align: center; padding: 0.5rem 1rem; }
 .action-name { font-size: 1.15rem; font-weight: 700; }
 .action-hint { font-size: 0.8rem; font-weight: 400; color: var(--ink-soft); }
 .floats { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
@@ -390,3 +390,18 @@ figure.visual.graph { max-width: 460px; }
 html[data-calm='true'] .hero-bubble { animation: bubble-calm 6s linear forwards; }
 @keyframes bubble-calm { 0%, 92% { opacity: 1; } 100% { opacity: 0; } }
 .sans-interface .hero-bubble { visibility: hidden; }
+
+/* --- Le sac en combat (ui/Bag.tsx) ----------------------------------------------------------- */
+.bag { width: min(640px, 94vw); }
+.bag-item { display: flex; align-items: center; gap: 0.9rem; width: 100%; margin-bottom: 0.7rem; padding: 0.7rem 1rem; text-align: left; }
+.bag-icon { font-size: 2rem; line-height: 1; }
+.bag-text { display: grid; gap: 0.1rem; }
+.bag-name { font-size: 1.2rem; font-weight: 700; }
+.bag-help { font-size: 0.95rem; font-weight: 400; color: var(--ink-soft); }
+.bag-item:disabled .bag-help { color: var(--ink-soft); }
+.shield-badge {
+  display: inline-block; margin-top: 0.3rem; padding: 0.2rem 0.7rem; border-radius: 999px; background: rgb(251 244 228 / 94%); color: var(--ink);
+  border: 2px solid var(--gold); font-size: 0.95rem; font-weight: 700;
+}
+.sans-interface .shield-badge { visibility: hidden; }
+.choice.gone { opacity: 0.28; text-decoration: line-through; }

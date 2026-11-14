@@ -106,6 +106,19 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   cinq étoiles (touches 1 à 5, « Passer » ou Échap : pas de note), envoyée avec la fin de la session du lieu (`PlaceSession.end(rating)` →
   `Session.end(rating)` → `session/end`, champ `rating`) ; elle sert d'indicateur au parent (critère de la phase 1 : note ≥ 4). Vérifier :
   captures `enigme`, `enigme-eveillee`, `enigme-brouillard` ; parcours `e2e/smoke.mjs` (erreur, réarmement, trois cristaux, porte, bulle, étoiles).
+- **Le sac** (`core/inventory.ts` : plume, parchemin, bouclier, potion, 5 au plus de chaque ; gagnés au coffre d'un lieu (2), à l'énigme (1), au coffre de la
+  semaine ; rangés dans la partie, `SaveData.items`) : **aucun objet ne fait sauter une question**. `core/bag.ts` (pur, testé) décide : `bagEntries`
+  (potion et bouclier avec ce qui empêche de s'en servir : plus d'objet, vie pleine, bouclier déjà levé), `useInCombat` (dépense l'objet et rend
+  l'événement `potion` ou `shield_up` d'`Encounter.usePotion` / `useShield`), `questionAids` et `featherHides`. **En combat**, le bouton « Sac »
+  (touche 4, `ui/Bag.tsx`, `ui/useFight.tsx`) ne pose aucune question et ne fait pas perdre le tour : `chooseAction` boucle tant que l'enfant
+  ouvre le sac ; un bouclier levé s'affiche (`FightView.shield`, badge « Bouclier levé ») jusqu'au prochain coup de l'ennemi, la potion rend
+  toute la vie ; l'usage est rangé par `persist` avant d'être raconté (`interior.present` : `potion`, `shield_up`). **Dans une question**
+  (`QuestionPanel`, prop `aids` : `ui/aids.ts` `makeAids`, donnée au combat, à l'énigme et à la pierre de l'île, **jamais** au défi du jour) : la
+  plume cache deux mauvaises propositions d'un QCM d'au moins trois choix (**une seule sur trois choix**, la v1 en retirait deux et laissait la
+  bonne réponse seule), le parchemin montre l'indice. Une aide d'objet compte comme indice pour le suivi mais **sans baisse de puissance**
+  (`helpCounted` : seul « Un indice ? » baisse la puissance du coup). Tests dans le navigateur (`&e2e`) : `__aldoria.give(id, n)` met des objets
+  au sac. Reste à faire : le sac n'est pas consultable hors combat (les objets gagnés s'annoncent, mais aucun écran ne les liste), pas d'objet
+  gagné par une quête de village ni à l'arène (ni village ni arène dans la v2).
 - **Musique** (`app/music.ts` joue, `core/music.ts` décide du volume, testé) : morceaux de `deploy/musique/` listés dans
   `content/monde/musique.json` (ordre de lecture, crédit des Options), servis sous `/musique/` par nginx ; `npm run dev` et
   `vite preview` les servent depuis le même dossier (`vite.config.ts`, requêtes `Range` comprises). Elle démarre à l'entrée
@@ -167,9 +180,7 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   `python tools/voix_elevenlabs.py --lieux` la reporte dans `lignes.json`, puis le script la génère. Le script tourne aussi dans la session
   cloud : la clé s'enregistre par `request_credential` (hôte `api.elevenlabs.io`, en-tête `xi-api-key`, jamais dans le dépôt) et le script
   reçoit `ELEVENLABS_API_KEY=proxy-injected` ; une clé limitée à la synthèse n'a pas le droit `voices_read` (inutile : les voix sont au manifeste).
-- **Logiques de la v1 portées, pas encore branchées à l'écran** (pures, testées, `core/`) : sac d'objets (`inventory.ts` : plume,
-  parchemin, bouclier, potion, 5 au plus de chaque ; le coffre de l'Effaceur et le coffre de la semaine en donnent, le combat applique déjà
-  bouclier et potion mais le bouton « Sac » viendra plus tard), apparence du héros et du renard
+- **Logiques de la v1 portées, pas encore branchées à l'écran** (pures, testées, `core/`) : apparence du héros et du renard
   (`wardrobe.ts`, `content/monde/apparence.json`), île du Sphinx (`sphinx/board.ts` : jeu de blocs ; `sphinx/island.ts` : passages de barque, paliers, aide du Sphinx ;
   180 énigmes dans `content/monde/sphinx_niveaux.json`, converties de `game/worlds/shared/sphinx_levels.gd` de la v1 ;
   `python tools/make_sphinx_levels.py` les régénère (graine fixe, mais le palier 6 est très long à calculer : relancé jusqu'au

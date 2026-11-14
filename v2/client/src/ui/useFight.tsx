@@ -9,12 +9,14 @@
  * Il rend deux morceaux d'interface à poser dans l'écran de jeu : `hud` (barres, actions, nombres flottants, annonce, bulle du héros) et
  * `overlay` (la question, le texte du repli, la note).
  */
-import { type ReactNode, type MutableRefObject, useCallback, useEffect, useRef, useState } from 'react'
+import { type ReactNode, type MutableRefObject, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { startPlaceSession, type PlaceSession } from '../app/placeSession'
 import type { Services } from '../app/services'
-import { type Action, type Answer, Combatant, Encounter } from '../core/combat/encounter'
+import { bagEntries, useInCombat, type BagEntry } from '../core/bag'
+import { type Answer, type CombatEvent, Combatant, Encounter } from '../core/combat/encounter'
 import { applyEvent, type FightHost, type FightView, runFight, viewOf } from '../core/combat/flow'
 import { combatTexts, pickOne } from '../core/combat/texts'
+import { count, type ItemId } from '../core/inventory'
 import { HeroVoice } from '../core/heroVoice'
 import { chestMessage, completePlace } from '../core/quest/chest'
 import { enigmaIntro, enigmaXp, ENIGMA_ITEMS, findItems, foundBanner, riddleItem } from '../core/quest/enigma'
@@ -27,7 +29,9 @@ import type { Place } from '../core/world/places'
 import type { GameWorld } from '../game/GameWorld'
 import type { Enemy, Pedestal } from '../game/interior'
 import type { WorldName } from '../game/theme'
-import { ActionBar, FightBars, type Floating, Floats } from './Combat'
+import { makeAids } from './aids'
+import { BagPanel } from './Bag'
+import { ActionBar, type Choice, FightBars, type Floating, Floats } from './Combat'
 import { Dialog } from './Dialogs'
 import { QuestionPanel, type QuestionOutcome } from './QuestionPanel'
 import { Rating } from './Rating'
@@ -71,6 +75,8 @@ export function useFight(options: FightOptions) {
     resolve: (o: QuestionOutcome) => void
   } | null>(null)
   const [rating, setRating] = useState<{ title: string; resolve: (value: number) => void } | null>(null)
+  /** Le sac ouvert en plein combat : ce qu'il propose, et la réponse (l'objet choisi, ou null : fermé). */
+  const [bag, setBag] = useState<{ entries: BagEntry[]; resolve: (id: ItemId | null) => void } | null>(null)
   const [bubble, setBubble] = useState<{ id: number; text: string } | null>(null)
   const [dialog, setDialog] = useState<{ title: string; text: string; actions: { label: string; primary?: boolean; run: () => void }[] } | null>(null)
   const [floats, setFloats] = useState<Floating[]>([])
@@ -84,11 +90,13 @@ export function useFight(options: FightOptions) {
   const visited = useRef(new Set<number>())
   const heroVoice = useRef<HeroVoice | null>(null)
   const viewRef = useRef<FightView | null>(null)
-  const actionResolver = useRef<((action: Action) => void) | null>(null)
+  const actionResolver = useRef<((choice: Choice) => void) | null>(null)
   const nextId = useRef(1)
   const latest = useRef(options)
   latest.current = options
   const texts = combatTexts(worldName)
+  /** Plume et parchemin sous les questions du combat et de l'énigme. */
+  const aids = useMemo(() => makeAids(() => latest.current.getSave(), (next) => latest.current.persist(next)), [])
 
   const show = useCallback((next: FightView | null) => {
     viewRef.current = next
@@ -183,13 +191,54 @@ export function useFight(options: FightOptions) {
     }
     show(viewOf(enc))
 
+    /** Raconte des événements dans la scène en tenant les barres à jour (l'XP et le niveau gagné, les PV, le bouclier). */
+    const play = async (events: CombatEvent[]): Promise<void> => {
+      setPhase('busy')
+      let shown = viewRef.current ?? viewOf(enc)
+      await interior.present(events, (event) => {
+        if (event.kind === 'xp') {
+          const level = latest.current.grantXp(event.amount)
+          if (level) {
+            enc.hero.raiseMax(heroMaxHp(level))
+            announce(`Niveau ${level} !`)
+            shown = { ...shown, hero: { hp: enc.hero.hp, maxHp: enc.hero.maxHp } }
+            show(shown)
+          }
+          return
+        }
+        shown = applyEvent(shown, event)
+        show(shown)
+      })
+      show(viewOf(enc))
+    }
+
+    /** Le sac : un objet se dépense sans perdre son tour (aucune question), puis les actions reviennent. */
+    const openBag = async (): Promise<void> => {
+      setPhase('busy')
+      const owned = latest.current.getSave().items
+      const picked = await new Promise<ItemId | null>((resolve) => setBag({ entries: bagEntries(owned, enc), resolve }))
+      setBag(null)
+      if (!picked) return
+      const used = useInCombat(latest.current.getSave().items, enc, picked)
+      if (!used) return
+      const save = latest.current.getSave()
+      latest.current.persist({ ...save, items: used.owned })
+      s.sfx.play(picked === 'potion' ? 'heal' : 'spell')
+      await play([used.event])
+    }
+
     const host: FightHost = {
-      chooseAction: (v) => {
+      chooseAction: async (v) => {
         show(v)
-        setPhase('actions')
-        return new Promise<Action>((resolve) => {
-          actionResolver.current = resolve
-        })
+        for (;;) {
+          setPhase('actions')
+          const choice = await new Promise<Choice>((resolve) => {
+            actionResolver.current = resolve
+          })
+          if (choice !== 'sac') return choice
+          await openBag()
+          show(viewOf(enc))
+        }
       },
       ask: async (action, role, level): Promise<Answer | null> => {
         const item = s.questions.next(role, level) ?? s.questions.next()
@@ -210,25 +259,7 @@ export function useFight(options: FightOptions) {
           difficulty: outcome.item.difficulty,
         }
       },
-      show: async (events) => {
-        setPhase('busy')
-        let shown = viewRef.current ?? viewOf(enc)
-        await interior.present(events, (event) => {
-          if (event.kind === 'xp') {
-            const level = latest.current.grantXp(event.amount)
-            if (level) {
-              enc.hero.raiseMax(heroMaxHp(level))
-              announce(`Niveau ${level} !`)
-              shown = { ...shown, hero: { hp: enc.hero.hp, maxHp: enc.hero.maxHp } }
-              show(shown)
-            }
-            return
-          }
-          shown = applyEvent(shown, event)
-          show(shown)
-        })
-        show(viewOf(enc))
-      },
+      show: (events) => play(events),
     }
 
     // Le déroulé tourne jusqu'à la victoire ou au repli ; une action en suspens (écran quitté) ne le retient pas.
@@ -434,17 +465,20 @@ export function useFight(options: FightOptions) {
     return { first: done.first, code }
   }, [worldRef, speak, leave])
 
-  const choose = useCallback((action: Action) => {
+  const choose = useCallback((choice: Choice) => {
     const resolve = actionResolver.current
     if (!resolve) return
     actionResolver.current = null
-    resolve(action)
+    resolve(choice)
   }, [])
+
+  const owned = options.getSave().items
+  const bagCount = count(owned, 'potion') + count(owned, 'bouclier')
 
   const hud: ReactNode = (
     <>
       {view && <FightBars view={view} heroName={heroName} />}
-      {view && phase === 'actions' && !question && !dialog && <ActionBar world={worldName} canHeal={view.canHeal} onChoose={choose} />}
+      {view && phase === 'actions' && !question && !dialog && <ActionBar world={worldName} canHeal={view.canHeal} bagCount={bagCount} onChoose={choose} />}
       <Floats items={floats} />
       {bubble && (
         <p key={bubble.id} className="hero-bubble" role="status" data-testid="heros-dit">
@@ -468,6 +502,7 @@ export function useFight(options: FightOptions) {
           title={question.title}
           gameMode={question.gameMode}
           aside={question.aside}
+          aids={aids}
           success={question.success}
           accommodations={accommodations}
           onDone={question.resolve}
@@ -475,8 +510,9 @@ export function useFight(options: FightOptions) {
       )}
       {dialog && <Dialog title={dialog.title} text={dialog.text} actions={dialog.actions} />}
       {rating && <Rating title={rating.title} onRated={rating.resolve} />}
+      {bag && <BagPanel entries={bag.entries} onUse={(id) => bag.resolve(id)} onClose={() => bag.resolve(null)} />}
     </>
   )
 
-  return { hud, overlay, enter, leave, openChest, active: view !== null || dialog !== null, questionOpen: question !== null, overlayOpen: question !== null || dialog !== null || rating !== null }
+  return { hud, overlay, enter, leave, openChest, active: view !== null || dialog !== null, questionOpen: question !== null, overlayOpen: question !== null || dialog !== null || rating !== null || bag !== null }
 }

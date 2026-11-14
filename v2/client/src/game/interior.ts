@@ -614,6 +614,19 @@ export class InteriorWorld {
           this.float(`+${e.healed}`, 'good', above(hero, 2.1))
           await wait(700)
           break
+        case 'potion':
+          void hero.playOnce('cheer', 'idle')
+          landed?.(e)
+          this.float(`+${e.healed}`, 'good', above(hero, 2.1))
+          sparkle(this.scene, new Vector3(hero.root.position.x, hero.root.position.y + 0.9, hero.root.position.z), this.options.calm)
+          await wait(800)
+          break
+        case 'shield_up':
+          void hero.playOnce('block', 'idle', 0.8)
+          landed?.(e)
+          this.float('Bouclier !', 'good', above(hero, 2.1))
+          await wait(700)
+          break
         case 'hero_stumble':
           void hero.playOnce('block', 'idle', 0.8)
           await wait(500)

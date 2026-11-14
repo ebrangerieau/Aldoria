@@ -144,7 +144,7 @@ Dans l'ordre que les enfants choisiront à la séance de la phase 1 :
 - Clairval en plein air et ses habitants (`villages.json`), quêtes du jour ;
 - Pierre du Jour (défi quotidien, série, coffre de la semaine, sans compte à rebours) : **faite le 14 novembre**, pierre sur le chemin de la Citadelle (`core/dailyRun.ts`, `ui/DailyChallenge.tsx`) ;
 - île du Sphinx : barque, passages, blocs du temple (niveaux de `tools/make_sphinx_levels.py` sortis en JSON) ;
-- apparence du héros (silhouettes, armes, capes, déblocages) et sac d'objets ;
+- apparence du héros (silhouettes, armes, capes, déblocages) ; **sac d'objets : fait le 14 novembre** (bouton « Sac » du combat, plume et parchemin dans les questions : `core/bag.ts`, `ui/Bag.tsx`) ;
 - prologue en cinq tableaux joués dans l'île, voix enregistrées de Maître Ysaline (`deploy/voix/manifest.json` ; **seuils faits le 14 novembre** : les 30 textes de lieu sont lus de
   sa vraie voix ; **l'accueil dans l'île et les textes des pages et du prologue réenregistrés le 14 novembre** (« sur l'île », plus de carte du royaume) ; restent à brancher les pages rendues, le prologue, le brouillard, Clairval et la Tour de l'Oubli quand ces
   moments existent dans l'île, **les 60 répliques des Effaceurs enregistrées le 14 novembre** (une voix pour les 30) **et jouées depuis l'étape 1.4**, ainsi que les pages rapportées (salut de Maître Ysaline au retour) ; reste à enregistrer ses répliques nouvelles de la v2), musique ;

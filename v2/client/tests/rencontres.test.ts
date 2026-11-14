@@ -245,7 +245,7 @@ describe('Ennemis : modèles et mesures', () => {
 })
 
 describe('État affiché pendant un tour', () => {
-  const view: FightView = { hero: { hp: 80, maxHp: 100 }, foe: { name: 'Gelée', hp: 50, maxHp: 80 }, boss: false, canHeal: true, questions: 1 }
+  const view: FightView = { hero: { hp: 80, maxHp: 100 }, foe: { name: 'Gelée', hp: 50, maxHp: 80 }, boss: false, canHeal: true, questions: 1, shield: false }
 
   it('baisse les PV de l’ennemi au coup, ceux du héros à la riposte, jamais sous zéro', () => {
     const hit = applyEvent(view, { kind: 'hero_strike', action: 'automatisme', power: 18, crit: false })
@@ -261,8 +261,18 @@ describe('État affiché pendant un tour', () => {
     expect(applyEvent(view, { kind: 'potion', healed: 80 }).hero.hp).toBe(100)
   })
 
+  it('montre le bouclier levé jusqu’au prochain coup de l’ennemi, bloqué ou non', () => {
+    const up = applyEvent(view, { kind: 'shield_up' })
+    expect(up.shield).toBe(true)
+    expect(up.hero.hp).toBe(80)
+    const blocked = applyEvent(up, { kind: 'foe_attack', damage: 0, blocked: true })
+    expect(blocked.shield).toBe(false)
+    expect(blocked.hero.hp).toBe(80)
+    expect(viewOf(Object.assign(encounter(100).enc, {})).shield).toBe(false)
+  })
+
   it('laisse l’état tel quel pour les autres événements', () => {
-    for (const event of [{ kind: 'xp', amount: 20 }, { kind: 'hero_stumble' }, { kind: 'foe_down' }, { kind: 'shield_up' }] as CombatEvent[]) {
+    for (const event of [{ kind: 'xp', amount: 20 }, { kind: 'hero_stumble' }, { kind: 'foe_down' }] as CombatEvent[]) {
       expect(applyEvent(view, event)).toBe(view)
     }
   })
