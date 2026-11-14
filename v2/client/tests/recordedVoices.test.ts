@@ -86,6 +86,30 @@ describe('voix enregistrées livrées avec le jeu (deploy/voix)', () => {
     expect(missing).toEqual([])
   })
 
+  it('l’accueil de Maître Ysaline dans l’île est enregistré de sa voix, et les pages rapportées parlent de l’île (plus d’une carte du royaume)', async () => {
+    const accueil = lignes.find((l) => l.id === 'ile-accueil')
+    expect(accueil?.voix).toBe('ysaline')
+    expect(manifest[await digest(accueil!.texte)]?.id).toBe('ile-accueil')
+    const pages = lignes.filter((l) => l.id.startsWith('page-'))
+    expect(pages).toHaveLength(30)
+    // Le chemin suivant « s'éclaire » sur l'île (la v2 n'a pas d'écran de carte du royaume) ; les « seuil-* » parlent, eux, de vraies cartes.
+    expect(pages.filter((l) => /sur la carte/.test(l.texte)).map((l) => l.id)).toEqual([])
+    expect(lignes.filter((l) => l.id.startsWith('prologue-quete-') && /la carte/.test(l.texte)).map((l) => l.id)).toEqual([])
+  })
+
+  it('les répliques des 30 Effaceurs (entrée et défaite) sont enregistrées de leur voix, et lignes.json suit lieux.json', async () => {
+    const lost: string[] = []
+    for (const d of lieux.dungeons) {
+      for (const [kind, text] of [['intro', d.boss_intro], ['defeat', d.boss_defeat]] as const) {
+        const entry = manifest[await digest(text)]
+        if (entry?.id !== `boss-${kind}-${d.code}` || entry.voix !== 'effaceur') lost.push(`${kind} ${d.code}`)
+      }
+    }
+    // Texte modifié dans lieux.json : `python tools/voix_elevenlabs.py --lieux` le reporte dans lignes.json, puis la génération suivante.
+    expect(lost).toEqual([])
+    expect(lignes.filter((l) => l.groupe === 'effaceur')).toHaveLength(60)
+  })
+
   it('le texte de seuil de chacun des 30 lieux est enregistré (Maître Ysaline le dit de sa vraie voix)', async () => {
     const lost: string[] = []
     for (const d of lieux.dungeons) {

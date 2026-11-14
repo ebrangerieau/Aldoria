@@ -366,6 +366,31 @@ try {
     await page.screenshot({ path: `${OUT}/07-citadelle.png` })
   })
 
+  await step('Maître Ysaline accueille l’Archiviste de sa voix enregistrée (ElevenLabs), pas de Piper', async () => {
+    const ysaline = await page.evaluate(() => {
+      const i = window.__aldoria.world.interactables.find((x) => x.kind === 'ysaline')
+      return i ? { x: i.x, z: i.z } : null
+    })
+    if (!ysaline) throw new Error('Maître Ysaline manque dans l’île')
+    await page.evaluate(({ x, z }) => window.__aldoria.world.teleport(x, z - 1.5, x, z), ysaline)
+    await page.getByTestId('invite').filter({ hasText: 'Maître Ysaline' }).waitFor({ timeout: 10_000 * SLOW })
+    await page.keyboard.press('KeyE')
+    await page.getByRole('heading', { name: 'Maître Ysaline' }).waitFor()
+    const speech = []
+    page.on('request', (r) => { if (r.url().includes('/play/speech')) speech.push(r.url()) })
+    const sound = page.waitForResponse((r) => r.url().includes('/voix/ile-accueil-'), { timeout: 15_000 * SLOW })
+    await page.getByRole('button', { name: /Écouter/ }).click()
+    const res = await sound
+    // 200 sur l'aperçu local, 206 en production (nginx sert le son par morceaux).
+    if (![200, 206].includes(res.status()) || !(res.headers()['content-type'] ?? '').startsWith('audio/mpeg')) {
+      throw new Error(`son de l’accueil : ${res.status()} ${res.headers()['content-type']} ${res.url()}`)
+    }
+    await page.waitForTimeout(500 * SLOW)
+    if (speech.length > 0) throw new Error(`Piper appelé pour l’accueil enregistré : ${speech.join(' ')}`)
+    await page.getByRole('button', { name: 'En route !' }).click()
+    await page.getByRole('dialog').waitFor({ state: 'detached' })
+  })
+
   await step('seuil d’un lieu : Maître Ysaline parle de sa voix enregistrée (ElevenLabs), pas de Piper', async () => {
     const lieu = await page.evaluate(() => {
       const i = window.__aldoria.world.interactables.find((x) => x.kind === 'lieu' && x.open)
@@ -373,9 +398,10 @@ try {
     })
     if (!lieu) throw new Error('aucun lieu ouvert dans l’île')
     await page.evaluate(({ x, z }) => window.__aldoria.world.teleport(x, z - 1, x, z), lieu)
-    await page.getByTestId('invite').waitFor({ timeout: 10_000 * SLOW })
+    // L'invite de l'endroit précédent (ici Maître Ysaline) reste une image après la téléportation : on attend celle du lieu.
+    await page.getByTestId('invite').filter({ hasText: 'Approcher' }).waitFor({ timeout: 10_000 * SLOW })
     await page.keyboard.press('KeyE')
-    await page.getByRole('dialog').waitFor()
+    await page.getByRole('heading', { name: lieu.label }).waitFor()
     await page.screenshot({ path: `${OUT}/08-seuil.png` })
     const speech = []
     page.on('request', (r) => { if (r.url().includes('/play/speech')) speech.push(r.url()) })

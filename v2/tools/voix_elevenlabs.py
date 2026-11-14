@@ -19,6 +19,7 @@ de la fenêtre) :
   ELEVENLABS_API_KEY          clé de l'API (toujours nécessaire pour générer)
   ELEVENLABS_VOIX_NARRATEUR   voix du narrateur (prologue, tableaux 1 à 3)
   ELEVENLABS_VOIX_YSALINE     voix de Maître Ysaline
+  ELEVENLABS_VOIX_EFFACEUR    voix des Effaceurs (les boss : une seule voix pour les 30)
   ELEVENLABS_MODELE           modèle (par défaut eleven_multilingual_v2)
 Sans variable de voix, le script reprend la voix déjà utilisée dans deploy/voix/manifest.json :
 il ne faut les poser qu'une fois, ou pour changer de voix (tout est alors régénéré).
@@ -27,7 +28,9 @@ Usage :
   python tools/voix_elevenlabs.py --essai             ce qui serait généré, sans appel ni clé
   python tools/voix_elevenlabs.py --voix              voix du compte (nom, identifiant)
   python tools/voix_elevenlabs.py --exemple ysaline   une réplique d'essai (dossier temporaire)
-  python tools/voix_elevenlabs.py [--groupe prologue|carte|tout]
+  python tools/voix_elevenlabs.py --exemple effaceur --ligne boss-intro-tour_fractions   une réplique précise
+  python tools/voix_elevenlabs.py --lieux             reporte boss_intro et boss_defeat de lieux.json dans lignes.json
+  python tools/voix_elevenlabs.py [--groupe prologue|carte|ile|effaceur|tout]
   python tools/voix_elevenlabs.py --niveau            ajuste le volume des sons déjà générés
 Bibliothèque standard uniquement (et ffmpeg pour le volume).
 """
@@ -49,12 +52,17 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 LINES = ROOT / "content" / "voix" / "lignes.json"
+LIEUX = ROOT / "content" / "monde" / "lieux.json"
 OUT = ROOT / "deploy" / "voix"
 MANIFEST = OUT / "manifest.json"
 API = "https://api.elevenlabs.io/v1"
 FORMAT = "mp3_44100_64"  # voix seule : 64 kbit/s suffisent (≈ 0,5 Mo par minute)
 DEFAULT_MODEL = "eleven_multilingual_v2"
-VOICE_ENV = {"narrateur": "ELEVENLABS_VOIX_NARRATEUR", "ysaline": "ELEVENLABS_VOIX_YSALINE"}
+VOICE_ENV = {
+    "narrateur": "ELEVENLABS_VOIX_NARRATEUR",
+    "ysaline": "ELEVENLABS_VOIX_YSALINE",
+    "effaceur": "ELEVENLABS_VOIX_EFFACEUR",
+}
 LOUDNESS = -16.0  # LUFS : niveau de la voix du serveur (Piper), mesuré le 2026-10-18
 PEAK_LIMIT = -4.5  # dBFS au limiteur : l'encodage MP3 à 64 kbit/s remonte les crêtes d'environ 2 dB
 
@@ -92,6 +100,25 @@ def load_lines() -> list[dict]:
     if not LINES.exists():
         sys.exit(f"{LINES} absent : lancer d'abord tools/export_voice_lines.gd")
     return json.loads(LINES.read_text(encoding="utf-8"))
+
+
+def boss_lines() -> list[dict]:
+    """Répliques des Effaceurs d'après lieux.json : c'est lui qui donne le texte affiché, donc le texte à enregistrer."""
+    lieux = json.loads(LIEUX.read_text(encoding="utf-8"))["dungeons"]
+    out = []
+    for d in lieux:
+        for kind, field in (("intro", "boss_intro"), ("defeat", "boss_defeat")):
+            if d.get(field):
+                out.append({"groupe": "effaceur", "id": f"boss-{kind}-{d['code']}", "texte": d[field], "voix": "effaceur"})
+    return out
+
+
+def sync_boss_lines() -> None:
+    """Remet le groupe « effaceur » de lignes.json d'après lieux.json (ajoute, met à jour, retire) ; le reste est inchangé."""
+    kept = [x for x in load_lines() if x["groupe"] != "effaceur"]
+    new = boss_lines()
+    LINES.write_text(json.dumps(kept + new, ensure_ascii=False, indent=2) + "\n", encoding="utf-8", newline="\n")
+    print(f"{len(new)} répliques d'Effaceurs reportées de lieux.json ({len(kept)} autres lignes inchangées).")
 
 
 def load_manifest() -> dict:
@@ -156,12 +183,17 @@ def voice_ids(manifest: dict) -> dict[str, str]:
 def main() -> None:
     sys.stdout.reconfigure(encoding="utf-8")  # accents lisibles dans la console Windows
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--groupe", choices=["prologue", "carte", "tout"], default="tout")
+    parser.add_argument("--groupe", choices=["prologue", "carte", "ile", "effaceur", "tout"], default="tout")
     parser.add_argument("--essai", action="store_true", help="ce qui serait généré, sans appel")
     parser.add_argument("--voix", action="store_true", help="voix disponibles sur le compte")
     parser.add_argument("--exemple", choices=sorted(VOICE_ENV), help="une réplique d'essai")
+    parser.add_argument("--lieux", action="store_true", help="reporte les répliques des Effaceurs de lieux.json dans lignes.json")
+    parser.add_argument("--ligne", help="identifiant de la réplique d'essai (par défaut : la première de cette voix)")
     parser.add_argument("--niveau", action="store_true", help="ajuste le volume des sons existants")
     args = parser.parse_args()
+    if args.lieux:
+        sync_boss_lines()
+        return
 
     lines = load_lines()
     manifest = load_manifest()
@@ -182,10 +214,11 @@ def main() -> None:
         return
     if args.exemple:
         key = env("ELEVENLABS_API_KEY")
-        line = next(x for x in lines if x["voix"] == args.exemple)
-        target = Path(tempfile.gettempdir()) / f"aldoria-exemple-{args.exemple}.mp3"
+        line = next(x for x in lines if x["voix"] == args.exemple and args.ligne in (None, x["id"]))
+        target = Path(tempfile.gettempdir()) / f"aldoria-exemple-{args.exemple}-{line['id']}.mp3"
         voice = voice_ids(manifest).get(args.exemple) or env(VOICE_ENV[args.exemple])
         target.write_bytes(speak(line["texte"], voice, model, key))
+        normalize(target)  # même volume que les sons du jeu : l'essai s'écoute comme le résultat
         print(f"{target} ({len(line['texte'])} caractères)")
         return
 

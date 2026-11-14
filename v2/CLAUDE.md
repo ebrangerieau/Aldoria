@@ -121,6 +121,15 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   d'un lieu fait échouer `tests/recordedVoices.test.ts` : relancer `python tools/voix_elevenlabs.py` (clé ElevenLabs dans
   l'environnement, jamais dans le dépôt ; `--essai` liste ce qui serait généré, sans clé). Un nouveau texte de Maître Ysaline
   s'ajoute à `lignes.json` (groupe, id, texte, voix), puis le script génère son son. Crédit ElevenLabs dans les Options.
+  L'accueil de Maître Ysaline dans l'île (`ile-accueil`) est lu **depuis** `lignes.json` par `GameScreen` : texte et voix au même endroit.
+  Les pages rapportées et le prologue parlent de l'île (« le chemin s'éclaire sur l'île »), jamais d'une carte du royaume, que la v2 n'a
+  pas ; les `seuil-*` parlent, eux, de vraies cartes (atlas, plans) : ne pas les « corriger ». Les 60 répliques des
+  Effaceurs (`boss_intro`, `boss_defeat` de `lieux.json`) sont enregistrées d'une voix unique pour les 30 (rôle « effaceur »,
+  `ELEVENLABS_VOIX_EFFACEUR`), mais pas encore jouées : l'écran du boss (étape 1.4) les lira par `services.voice.say`, et le test
+  `recordedVoices` les lie à `lieux.json`. Modifier une de ces répliques : la changer dans `lieux.json`, puis
+  `python tools/voix_elevenlabs.py --lieux` la reporte dans `lignes.json`, puis le script la génère. Le script tourne aussi dans la session
+  cloud : la clé s'enregistre par `request_credential` (hôte `api.elevenlabs.io`, en-tête `xi-api-key`, jamais dans le dépôt) et le script
+  reçoit `ELEVENLABS_API_KEY=proxy-injected` ; une clé limitée à la synthèse n'a pas le droit `voices_read` (inutile : les voix sont au manifeste).
 - **Logiques de la v1 portées, pas encore branchées à l'écran** (pures, testées, `core/`) : sac d'objets (`inventory.ts` : plume,
   parchemin, bouclier, potion, 5 au plus de chaque ; le combat applique déjà les deux derniers), voix du héros entre les salles
   (`heroVoice.ts` et `content/monde/heros.json`), apparence du héros et du renard
