@@ -3,6 +3,8 @@ import ile from '@content/monde/ile.json'
 import {
   browserLabel,
   type FrameSample,
+  isReliable,
+  MIN_FRAMES,
   percentile,
   perfLogRow,
   summarize,
@@ -46,6 +48,15 @@ describe('summarize', () => {
     const samples: FrameSample[] = [{ frameMs: 16, cpuMs: 3, gpuMs: 8 }, { frameMs: 16, cpuMs: 3 }, { frameMs: 16, cpuMs: 3 }]
     expect(summarize(samples).gpuP50).toBeNull()
     expect(summarize([{ frameMs: 16, cpuMs: 3 }]).gpuP50).toBeNull()
+  })
+})
+
+describe('fiabilité', () => {
+  it('ne se fie pas à un relevé de moins de MIN_FRAMES images', () => {
+    const few = Array.from({ length: MIN_FRAMES - 1 }, () => ({ frameMs: 16, cpuMs: 3 }))
+    const enough = Array.from({ length: MIN_FRAMES }, () => ({ frameMs: 16, cpuMs: 3 }))
+    expect(isReliable(summarize(few))).toBe(false)
+    expect(isReliable(summarize(enough))).toBe(true)
   })
 })
 

@@ -3,7 +3,7 @@
  * tour de l'île, puis le résultat et la ligne à recopier dans le journal des performances.
  */
 import { useState } from 'react'
-import { type PerfReport, perfLogRow } from '../core/perf'
+import { isReliable, MIN_FRAMES, type PerfReport, perfLogRow } from '../core/perf'
 
 const ms = (v: number) => `${v.toFixed(1).replace('.', ',')} ms`
 
@@ -38,6 +38,12 @@ export function MeasurePanel({ report, onAgain, onClose }: { report: PerfReport;
           <li>Au plus : {report.drawCalls} appels de dessin, {(report.triangles / 1e6).toFixed(2).replace('.', ',')} million de triangles</li>
           <li>Île prête en {(report.loadMs / 1000).toFixed(1).replace('.', ',')} s{report.heapMb !== null && ` ; mémoire JavaScript : ${Math.round(report.heapMb)} Mo`}</li>
         </ul>
+        {!isReliable(s) && (
+          <p className="hint" role="alert" data-testid="mesure-peu-fiable">
+            Seulement {s.frames} images relevées (moins de {MIN_FRAMES}) : le rendu est trop lent ou le tour trop court. Ces chiffres ne
+            disent rien de ce PC : ne pas les recopier dans le journal.
+          </p>
+        )}
         <p>Ligne pour docs/perf-log.md ({s.frames} images sur {report.seconds} s) :</p>
         <pre className="measure-row">{row}</pre>
         <div className="actions">

@@ -27,6 +27,13 @@ export interface PerfSummary {
 
 export const SLOW_FRAME_MS = 1000 / 30
 
+/** Sous ce nombre d'images, une médiane et un 95e centile ne disent rien (rendu logiciel, tour trop court). */
+export const MIN_FRAMES = 60
+
+export function isReliable(summary: PerfSummary): boolean {
+  return summary.frames >= MIN_FRAMES
+}
+
 /** Centile au rang le plus proche (p de 0 à 100), sur une copie triée. */
 export function percentile(values: readonly number[], p: number): number {
   if (values.length === 0) return 0
