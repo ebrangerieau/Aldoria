@@ -97,6 +97,19 @@ describe('voix enregistrées livrées avec le jeu (deploy/voix)', () => {
     expect(lignes.filter((l) => l.id.startsWith('prologue-quete-') && /la carte/.test(l.texte)).map((l) => l.id)).toEqual([])
   })
 
+  it('les répliques des 30 Effaceurs (entrée et défaite) sont enregistrées de leur voix, et lignes.json suit lieux.json', async () => {
+    const lost: string[] = []
+    for (const d of lieux.dungeons) {
+      for (const [kind, text] of [['intro', d.boss_intro], ['defeat', d.boss_defeat]] as const) {
+        const entry = manifest[await digest(text)]
+        if (entry?.id !== `boss-${kind}-${d.code}` || entry.voix !== 'effaceur') lost.push(`${kind} ${d.code}`)
+      }
+    }
+    // Texte modifié dans lieux.json : `python tools/voix_elevenlabs.py --lieux` le reporte dans lignes.json, puis la génération suivante.
+    expect(lost).toEqual([])
+    expect(lignes.filter((l) => l.groupe === 'effaceur')).toHaveLength(60)
+  })
+
   it('le texte de seuil de chacun des 30 lieux est enregistré (Maître Ysaline le dit de sa vraie voix)', async () => {
     const lost: string[] = []
     for (const d of lieux.dungeons) {

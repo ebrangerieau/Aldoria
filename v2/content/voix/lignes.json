@@ -502,5 +502,365 @@
     "id": "page-palais_libertes",
     "texte": "Tu as rapporté la page des Libertés ! Elle a repris sa place dans la Grande Chronique. Toutes les pages de la région « Le Forum des Citoyens » sont revenues. Malvrek doit trembler dans sa tour !",
     "voix": "ysaline"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-intro-tour_fractions",
+    "texte": "Ha ! Encore un petit Archiviste ! Moi, je coupe tout en morceaux… et je ne recolle jamais rien. Ta page des Fractions, tu ne la reverras pas !",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-defeat-tour_fractions",
+    "texte": "Non… mes morceaux se recollent tout seuls ! Malvrek va être furieux…",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-intro-atelier_balances",
+    "texte": "Bienvenue dans mon atelier ! Ici, un kilo pèse ce que JE décide. Essaie donc de m'équilibrer, petit Archiviste !",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-defeat-atelier_balances",
+    "texte": "Mes plateaux… ils sont justes à nouveau. Quelle horreur, la vérité !",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-intro-observatoire_angles",
+    "texte": "Grrr… Qui ose monter jusqu'à mes étoiles ? Ici, les angles sont tordus et le hasard m'obéit. Tu n'as aucune chance !",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-defeat-observatoire_angles",
+    "texte": "Aucune chance… C'est moi qui n'en avais aucune. Reprends ta page, Archiviste.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-intro-bibliotheque_langues",
+    "texte": "(Le Bibliothécaire Muet pose un doigt sur sa bouche et serre la page contre lui. Sur un parchemin, il griffonne : « SILENCE ! »)",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-defeat-bibliotheque_langues",
+    "texte": "(Le Bibliothécaire laisse tomber la page. Pour la première fois depuis longtemps, il murmure : « … thank you. »)",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-intro-porte_origines",
+    "texte": "Ha ha ! Je suis Dame Sablière ! J'ai envoyé les pharaons chez les Romains et Jules César à l'âge de pierre ! Ta page de l'Histoire ? Perdue au fond de mon sablier !",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-defeat-porte_origines",
+    "texte": "Mon sablier… le sable retombe dans le bon sens ! Chaque époque retrouve sa place. Malvrek ne va pas être content…",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-intro-porte_horizons",
+    "texte": "Nord, sud, est, ouest… je mélange tout ! J'ai posé le Sahara au milieu de Paris et la mer dans le désert. Tu ne retrouveras jamais ton chemin !",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-defeat-porte_horizons",
+    "texte": "Ma boussole… elle montre le nord à nouveau ! Les cartes se remettent en place. Zut, zut et zut !",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-intro-moulin_phrases",
+    "texte": "Miam ! Je suis le Gobe-Lettres ! J'avale les accords, je croque les terminaisons et je recrache les phrases toutes de travers. Ta page de la Grammaire ? Elle a un goût de virgule !",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-defeat-moulin_phrases",
+    "texte": "Beurk… j'ai trop mangé de mots. Tiens, reprends-les, je ne digère pas les phrases bien construites !",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-intro-puits_contes",
+    "texte": "Grrr… Qui ose descendre dans mon puits ? Je suis l'Ogre Oublieux ! J'ai mangé la fin de tous les contes : plus personne ne sait comment finissent les histoires. Et toi, je vais te manger aussi… enfin, si je m'en souviens !",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-defeat-puits_contes",
+    "texte": "Ah… je me souviens ! Il était une fois… un Archiviste très courageux. Reprends tes contes, ils me donnaient mal au ventre.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-intro-tour_experiences",
+    "texte": "Bzzzt ! Je suis le Professeur Court-Circuit ! J'ai fait fondre la glace à l'envers, inversé les fils et volé l'énergie de toutes les piles. Ta page des Sciences ? Elle a grillé avec mes fusibles !",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-defeat-tour_experiences",
+    "texte": "Pfffiou… mes circuits fument. Tiens, reprends ta page : tes expériences marchent bien mieux que les miennes.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-intro-maison_naturaliste",
+    "texte": "Halte ! Je suis le Pétrificateur ! Tout ce qui vit, je le change en caillou : les fleurs, les abeilles, les grenouilles… Et j'ai mélangé tous les fossiles du monde. Bientôt, plus rien ne poussera !",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-defeat-maison_naturaliste",
+    "texte": "Non… mes cailloux se remettent à respirer ! Les graines germent, les abeilles bourdonnent. Je déteste quand ça repousse.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-intro-tribune_conseil",
+    "texte": "Silence ! Je suis le Voleur de Voix. J'ai vidé les urnes et rangé tous les bulletins dans ma poche. Pourquoi voter ? Je décide tout seul, pour moi seul. Ta page du Conseil, je l'ai déjà votée : elle est à moi !",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-defeat-tribune_conseil",
+    "texte": "Mes poches se vident… Les bulletins s'envolent vers les urnes, et chacun retrouve sa voix. Bon, d'accord : vous êtes plus nombreux que moi.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-intro-palais_libertes",
+    "texte": "Hé hé… Je suis le Fouineur. Je lis les journaux intimes, je publie les photos sans demander, et je voudrais que tout le monde pense exactement comme moi. Tes secrets, ta page, tout m'appartient !",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-defeat-palais_libertes",
+    "texte": "Aïe ! Toutes les portes se referment sur mon nez… Les secrets restent secrets, et chacun pense librement. Je n'ai plus rien à fouiller.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-intro-labyrinthe_vecteurs",
+    "texte": "Tu crois sortir de mon Labyrinthe ? Chaque couloir est une flèche qui ne mène nulle part. Ton phare restera éteint.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-defeat-labyrinthe_vecteurs",
+    "texte": "Mes flèches… elles indiquent toutes le centre. Le phare se rallume. Malvrek ne va pas aimer ça.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-intro-forge_algebre",
+    "texte": "Approche, Archiviste. Dans ma forge, les formules sortent tordues, et j'aime ça. Voyons si tu sais redresser le métal.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-defeat-forge_algebre",
+    "texte": "L'enclume refroidit… et tes formules sont droites. Bien joué. Pour cette fois.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-intro-citadelle_fonctions",
+    "texte": "Le Veilleur ne voit plus rien, et c'est très bien ainsi. Mes courbes montent et descendent quand je veux. Lis-les donc, si tu peux.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-defeat-citadelle_fonctions",
+    "texte": "Tu lis mes courbes mieux que moi… Le Veilleur rouvre les yeux. Je me retire.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-intro-theatre_verdure",
+    "texte": "Un mot de trop, Archiviste, et je te rature. Ici, j'efface tout ce qui a du sens : les vers, les figures, les règles.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-defeat-theatre_verdure",
+    "texte": "Mon encre… pâlit. Les mots reviennent sous les ratures. Malvrek saura que tu lis entre les lignes.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-intro-bibliotheque_engloutie",
+    "texte": "Passé, présent, futur… je les mélange tous ! Ici, hier sera demain et demain était hier. Ta page de Grammaire ? Elle dort au fond de l'eau, Archiviste. Tu vas l'y rejoindre.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-defeat-bibliotheque_engloutie",
+    "texte": "Non… les temps se remettent en ligne : “I was, I am, I will be.” Malvrek m'avait promis un monde sans règles…",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-intro-port_couronnes",
+    "texte": "Indépendances, couronnes, empires… À quoi bon s'en souvenir ? J'efface les dates, Archiviste, et les peuples oublient d'où ils viennent. Ta page sera la prochaine.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-defeat-port_couronnes",
+    "texte": "Les dates… reviennent. 1947, 1957, 1994… Je ne peux pas effacer ce que tant de gens racontent encore.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-intro-porte_empires",
+    "texte": "Je suis le Grand Censeur. Ce qui n'est pas autorisé n'a jamais existé : ni Luther, ni Galilée, ni le Bill of Rights. J'ai rayé leurs noms des registres. Tu ne liras rien que je n'aie approuvé.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-defeat-porte_empires",
+    "texte": "Mes registres… les noms reviennent, un à un. On n'efface pas une idée imprimée à mille exemplaires. Malvrek l'apprendra à ses dépens.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-intro-porte_transitions",
+    "texte": "Je suis l'Arpenteur Aveugle. Je mesure le monde sans le voir : un désert vaut une métropole, un pays riche un pays pauvre. Tes cartes, je les ai effacées. Dis-moi donc où tu vas.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-defeat-porte_transitions",
+    "texte": "Mes instruments… se règlent à nouveau. Les écarts, les flux, les risques réapparaissent sur la carte. Elle n'était pas si simple, finalement.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-intro-alambic_elements",
+    "texte": "Je suis le Dissolveur. Tout se dissout dans mon creuset : les atomes perdent leurs électrons, les équations leurs coefficients, les noyaux leurs neutrons. Ta page de la Matière ? Une flaque, rien de plus.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-defeat-alambic_elements",
+    "texte": "Mon creuset… refroidit. Les éléments se reforment, chacun à sa place dans le tableau. Rien ne se perd, rien ne se crée : même pas ma défaite.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-intro-laboratoire_foudroye",
+    "texte": "Je suis le Brouilleur. J'ai mis du bruit dans tes signaux, du flou dans tes lentilles et du désordre dans tes forces. Ici, plus rien n'avance droit, plus rien ne sonne juste. Écoute bien… si tu peux.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-defeat-laboratoire_foudroye",
+    "texte": "Le silence… puis un son pur. Mes parasites s'éteignent un à un. Tes ondes et tes forces obéissent de nouveau aux lois. Je n'aurais jamais dû défier un Archiviste qui calcule.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-intro-pont_paquets",
+    "texte": "Je suis le Crieur Menteur ! Je mélange les paquets, j'envoie les messages au mauvais destinataire et je répands des rumeurs plus vite que la vérité. Ta page des Messages ? Je l'ai partagée… à l'envers.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-defeat-pont_paquets",
+    "texte": "Mes rumeurs… plus personne ne les relaie. Chaque paquet retrouve son adresse, chaque page son lien. La vérité arrive toujours, même par un chemin plus long.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-intro-atelier_automates",
+    "texte": "Je suis le Détraqueur. J'ai embrouillé les cartes, faussé les capteurs, mélangé les pixels et glissé des erreurs dans chaque programme. Tes automates tournent en rond. Et toi, sauras-tu retrouver ton chemin ?",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-defeat-atelier_automates",
+    "texte": "Mes rouages… se remettent à tourner rond. Les cartes indiquent le bon chemin, les capteurs mesurent juste, les programmes s'exécutent sans erreur. Bien calculé, Archiviste.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-intro-moulin_mancha",
+    "texte": "¡Hola, Archivista! Je suis l'Enredador, celui qui emmêle. J'ai noué les verbes, retourné les points d'interrogation et brouillé les accents. Ta page d'espagnol ? Un nœud de mots que personne ne défera.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-defeat-moulin_mancha",
+    "texte": "¡Ay, ay, ay! Mes nœuds se défont… Les verbes retrouvent leurs terminaisons, les phrases leur ordre. Hasta luego, Archivista : tu parles mieux que moi.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-intro-conservatoire_vivant",
+    "texte": "Bienvenue dans ma collection, Archiviste. Je suis le Brouille-Gènes. J'ai mélangé l'ADN de chaque bocal, déréglé les hormones et lâché les microbes. Ta page du Vivant ? Une séquence illisible, et je suis le seul à l'avoir écrite.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-defeat-conservatoire_vivant",
+    "texte": "Mes séquences… se recollent, A en face de T, C en face de G. Les cellules se remettent au travail, les microbes retournent à leur place. Tu lis le vivant mieux que moi.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-intro-puits_vallee",
+    "texte": "Crrr… crrr… Je suis le Rongeur. Je ronge les roches, j'emporte les sols, j'épuise les champs. Bientôt, la Vallée ne sera plus qu'une boue stérile, et ta page de la Terre finira au fond de mon puits.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-defeat-puits_vallee",
+    "texte": "Mes dents s'émoussent… Les haies retiennent la terre, les champs reprennent des forces, la rivière dépose ses sables en ordre. Garde ta page : je n'ai plus rien à ronger.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-intro-haute_cour",
+    "texte": "Silence dans la Cour ! Je suis l'Arbitraire. Ici, la loi, c'est moi : je juge sans juges, je fais taire les journaux et je signe des permis de polluer. Ta page des Droits ? Je l'ai déclarée illégale.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-defeat-haute_cour",
+    "texte": "Objection… rejetée. Les juges reprennent leur siège, la presse imprime de nouveau, la Charte de l'environnement est remise au mur. Même moi, je dois obéir à la loi.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-intro-marche_forum",
+    "texte": "Approchez, approchez ! Je suis le Spéculateur. J'ai truqué les balances, caché les stocks et gonflé les comptes : ici, plus personne ne sait ce qui vaut quoi. Ta page de l'Économie ? Je te la revends au double.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-defeat-marche_forum",
+    "texte": "Mes prix s'effondrent… L'offre et la demande se retrouvent, les comptes redeviennent justes. Personne n'achète plus mes promesses en l'air.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-intro-maison_commune",
+    "texte": "À quoi bon, Archiviste ? Je suis le Fataliste. Chacun restera à la place où il est né. Voter ne change rien, étudier ne sert à rien. Ta page de la Société ? Elle était écrite d'avance, et pas pour toi.",
+    "voix": "effaceur"
+  },
+  {
+    "groupe": "effaceur",
+    "id": "boss-defeat-maison_commune",
+    "texte": "Tiens… les règles s'apprennent, les votes comptent, les diplômes ouvrent des portes. Rien n'était écrit d'avance. Je déteste quand on me prouve le contraire.",
+    "voix": "effaceur"
   }
 ]

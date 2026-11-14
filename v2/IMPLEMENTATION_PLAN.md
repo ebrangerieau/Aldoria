@@ -147,7 +147,7 @@ Dans l'ordre que les enfants choisiront à la séance de la phase 1 :
 - apparence du héros (silhouettes, armes, capes, déblocages) et sac d'objets ;
 - prologue en cinq tableaux joués dans l'île, voix enregistrées de Maître Ysaline (`deploy/voix/manifest.json` ; **seuils faits le 14 novembre** : les 30 textes de lieu sont lus de
   sa vraie voix ; **l'accueil dans l'île et les textes des pages et du prologue réenregistrés le 14 novembre** (« sur l'île », plus de carte du royaume) ; restent à brancher les pages rendues, le prologue, le brouillard, Clairval et la Tour de l'Oubli quand ces
-  moments existent dans l'île, et à enregistrer les répliques des Effaceurs (une voix à choisir), puis ses répliques nouvelles de la v2), musique ;
+  moments existent dans l'île, **les 60 répliques des Effaceurs enregistrées le 14 novembre** (une voix pour les 30, à lire à l'étape 1.4) ; reste à enregistrer ses répliques nouvelles de la v2), musique ;
 - Archives (étoiles par notion : **fait le 14 novembre**, bouton « Archives » de l'île, `core/archives.ts`), bestiaire (avec les rencontres) ; brouillard des régions pas encore au programme, qui recule page après page.
 
 **Critère de passage** : deux semaines d'usage spontané (au moins deux séances par semaine et par enfant, sans relance).

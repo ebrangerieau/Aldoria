@@ -1,4 +1,484 @@
 {
+  "c300f5a2f2dc4b459aa2e9c860090cd6c76d2d3950727a16e4bff4ad6bb41366": {
+    "id": "boss-defeat-alambic_elements",
+    "voix": "effaceur",
+    "fichier": "boss-defeat-alambic_elements-c300f5a2.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "658c4d65415b97473c35a101665abb6bfb9b7e2d4a186c10d667d64a785631e0": {
+    "id": "boss-defeat-atelier_automates",
+    "voix": "effaceur",
+    "fichier": "boss-defeat-atelier_automates-658c4d65.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "82cebe2e0a6c5817012d9c64b0dbd6d696227f676a5a849ef91633513fa6d087": {
+    "id": "boss-defeat-atelier_balances",
+    "voix": "effaceur",
+    "fichier": "boss-defeat-atelier_balances-82cebe2e.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "708779b4d334fe2bcc6122084ab396ef888cc0419b3f4e0763d08b6ced2e278c": {
+    "id": "boss-defeat-bibliotheque_engloutie",
+    "voix": "effaceur",
+    "fichier": "boss-defeat-bibliotheque_engloutie-708779b4.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "e1b43c38b124431ac5ca0d32f82b6b6d9ca7d60282b3fd06d315a5cfbd3bb4b6": {
+    "id": "boss-defeat-bibliotheque_langues",
+    "voix": "effaceur",
+    "fichier": "boss-defeat-bibliotheque_langues-e1b43c38.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "06db1b5fa693b55a14b4e9a4259998055f774a8c9ac5c3a462f2bc37ee67211d": {
+    "id": "boss-defeat-citadelle_fonctions",
+    "voix": "effaceur",
+    "fichier": "boss-defeat-citadelle_fonctions-06db1b5f.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "bb4a1ef0e74ba7bfa4998f220b05cb7f31c5fc6b39b82518e1c9f4873d1ffcd5": {
+    "id": "boss-defeat-conservatoire_vivant",
+    "voix": "effaceur",
+    "fichier": "boss-defeat-conservatoire_vivant-bb4a1ef0.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "9600aefe82654d1545d109f4e4d939f70c819ce557c6146dc189e801d25a05ba": {
+    "id": "boss-defeat-forge_algebre",
+    "voix": "effaceur",
+    "fichier": "boss-defeat-forge_algebre-9600aefe.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "bfa9b19f383dbd6fe3c6380039e85bd03cc94ef1bfc42d2479544c856f125b5f": {
+    "id": "boss-defeat-haute_cour",
+    "voix": "effaceur",
+    "fichier": "boss-defeat-haute_cour-bfa9b19f.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "44cb9609b1451f8edd51f450225c995e1020fd089d1d004059b51d50936a119d": {
+    "id": "boss-defeat-laboratoire_foudroye",
+    "voix": "effaceur",
+    "fichier": "boss-defeat-laboratoire_foudroye-44cb9609.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "1440c4ffa475be53f5e65170e66e6aa6ffddd358c1a9c4e897b90988d1df27e2": {
+    "id": "boss-defeat-labyrinthe_vecteurs",
+    "voix": "effaceur",
+    "fichier": "boss-defeat-labyrinthe_vecteurs-1440c4ff.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "796173c9cb75fa8e534bf6f623b627e0f34849f600ec6f904725a5aa1208aafb": {
+    "id": "boss-defeat-maison_commune",
+    "voix": "effaceur",
+    "fichier": "boss-defeat-maison_commune-796173c9.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "d4a4cc74b1bd12b11613b59d868033a38c0f877636ace5629c25113a30fc3660": {
+    "id": "boss-defeat-maison_naturaliste",
+    "voix": "effaceur",
+    "fichier": "boss-defeat-maison_naturaliste-d4a4cc74.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "90c58d99c0dea1837d0ff966756385a1e83822f55369bf47a40b04f1e1a9dd4e": {
+    "id": "boss-defeat-marche_forum",
+    "voix": "effaceur",
+    "fichier": "boss-defeat-marche_forum-90c58d99.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "1d431212a81afef2ddb404f867f0070b51a84546ab25ca65a1424c51a73d7fc1": {
+    "id": "boss-defeat-moulin_mancha",
+    "voix": "effaceur",
+    "fichier": "boss-defeat-moulin_mancha-1d431212.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "2e3c98e3f4cf52d6a46d939067bcfc44a483f5aef85ca40c0a7111bdd1dc28c5": {
+    "id": "boss-defeat-moulin_phrases",
+    "voix": "effaceur",
+    "fichier": "boss-defeat-moulin_phrases-2e3c98e3.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "e791668caf14d5950abc5d77dc6d1c73c4cd6dd7cc2f54d1bee7ca37be1b602d": {
+    "id": "boss-defeat-observatoire_angles",
+    "voix": "effaceur",
+    "fichier": "boss-defeat-observatoire_angles-e791668c.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "2ad47123dd4c92b46c9c50c54f048e42f79c0bc57d239b8fd48b3331af3fcf32": {
+    "id": "boss-defeat-palais_libertes",
+    "voix": "effaceur",
+    "fichier": "boss-defeat-palais_libertes-2ad47123.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "c25068711ff76cb401584eec1597eb47525bf89defb98b1dfae867a89d4975dc": {
+    "id": "boss-defeat-pont_paquets",
+    "voix": "effaceur",
+    "fichier": "boss-defeat-pont_paquets-c2506871.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "8ea5bdbee21af110f6d6ef929bf1548046893524bf9a2bd986aaf30b2d4c9d99": {
+    "id": "boss-defeat-port_couronnes",
+    "voix": "effaceur",
+    "fichier": "boss-defeat-port_couronnes-8ea5bdbe.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "4fa665bf599e80b02e66712b839b997b43dad89cb32c6ba823891aa62b951e39": {
+    "id": "boss-defeat-porte_empires",
+    "voix": "effaceur",
+    "fichier": "boss-defeat-porte_empires-4fa665bf.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "c24cb61f1ab2118c93f14ac2b4d9a4361254216c31818df827bd47659c420de8": {
+    "id": "boss-defeat-porte_horizons",
+    "voix": "effaceur",
+    "fichier": "boss-defeat-porte_horizons-c24cb61f.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "53f8001331dab9df25817bbf39dbb0a042111ea00e4038a42b6dc0597d2d849f": {
+    "id": "boss-defeat-porte_origines",
+    "voix": "effaceur",
+    "fichier": "boss-defeat-porte_origines-53f80013.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "78811ce81b64e6543d72a8ba2cff8a3e53a6688825beeea65c319ece5b127cb0": {
+    "id": "boss-defeat-porte_transitions",
+    "voix": "effaceur",
+    "fichier": "boss-defeat-porte_transitions-78811ce8.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "c3ca60b6775fa0dd12f4b47b692c4b8dcaa2b4f021b188762f9b70ea18bba85f": {
+    "id": "boss-defeat-puits_contes",
+    "voix": "effaceur",
+    "fichier": "boss-defeat-puits_contes-c3ca60b6.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "cab291afcf283d91e09a239e43056a09dbf855137925fea21bd0779e706030d9": {
+    "id": "boss-defeat-puits_vallee",
+    "voix": "effaceur",
+    "fichier": "boss-defeat-puits_vallee-cab291af.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "99517ad7375a7b2a836c75427ca09759ef0f75dfc87271acebac51b4c889a67b": {
+    "id": "boss-defeat-theatre_verdure",
+    "voix": "effaceur",
+    "fichier": "boss-defeat-theatre_verdure-99517ad7.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "9121f2096f0884c026e16a8f0d8411c77ab3e2861748d2b70f0631617bc02fe0": {
+    "id": "boss-defeat-tour_experiences",
+    "voix": "effaceur",
+    "fichier": "boss-defeat-tour_experiences-9121f209.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "78388603a0e8c7d509313a837fd191c39eb870cc161b8bbc67a52622df73b235": {
+    "id": "boss-defeat-tour_fractions",
+    "voix": "effaceur",
+    "fichier": "boss-defeat-tour_fractions-78388603.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "145d40c05240361b20e4bc79aa80ee3d2a7d7e5d9f409ecc22eed84ea1900903": {
+    "id": "boss-defeat-tribune_conseil",
+    "voix": "effaceur",
+    "fichier": "boss-defeat-tribune_conseil-145d40c0.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "ef62c80e32cb7a8821823c25b665f0f8e3a2f479cdd2689c57cc1a898a837288": {
+    "id": "boss-intro-alambic_elements",
+    "voix": "effaceur",
+    "fichier": "boss-intro-alambic_elements-ef62c80e.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "7312a21d0d539cc2f50f7e59655d63d2de7ed81bf3c4bf1513b7a252b2f5bbf2": {
+    "id": "boss-intro-atelier_automates",
+    "voix": "effaceur",
+    "fichier": "boss-intro-atelier_automates-7312a21d.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "272ebad282f9e623925136af3d853aa0dbd5a56fd7350e8a86a127c3ceb509a3": {
+    "id": "boss-intro-atelier_balances",
+    "voix": "effaceur",
+    "fichier": "boss-intro-atelier_balances-272ebad2.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "4905556b4e8575e00434c90c032f1de8913095bdc46c42a4a709aecc3350be51": {
+    "id": "boss-intro-bibliotheque_engloutie",
+    "voix": "effaceur",
+    "fichier": "boss-intro-bibliotheque_engloutie-4905556b.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "8d65efe3f73670fb7fdb9cd54760383db473184f52f428862392ab5ee9e7f2fe": {
+    "id": "boss-intro-bibliotheque_langues",
+    "voix": "effaceur",
+    "fichier": "boss-intro-bibliotheque_langues-8d65efe3.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "8a88f459e4f458d64e000e21f538ad2f8f1d18766ae50ba302134b09ea29b3fa": {
+    "id": "boss-intro-citadelle_fonctions",
+    "voix": "effaceur",
+    "fichier": "boss-intro-citadelle_fonctions-8a88f459.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "e7d4875d5acc4db4290fdb8b53e2a32a1cbb63e0bfee928e2e1d57c6d892927f": {
+    "id": "boss-intro-conservatoire_vivant",
+    "voix": "effaceur",
+    "fichier": "boss-intro-conservatoire_vivant-e7d4875d.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "2ee5c4a868a3ab8e52f0f73ad513c790ecfc7c7cbcac6c57481a592c2d46d92b": {
+    "id": "boss-intro-forge_algebre",
+    "voix": "effaceur",
+    "fichier": "boss-intro-forge_algebre-2ee5c4a8.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "a07baeae3b8751c2119d1827769a85d24737e6381e9e9a85ec11c0e125654464": {
+    "id": "boss-intro-haute_cour",
+    "voix": "effaceur",
+    "fichier": "boss-intro-haute_cour-a07baeae.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "e8713038687b3702a2d5e3a2d1b19d4881179858543d116b2771481961a25339": {
+    "id": "boss-intro-laboratoire_foudroye",
+    "voix": "effaceur",
+    "fichier": "boss-intro-laboratoire_foudroye-e8713038.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "9fa44413ebb5840bbe93e8442731bf57fdc3665e054f5ee0c4bc37e9a4930e3b": {
+    "id": "boss-intro-labyrinthe_vecteurs",
+    "voix": "effaceur",
+    "fichier": "boss-intro-labyrinthe_vecteurs-9fa44413.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "a0a643f312a5bf949426f54898f6c1875cce9beaba3980425e511150c92b51f2": {
+    "id": "boss-intro-maison_commune",
+    "voix": "effaceur",
+    "fichier": "boss-intro-maison_commune-a0a643f3.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "4b49d1be797338462f020b303bdbfe552ca5598db95b38ab478cce3bdc7c3f1e": {
+    "id": "boss-intro-maison_naturaliste",
+    "voix": "effaceur",
+    "fichier": "boss-intro-maison_naturaliste-4b49d1be.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "6a1fd7116f6f2b547a44c265c1b415bb5441de092686ab8b1cf0bd9f2e2c8c1b": {
+    "id": "boss-intro-marche_forum",
+    "voix": "effaceur",
+    "fichier": "boss-intro-marche_forum-6a1fd711.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "972dace713ab85778efa6412c2fe774d699619a7fa1b0f177694b082ddf65b7a": {
+    "id": "boss-intro-moulin_mancha",
+    "voix": "effaceur",
+    "fichier": "boss-intro-moulin_mancha-972dace7.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "c82832de63acc7d85f6ce5e91314bd8d6c63f29ffafc80a91a582ab1a42c2f68": {
+    "id": "boss-intro-moulin_phrases",
+    "voix": "effaceur",
+    "fichier": "boss-intro-moulin_phrases-c82832de.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "7d275ee9d3407e16c96a5b0504084a7fe2205f297b5aad7cda224cc0e4dc68a7": {
+    "id": "boss-intro-observatoire_angles",
+    "voix": "effaceur",
+    "fichier": "boss-intro-observatoire_angles-7d275ee9.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "6b1e946f9d0ce641b38e1e05e6c490b2bbe891d3097962511a68be9faf40aaf1": {
+    "id": "boss-intro-palais_libertes",
+    "voix": "effaceur",
+    "fichier": "boss-intro-palais_libertes-6b1e946f.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "12adebb7bfcba4315ca41824b600488c0d0b1133fca48f564570e035950798f3": {
+    "id": "boss-intro-pont_paquets",
+    "voix": "effaceur",
+    "fichier": "boss-intro-pont_paquets-12adebb7.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "da9f79bec342b6e96c1da678ecbf7613466b59e63b3710b43e0babc62c28b9c6": {
+    "id": "boss-intro-port_couronnes",
+    "voix": "effaceur",
+    "fichier": "boss-intro-port_couronnes-da9f79be.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "df357151ff40b7f7dee11af4325b7c9ae214a086f65ae6f4aa28c2596f7f28f0": {
+    "id": "boss-intro-porte_empires",
+    "voix": "effaceur",
+    "fichier": "boss-intro-porte_empires-df357151.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "077e197c56b1093e68ac88ea4d7b42a5be4868bcf305064b67e62517d17c4f6f": {
+    "id": "boss-intro-porte_horizons",
+    "voix": "effaceur",
+    "fichier": "boss-intro-porte_horizons-077e197c.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "8e2f32885333eb91fa445ff83bdaf3dfea7cc611a06c85759648fa6bd34e4622": {
+    "id": "boss-intro-porte_origines",
+    "voix": "effaceur",
+    "fichier": "boss-intro-porte_origines-8e2f3288.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "6db60023483b6f78b26d0d9612328bb6aa7ae3b85f590909348e92f7bde7bceb": {
+    "id": "boss-intro-porte_transitions",
+    "voix": "effaceur",
+    "fichier": "boss-intro-porte_transitions-6db60023.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "cc4fb53700bb9140270fa9687156e35afa3c853a0e359847c43bdb9f63211aeb": {
+    "id": "boss-intro-puits_contes",
+    "voix": "effaceur",
+    "fichier": "boss-intro-puits_contes-cc4fb537.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "eeacb1a0b51156dad13eb618d4a03f3c4a8622c194f6ed1063146e073b828379": {
+    "id": "boss-intro-puits_vallee",
+    "voix": "effaceur",
+    "fichier": "boss-intro-puits_vallee-eeacb1a0.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "0c9a7ddf42a604da0e61cb1c84ce6bfbcc9ffdec2b69401a50cd28bf51a2340f": {
+    "id": "boss-intro-theatre_verdure",
+    "voix": "effaceur",
+    "fichier": "boss-intro-theatre_verdure-0c9a7ddf.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "b86a575a97c54bd59557eb1d8f78e656372ac97e5d69f32d2029a82364dc3250": {
+    "id": "boss-intro-tour_experiences",
+    "voix": "effaceur",
+    "fichier": "boss-intro-tour_experiences-b86a575a.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "67b78d9e6c156a627dbb9e959f3bd1759c55ecb865e454bb722ed8f1ec2e7a3c": {
+    "id": "boss-intro-tour_fractions",
+    "voix": "effaceur",
+    "fichier": "boss-intro-tour_fractions-67b78d9e.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
+  "e1ede98c8c576501b94d07ed314c63142555116d19058193ba87423186fa7c4a": {
+    "id": "boss-intro-tribune_conseil",
+    "voix": "effaceur",
+    "fichier": "boss-intro-tribune_conseil-e1ede98c.mp3",
+    "voix_id": "2gPFXx8pN3Avh27Dw5Ma",
+    "modele": "eleven_multilingual_v2",
+    "niveau": -16.0
+  },
   "c0d13307371f82374fcb282eb773c1758646107fcf2fae148a384821d914fd42": {
     "id": "brouillard-anglais",
     "voix": "ysaline",
