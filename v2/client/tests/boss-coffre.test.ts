@@ -7,6 +7,8 @@ import { MAX_PER_ITEM } from '../src/core/inventory'
 import { bossOf, isBossRoom } from '../src/core/quest/boss'
 import { chestMessage, CHEST_ITEMS, completePlace, pageGreeting } from '../src/core/quest/chest'
 import { EMPTY_SAVE, type SaveData } from '../src/core/save'
+import { CHEST_RADIUS, CLIMB_RISE, Dungeon, type DungeonDecor, ENEMY_RADIUS, ROOM_W } from '../src/core/world/dungeon'
+import { Obstacles } from '../src/core/world/obstacles'
 import { DUNGEONS } from '../src/core/world/places'
 
 const fresh = (): SaveData => structuredClone(EMPTY_SAVE)
@@ -180,6 +182,36 @@ describe('salut de Maître Ysaline au retour sur l’île', () => {
       const text = pageGreeting(d.code)!
       expect(text, d.code).not.toMatch(/sur la carte/)
       expect(text, d.code).toMatch(/Tu as rapporté/)
+    }
+  })
+})
+
+describe('le coffre dans la salle de l’Effaceur (30 lieux)', () => {
+  it('apparaît sur le sol de la salle du boss, hors des objets, de l’Effaceur tombé et de l’escalier, et reste atteignable', () => {
+    for (const place of DUNGEONS) {
+      const dungeon = new Dungeon(place.rooms.length, CLIMB_RISE, (place as unknown as { v1_decor: DungeonDecor }).v1_decor)
+      const obstacles = new Obstacles()
+      for (const c of dungeon.obstacles()) obstacles.add(c)
+      const boss = bossOf(place)!
+      const where = `${place.code} (${boss.spec.name})`
+      const chest = dungeon.chestPoint(boss.room)
+      const floor = boss.room * CLIMB_RISE
+      expect(dungeon.roomAt(chest.x), where).toBe(boss.room)
+      expect(dungeon.heightAt(chest.x, chest.z), `${where} : sol du coffre`).toBe(floor)
+      expect(obstacles.overlaps(chest.x, chest.z, CHEST_RADIUS), `${where} : coffre sur un objet`).toBe(false)
+      // L'Effaceur vaincu gît à sa place : le coffre ne lui est pas posé dessus.
+      const at = dungeon.enemyPoint(boss.room, boss.spec.v1_at)
+      expect(Math.hypot(chest.x - at.x, chest.z - at.z), `${where} : coffre sur l'Effaceur`).toBeGreaterThan(ENEMY_RADIUS + CHEST_RADIUS + 1)
+      // Le héros combat à FIGHT_GAP de l'Effaceur : le coffre est à portée de marche depuis là, sans traverser un objet.
+      const spot = dungeon.fightSpot(boss.room, at)
+      const dx = chest.x - spot.x
+      const dz = chest.z - spot.z
+      for (let k = 0; k <= 20; k += 1) {
+        expect(obstacles.overlaps(spot.x + (dx * k) / 20, spot.z + (dz * k) / 20, 0.45), `${where} : chemin vers le coffre`).toBe(false)
+      }
+      // Pas d'escalier dans la dernière salle : tout le quart est de la salle est libre.
+      expect(dungeon.hasStairs(boss.room), where).toBe(false)
+      expect(chest.x - boss.room * ROOM_W, where).toBeLessThan(ROOM_W - 0.75 - CHEST_RADIUS)
     }
   })
 })
