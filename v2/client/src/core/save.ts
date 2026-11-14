@@ -8,6 +8,7 @@
  * notions est calculée par le serveur à partir des réponses, jamais par le client.
  */
 import type { ApiClient } from './api'
+import { give, type ItemId, type Owned, use } from './progression/inventory'
 import type { Store } from './storage'
 
 export const SCHEMA_VERSION = 1
@@ -20,6 +21,8 @@ export interface SaveData {
   stones: Record<string, string>
   /** Étapes de l'histoire déjà vues (prologue, pages rendues…). */
   story: string[]
+  /** Objets du sac (core/progression/inventory.ts). */
+  items: Owned
   look: { model: string; main: string; off: string; cape: string }
 }
 
@@ -28,6 +31,7 @@ export const EMPTY_SAVE: SaveData = {
   places: {},
   stones: {},
   story: [],
+  items: {},
   look: { model: 'Knight', main: '1H_Sword', off: 'Round_Shield', cape: 'origine' },
 }
 
@@ -101,6 +105,28 @@ export class SaveGame {
 
   addXp(amount: number): void {
     this.data.xp += Math.max(0, Math.round(amount))
+  }
+
+  /** Un lieu de quête terminé de plus (le suivant de sa région s'ouvre dès la première fois). */
+  completePlace(code: string): void {
+    this.data.places = { ...this.data.places, [code]: (this.data.places[code] ?? 0) + 1 }
+  }
+
+  /** Étape de l'histoire vue (une seule fois). */
+  markStory(step: string): void {
+    if (!this.data.story.includes(step)) this.data.story = [...this.data.story, step]
+  }
+
+  giveItems(ids: readonly ItemId[]): void {
+    this.data.items = give(this.data.items, ids)
+  }
+
+  /** Retire un objet du sac ; faux s'il n'en reste pas. */
+  useItem(id: ItemId): boolean {
+    const next = use(this.data.items, id)
+    if (!next) return false
+    this.data.items = next
+    return true
   }
 
   private adopt(revision: number, epoch: number, data: Partial<SaveData>, dirty: boolean): void {

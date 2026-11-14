@@ -1,0 +1,63 @@
+{
+ "source": "porté de game/worlds/shared/world_theme.gd (v1) ; ce fichier fait foi pour la v2",
+ "lumineux": {
+  "actions": {
+   "automatisme": "Coup d'épée",
+   "chapitre": "Sort d'étoiles",
+   "soin": "Potion"
+  },
+  "enemy_names": [
+   "Champignon égaré",
+   "Squelette grognon",
+   "Gelée sautillante",
+   "Petit golem",
+   "Cactus piquant",
+   "Gardien des os"
+  ],
+  "retreat_text": "Ouf ! Tu reprends ton souffle près du feu de camp. Tes forces reviennent, rien n'est perdu.",
+  "victory_texts": [
+   "Victoire !",
+   "Bien joué !",
+   "Bravo, Archiviste !",
+   "Quelle puissance !"
+  ],
+  "encouragements": [
+   "Super !",
+   "Excellent !",
+   "Tu gères !",
+   "Magnifique !",
+   "Trop fort !"
+  ],
+  "wrong_title": "Presque ! Regarde comment faire :"
+ },
+ "brouillard": {
+  "actions": {
+   "automatisme": "Frappe",
+   "chapitre": "Arcane",
+   "soin": "Régénération"
+  },
+  "enemy_names": [
+   "Sentinelle du Brouillard",
+   "Spectre du Brouillard",
+   "Orc des brumes",
+   "Spectre d'os",
+   "Démon bleu",
+   "Héraut du Brouillard"
+  ],
+  "retreat_text": "Le Brouillard t'a repoussé. Tu te replies et récupères. Aucune progression perdue.",
+  "victory_texts": [
+   "Ennemi dissipé.",
+   "Propre.",
+   "Brouillard repoussé.",
+   "Archive restaurée."
+  ],
+  "encouragements": [
+   "Exact.",
+   "Net.",
+   "Impeccable.",
+   "Rapide et juste.",
+   "Bien vu."
+  ],
+  "wrong_title": "Pas cette fois. La méthode :"
+ }
+}
