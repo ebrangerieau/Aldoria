@@ -110,7 +110,9 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   d'un lieu fait échouer `tests/recordedVoices.test.ts` : relancer `python tools/voix_elevenlabs.py` (clé ElevenLabs dans
   l'environnement, jamais dans le dépôt ; `--essai` liste ce qui serait généré, sans clé). Un nouveau texte de Maître Ysaline
   s'ajoute à `lignes.json` (groupe, id, texte, voix), puis le script génère son son. Crédit ElevenLabs dans les Options.
-- **Logiques de la v1 portées, pas encore branchées à l'écran** (pures, testées, `core/`) : apparence du héros et du renard
+- **Logiques de la v1 portées, pas encore branchées à l'écran** (pures, testées, `core/`) : sac d'objets (`inventory.ts` : plume,
+  parchemin, bouclier, potion, 5 au plus de chaque ; le combat applique déjà les deux derniers), voix du héros entre les salles
+  (`heroVoice.ts` et `content/monde/heros.json`), apparence du héros et du renard
   (`wardrobe.ts`, `content/monde/apparence.json`), défi quotidien (`dailyChallenge.ts` : série, rattrapage, record, coffre de la
   semaine), île du Sphinx (`sphinx/board.ts` : jeu de blocs ; `sphinx/island.ts` : passages de barque, paliers, aide du Sphinx ;
   180 énigmes dans `content/monde/sphinx_niveaux.json`, converties de `game/worlds/shared/sphinx_levels.gd` de la v1 ;
