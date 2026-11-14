@@ -1,9 +1,8 @@
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it, vi } from 'vitest'
 import lieux from '@content/monde/lieux.json'
 import lignes from '@content/voix/lignes.json'
-import manifest from '../../deploy/voix/manifest.json'
 import { digest, RecordedVoices, RETRY_AFTER_MS } from '../src/core/recordedVoices'
 
 const FILE = 'seuil-abc12345.mp3'
@@ -73,11 +72,14 @@ describe('RecordedVoices', () => {
 
 describe('voix enregistrées livrées avec le jeu (deploy/voix)', () => {
   const sounds = fileURLToPath(new URL('../../deploy/voix/', import.meta.url))
+  // Lu à l'exécution, pas importé : l'image web2 construit le jeu avec client/ et content/ seulement (deploy/ n'y est pas),
+  // et `tsc` vérifie aussi les tests (npm run build) : un import statique de deploy/ ferait échouer cette construction.
+  const manifest = JSON.parse(readFileSync(sounds + 'manifest.json', 'utf-8')) as Record<string, { id: string; voix: string; fichier: string }>
 
   it('chaque réplique de content/voix/lignes.json a son son, et le fichier existe', async () => {
     const missing: string[] = []
     for (const line of lignes) {
-      const entry = (manifest as Record<string, { fichier: string }>)[await digest(line.texte)]
+      const entry = manifest[await digest(line.texte)]
       if (!entry || !existsSync(sounds + entry.fichier)) missing.push(line.id)
     }
     // Texte modifié sans nouvelle voix : relancer tools/voix_elevenlabs.py (clé ElevenLabs dans l'environnement).
@@ -87,7 +89,7 @@ describe('voix enregistrées livrées avec le jeu (deploy/voix)', () => {
   it('le texte de seuil de chacun des 30 lieux est enregistré (Maître Ysaline le dit de sa vraie voix)', async () => {
     const lost: string[] = []
     for (const d of lieux.dungeons) {
-      const entry = (manifest as Record<string, { id: string; voix: string }>)[await digest(d.threshold)]
+      const entry = manifest[await digest(d.threshold)]
       if (entry?.id !== `seuil-${d.code}` || entry.voix !== 'ysaline') lost.push(d.code)
     }
     expect(lieux.dungeons).toHaveLength(30)
