@@ -109,8 +109,10 @@ export function Wardrobe({ data, world, onPick, onClose }: {
           entries={menu.off}
           hint={menu.off.some((e) => e.unavailable) ? 'Une arme à deux mains occupe les deux mains.' : undefined}
         />
-        {menu.hasHead && <Group {...props('couvre-chef', 'Couvre-chef', (e) => ({ head: e.id === 'oui' }))} title="Couvre-chef" entries={yesNo(look.head, 'Porté', 'Retiré')} />}
-        <Group {...props('cape', 'Cape', (e) => ({ cape: e.id === 'oui' }))} title="Cape" entries={yesNo(look.cape, 'Portée', 'Retirée')} />
+        <div className="wardrobe-pair">
+          {menu.hasHead && <Group {...props('couvre-chef', 'Couvre-chef', (e) => ({ head: e.id === 'oui' }))} title="Couvre-chef" entries={yesNo(look.head, 'Porté', 'Retiré')} />}
+          <Group {...props('cape', 'Cape', (e) => ({ cape: e.id === 'oui' }))} title="Cape" entries={yesNo(look.cape, 'Portée', 'Retirée')} />
+        </div>
         <Group {...props('cape-couleur', 'Couleur de la cape', (e) => ({ cape_color: e.id, cape: true }))} title="Couleur de la cape" entries={menu.capeColors} />
         {menu.pet && (
           <>

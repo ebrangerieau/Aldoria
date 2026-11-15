@@ -110,7 +110,7 @@ const layout = ile as unknown as IslandLayout
 const today = (): string => new Date().toISOString().slice(0, 10)
 /** Écran d'apparence : durée du cadrage de la caméra, et décalage (écran) qui garde le héros à gauche du panneau. */
 const SHOWCASE_MS = 900
-const SHOWCASE_OFFSET = 1.5
+const SHOWCASE_OFFSET = -1.5
 
 export class GameWorld {
   readonly events = new Emitter<WorldEvents>()
