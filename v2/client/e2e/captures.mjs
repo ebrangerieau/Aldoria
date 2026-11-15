@@ -71,6 +71,13 @@ const VIEWS = {
   'region-panorama': { query: '', at: [0, -30], face: [0, 30], beta: 1.05, radius: 60, turn: 0.2 },
   // La mini-carte voile les régions pas encore éclairées (ici : les Cimes Fractales ont toutes leurs pages, la Vallée du Vivant et le Carrefour des Messagers sont sous le brouillard).
   'carte-lumiere': { query: '', at: [0, -30], face: [0, 30], beta: 1.25, radius: 6, turn: 0, interface: true, region: 'maths' },
+  // Le prologue (cinq tableaux, 6e) : la caméra de cinéma, le titre, le texte affiché (option `prologue` : le numéro du tableau, de 1 à 5).
+  'prologue-1': { query: '', at: [0, -30], face: [0, 30], beta: 1.25, radius: 6, turn: 0, interface: true, prologue: 1 },
+  'prologue-2': { query: '', at: [0, -30], face: [0, 30], beta: 1.25, radius: 6, turn: 0, interface: true, prologue: 2 },
+  'prologue-3': { query: '', at: [0, -30], face: [0, 30], beta: 1.25, radius: 6, turn: 0, interface: true, prologue: 3 },
+  'prologue-4': { query: '', at: [0, -30], face: [0, 30], beta: 1.25, radius: 6, turn: 0, interface: true, prologue: 4 },
+  'prologue-5': { query: '', at: [0, -30], face: [0, 30], beta: 1.25, radius: 6, turn: 0, interface: true, prologue: 5 },
+  'prologue-brouillard': { query: '&monde=brouillard&classe=2nde', at: [0, -30], face: [0, 30], beta: 1.25, radius: 6, turn: 0, interface: true, prologue: 3 },
   // Le sac consulté sur l'île : vide (où trouver des objets), puis garni (quatre objets, ce qu'ils font, où ils servent).
   'sac-vide': { query: '', at: [0, -30], face: [0, 30], beta: 1.25, radius: 6, turn: 0, interface: true, bag: 'vide' },
   'sac-garni': { query: '&monde=brouillard', at: [0, -30], face: [0, 30], beta: 1.25, radius: 6, turn: 0, interface: true, bag: 'garni' },
@@ -202,6 +209,21 @@ for (const name of views) {
   if (view.accept) {
     await page.getByRole('button', { name: "Je t'aide !" }).click()
     await page.locator('figure.visual.table').waitFor({ timeout: 15_000 })
+  }
+  if (view.prologue) {
+    // Ysaline (E devant elle) → « Revoir l'histoire » → le tableau voulu (« Suite » autant de fois), texte affiché, le temps que la caméra arrive.
+    await page.evaluate(() => {
+      const w = window.__aldoria.world
+      const i = w.interactables.find((x) => x.kind === 'ysaline')
+      w.teleport(i.x, i.z - 1.5, i.x, i.z)
+    })
+    await page.getByTestId('invite').filter({ hasText: 'Maître Ysaline' }).waitFor({ timeout: 20_000 })
+    await page.keyboard.press('KeyE')
+    await page.getByRole('button', { name: 'Revoir l’histoire' }).click()
+    await page.getByTestId('prologue').waitFor()
+    for (let i = 1; i < view.prologue; i += 1) await page.getByTestId('prologue-suite').click()
+    await page.getByTestId('prologue-bouton-texte').click()
+    await page.waitForTimeout(12_000)
   }
   if (view.bag) {
     if (view.bag === 'garni') await page.evaluate(() => { window.__aldoria.give('plume', 3); window.__aldoria.give('parchemin', 1); window.__aldoria.give('potion', 2) })

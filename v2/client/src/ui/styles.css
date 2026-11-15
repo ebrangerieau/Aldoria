@@ -578,3 +578,21 @@ html[data-calm='true'] .hero-bubble { animation: bubble-calm 6s linear forwards;
 .tir-stepper { display: inline-flex; align-items: center; gap: 0.35rem; }
 .tir-stepper button { min-width: 2.6rem; font-size: 1.3rem; }
 .tir-value { min-width: 4.6rem; padding: 0.15rem 0.5rem; border: 2px solid var(--ink); border-radius: 6px; background: var(--parchment-light, #fff8e1); font-size: 1.6rem; font-weight: 700; text-align: center; }
+
+/* --- Prologue (ui/Prologue.tsx) : barres de cinéma, panneau du tableau, interface cachée le temps du récit -------------------------------------------------- */
+.prologue { position: absolute; inset: 0; pointer-events: none; }
+.prologue-bar { position: absolute; left: 0; right: 0; height: 8vh; background: #0b0a10; }
+.prologue-bar.top { top: 0; }
+.prologue-bar.bottom { bottom: 0; }
+.prologue-panel { position: absolute; left: 50%; bottom: calc(8vh + 1rem); transform: translateX(-50%); width: min(760px, 92vw); pointer-events: auto; }
+.prologue-head { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0.8rem; }
+.prologue-head h2 { margin: 0; font-size: 1.3rem; }
+.prologue-who { flex: 1; color: var(--ink-soft); font-size: 0.95rem; }
+.prologue-dots { display: flex; gap: 0.4rem; list-style: none; margin: 0; padding: 0; }
+.prologue-dots li { width: 0.7rem; height: 0.7rem; border: 2px solid var(--ink); border-radius: 50%; }
+.prologue-dots li.past { background: var(--ink-soft); }
+.prologue-dots li.on { background: var(--gold); }
+.prologue-text { margin: 0.6rem 0; font-size: 1.15rem; animation: prologue-in 0.5s ease; }
+.prologue-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.6rem; margin-top: 0.5rem; }
+@keyframes prologue-in { from { opacity: 0; } to { opacity: 1; } }
+html.en-prologue .hud-top, html.en-prologue .controls-help, html.en-prologue .region-banner, html.en-prologue .prompt-bar, html.en-prologue .minimap, html.en-prologue .floor-label { visibility: hidden; }

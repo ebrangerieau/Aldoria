@@ -19,11 +19,13 @@ import { MAX_PASSES, sphinxOf, type SphinxState } from '../core/sphinx/island'
 import { EMPTY_SAVE, SaveGame, type SaveData } from '../core/save'
 import { pageGreeting } from '../core/quest/chest'
 import { regionTitle } from '../core/world/places'
+import { markSeen as markPrologueSeen, shouldAutoplay, tableaux as prologueTableaux } from '../core/prologue'
 import type { GameWorld, Interactable, WorldEvents } from '../game/GameWorld'
 import type { WorldName } from '../game/theme'
 import { PlayTimeGuard } from './PlayTimeGuard'
 import { Archives } from './Archives'
 import { BagView } from './BagView'
+import { Prologue } from './Prologue'
 import { DailyChallenge } from './DailyChallenge'
 import { RelicTable } from './RelicTable'
 import { Wardrobe } from './Wardrobe'
@@ -51,6 +53,7 @@ type Modal =
   | { kind: 'options' }
   | { kind: 'archives' }
   | { kind: 'sac' }
+  | { kind: 'prologue' }
   | { kind: 'daily' }
   | { kind: 'table' }
   | { kind: 'sphinx' }
@@ -106,6 +109,15 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
   })
 
   useEffect(() => applyToDocument(accommodations), [accommodations])
+
+  // Le prologue se joue tout seul la première fois (enfant connecté, jamais en mode découverte), dès que l'île est prête.
+  const prologueAuto = useRef(false)
+  useEffect(() => {
+    if (!world || loading || prologueAuto.current || !shouldAutoplay(data, demo)) return
+    prologueAuto.current = true
+    world.setInputEnabled(false)
+    setModal({ kind: 'prologue' })
+  }, [world, loading])
 
   // Une région sous le brouillard : avec la « lecture automatique », Maître Ysaline lit son texte de sa voix enregistrée (le texte de la bannière est celui qu'elle a enregistré) ;
   // on ne coupe que cette lecture quand le héros s'en va.
@@ -380,6 +392,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
         text: WELCOME,
         actions: [
           { label: '🔊 Écouter', run: () => void services.voice.say([WELCOME]) },
+          { label: 'Revoir l’histoire', run: () => setModal({ kind: 'prologue' }) },
           { label: 'En route !', primary: true, run: close },
         ],
       })
@@ -666,6 +679,18 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
         onEnd={onQuit}
       />
       {modal?.kind === 'archives' && <Archives services={services} beasts={data.bestiary} onClose={close} />}
+      {modal?.kind === 'prologue' && world && (
+        <Prologue
+          services={services}
+          world={world}
+          list={prologueTableaux((profile.world as WorldName) ?? 'lumineux')}
+          onDone={() => {
+            persist(markPrologueSeen(dataRef.current))
+            close()
+            canvasRef.current?.focus()
+          }}
+        />
+      )}
       {modal?.kind === 'sac' && <BagView owned={data.items} onClose={() => { close(); canvasRef.current?.focus() }} />}
       {modal?.kind === 'daily' && (
         <DailyChallenge
