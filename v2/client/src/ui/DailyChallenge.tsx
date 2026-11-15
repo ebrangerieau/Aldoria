@@ -11,6 +11,7 @@ import { countedDay, QUESTIONS, today as localDay } from '../core/dailyChallenge
 import { DailyRun, GAME_MODE, introText, openChest, pips, titleFor, type DailyReport } from '../core/dailyRun'
 import type { Item } from '../core/items'
 import { answerXp } from '../core/progression'
+import { afterActivity, passesText, sphinxOf, takePassageNews } from '../core/sphinx/island'
 import type { SaveData } from '../core/save'
 import { E2eQuestion } from './E2eQuestion'
 import { QuestionPanel, type QuestionOutcome } from './QuestionPanel'
@@ -90,9 +91,14 @@ export function DailyChallenge({ services, accommodations, demo, data, onSave, o
     if (!run.complete) return nextQuestion()
     const report = run.finish(savedRef.current.daily, noSpeed)
     if (!report) return setPhase({ kind: 'unavailable' })
-    onSave({ ...savedRef.current, daily: report.state, xp: savedRef.current.xp + report.xp })
+    // Dix réponses : un passage pour la barque du Sphinx (un défi interrompu ne compte pas, comme pour la série).
+    const level = services.session.profile?.level ?? '6e'
+    const earned = afterActivity(savedRef.current, level, 'defi', services.questions.answered)
+    const sphinx = earned.gained ? sphinxOf(earned.save, level) : null
+    onSave({ ...earned.save, ...(sphinx ? { sphinx: takePassageNews(sphinx).state } : {}), daily: report.state, xp: savedRef.current.xp + report.xp })
     services.sfx.play('victory')
-    setPhase({ kind: 'results', report })
+    const lines = sphinx ? [...report.lines, `Un passage pour la barque du Sphinx ! (${passesText(sphinx.passes)})`] : report.lines
+    setPhase({ kind: 'results', report: { ...report, lines } })
   }
 
   function openTheChest(report: DailyReport) {

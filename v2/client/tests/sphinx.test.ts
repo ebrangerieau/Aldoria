@@ -1,9 +1,10 @@
 import { describe, expect, it } from 'vitest'
 import niveaux from '@content/monde/sphinx_niveaux.json'
 import { SphinxBoard } from '../src/core/sphinx/board'
+import { EMPTY_SAVE, normalizeSave } from '../src/core/save'
 import {
-  earnPassage, earnsPassage, HOW_TO_EARN, helpSteps, initialSphinx, levelAt, MAX_PASSES, nextPuzzle, normalizeSphinx, PASS_ANSWERS,
-  passesText, recordSolved, spendPassage, startTier, takePassageNews, TIER_UP, tierCount, VISIT_PUZZLES,
+  afterActivity, earnPassage, earnsPassage, HOW_TO_EARN, helpSteps, initialSphinx, levelAt, MAX_PASSES, nextPuzzle, normalizeSphinx, PASS_ANSWERS,
+  passesText, recordSolved, spendPassage, sphinxOf, startTier, takePassageNews, TIER_UP, tierCount, VISIT_PUZZLES,
 } from '../src/core/sphinx/island'
 
 const ROWS = ['######', '#@ $.#', '#    #', '######']
@@ -184,6 +185,35 @@ describe('île du Sphinx : passages', () => {
     expect(earnsPassage('donjon', PASS_ANSWERS - 1)).toBe(false) // à peine commencée
     expect(earnsPassage('defi', PASS_ANSWERS)).toBe(true)
     expect(earnsPassage('sphinx', 40)).toBe(false)
+    expect(earnsPassage('monde', 40)).toBe(false) // les pierres de l'île principale ne sont pas une activité
+  })
+
+  it('à la fin d’un lieu ou du défi, la partie reçoit un passage (nouvelle partie, jamais modifiée sur place)', () => {
+    const save = structuredClone(EMPTY_SAVE)
+    expect(save.sphinx).toBeUndefined()
+    const none = afterActivity(save, '6e', 'donjon', PASS_ANSWERS - 1)
+    expect(none).toEqual({ save, gained: false })
+    const got = afterActivity(save, '6e', 'donjon', PASS_ANSWERS)
+    expect(got.gained).toBe(true)
+    expect(got.save.sphinx).toMatchObject({ passes: 1, news: 1, tier: 1 })
+    expect(save.sphinx).toBeUndefined()
+    // La classe de l'enfant fixe le palier de départ de la première fois.
+    expect(afterActivity(save, '2nde', 'defi', PASS_ANSWERS).save.sphinx?.tier).toBe(2)
+    expect(sphinxOf(save, '2nde').tier).toBe(2)
+    // Jamais pour l'île du Sphinx ni pour les pierres ; réserve pleine : pas de passage de plus, ni d'annonce.
+    expect(afterActivity(save, '6e', 'sphinx', 40).gained).toBe(false)
+    expect(afterActivity(save, '6e', 'monde', 40).gained).toBe(false)
+    let full = save
+    for (let i = 0; i < MAX_PASSES; i++) full = afterActivity(full, '6e', 'donjon', 10).save
+    expect(full.sphinx?.passes).toBe(MAX_PASSES)
+    expect(afterActivity(full, '6e', 'donjon', 10)).toEqual({ save: full, gained: false })
+  })
+
+  it('l’état du Sphinx se range dans la partie et se relit sans rien perdre ni inventer', () => {
+    const earned = afterActivity(structuredClone(EMPTY_SAVE), '6e', 'donjon', 10).save
+    expect(normalizeSave(JSON.parse(JSON.stringify(earned))).sphinx).toEqual(earned.sphinx)
+    expect(normalizeSave({ xp: 5 }).sphinx).toBeUndefined() // une ancienne partie n'en a pas
+    expect(normalizeSave({ sphinx: { passes: 99, tier: -4, next: { '1': 'x' } } as never }).sphinx).toMatchObject({ passes: MAX_PASSES, tier: 1, next: {} })
   })
 
   it('la réserve est limitée, les gains sont annoncés une seule fois', () => {
