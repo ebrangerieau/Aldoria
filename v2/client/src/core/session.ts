@@ -14,6 +14,31 @@ export const BATCH_SIZE = 50
 /** Refus définitif (requête invalide) ; les autres échecs se retentent (réseau, 401, 5xx). */
 export const REJECTED_FOR_GOOD = [400, 403, 404, 409, 413, 422]
 
+/**
+ * Fin de validité d'un jeton de connexion (champ `exp` d'un JWT, en millisecondes), lue sans le vérifier : le serveur fait foi, ceci sert seulement à
+ * ne pas proposer « Continuer » avec une connexion déjà expirée (le jeton vit 12 heures, `token_hours` de l'API). null si le jeton n'a pas cette forme.
+ */
+export function tokenExpiry(token: string): number | null {
+  const payload = token.split('.')[1]
+  if (!payload) return null
+  try {
+    const padded = payload.replace(/-/g, '+').replace(/_/g, '/')
+    const exp = (JSON.parse(atob(padded)) as { exp?: unknown }).exp
+    return typeof exp === 'number' && Number.isFinite(exp) ? exp * 1000 : null
+  } catch {
+    return null
+  }
+}
+
+/** Que faire quand l'ouverture de la session de l'île échoue : redemander le code (connexion expirée), revoir l'appareil, ou réessayer plus tard. */
+export type Recovery = 'relogin' | 'unpaired' | 'retry'
+
+export function recoveryFor(status: number): Recovery {
+  if (status === 401) return 'relogin'
+  if (status === 403) return 'unpaired'
+  return 'retry'
+}
+
 export interface Profile {
   id: number
   name: string
@@ -76,6 +101,12 @@ export class Session implements QuestionSource {
     return this.api.token !== '' && this.profile !== null
   }
 
+  /** La connexion gardée sur l'appareil est expirée (une minute de marge) : il faut remettre le code secret. */
+  tokenExpired(now: number = Date.now()): boolean {
+    const exp = tokenExpiry(this.api.token)
+    return exp !== null && exp - 60_000 <= now
+  }
+
   /** Mode découverte : sans compte ni serveur, rien n'est enregistré ni envoyé. */
   demo = false
 
@@ -115,7 +146,7 @@ export class Session implements QuestionSource {
   }
 
   /** Ouvre une session et charge le paquet. Sans réseau, reprend le dernier paquet gardé. */
-  async start(mode: SessionMode, params: Record<string, unknown> = {}, cacheKey = ''): Promise<{ ok: boolean; offline?: boolean }> {
+  async start(mode: SessionMode, params: Record<string, unknown> = {}, cacheKey = ''): Promise<{ ok: boolean; offline?: boolean; status?: number }> {
     this.clock.checkBreak(this.sessionId !== '') // une pause assez longue remet la séance à zéro
     this.mode = mode
     this.answered = 0
@@ -135,7 +166,7 @@ export class Session implements QuestionSource {
         return { ok: true, offline: true }
       }
     }
-    return { ok: false }
+    return { ok: false, status: res.status }
   }
 
   /** Fin de session ; `rating` : note de plaisir de 1 à 5 (fin de lieu), 0 sinon. */
