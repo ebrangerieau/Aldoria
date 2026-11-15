@@ -66,6 +66,8 @@ type Modal =
 
 /** Accueil de Maître Ysaline : le texte et sa voix enregistrée sont dans content/voix/lignes.json (un seul endroit : modifier ce texte demande de le réenregistrer). */
 const WELCOME = lignes.find((l) => l.id === 'ile-accueil')!.texte
+/** La Tour de l'Oubli, fermée : le texte de Maître Ysaline (sa voix enregistrée), le même que sur la carte de la v1. */
+const TOWER = lignes.find((l) => l.id === 'secret-tour_oubli')!.texte
 
 export function GameScreen({ services, demo, onQuit }: { services: Services; demo: boolean; onQuit: () => void }) {
   const canvasRef = useRef<HTMLCanvasElement>(null)
@@ -387,6 +389,17 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
     } else if (target.kind === 'habitant' && target.npc) {
       worldRef.current?.talkTo(target.npc.code)
       setModal({ kind: 'village', npc: target.npc })
+    } else if (target.kind === 'oubli') {
+      setModal({
+        kind: 'dialog',
+        title: "La Tour de l'Oubli",
+        text: TOWER,
+        actions: [
+          { label: '🔊 Écouter', run: () => void services.voice.say([TOWER]) },
+          { label: 'D’accord', primary: true, run: close },
+        ],
+      })
+      if (accommodations.auto_read) void services.voice.say([TOWER])
     } else if (target.kind === 'pont') {
       setModal({ kind: 'pont' })
     } else if (target.kind === 'tir') {

@@ -38,7 +38,7 @@ import { angleDelta, RUN_SPEED, step, WALK_SPEED } from '../core/world/movement'
 import { isOpen, type Place, placesFor, regionTitle } from '../core/world/places'
 import type { Shot } from '../core/prologue'
 import { fogDensityFactor, fogNote, type RegionLight, regionLights } from '../core/world/regionLight'
-import { type IslandLayout, SEA_LEVEL, Terrain } from '../core/world/terrain'
+import { type IslandLayout, SEA_LEVEL, secretDoor, Terrain } from '../core/world/terrain'
 import { type Atmosphere, createAtmosphere } from './atmosphere'
 import { type Character, dress, loadFox, loadHero, loadMonster, loadNpc, settleOnGround, skinnedHeights, tintFox } from './characters'
 import { type BalanceStation, type Enemy, type FloatTone, InteriorWorld, type Pedestal } from './interior'
@@ -51,7 +51,7 @@ import { buildGround, buildSea, type Ground } from './island'
 import { chooseQuality, type Quality } from './quality'
 import { THEMES, type WorldName } from './theme'
 
-export type InteractableKind = 'lieu' | 'pierre' | 'ysaline' | 'sortie' | 'jour' | 'coffre' | 'relique' | 'table' | 'barque' | 'habitant' | 'pont' | 'tir'
+export type InteractableKind = 'lieu' | 'pierre' | 'ysaline' | 'sortie' | 'jour' | 'coffre' | 'relique' | 'table' | 'barque' | 'habitant' | 'pont' | 'tir' | 'oubli'
 
 export interface Interactable {
   id: string
@@ -607,6 +607,14 @@ export class GameWorld {
       this.interactables.push({
         id: place.dungeon.code, kind: 'lieu', label: place.dungeon.title, x: door.x, z: door.z, radius: 4, place, open,
       })
+    }
+    // Les lieux secrets (la Tour de l'Oubli, au nord) : fermés tant que l'enfant n'a pas repris assez de pages ; on s'en approche, Maître Ysaline dit pourquoi.
+    for (const [code, secret] of Object.entries(layout.secrets)) {
+      const at = secretDoor(layout, secret)
+      const door = new Vector3(at.x, 0, at.z)
+      door.y = this.grid.heightAt(door.x, door.z)
+      beacon(this.scene, `seuil-${code}`, door, '#7a7f8c', false)
+      this.interactables.push({ id: code, kind: 'oubli', label: "La Tour de l'Oubli", x: door.x, z: door.z, radius: 4, open: false })
     }
     const ys = layout.ysaline
     this.interactables.push({ id: 'ysaline', kind: 'ysaline', label: 'Maître Ysaline', x: ys.x, z: ys.z, radius: 3.2 })

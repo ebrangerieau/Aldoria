@@ -890,6 +890,47 @@ try {
     await page.getByRole('button', { name: 'Pas maintenant' }).click()
   })
 
+  await step('la Tour de l’Oubli : fermée, on s’en approche et Maître Ysaline en dit la raison de sa voix enregistrée', async () => {
+    const door = await page.evaluate(() => {
+      const w = window.__aldoria.world
+      const it = w.interactables.find((i) => i.id === 'tour_oubli')
+      if (!it) return null
+      // La distance du seuil au bord de la tour : devant elle, jamais dans son emprise (le héros pourrait ne pas l'atteindre).
+      const circles = []
+      for (let dx = -16; dx <= 16; dx += 16) for (let dz = -16; dz <= 16; dz += 16) circles.push(...w.obstacles.near(it.x + dx, it.z + dz))
+      return { x: it.x, z: it.z, open: it.open, gap: Math.min(...circles.map((c) => Math.hypot(c.x - it.x, c.z - it.z) - c.r)) }
+    })
+    if (!door) throw new Error('la Tour de l’Oubli devrait avoir un seuil dans l’île')
+    if (door.open) throw new Error('la Tour de l’Oubli est fermée')
+    if (door.gap < 0.5 || door.gap > 4) throw new Error(`le seuil doit être devant la tour, hors de son emprise : ${door.gap.toFixed(1)} m de son bord`)
+    await page.evaluate(() => {
+      const w = window.__aldoria.world
+      const it = w.interactables.find((i) => i.id === 'tour_oubli')
+      w.teleport(it.x, it.z - 1.5, it.x, it.z)
+    })
+    await page.getByTestId('invite').filter({ hasText: /Approcher : La Tour de l.Oubli/ }).waitFor({ timeout: 10_000 * SLOW })
+    await page.keyboard.press('KeyE')
+    await page.getByRole('heading', { name: /La Tour de l.Oubli/ }).waitFor({ timeout: 10_000 * SLOW })
+    const text = await page.getByRole('dialog').innerText()
+    if (!/Elle ne s.ouvrira que lorsque tu auras repris assez de pages/.test(text)) throw new Error(`le texte de la tour : ${text}`)
+    await page.screenshot({ path: `${OUT}/03g-tour-oubli.png` })
+    // Sa voix enregistrée : « Écouter » joue le fichier (le journal de la voix le dit : demandé, puis « joue »).
+    const from = await page.evaluate(() => window.__aldoria.services.voice.notedCount)
+    await page.getByRole('button', { name: /Écouter/ }).click()
+    await page.waitForFunction(
+      (start) => {
+        const voice = window.__aldoria.services.voice
+        const fresh = voice.trace.slice(Math.max(0, voice.trace.length - (voice.notedCount - start)))
+        const at = fresh.findIndex((line) => line.includes('son '))
+        return at >= 0 && fresh.slice(at).some((line) => line.endsWith('joue'))
+      },
+      from,
+      { timeout: 15_000 * SLOW },
+    )
+    await page.getByRole('button', { name: 'D’accord' }).click()
+    await page.getByRole('dialog').waitFor({ state: 'detached', timeout: 5000 * SLOW })
+  })
+
   await step('le boss : l’Effaceur parle de sa voix enregistrée, huit sceaux, le coffre, la page rendue, le lieu suivant s’ouvre, Maître Ysaline salue', async () => {
     // Les demandes de son vues depuis le début de l'étape : si une attente expire, le message dit lesquelles sont parties (aucune : le jeu n'a
     // rien demandé ; une demande sans réponse : le réseau ou le serveur) et quel dialogue était ouvert.
