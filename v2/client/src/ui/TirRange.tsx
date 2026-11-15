@@ -71,7 +71,7 @@ function ProtractorView({ spec, shots, hit, flying }: { spec: ProtractorSpec; sh
       })}
       <line x1={PCX - PR - 14} y1={PCY} x2={PCX + PR + 14} y2={PCY} className="tir-diameter" />
       <line x1={PCX} y1={PCY} x2={PCX + side * (PR + 1.2 * PS)} y2={PCY} className="tir-start" data-testid="tir-ligne-depart" />
-      <text x={PCX + side * (PR - 0.4 * PS)} y={PCY + 26} textAnchor="middle" className="tir-start-label">ligne de départ</text>
+      <text x={PCX + side * (PR - 1.6 * PS)} y={PCY + 26} textAnchor="middle" className="tir-start-label">ligne de départ</text>
       <g className="tir-target" data-testid="tir-cible" data-hit={hit ? 'oui' : undefined}>
         <circle cx={target.x} cy={target.y} r={26} className="ring-a" />
         <circle cx={target.x} cy={target.y} r={19.5} className="ring-b" />
