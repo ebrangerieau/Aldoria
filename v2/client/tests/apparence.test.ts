@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { choose, lookOf, markSeen, menuOf, normalizeLook, progressOf, unlockNews, unseenCount, withLook } from '../src/core/appearance'
+import { choose, companionLabel, lookOf, markSeen, menuOf, normalizeLook, progressOf, unlockNews, unseenCount, withLook } from '../src/core/appearance'
 import { chestMessage, completePlace } from '../src/core/quest/chest'
 import { EMPTY_SAVE, normalizeSave, type SaveData } from '../src/core/save'
 import { CAPE_COLORS, defaultLook, isTwoHanded, PARTS, PET_FURS, PET_NAMES, SILHOUETTES } from '../src/core/wardrobe'
@@ -182,5 +182,27 @@ describe('Les choix de l’écran d’apparence', () => {
     expect(menu.silhouettes.find((s) => s.selected)!.id).toBe('Rogue_Hooded')
     expect(menu.hasHead).toBe(false)
     expect(Object.keys(PARTS)).toContain('Rogue_Hooded')
+  })
+})
+
+describe('Le compagnon dans la barre du haut', () => {
+  it('montre le nom que l’enfant a choisi pour son renard, dans le monde lumineux seulement', () => {
+    const name = PET_NAMES[1]!
+    const save = fresh({ look: { ...defaultLook('lumineux'), pet_name: name } })
+    expect(companionLabel(save, 'lumineux')).toBe(name)
+    expect(companionLabel(save, 'brouillard')).toBe('') // pas de renard dans le monde Brouillard
+  })
+
+  it('un nom inconnu (partie abîmée) reprend le nom par défaut, jamais une chaîne vide dans le monde lumineux', () => {
+    const save = fresh({ look: { ...defaultLook('lumineux'), pet_name: 'Nom inventé' } })
+    expect(companionLabel(save, 'lumineux')).toBe(PET_NAMES[0])
+    expect(companionLabel(fresh(), 'lumineux')).toBe(PET_NAMES[0])
+  })
+
+  it('suit le choix tout de suite : renommer le renard change le nom affiché', () => {
+    const before = fresh()
+    const after = withLook(before, { ...before.look, pet_name: PET_NAMES[2]! }, 'lumineux')
+    expect(companionLabel(after, 'lumineux')).toBe(PET_NAMES[2])
+    expect(companionLabel(before, 'lumineux')).toBe(PET_NAMES[0])
   })
 })

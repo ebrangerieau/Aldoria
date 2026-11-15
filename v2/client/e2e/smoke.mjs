@@ -1553,6 +1553,9 @@ try {
     await page.getByTestId('apparence-renard-nom-Comète').click()
     l = await look()
     if (l.pet_fur !== 'arctique' || l.pet_name !== 'Comète') throw new Error(`le renard : ${l.pet_fur} / ${l.pet_name}`)
+    // Le nom choisi s'affiche tout de suite sous le badge du héros (monde lumineux : le renard existe).
+    const companion = await page.getByTestId('compagnon').innerText()
+    if (!companion.includes('Comète')) throw new Error(`le compagnon de la barre du haut : ${companion}`)
     await page.waitForTimeout(800 * SLOW)
     await page.screenshot({ path: `${OUT}/06b-apparence-mage.png` })
 

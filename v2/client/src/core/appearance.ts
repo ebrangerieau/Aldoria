@@ -42,6 +42,11 @@ export function lookOf(save: Pick<SaveData, 'look' | 'xp' | 'places'>, world: Wo
   return sanitizeLook(save.look, world, progressOf(save))
 }
 
+/** Le compagnon à montrer dans la barre du haut : son nom (celui que l'enfant a choisi), ou rien dans un monde sans compagnon (le renard n'existe que dans le monde lumineux). */
+export function companionLabel(save: Pick<SaveData, 'look' | 'xp' | 'places'>, world: World): string {
+  return hasPet(world) ? lookOf(save, world).pet_name : ''
+}
+
 /** La partie avec une nouvelle apparence (déjà validée avec ce que l'enfant a débloqué) ; jamais modifiée sur place. */
 export function withLook<T extends Pick<SaveData, 'look' | 'xp' | 'places'>>(save: T, raw: unknown, world: World): T {
   return { ...save, look: sanitizeLook(raw, world, progressOf(save)) }

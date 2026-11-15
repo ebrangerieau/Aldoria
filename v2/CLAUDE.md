@@ -292,7 +292,7 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   sa condition (« Niveau 5 », « Termine 2 lieux ») ; le toucher l'explique sans rien changer ; jamais la couleur seule (nom, coche, texte de verrou). Le coffre
   (`chestMessage`, fait `unlocked`) et le niveau gagné en combat (`announce`) annoncent les nouveautés. Vérifier : captures `apparence-*` (héros), `apparence-ecran*`
   (écran, niveau 3 et deux lieux), `e2e/wardrobe-a11y.mjs` (texte agrandi à 1280 × 720) et l'étape « l'apparence » du parcours (`giveProgress(xp, lieux)`,
-  mode découverte seulement). Reste : le nom du renard n'est affiché nulle part dans le monde.
+  mode découverte seulement). Le **nom du renard** s'affiche sous le badge du héros (`companionLabel`, `data-testid="compagnon"`, monde lumineux seulement, hors intérieur d'un lieu) et suit tout de suite un renommage.
 - **Un état se rend toujours neuf** (jamais modifié sur place) dans `core/`.
 - **Textes visibles par les enfants en français**, tutoiement ; aucune donnée personnelle hors du serveur d'Aldoria.
 - **Erreurs du jeu** : tout ce qui passe par une exception, une promesse rejetée ou `console.error` remonte à l'exploitant

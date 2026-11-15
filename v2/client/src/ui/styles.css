@@ -167,6 +167,8 @@ html[data-big-targets='true'] .minimap { width: 300px; }
   margin-top: 4px; text-align: center; font-family: var(--title-font); font-size: 0.85rem; color: #fff7e2;
   background: rgb(28 24 36 / 72%); border-radius: 8px; padding: 0.15rem 0.5rem;
 }
+.badge-column { display: grid; gap: 0.4rem; justify-items: start; }
+.pet-badge { padding: 0.2rem 0.8rem; font-size: 0.95rem; }
 .badge { background: rgb(244 233 210 / 92%); border: 2px solid var(--gold); border-radius: 10px; padding: 0.35rem 0.9rem; }
 .offline { color: var(--bad-ink); }
 
