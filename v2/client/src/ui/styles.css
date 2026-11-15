@@ -178,6 +178,8 @@ html[data-big-targets='true'] .minimap { width: 300px; }
   100% { opacity: 0; }
 }
 html[data-calm='true'] .region-banner { opacity: 1; }
+.region-banner { width: max-content; max-width: min(34rem, 90vw); text-align: center; }
+.region-note { display: block; margin-top: 0.3rem; font-family: var(--text-font); font-size: 1.05rem; line-height: 1.35; }
 
 .floor-label {
   position: absolute; top: 14px; left: 50%; transform: translateX(-50%);

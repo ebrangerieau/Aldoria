@@ -36,6 +36,7 @@ import type { Obstacles } from '../core/world/obstacles'
 import { heading, type MapMarker, mapMarkers, type ReliefPalette } from '../core/world/minimap'
 import { angleDelta, RUN_SPEED, step, WALK_SPEED } from '../core/world/movement'
 import { isOpen, type Place, placesFor, regionTitle } from '../core/world/places'
+import { fogDensityFactor, fogNote, type RegionLight, regionLights } from '../core/world/regionLight'
 import { type IslandLayout, SEA_LEVEL, Terrain } from '../core/world/terrain'
 import { type Atmosphere, createAtmosphere } from './atmosphere'
 import { type Character, dress, loadFox, loadHero, loadMonster, loadNpc, settleOnGround, skinnedHeights, tintFox } from './characters'
@@ -44,7 +45,7 @@ import { today as localDay } from '../core/dailyChallenge'
 import { beacon, buildDecor, setBeacon } from './decor'
 import { sparkle } from './effects'
 import { createEngine, type EngineKind } from './engine'
-import { buildGround, buildSea } from './island'
+import { buildGround, buildSea, type Ground } from './island'
 import { chooseQuality, type Quality } from './quality'
 import { THEMES, type WorldName } from './theme'
 
@@ -67,7 +68,8 @@ export interface Interactable {
 
 export type WorldEvents = {
   progress: { label: string; ratio: number }
-  region: { code: string | null; title: string }
+  /** `note` : le texte de brouillard d'une région que la classe n'a pas encore au programme (vide ailleurs). */
+  region: { code: string | null; title: string; note?: string }
   focus: Interactable | null
   interact: Interactable
   stats: { fps: number; drawCalls: number; triangles: number }
@@ -145,6 +147,11 @@ export class GameWorld {
   private dayRing: Mesh | null = null
   private focused: Interactable | null = null
   private region: string | null = null
+  /** Lumière de chaque région selon les pages rapportées (core/world/regionLight.ts) : le sol et la brume locale la suivent. */
+  private lights: Record<string, RegionLight> = {}
+  private ground: Ground | null = null
+  private baseFog = 0
+  private fogTarget = 0
   private lastCameraInput = 0
   /** Cadrage en cours vers un but (écran d'apparence) : la caméra s'en approche pendant `SHOWCASE_MS`, puis la souris reprend la main. */
   private cameraGoal: { alpha: number; beta: number; radius: number; offsetX: number; until: number } | null = null
@@ -212,13 +219,16 @@ export class GameWorld {
     this.atmosphere = createAtmosphere(scene, this.camera, theme, this.quality)
 
     this.progress("Le relief de l'île", 0.1)
-    const { mesh: ground, grid } = buildGround(scene, this.terrain, theme, this.quality.terrainSubdivisions)
-    this.grid = grid
-    buildSea(scene, this.terrain, theme)
-    void ground
-
     const places = placesFor(this.options.level, this.terrain)
     this.places = places
+    this.lights = regionLights(places, this.placesDone)
+    this.baseFog = theme.fogDensity
+    this.fogTarget = theme.fogDensity
+    const ground = buildGround(scene, this.terrain, theme, this.quality.terrainSubdivisions, this.lightLevels())
+    const grid = ground.grid
+    this.ground = ground
+    this.grid = grid
+    buildSea(scene, this.terrain, theme)
     const steps = ['La Citadelle des Archives', 'Les lieux de quête', 'Le village', "L'île du Sphinx", 'Les forêts', 'Les nuages']
     const decor = await buildDecor(scene, this.terrain, grid, places, this.options.world, this.quality, this.atmosphere.shadows, (label) => {
       this.progress(label, 0.2 + (0.5 * (steps.indexOf(label) + 1)) / steps.length)
@@ -458,13 +468,18 @@ export class GameWorld {
     this.updateFox(dt)
     this.updateCamera(dt, moving)
 
+    // La brume de l'air suit la région du héros en douceur (d'un coup en mode calme).
+    const fog = this.scene.fogDensity
+    this.scene.fogDensity = this.options.calm ? this.fogTarget : fog + (this.fogTarget - fog) * Math.min(1, dt * 1.2)
+
     this.regionTimer -= dt
     if (this.regionTimer <= 0) {
       this.regionTimer = 0.5
       const region = this.terrain.regionAt(p.x, p.z)
       if (region !== this.region) {
         this.region = region
-        this.events.emit('region', { code: region, title: region ? regionTitle(region) : '' })
+        this.events.emit('region', { code: region, title: region ? regionTitle(region) : '', note: fogNote(region, this.lights) })
+        this.fogTarget = this.fogFor(region)
       }
       this.updateFocus()
     }
@@ -989,6 +1004,7 @@ export class GameWorld {
    */
   placeCompleted(done: Record<string, number>): void {
     this.placesDone = { ...done }
+    this.relight()
     for (const it of this.interactables) {
       if (it.kind !== 'lieu' || !it.place) continue
       const open = isOpen(it.place, this.placesDone)
@@ -996,6 +1012,35 @@ export class GameWorld {
       setBeacon(this.scene, `seuil-${it.place.dungeon.code}`, open ? '#ffd27a' : '#7a7f8c', open)
     }
     this.events.emit('markers', this.mapMarkers())
+  }
+
+  /** Lumière de chaque région, de 0 à 1, pour le sol. */
+  private lightLevels(): Record<string, number> {
+    return Object.fromEntries(Object.entries(this.lights).map(([code, region]) => [code, region.light]))
+  }
+
+  /** Densité de brume de l'air d'une région (celle du monde, épaissie quand la région n'est pas éclairée ; hors région : celle du monde). */
+  private fogFor(region: string | null): number {
+    const light = region ? this.lights[region]?.light : undefined
+    return light === undefined ? this.baseFog : this.baseFog * fogDensityFactor(light)
+  }
+
+  /** Les pages rapportées ont changé : le sol de chaque région reprend ses couleurs, la brume du héros suit. */
+  private relight(): void {
+    this.lights = regionLights(this.places, this.placesDone)
+    this.ground?.setLights(this.lightLevels())
+    this.fogTarget = this.fogFor(this.region)
+    if (this.options.calm) this.scene.fogDensity = this.fogTarget
+  }
+
+  /** Densité de brume du monde, hors de toute région sombre (tests dans le navigateur). */
+  fogBase(): number {
+    return this.baseFog
+  }
+
+  /** Lumière et état de chaque région (tests dans le navigateur et lecteurs d'écran). */
+  regionLights(): Record<string, RegionLight> {
+    return this.lights
   }
 
   /** Le défi du jour vient d'être relevé (ou ne l'est pas encore) : l'éclat de la pierre et son repère sur la carte suivent. */
