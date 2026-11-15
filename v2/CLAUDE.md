@@ -158,10 +158,10 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   la classe fixe le palier de départ) est rendu neuf à chaque changement. **La barque** (`ile.json` : `barque`, `GameWorld.buildBoat` : coque, proue, mât et voile en formes simples, qui tangue ;
   interaction `kind: 'barque'`, repère sur la mini-carte ; atteignable à pied et en eau profonde, testé) ouvre `ui/SphinxVisit.tsx` : sans passage elle l'explique (`noPassageText`) ; avec, « Traverser »
   en dépense un, le Sphinx se présente (la première fois : `STORY_KEY`, texte lu par Piper, pas de voix enregistrée), puis `VISIT_PUZZLES` (3) énigmes (`ui/SphinxPuzzle.tsx`, SVG : flèches ou Z, Q, S, D,
-  Retour arrière ou U pour annuler, R pour recommencer, H pour l'aide, Échap pour quitter ; toucher une dalle libre y mène sans pousser de bloc ; l'aide remet la salle au départ et rejoue un tiers de plus de la
+  Retour arrière ou U pour annuler, R pour recommencer, H pour l'aide, Échap pour quitter ; cliquer sur une dalle libre y mène sans pousser de bloc ; l'aide remet la salle au départ et rejoue un tiers de plus de la
   solution à chaque appel) ; jamais la couleur seule (dalle gravée = losange creux, bloc = croix, bloc posé = coche, bloc coincé = « ! »). Trois énigmes de suite sans aide font monter d'un palier.
   La traversée ouvre une session « sphinx » (`app/sphinxSession.ts`, paquet vide côté API) : elle compte le temps de jeu fixé par le parent. Crochets `&e2e` : `sphinx` (l'énigme en cours : `rows`, `solution`,
-  `tier`, `round`) et, en découverte, `giveSphinxPasses(n)`. Parcours navigateur : barque sans passage, traversée, présentation, trois énigmes (annuler, recommencer, aide, dalle touchée), bilan, seconde visite
+  `tier`, `round`) et, en découverte, `giveSphinxPasses(n, patch)` (le patch change le palier, `next`…). Parcours navigateur : barque sans passage, traversée, présentation, trois énigmes (annuler, recommencer, aide, dalle cliquée), bilan, seconde visite
   quittée à Échap ; captures `barque`, `barque-brouillard`. **Pas encore fait** : le temple en 3D de la v1 (`SphinxTemple`, le Sphinx et son compagnon) : l'énigme se joue sur un plateau 2D ; les passages gagnés au
   village et à l'arène (ni l'un ni l'autre n'existe dans la v2).
 - **Musique** (`app/music.ts` joue, `core/music.ts` décide du volume, testé) : morceaux de `deploy/musique/` listés dans

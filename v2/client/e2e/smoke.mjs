@@ -722,7 +722,7 @@ try {
     await page.getByTestId('table-reliques').waitFor({ state: 'detached', timeout: 5000 * SLOW })
   })
 
-  await step('l’île du Sphinx : sans passage la barque ne part pas, puis trois énigmes (annuler, recommencer, aide, une dalle touchée), le bilan, et une visite quittée à Échap', async () => {
+  await step('l’île du Sphinx : sans passage la barque ne part pas, puis trois énigmes (annuler, recommencer, aide, une dalle cliquée), le bilan, et une visite quittée à Échap', async () => {
     const save = () => page.evaluate(() => window.__aldoria.save())
     const toBoat = () =>
       page.evaluate(() => {
@@ -804,7 +804,7 @@ try {
     if (!card.includes('Résolue en') || !card.includes('Avec mon aide')) throw new Error(`l’énigme résolue avec l’aide : ${card}`)
     await page.getByRole('button', { name: 'Énigme suivante' }).click()
 
-    // Énigme 2 : on touche une dalle pour y aller (sans pousser de bloc), puis on recommence et on résout seul : le Sphinx salue le minimum de poussées.
+    // Énigme 2 : on clique sur une dalle pour y aller (sans pousser de bloc), puis on recommence et on résout seul : le Sphinx salue le minimum de poussées.
     await page.getByTestId('sphinx-enigme').waitFor({ timeout: 10_000 * SLOW })
     const p2 = await puzzle()
     if (p2.round !== 1) throw new Error(`la deuxième énigme : rang ${p2.round}`)
@@ -823,7 +823,7 @@ try {
         break
       } catch { /* dalle hors d'atteinte sans pousser : on essaie la suivante */ }
     }
-    if (!walked) throw new Error('toucher une dalle libre devrait y mener le héros')
+    if (!walked) throw new Error('cliquer sur une dalle libre devrait y mener le héros')
     await page.getByTestId('sphinx-recommencer').click()
     await play(p2.solution)
     card = await solvedCard()

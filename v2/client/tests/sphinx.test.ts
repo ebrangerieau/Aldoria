@@ -350,7 +350,7 @@ describe('traversée : les textes du Sphinx (repris de la v1)', () => {
   })
 
   it('le bilan, le bandeau et les messages après un pas', () => {
-    expect(finishText(3, 17)).toBe('Énigmes résolues pendant cette traversée : 3. Sceaux du Sphinx gagnés en tout : 17. La barque te ramène sur la grande île.')
+    expect(finishText(3, 17)).toBe('Énigmes résolues pendant cette traversée : 3. Énigmes du Sphinx résolues en tout : 17. La barque te ramène sur la grande île.')
     const board = boardFor({ rows: ROWS })
     board.step('r')
     board.step('r')

@@ -600,7 +600,7 @@ export class GameWorld {
     wood.specularColor = new Color3(0.05, 0.05, 0.05)
     const sail = new StandardMaterial('barque-voile', this.scene)
     sail.diffuseColor = Color3.FromHexString('#f3ead2')
-    sail.emissiveColor = Color3.FromHexString('#f3ead2').scale(0.25)
+    sail.emissiveColor = Color3.FromHexString('#f3ead2').scale(0.08) // à peine : trop clair, la voile devenait un aplat blanc
     sail.backFaceCulling = false
     const hull = MeshBuilder.CreateBox('barque-coque', { width: 3.6, height: 0.8, depth: 1.7 }, this.scene)
     hull.position.set(bateau.x, SEA_LEVEL - 0.05, bateau.z)

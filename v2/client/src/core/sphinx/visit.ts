@@ -16,7 +16,7 @@ export function welcomeText(first: boolean): string {
   return (
     "Bienvenue sur mon île, jeune Archiviste. Je suis le Sphinx, gardien de ce temple. Ici, pas de leçon à réciter : il faut réfléchir. " +
     'Pousse les blocs de pierre jusqu\'aux dalles gravées. Tu peux pousser un bloc, jamais le tirer. Si un bloc se coince, annule ton ' +
-    "dernier pas ou recommence. Et si tu sèches, demande mon aide. Pour marcher : les flèches du clavier (ou Z, Q, S, D), ou touche une dalle."
+    "dernier pas ou recommence. Et si tu sèches, demande mon aide. Pour marcher : les flèches du clavier (ou Z, Q, S, D), ou clique sur une dalle."
   )
 }
 
@@ -50,7 +50,7 @@ export function celebrateLines(r: Solved): string[] {
 
 /** Le bilan de la traversée : les énigmes de cette visite, et le total des sceaux du Sphinx gagnés. */
 export function finishText(solvedNow: number, solvedTotal: number): string {
-  return `Énigmes résolues pendant cette traversée : ${solvedNow}. Sceaux du Sphinx gagnés en tout : ${solvedTotal}. La barque te ramène sur la grande île.`
+  return `Énigmes résolues pendant cette traversée : ${solvedNow}. Énigmes du Sphinx résolues en tout : ${solvedTotal}. La barque te ramène sur la grande île.`
 }
 
 /** Le bandeau d'une énigme : « Énigme du temple 2 / 3 », « Palier 2 · 12 pas · 3 poussées ». */

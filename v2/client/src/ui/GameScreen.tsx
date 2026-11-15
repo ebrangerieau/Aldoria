@@ -14,7 +14,7 @@ import { today as localDay } from '../core/dailyChallenge'
 import { DEFAULT_VOLUME, volumeOf } from '../core/music'
 import { levelForXp } from '../core/progression'
 import { grantRelic, normalizeRelics, relicOf, RELICS } from '../core/relics'
-import { MAX_PASSES, sphinxOf } from '../core/sphinx/island'
+import { MAX_PASSES, sphinxOf, type SphinxState } from '../core/sphinx/island'
 import { EMPTY_SAVE, SaveGame, type SaveData } from '../core/save'
 import { pageGreeting } from '../core/quest/chest'
 import { regionTitle } from '../core/world/places'
@@ -242,9 +242,9 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
   }
 
   /** Tests dans le navigateur (?e2e, mode découverte seulement) : met des passages dans la réserve du Sphinx. */
-  function giveSphinxPasses(n: number) {
+  function giveSphinxPasses(n: number, patch: Partial<SphinxState> = {}) {
     const current = sphinxOf(dataRef.current, profile.level)
-    persist({ ...dataRef.current, sphinx: { ...current, passes: Math.min(MAX_PASSES, Math.max(0, current.passes + n)) } })
+    persist({ ...dataRef.current, sphinx: { ...current, ...patch, passes: Math.min(MAX_PASSES, Math.max(0, current.passes + n)) } })
   }
 
   /** Le héros ramasse une relique de l'île : elle rejoint la partie (jamais deux fois), l'éclat disparaît, l'enfant sait où il en est. */

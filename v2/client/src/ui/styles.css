@@ -432,9 +432,11 @@ html[data-calm='true'] .hero-bubble { animation: bubble-calm 6s linear forwards;
 .relic-result h3 { margin: 0 0 0.3rem; color: var(--good-ink); }
 
 /* L'île du Sphinx (ui/SphinxPuzzle.tsx) : jamais la couleur seule (dalle = losange creux, bloc = croix, bloc posé = coche, bloc coincé = « ! »). */
-.sphinx-panel { width: min(640px, 96vw); }
+.sphinx-panel { width: min(900px, 96vw); }
+.sphinx-layout { display: flex; flex-wrap: wrap; gap: 0.6rem 1.4rem; align-items: flex-start; justify-content: center; }
+.sphinx-side { flex: 1 1 13rem; min-width: 12rem; }
 .sphinx-detail { margin: 0 0 0.4rem; color: var(--ink-soft); font-weight: 600; }
-.sphinx-board { display: block; width: 100%; margin: 0.3rem auto; border-radius: 0.5rem; background: #d9c58a; }
+.sphinx-board { display: block; flex: none; max-width: 100%; max-height: max(calc(100vh - 11rem), 15rem); border-radius: 0.5rem; background: #d9c58a; }
 .sphinx-tile { fill: #efe3c6; stroke: #b9a77c; stroke-width: 1; cursor: pointer; }
 .sphinx-goal { fill: none; stroke: #7a5a1e; stroke-width: 3; stroke-dasharray: 5 3; pointer-events: none; }
 .sphinx-wall rect { fill: #5d574b; }
@@ -447,7 +449,7 @@ html[data-calm='true'] .hero-bubble { animation: bubble-calm 6s linear forwards;
 .sphinx-alert { fill: var(--bad-ink); font: 700 18px var(--title-font); }
 .sphinx-hero circle { fill: #2f4c9a; stroke: #12204a; stroke-width: 3; }
 .sphinx-hero polygon { fill: #f4e9d2; stroke: #12204a; stroke-width: 1.5; }
-.sphinx-status { min-height: 2.9rem; margin: 0.3rem 0; font-weight: 600; }
+.sphinx-status { min-height: 4.4rem; margin: 0 0 0.5rem; font-weight: 600; }
 
 .shield-badge {
   display: inline-block; margin-top: 0.3rem; padding: 0.2rem 0.7rem; border-radius: 999px; background: rgb(251 244 228 / 94%); color: var(--ink);

@@ -1,7 +1,7 @@
 /**
  * Une énigme de blocs du temple du Sphinx (type Sokoban ; règles dans core/sphinx/board.ts, textes dans core/sphinx/visit.ts) : pousser chaque bloc
  * sur une dalle gravée, sans jamais en tirer un. Au clavier : flèches ou Z, Q, S, D (position des touches) pour marcher, Retour arrière ou U pour
- * annuler, R pour recommencer, H pour l'aide du Sphinx, Échap pour quitter l'île. À la souris : toucher une dalle libre y mène sans pousser de
+ * annuler, R pour recommencer, H pour l'aide du Sphinx, Échap pour quitter l'île. À la souris : cliquer sur une dalle libre y mène sans pousser de
  * bloc. L'aide du Sphinx remet la salle au départ et rejoue un tiers de plus de la solution à chaque appel. Rien ne dépend de la couleur seule :
  * une dalle gravée est un losange creux, un bloc porte une croix et un coche une fois posé, un bloc coincé un « ! ».
  */
@@ -207,33 +207,37 @@ export function SphinxPuzzle({ level, tier, round, onSolved, onQuit }: {
       <section className="panel dialog sphinx-panel">
         <h2 id="sphinx-titre">{status.title}</h2>
         <p className="sphinx-detail" data-testid="sphinx-detail">{status.detail}</p>
-        <svg
-          className="sphinx-board"
-          viewBox={`0 0 ${b.width * SIZE} ${b.height * SIZE}`}
-          style={{ maxWidth: `${b.width * 3.3}rem` }}
-          role="img"
-          aria-label={boardSummary(b)}
-          data-testid="sphinx-plateau"
-        >
-          {cells}
-          {pieces}
-          <g className="sphinx-hero" transform={`translate(${b.player.x * SIZE + SIZE / 2} ${b.player.y * SIZE + SIZE / 2})`} data-testid="sphinx-heros" data-x={b.player.x} data-y={b.player.y}>
-            <circle r="13" />
-            <polygon points={nose} />
-          </g>
-        </svg>
-        <p className="sphinx-status" role="status" data-testid="sphinx-message">{message}</p>
-        <div className="actions">
-          <button type="button" className="secondary" data-testid="sphinx-annuler" disabled={!b.canUndo() || solved} onClick={undo}>
-            Annuler <kbd>⌫</kbd>
-          </button>
-          <button type="button" className="secondary" data-testid="sphinx-recommencer" disabled={!b.canUndo() || solved} onClick={restart}>
-            Recommencer <kbd>R</kbd>
-          </button>
-          <button type="button" className="secondary" data-testid="sphinx-aide" disabled={solved} onClick={help}>
-            Aide du Sphinx{hints > 0 ? ` (${hints})` : ''} <kbd>H</kbd>
-          </button>
-          <button type="button" className="primary" onClick={onQuit}>Quitter l’île <kbd>Échap</kbd></button>
+        <div className="sphinx-layout">
+          <svg
+            className="sphinx-board"
+            viewBox={`0 0 ${b.width * SIZE} ${b.height * SIZE}`}
+            style={{ width: `${b.width * 3.3}rem` }}
+            role="img"
+            aria-label={boardSummary(b)}
+            data-testid="sphinx-plateau"
+          >
+            {cells}
+            {pieces}
+            <g className="sphinx-hero" transform={`translate(${b.player.x * SIZE + SIZE / 2} ${b.player.y * SIZE + SIZE / 2})`} data-testid="sphinx-heros" data-x={b.player.x} data-y={b.player.y}>
+              <circle r="13" />
+              <polygon points={nose} />
+            </g>
+          </svg>
+          <div className="sphinx-side">
+            <p className="sphinx-status" role="status" data-testid="sphinx-message">{message}</p>
+            <div className="actions column">
+              <button type="button" className="secondary" data-testid="sphinx-annuler" disabled={!b.canUndo() || solved} onClick={undo}>
+                Annuler <kbd>⌫</kbd>
+              </button>
+              <button type="button" className="secondary" data-testid="sphinx-recommencer" disabled={!b.canUndo() || solved} onClick={restart}>
+                Recommencer <kbd>R</kbd>
+              </button>
+              <button type="button" className="secondary" data-testid="sphinx-aide" disabled={solved} onClick={help}>
+                Aide du Sphinx{hints > 0 ? ` (${hints})` : ''} <kbd>H</kbd>
+              </button>
+              <button type="button" className="primary" onClick={onQuit}>Quitter l’île <kbd>Échap</kbd></button>
+            </div>
+          </div>
         </div>
       </section>
     </div>
