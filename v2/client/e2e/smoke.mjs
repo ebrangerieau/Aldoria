@@ -970,7 +970,8 @@ try {
         const it = w.interactables.find((i) => i.id === 'tour_fractions')
         w.teleport(it.x, it.z - 1.5, it.x, it.z)
       })
-      await page.getByTestId('invite').filter({ hasText: 'Approcher' }).waitFor({ timeout: 10_000 * SLOW })
+      // La Tour des Fractions précisément : l'invite de l'objet d'avant (la Tour de l'Oubli, juste devant) reste affichée une image après la téléportation, et E l'ouvrirait.
+      await page.getByTestId('invite').filter({ hasText: /Approcher : La Tour des Fractions/ }).waitFor({ timeout: 10_000 * SLOW })
       await page.keyboard.press('KeyE')
       await page.getByRole('button', { name: "J'y vais" }).click()
       await page.getByTestId('etage').waitFor({ timeout: 60_000 * SLOW })
