@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { lookOf, markSeen, normalizeLook, progressOf, unlockNews, unseenCount, withLook } from '../src/core/appearance'
+import { choose, lookOf, markSeen, menuOf, normalizeLook, progressOf, unlockNews, unseenCount, withLook } from '../src/core/appearance'
 import { chestMessage, completePlace } from '../src/core/quest/chest'
 import { EMPTY_SAVE, normalizeSave, type SaveData } from '../src/core/save'
-import { CAPE_COLORS, defaultLook, PARTS, PET_FURS, SILHOUETTES } from '../src/core/wardrobe'
+import { CAPE_COLORS, defaultLook, isTwoHanded, PARTS, PET_FURS, PET_NAMES, SILHOUETTES } from '../src/core/wardrobe'
 import { xpForLevel } from '../src/core/progression'
 
 const fresh = (over: Partial<SaveData> = {}): SaveData => ({ ...structuredClone(EMPTY_SAVE), ...over })
@@ -99,5 +99,87 @@ describe('La pastille des nouveautés', () => {
     const more = { ...seen, places: places(2) }
     expect(unseenCount(more, 'lumineux')).toBe(unlockNews(seen, more, 'lumineux').length)
     expect(CAPE_COLORS.length).toBeGreaterThan(3)
+  })
+})
+
+describe('Les choix de l’écran d’apparence', () => {
+  const start = progressOf(fresh())
+  const far = progressOf(fresh({ places: places(5), xp: xpForLevel(8) }))
+  const knight = defaultLook('lumineux')
+
+  it('un choix libre est pris, un choix verrouillé ou inconnu ne change rien', () => {
+    expect(choose(knight, { cape_color: 'rouge' }, 'lumineux', start).cape_color).toBe('rouge')
+    expect(choose(knight, { cape_color: 'or' }, 'lumineux', start)).toEqual(knight) // trois lieux demandés
+    expect(choose(knight, { model: 'Mage' }, 'lumineux', start)).toEqual(knight) // niveau 5
+    expect(choose(knight, { pet_fur: 'dore' }, 'lumineux', start)).toEqual(knight)
+    expect(choose(knight, { pet_name: 'Inconnu' }, 'lumineux', start)).toEqual(knight)
+    expect(choose(knight, { main: '1H_Wand' }, 'lumineux', far)).toEqual(knight) // une arme d'une autre silhouette
+  })
+
+  it('une autre silhouette reprend ses pièces par défaut et garde la couleur de cape, la cape et le compagnon', () => {
+    const red = choose(knight, { cape_color: 'rouge', pet_fur: 'sable', pet_name: 'Filou' }, 'lumineux', start)
+    const mage = choose({ ...red, seen: 4 }, { model: 'Mage' }, 'lumineux', far)
+    expect(mage).toMatchObject({ model: 'Mage', main: '1H_Wand', off: 'Spellbook', head: true, cape: true, cape_color: 'rouge', pet_fur: 'sable', pet_name: 'Filou', seen: 4 })
+    const back = choose(mage, { model: 'Knight' }, 'lumineux', far)
+    expect(back).toMatchObject({ model: 'Knight', main: '1H_Sword', off: 'Round_Shield' })
+  })
+
+  it('une arme à deux mains libère la main gauche et la ferme ; une à une main la rouvre', () => {
+    const big = choose(knight, { main: '2H_Sword' }, 'lumineux', start)
+    expect(big.off).toBe('')
+    expect(choose(big, { off: 'Round_Shield' }, 'lumineux', start).off).toBe('') // impossible tant que la grande épée est tenue
+    const again = choose(big, { main: '1H_Sword' }, 'lumineux', start)
+    expect(isTwoHanded(again.main)).toBe(false)
+    expect(choose(again, { off: 'Spike_Shield' }, 'lumineux', start).off).toBe('Spike_Shield')
+  })
+
+  it('le couvre-chef et la cape se retirent (le Rôdeur n’a pas de couvre-chef à retirer)', () => {
+    expect(choose(knight, { head: false, cape: false }, 'lumineux', start)).toMatchObject({ head: false, cape: false })
+    const rogue = choose(knight, { model: 'Rogue' }, 'lumineux', far)
+    expect(choose(rogue, { head: true }, 'lumineux', far).head).toBe(false)
+  })
+
+  it('le choix ne modifie jamais l’apparence d’origine et garde le compte des nouveautés vues', () => {
+    const before = structuredClone(knight)
+    const next = choose({ ...knight, seen: 7 }, { cape_color: 'bleu' }, 'lumineux', start)
+    expect(knight).toEqual(before)
+    expect(next.seen).toBe(7)
+  })
+
+  it('le menu dit ce qui est choisi, ce qui est verrouillé (et ce qu’il faut faire) et ce qui est impossible', () => {
+    const menu = menuOf(knight, 'lumineux', start)
+    expect(menu.silhouettes.filter((s) => s.selected).map((s) => s.id)).toEqual(['Knight'])
+    const mage = menu.silhouettes.find((s) => s.id === 'Mage')!
+    expect(mage.locked).toBe('Niveau 5')
+    expect(menu.silhouettes.find((s) => s.id === 'Knight')!.locked).toBeUndefined()
+    expect(menu.capeColors.find((c) => c.id === 'or')!.locked).toBe('Termine 3 lieux')
+    expect(menu.capeColors.find((c) => c.id === 'vert')!.locked).toBe('Termine 1 lieu')
+    expect(menu.capeColors.every((c) => c.swatch?.startsWith('#'))).toBe(true)
+    expect(menu.pet!.names.map((n) => n.id)).toEqual(PET_NAMES)
+    expect(menu.pet!.furs.filter((f) => f.selected)).toHaveLength(1)
+    expect(menu.hasHead).toBe(true)
+    expect(menu.off.every((o) => o.unavailable === undefined)).toBe(true)
+    const big = menuOf(choose(knight, { main: '2H_Sword' }, 'lumineux', start), 'lumineux', start)
+    expect(big.off.find((o) => o.id === '')!.unavailable).toBeUndefined() // « Rien » reste possible
+    expect(big.off.filter((o) => o.id !== '').every((o) => o.unavailable)).toBe(true)
+  })
+
+  it('tout est débloqué plus loin ; une entrée verrouillée l’est toujours par la même condition que sanitizeLook', () => {
+    const menu = menuOf(knight, 'lumineux', far)
+    const all = [...menu.silhouettes, ...menu.capeColors, ...menu.pet!.furs]
+    expect(all.every((e) => e.locked === undefined)).toBe(true)
+    const low = menuOf(knight, 'lumineux', start)
+    for (const e of [...low.silhouettes, ...low.capeColors, ...low.pet!.furs].filter((x) => x.locked)) {
+      const chosen = e.id in Object.fromEntries(SILHOUETTES.map((s) => [s.model, 1])) ? { model: e.id } : CAPE_COLORS.some((c) => c.id === e.id) ? { cape_color: e.id } : { pet_fur: e.id }
+      expect(choose(knight, chosen, 'lumineux', start)).toEqual(knight)
+    }
+  })
+
+  it('dans le Brouillard : pas de compagnon dans le menu, le Rôdeur est choisi au départ', () => {
+    const menu = menuOf(defaultLook('brouillard'), 'brouillard', start)
+    expect(menu.pet).toBeNull()
+    expect(menu.silhouettes.find((s) => s.selected)!.id).toBe('Rogue_Hooded')
+    expect(menu.hasHead).toBe(false)
+    expect(Object.keys(PARTS)).toContain('Rogue_Hooded')
   })
 })

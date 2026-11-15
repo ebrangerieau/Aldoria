@@ -1044,6 +1044,114 @@ try {
     if (!/étapes, une énigme/.test(note)) throw new Error(`indication des étapes absente : ${note}`)
   })
 
+  await step('l’apparence : un choix verrouillé l’explique sans rien changer, un déblocage se signale puis se choisit, le héros change à l’écran et la partie le garde', async () => {
+    const look = () => page.evaluate(() => ({ ...window.__aldoria.world.look }))
+    const savedLook = () => page.evaluate(() => ({ ...window.__aldoria.save().look }))
+    const badge = () => page.getByTestId('apparence-nouveautes').count()
+    const stateOf = (id) => page.getByTestId(`apparence-${id}`).getAttribute('data-state')
+    const open = async () => {
+      await page.getByTestId('bouton-apparence').click()
+      await page.getByTestId('apparence').waitFor({ timeout: 10_000 * SLOW })
+    }
+    const close = async () => {
+      await page.keyboard.press('Escape')
+      await page.getByTestId('apparence').waitFor({ state: 'detached', timeout: 10_000 * SLOW })
+    }
+    const pos = () => page.evaluate(() => { const p = window.__aldoria.world.hero.root.position; return [p.x, p.z].map((v) => Math.round(v * 100) / 100) })
+    const before = await pos()
+    const start = await look()
+
+    // Un lieu terminé plus tôt dans le parcours a débloqué une cape : une nouveauté est signalée sur le bouton, et ouvrir l'écran la fait disparaître.
+    if ((await badge()) === 0) throw new Error('la cape débloquée par le premier lieu terminé devrait être signalée sur le bouton')
+    await open()
+    if ((await badge()) !== 0) throw new Error('ouvrir l’écran d’apparence doit faire disparaître la pastille des nouveautés')
+    await page.waitForFunction(() => window.__aldoria.world.camera.radius < 6, null, { timeout: 8000 * SLOW }) // la caméra est passée devant le héros, tout près
+    await page.waitForTimeout(500 * SLOW)
+    await page.screenshot({ path: `${OUT}/06a-apparence.png` })
+    if ((await pos()).join() !== before.join()) throw new Error('le héros ne doit pas bouger pendant l’écran d’apparence')
+    if ((await stateOf(`silhouette-${start.model}`)) !== 'choisi') throw new Error(`la silhouette choisie est repérée : ${await stateOf(`silhouette-${start.model}`)}`)
+
+    // Le Mage demande le niveau 5 : visible, verrouillé, avec la condition ; le toucher l'explique et ne change rien.
+    const xp = await page.evaluate(() => window.__aldoria.save().xp)
+    if (xp < 2000) {
+      if ((await stateOf('silhouette-Mage')) !== 'verrouille') throw new Error('le Mage doit être verrouillé avant le niveau 5')
+      const text = await page.getByTestId('apparence-silhouette-Mage').innerText()
+      if (!text.includes('Niveau 5')) throw new Error(`la condition de déblocage est écrite : ${text}`)
+      await page.getByTestId('apparence-silhouette-Mage').click()
+      const message = await page.getByTestId('apparence-message').innerText()
+      if (!message.includes('Niveau 5')) throw new Error(`le choix verrouillé s’explique : ${message}`)
+      if ((await look()).model !== start.model) throw new Error('un choix verrouillé ne change rien')
+    }
+    await close()
+    await page.waitForFunction(() => window.__aldoria.world.camera.radius > 6.5, null, { timeout: 8000 * SLOW }) // la caméra est revenue derrière le héros
+    if ((await pos()).join() !== before.join()) throw new Error('le héros n’a pas bougé en fermant l’écran')
+
+    // Niveau 8 et cinq lieux de plus : tout se débloque, la pastille compte les nouveautés, ouvrir l'écran les vide.
+    await page.evaluate(() => window.__aldoria.giveProgress(2400, 5))
+    if ((await badge()) === 0) throw new Error('les déblocages du niveau 8 doivent être signalés sur le bouton')
+    await page.getByTestId('bouton-apparence').getAttribute('aria-label').then((label) => {
+      if (!/nouveaut/.test(label ?? '')) throw new Error(`le bouton dit qu’il y a du nouveau : ${label}`)
+    })
+    await open()
+    if ((await badge()) !== 0) throw new Error('la pastille disparaît à l’ouverture')
+
+    // Le Mage : un autre modèle prend la place du Chevalier ; ses pièces par défaut, sa cape.
+    await page.getByTestId('apparence-silhouette-Mage').click()
+    await page.waitForFunction(() => window.__aldoria.world.look.model === 'Mage', null, { timeout: 8000 * SLOW })
+    let l = await look()
+    if (l.main !== '1H_Wand' || l.off !== 'Spellbook') throw new Error(`pièces du Mage : ${l.main} / ${l.off}`)
+    if ((await stateOf('silhouette-Mage')) !== 'choisi') throw new Error('le Mage est repéré comme choisi')
+    await page.waitForTimeout(1200 * SLOW) // le nouveau héros se charge
+    if ((await pos()).join() !== before.join()) throw new Error('le nouveau modèle prend la place de l’ancien')
+
+    // Un bâton à deux mains : la main gauche est libérée et ses choix deviennent impossibles (la raison est dite).
+    await page.getByTestId('apparence-arme-2H_Staff').click()
+    l = await look()
+    if (l.main !== '2H_Staff' || l.off !== '') throw new Error(`le bâton prend les deux mains : ${l.main} / ${l.off}`)
+    if ((await stateOf('main-gauche-Spellbook')) !== 'impossible') throw new Error('le grimoire est impossible avec un bâton à deux mains')
+    await page.getByTestId('apparence-main-gauche-Spellbook').click()
+    if ((await look()).off !== '') throw new Error('un choix impossible ne change rien')
+    if (!(await page.getByTestId('apparence-message').innerText()).includes('deux mains')) throw new Error('la raison est dite')
+
+    // La cape d'or (trois lieux), puis retirée, puis une couleur : la cape revient.
+    await page.getByTestId('apparence-cape-couleur-or').click()
+    if ((await look()).cape_color !== 'or') throw new Error('la cape d’or')
+    await page.getByTestId('apparence-cape-non').click()
+    if ((await look()).cape !== false) throw new Error('la cape retirée')
+    await page.getByTestId('apparence-cape-couleur-rouge').click()
+    l = await look()
+    if (!l.cape || l.cape_color !== 'rouge') throw new Error('choisir une couleur remet la cape')
+    await page.getByTestId('apparence-couvre-chef-non').click()
+    if ((await look()).head !== false) throw new Error('le chapeau retiré')
+
+    // Le renard (monde lumineux) : son pelage et son nom.
+    await page.getByTestId('apparence-renard-pelage-arctique').click()
+    await page.getByTestId('apparence-renard-nom-Comète').click()
+    l = await look()
+    if (l.pet_fur !== 'arctique' || l.pet_name !== 'Comète') throw new Error(`le renard : ${l.pet_fur} / ${l.pet_name}`)
+    await page.waitForTimeout(800 * SLOW)
+    await page.screenshot({ path: `${OUT}/06b-apparence-mage.png` })
+
+    // La partie garde tout (elle part au serveur) ; l'interface est revenue à l'île et le héros marche.
+    const saved = await savedLook()
+    for (const k of ['model', 'main', 'off', 'head', 'cape', 'cape_color', 'pet_fur', 'pet_name']) {
+      if (saved[k] !== l[k]) throw new Error(`la partie garde ${k} : ${saved[k]} au lieu de ${l[k]}`)
+    }
+    await close()
+    await page.getByTestId('apparence').waitFor({ state: 'detached', timeout: 5000 * SLOW })
+    if ((await badge()) !== 0) throw new Error('rien de nouveau après avoir tout vu')
+    await page.keyboard.down('KeyZ')
+    await page.waitForTimeout(700 * SLOW)
+    await page.keyboard.up('KeyZ')
+    const after = await pos()
+    if (after.join() === before.join()) throw new Error('le héros doit pouvoir marcher de nouveau')
+
+    // Ce qui est choisi est rouvert tel quel.
+    await open()
+    if ((await stateOf('silhouette-Mage')) !== 'choisi' || (await stateOf('cape-couleur-rouge')) !== 'choisi') throw new Error('l’écran rouvre l’apparence choisie')
+    await close()
+  })
+
   await step('fin de séance fixée par le parent : l’île se fige, on peut terminer, l’écran titre revient', async () => {
     // Mode découverte : pas de parent, donc pas de limite. On fait comme si l'enfant était connecté (rien n'est
     // envoyé : aucune réponse n'est donnée) avec une séance de 5 minutes déjà jouée à 6,7.

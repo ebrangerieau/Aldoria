@@ -8,7 +8,10 @@
 import { levelForXp } from './progression'
 import { placesDone } from './relics'
 import type { SaveData } from './save'
-import { defaultLook, newlyUnlocked, type Look, type Progress, sanitizeLook, unlockedCount, type World } from './wardrobe'
+import {
+  CAPE_COLORS, defaultLook, isTwoHanded, newlyUnlocked, PARTS, PET_FURS, PET_NAMES, type Look, type Progress, requirementMet, requirementText, sanitizeLook,
+  SILHOUETTES, type Unlockable, unlockedCount, type World,
+} from './wardrobe'
 
 /** Le compagnon animal n'existe que dans le monde lumineux (le renard de Jules). */
 export const hasPet = (world: World): boolean => world === 'lumineux'
@@ -63,4 +66,64 @@ export function unseenCount(save: Pick<SaveData, 'look' | 'xp' | 'places'>, worl
 export function markSeen<T extends Pick<SaveData, 'look' | 'xp' | 'places'>>(save: T, world: World): T {
   const look = lookOf(save, world)
   return { ...save, look: { ...look, seen: unlockedCount(progressOf(save), hasPet(world)) } }
+}
+
+/** Un changement demandé dans l'écran d'apparence : un ou plusieurs champs de l'`Look` ; `choose` le valide. */
+export type LookChoice = Partial<Pick<Look, 'model' | 'main' | 'off' | 'head' | 'cape' | 'cape_color' | 'pet_name' | 'pet_fur'>>
+
+/**
+ * L'apparence après ce choix, toujours validée avec ce que l'enfant a débloqué : un choix verrouillé ou incompatible n'a aucun effet (la valeur
+ * d'avant est gardée), une autre silhouette reprend ses pièces par défaut, une arme à deux mains libère la main gauche.
+ */
+export function choose(look: Look, choice: LookChoice, world: World, progress: Progress): Look {
+  const kept = sanitizeLook(look, world, progress)
+  return { ...sanitizeLook({ ...kept, ...choice }, world, progress), seen: kept.seen }
+}
+
+/** Un choix de l'écran : son nom, s'il est celui de l'apparence, et ce qui le verrouille (`locked` : texte de la condition, « Niveau 5 »). */
+export interface MenuEntry {
+  id: string
+  name: string
+  selected: boolean
+  /** Rien pour un choix libre ; sinon ce qu'il faut faire (« Niveau 5 », « Termine 2 lieux »). */
+  locked?: string
+  /** Un choix impossible pour une autre raison que la progression (main gauche avec une arme à deux mains) : la raison. */
+  unavailable?: string
+  /** Couleur à montrer à côté du nom (cape, pelage) ; jamais seule : le nom et la coche l'accompagnent. */
+  swatch?: string
+}
+
+export interface Menu {
+  silhouettes: MenuEntry[]
+  main: MenuEntry[]
+  off: MenuEntry[]
+  /** Vrai si cette silhouette a un couvre-chef à retirer. */
+  hasHead: boolean
+  capeColors: MenuEntry[]
+  /** Le compagnon : seulement dans le monde lumineux. */
+  pet: { names: MenuEntry[]; furs: MenuEntry[] } | null
+}
+
+const lockOf = (item: Unlockable, progress: Progress): string | undefined => (requirementMet(item, progress) ? undefined : requirementText(item))
+
+/** Tout ce que l'écran d'apparence propose pour cette apparence et cette progression (aucun calcul dans l'interface). */
+export function menuOf(look: Look, world: World, progress: Progress): Menu {
+  const parts = PARTS[look.model]!
+  const twoHanded = isTwoHanded(look.main)
+  return {
+    silhouettes: SILHOUETTES.map((s) => ({ id: s.model, name: s.name, selected: s.model === look.model, locked: lockOf(s, progress) })),
+    main: parts.main.map(([id, name]) => ({ id, name, selected: id === look.main })),
+    off: parts.off.map(([id, name]) => ({
+      id, name, selected: id === look.off,
+      unavailable: twoHanded && id !== '' ? 'Une arme à deux mains occupe les deux mains.' : undefined,
+    })),
+    hasHead: parts.head !== '',
+    capeColors: CAPE_COLORS.map((c) => ({ id: c.id, name: c.name, selected: c.id === look.cape_color, locked: lockOf(c, progress), swatch: c.color })),
+    pet: hasPet(world)
+      ? {
+          names: PET_NAMES.map((name) => ({ id: name, name, selected: name === look.pet_name })),
+          furs: PET_FURS.map((f) => ({ id: f.id, name: f.name, selected: f.id === look.pet_fur, locked: lockOf(f, progress), swatch: f.main })),
+        }
+      : null,
+  }
 }

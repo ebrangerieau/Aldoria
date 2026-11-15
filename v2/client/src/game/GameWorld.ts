@@ -12,6 +12,7 @@ import {
   AnimationPropertiesOverride,
   ArcRotateCamera,
   Color3,
+  Matrix,
   type Mesh,
   MeshBuilder,
   PointerEventTypes,
@@ -107,6 +108,9 @@ export interface WorldOptions {
 
 const layout = ile as unknown as IslandLayout
 const today = (): string => new Date().toISOString().slice(0, 10)
+/** Écran d'apparence : durée du cadrage de la caméra, et décalage (écran) qui garde le héros à gauche du panneau. */
+const SHOWCASE_MS = 900
+const SHOWCASE_OFFSET = 1.5
 
 export class GameWorld {
   readonly events = new Emitter<WorldEvents>()
@@ -134,6 +138,9 @@ export class GameWorld {
   private focused: Interactable | null = null
   private region: string | null = null
   private lastCameraInput = 0
+  /** Cadrage en cours vers un but (écran d'apparence) : la caméra s'en approche pendant `SHOWCASE_MS`, puis la souris reprend la main. */
+  private cameraGoal: { alpha: number; beta: number; radius: number; offsetX: number; until: number } | null = null
+  private cameraBefore: { beta: number; radius: number } | null = null
   private stones = new Map<string, Mesh>()
   /** Les reliques encore à ramasser : leur éclat et leur anneau, par identifiant. */
   private relicMeshes = new Map<string, { gem: Mesh; ring: Mesh }>()
@@ -287,6 +294,7 @@ export class GameWorld {
     // En place : réaffecter `camera.target` recalculerait les angles depuis l'ancienne position
     // et annulerait chaque frame le mouvement de la souris.
     camera.target.copyFrom(Vector3.Lerp(camera.target, target, 1 - Math.exp(-10 * dt)))
+    this.followGoal(dt)
     // Sans action de la souris depuis un moment, la caméra revient doucement derrière le héros.
     if (moving && performance.now() - this.lastCameraInput > 1800) {
       const yaw = this.hero.yaw
@@ -299,6 +307,43 @@ export class GameWorld {
       if (p.y > this.grid.heightAt(p.x, p.z) + 0.7 || camera.beta <= camera.lowerBetaLimit!) break
       camera.beta = Math.max(camera.lowerBetaLimit!, camera.beta - 0.04)
       camera.getViewMatrix(true)
+    }
+  }
+
+  /** La caméra glisse vers son but (écran d'apparence) ; à la fin du délai elle l'atteint et la souris reprend la main. */
+  private followGoal(dt: number): void {
+    const goal = this.cameraGoal
+    if (!goal) return
+    const camera = this.camera
+    const k = 1 - Math.exp(-7 * dt)
+    camera.alpha += angleDelta(camera.alpha, goal.alpha) * k
+    camera.beta += (goal.beta - camera.beta) * k
+    camera.radius += (goal.radius - camera.radius) * k
+    camera.targetScreenOffset.x += (goal.offsetX - camera.targetScreenOffset.x) * k
+    this.lastCameraInput = performance.now()
+    if (performance.now() >= goal.until) {
+      camera.alpha += angleDelta(camera.alpha, goal.alpha)
+      camera.beta = goal.beta
+      camera.radius = goal.radius
+      camera.targetScreenOffset.x = goal.offsetX
+      this.cameraGoal = null
+    }
+  }
+
+  /**
+   * Écran d'apparence ouvert (`true`) ou fermé : la caméra passe devant le héros, tout près et décalé pour qu'il reste visible à côté du panneau
+   * (à droite), puis revient derrière lui comme avant. Le héros ne bouge pas pendant ce temps (l'interface a la main) ; la souris peut tourner autour.
+   */
+  setShowcase(on: boolean): void {
+    if (this.interior) return
+    const camera = this.camera
+    const behind = Math.atan2(-Math.cos(this.hero.yaw), -Math.sin(this.hero.yaw))
+    if (on) {
+      this.cameraBefore ??= { beta: camera.beta, radius: camera.radius }
+      this.cameraGoal = { alpha: behind + Math.PI, beta: 1.32, radius: 4.8, offsetX: SHOWCASE_OFFSET, until: performance.now() + SHOWCASE_MS }
+    } else if (this.cameraBefore) {
+      this.cameraGoal = { alpha: behind, beta: this.cameraBefore.beta, radius: this.cameraBefore.radius, offsetX: 0, until: performance.now() + SHOWCASE_MS }
+      this.cameraBefore = null
     }
   }
 
@@ -853,6 +898,14 @@ export class GameWorld {
     this.camera.alpha = Math.atan2(-Math.cos(this.hero.yaw), -Math.sin(this.hero.yaw))
     this.regionTimer = 0
     this.heroTimer = 0
+  }
+
+  /** Où un point du monde tombe à l'écran, en pixels de la page : les tests dans le navigateur vérifient qu'un panneau ne cache pas le héros. */
+  projectToScreen(x: number, y: number, z: number): { x: number; y: number } {
+    const width = this.engine.getRenderWidth()
+    const height = this.engine.getRenderHeight()
+    const p = Vector3.Project(new Vector3(x, y, z), Matrix.Identity(), this.scene.getTransformMatrix(), this.camera.viewport.toGlobal(width, height))
+    return { x: (p.x / width) * this.canvas.clientWidth, y: (p.y / height) * this.canvas.clientHeight }
   }
 
   /** Cadre la caméra (captures) : angle autour du héros, hauteur, distance. */

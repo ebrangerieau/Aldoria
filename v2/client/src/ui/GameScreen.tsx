@@ -13,7 +13,7 @@ import lignes from '@content/voix/lignes.json'
 import { today as localDay } from '../core/dailyChallenge'
 import { DEFAULT_VOLUME, volumeOf } from '../core/music'
 import { levelForXp } from '../core/progression'
-import { unlockNews } from '../core/appearance'
+import { choose, lookOf, markSeen, progressOf, unlockNews, unseenCount, type LookChoice } from '../core/appearance'
 import { grantRelic, normalizeRelics, relicOf, RELICS } from '../core/relics'
 import { MAX_PASSES, sphinxOf, type SphinxState } from '../core/sphinx/island'
 import { EMPTY_SAVE, SaveGame, type SaveData } from '../core/save'
@@ -25,6 +25,7 @@ import { PlayTimeGuard } from './PlayTimeGuard'
 import { Archives } from './Archives'
 import { DailyChallenge } from './DailyChallenge'
 import { RelicTable } from './RelicTable'
+import { Wardrobe } from './Wardrobe'
 import { SphinxVisit } from './SphinxVisit'
 import { E2eQuestion } from './E2eQuestion'
 import { give, type ItemId } from '../core/inventory'
@@ -47,6 +48,7 @@ type Modal =
   | { kind: 'daily' }
   | { kind: 'table' }
   | { kind: 'sphinx' }
+  | { kind: 'wardrobe' }
   | null
 
 /** Accueil de Maître Ysaline : le texte et sa voix enregistrée sont dans content/voix/lignes.json (un seul endroit : modifier ce texte demande de le réenregistrer). */
@@ -142,7 +144,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
         world.events.on('stats', setStats)
         world.events.on('interact', (target) => interactRef.current(target))
         setLoading(null)
-        if (params.has('e2e')) (window as unknown as { __aldoria: unknown }).__aldoria = { world, services, save: () => dataRef.current, ...(demo ? { give: (id: ItemId, n = 1) => giveItems(id, n), giveRelics, giveSphinxPasses } : {}) }
+        if (params.has('e2e')) (window as unknown as { __aldoria: unknown }).__aldoria = { world, services, save: () => dataRef.current, ...(demo ? { give: (id: ItemId, n = 1) => giveItems(id, n), giveRelics, giveSphinxPasses, giveProgress } : {}) }
       } catch (error) {
         if (reloadPending()) return // nouvelle version du jeu : la page se recharge
         console.error(error)
@@ -200,6 +202,13 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
     return () => window.removeEventListener('keydown', onKey)
   }, [])
 
+  // Écran d'apparence : la caméra passe devant le héros tant qu'il est ouvert (et revient derrière lui à sa fermeture).
+  const wardrobeOpen = modal?.kind === 'wardrobe'
+  useEffect(() => {
+    if (!world) return
+    world.setShowcase(wardrobeOpen)
+  }, [world, wardrobeOpen])
+
   // Musique : à l'écran quand l'île est prête, réglée par l'enfant, muette pendant une question.
   const calm = accommodations.calm
   const musicQuestion = modal?.kind === 'question' || modal?.kind === 'daily' || modal?.kind === 'table' || modal?.kind === 'sphinx' || fight.questionOpen
@@ -247,6 +256,33 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
   function giveSphinxPasses(n: number, patch: Partial<SphinxState> = {}) {
     const current = sphinxOf(dataRef.current, profile.level)
     persist({ ...dataRef.current, sphinx: { ...current, ...patch, passes: Math.min(MAX_PASSES, Math.max(0, current.passes + n)) } })
+  }
+
+  /** Tests dans le navigateur (?e2e, mode découverte seulement) : monte l'XP et les lieux terminés (ce qui débloque l'apparence). */
+  function giveProgress(xp: number, places = 0) {
+    const current = dataRef.current
+    const done = { ...current.places }
+    for (let i = 0; i < places; i += 1) done[`essai-${i}`] = 1
+    persist({ ...current, xp: current.xp + xp, places: done })
+  }
+
+  /** L'écran d'apparence s'ouvre : le héros s'arrête, la caméra passe devant lui, les nouveautés sont vues (la pastille du bouton disparaît). */
+  function openWardrobe() {
+    const worldName = (profile.world as WorldName) ?? 'lumineux'
+    worldRef.current?.setInputEnabled(false)
+    if (unseenCount(dataRef.current, worldName) > 0) persist(markSeen(dataRef.current, worldName))
+    setModal({ kind: 'wardrobe' })
+  }
+
+  /** Un choix d'apparence : validé avec ce que l'enfant a débloqué, rangé dans la partie, et le héros (ou le renard) change tout de suite. */
+  function chooseLook(choice: LookChoice) {
+    const worldName = (profile.world as WorldName) ?? 'lumineux'
+    const current = dataRef.current
+    const before = lookOf(current, worldName)
+    const next = choose(before, choice, worldName, progressOf(current))
+    if (JSON.stringify(next) === JSON.stringify(before)) return
+    persist({ ...current, look: next })
+    void worldRef.current?.setLook(next)
   }
 
   /** Le héros ramasse une relique de l'île : elle rejoint la partie (jamais deux fois), l'éclat disparaît, l'enfant sait où il en est. */
@@ -434,6 +470,8 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
     close()
   }
 
+  const news = unseenCount(data, (profile.world as WorldName) ?? 'lumineux')
+
   return (
     <div className="game">
       <canvas ref={canvasRef} className="world-canvas" tabIndex={-1} aria-label="L'île d'Aldoria" data-testid="monde" />
@@ -475,11 +513,23 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
                 Musique
               </button>
             )}
+            {!inside && (
+              <button
+                type="button"
+                className="secondary small"
+                data-testid="bouton-apparence"
+                aria-label={news > 0 ? `Apparence, ${news} nouveauté${news > 1 ? 's' : ''}` : undefined}
+                onClick={openWardrobe}
+              >
+                Apparence
+                {news > 0 && <span className="news-count" data-testid="apparence-nouveautes" aria-hidden="true">{news}</span>}
+              </button>
+            )}
             <button type="button" className="secondary small" data-testid="bouton-archives" onClick={() => { worldRef.current?.setInputEnabled(false); setModal({ kind: 'archives' }) }}>Archives</button>
             <button type="button" className="secondary small" onClick={() => { worldRef.current?.setInputEnabled(false); setModal({ kind: 'options' }) }}>Options</button>
             <button type="button" className="secondary small" onClick={onQuit}>Quitter</button>
           </div>
-          {world && mapVisible && !loading && !inside && <Minimap world={world} place={region?.title ?? ''} />}
+          {world && mapVisible && !loading && !inside && !wardrobeOpen && <Minimap world={world} place={region?.title ?? ''} />}
         </div>
       </div>
 
@@ -584,6 +634,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
         />
       )}
       {modal?.kind === 'sphinx' && <SphinxVisit services={services} data={data} demo={demo} onSave={persist} onClose={close} />}
+      {modal?.kind === 'wardrobe' && <Wardrobe data={data} world={(profile.world as WorldName) ?? 'lumineux'} onPick={chooseLook} onClose={() => { close(); canvasRef.current?.focus() }} />}
       {modal?.kind === 'options' && (
         <Options
           accommodations={accommodations}
