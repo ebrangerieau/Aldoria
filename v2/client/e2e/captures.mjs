@@ -64,6 +64,9 @@ const VIEWS = {
   'tir-touche': { query: '', at: [28, 28], face: [28, 30], beta: 1.2, radius: 6, turn: 0.2, interface: true, lice: 'tir', shot: 'juste' },
   'tir-droite': { query: '&monde=brouillard&classe=2nde', at: [28, 28], face: [28, 30], beta: 1.2, radius: 6, turn: 0.2, interface: true, lice: 'tir', shot: 'rate' },
   'tir-droite-touche': { query: '&monde=brouillard&classe=2nde', at: [28, 28], face: [28, 30], beta: 1.2, radius: 6, turn: 0.2, interface: true, lice: 'tir', shot: 'juste' },
+  // Le sac consulté sur l'île : vide (où trouver des objets), puis garni (quatre objets, ce qu'ils font, où ils servent).
+  'sac-vide': { query: '', at: [0, -30], face: [0, 30], beta: 1.25, radius: 6, turn: 0, interface: true, bag: 'vide' },
+  'sac-garni': { query: '&monde=brouillard', at: [0, -30], face: [0, 30], beta: 1.25, radius: 6, turn: 0, interface: true, bag: 'garni' },
   // Une relique de l'île par élément (reliques.json) : le héros à 2,6 m, l'éclat et son anneau devant lui.
   'relique-flamme': { query: '', at: [-62.6, -42], face: [-60, -42], beta: 1.3, radius: 6, turn: 0.35 },
   'relique-onde': { query: '', at: [-148.6, 132], face: [-146, 132], beta: 1.3, radius: 6, turn: 0.35 },
@@ -191,6 +194,11 @@ for (const name of views) {
   if (view.accept) {
     await page.getByRole('button', { name: "Je t'aide !" }).click()
     await page.locator('figure.visual.table').waitFor({ timeout: 15_000 })
+  }
+  if (view.bag) {
+    if (view.bag === 'garni') await page.evaluate(() => { window.__aldoria.give('plume', 3); window.__aldoria.give('parchemin', 1); window.__aldoria.give('potion', 2) })
+    await page.getByTestId('bouton-sac').click()
+    await page.getByTestId('sac-ile').waitFor()
   }
   if (view.wardrobe) {
     await page.getByTestId('bouton-apparence').click()

@@ -23,6 +23,7 @@ import type { GameWorld, Interactable, WorldEvents } from '../game/GameWorld'
 import type { WorldName } from '../game/theme'
 import { PlayTimeGuard } from './PlayTimeGuard'
 import { Archives } from './Archives'
+import { BagView } from './BagView'
 import { DailyChallenge } from './DailyChallenge'
 import { RelicTable } from './RelicTable'
 import { Wardrobe } from './Wardrobe'
@@ -49,6 +50,7 @@ type Modal =
   | { kind: 'dialog'; title: string; text: string; note?: string; actions: { label: string; primary?: boolean; run: () => void }[] }
   | { kind: 'options' }
   | { kind: 'archives' }
+  | { kind: 'sac' }
   | { kind: 'daily' }
   | { kind: 'table' }
   | { kind: 'sphinx' }
@@ -539,6 +541,11 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
                 {news > 0 && <span className="news-count" data-testid="apparence-nouveautes" aria-hidden="true">{news}</span>}
               </button>
             )}
+            {!inside && (
+              <button type="button" className="secondary small" data-testid="bouton-sac" onClick={() => { worldRef.current?.setInputEnabled(false); setModal({ kind: 'sac' }) }}>
+                Sac
+              </button>
+            )}
             <button type="button" className="secondary small" data-testid="bouton-archives" onClick={() => { worldRef.current?.setInputEnabled(false); setModal({ kind: 'archives' }) }}>Archives</button>
             <button type="button" className="secondary small" onClick={() => { worldRef.current?.setInputEnabled(false); setModal({ kind: 'options' }) }}>Options</button>
             <button type="button" className="secondary small" onClick={onQuit}>Quitter</button>
@@ -630,6 +637,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
         onEnd={onQuit}
       />
       {modal?.kind === 'archives' && <Archives services={services} onClose={close} />}
+      {modal?.kind === 'sac' && <BagView owned={data.items} onClose={() => { close(); canvasRef.current?.focus() }} />}
       {modal?.kind === 'daily' && (
         <DailyChallenge
           services={services}

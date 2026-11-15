@@ -1374,6 +1374,27 @@ try {
     if ((await page.evaluate(() => window.__aldoria.save().sphinx.passes)) !== 1) throw new Error('le passage du tir est rangé dans la partie')
   })
 
+  await step('le sac sur l’île : les objets gagnés se consultent, rien ne se dépense, Échap ferme', async () => {
+    await page.evaluate(() => {
+      window.__aldoria.give('plume', 2)
+      window.__aldoria.give('potion', 1)
+    })
+    const owned = await page.evaluate(() => ({ ...window.__aldoria.save().items }))
+    if ((owned.plume ?? 0) < 2 || (owned.potion ?? 0) < 1) throw new Error(`le sac de la partie : ${JSON.stringify(owned)}`)
+    await page.getByTestId('bouton-sac').click()
+    await page.getByTestId('sac-ile').waitFor({ timeout: 10_000 * SLOW })
+    for (const id of ['plume', 'parchemin', 'bouclier', 'potion']) {
+      const shown = Number(await page.getByTestId(`sac-ile-${id}`).getAttribute('data-count'))
+      if (shown !== (owned[id] ?? 0)) throw new Error(`${id} : ${shown} affiché pour ${owned[id] ?? 0} dans la partie`)
+    }
+    if ((await page.getByTestId('sac-ile-vide').count()) !== 0) throw new Error('un sac qui contient des objets ne se dit pas vide')
+    await page.screenshot({ path: `${OUT}/09g-sac.png` })
+    await page.keyboard.press('Escape')
+    await page.getByTestId('sac-ile').waitFor({ state: 'detached', timeout: 5000 * SLOW })
+    const after = await page.evaluate(() => ({ ...window.__aldoria.save().items }))
+    if (JSON.stringify(after) !== JSON.stringify(owned)) throw new Error(`consulter le sac ne dépense rien : ${JSON.stringify(owned)} puis ${JSON.stringify(after)}`)
+  })
+
   await step('l’apparence : un choix verrouillé l’explique sans rien changer, un déblocage se signale puis se choisit, le héros change à l’écran et la partie le garde', async () => {
     const look = () => page.evaluate(() => ({ ...window.__aldoria.world.look }))
     const savedLook = () => page.evaluate(() => ({ ...window.__aldoria.save().look }))

@@ -126,7 +126,7 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   plume cache deux mauvaises propositions d'un QCM d'au moins trois choix (**une seule sur trois choix**, la v1 en retirait deux et laissait la
   bonne réponse seule), le parchemin montre l'indice. Une aide d'objet compte comme indice pour le suivi mais **sans baisse de puissance**
   (`helpCounted` : seul « Un indice ? » baisse la puissance du coup). Tests dans le navigateur (`&e2e`) : `__aldoria.give(id, n)` met des objets
-  au sac. Reste à faire : le sac n'est pas consultable hors combat (les objets gagnés s'annoncent, mais aucun écran ne les liste) ; une quête de village rapporte un objet, l'arène n'existe pas encore dans la v2.
+  au sac. **Sur l'île**, le bouton « Sac » de la barre (hors intérieur, `ui/BagView.tsx`, `bagOverview` / `isBagEmpty` de `core/bag.ts`) liste les quatre objets avec ce qu'il en reste, ce qu'ils font et où ils servent, en lecture seule (rien ne s'y dépense) ; un sac vide dit où en trouver (`BAG_SOURCES`). Captures `sac-vide`, `sac-garni`. Reste à faire : l'arène n'existe pas encore dans la v2 (une quête de village rapporte un objet).
 - **Reliques et Table des Reliques** (décision D13 ; `core/relics.ts`, `content/monde/reliques.json`, tests `reliques.test.ts`) : seize **sceaux**, un par couple
   d'un élément (flamme, onde, feuille, étoile : chacun a une couleur **et une forme**, jamais la couleur seule) et d'un rang (I à IV) ; deux reliques
   « se répondent » quand elles partagent un élément ou un rang. Huit se ramassent dans l'île (une par région, positions de `reliques.json`, vérifiées sur

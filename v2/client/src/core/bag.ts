@@ -8,7 +8,7 @@
  * Les objets sont rangés dans la partie (`core/save.ts`) : l'appelant la range après chaque usage.
  */
 import type { CombatEvent, Encounter } from './combat/encounter'
-import { count, ITEMS, type ItemId, type Owned, use } from './inventory'
+import { count, ITEMS, type ItemId, MAX_PER_ITEM, ORDER, type Owned, use } from './inventory'
 import type { Item } from './items'
 
 /** Objets du bouton « Sac » d'un combat, dans l'ordre de la v1. */
@@ -43,6 +43,32 @@ export function bagEntries(owned: Owned, fight: Pick<Fighter, 'hero' | 'shieldUp
     return { id, name: ITEMS[id].name, help: ITEMS[id].help, count: n, usable: why === '', why }
   })
 }
+
+export interface BagLine {
+  id: ItemId
+  name: string
+  help: string
+  count: number
+  /** Où il sert : « dans une question » (plume, parchemin) ou « en combat » (potion, bouclier). */
+  where: string
+}
+
+/** Tout le sac, objet par objet (même ceux qu'on n'a pas), pour le consulter sur l'île : rien ne s'y dépense. */
+export function bagOverview(owned: Owned): BagLine[] {
+  return ORDER.map((id) => ({
+    id,
+    name: ITEMS[id].name,
+    help: ITEMS[id].help,
+    count: count(owned, id),
+    where: COMBAT_ITEMS.includes(id) ? 'En combat : bouton « Sac »' : 'Dans une question : sous l’énoncé',
+  }))
+}
+
+/** Le sac est vide : l'écran dit alors où trouver des objets. */
+export const isBagEmpty = (owned: Owned): boolean => ORDER.every((id) => count(owned, id) === 0)
+
+/** Où se gagnent les objets (annoncés au coffre, à l'énigme, au village) ; le sac garde `MAX_PER_ITEM` de chacun. */
+export const BAG_SOURCES = `Les coffres des lieux, les énigmes et les quêtes du village en donnent. Le sac garde ${MAX_PER_ITEM} objets de chaque sorte.`
 
 /** « Plume ×2, Parchemin ×1 » : ce que le sac garde pour les questions (vide s'il n'y en a pas) ; le panneau du combat le rappelle. */
 export function questionItemsText(owned: Owned): string {
