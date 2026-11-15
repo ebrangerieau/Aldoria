@@ -140,7 +140,7 @@ par ce qui se teste sans moteur.
 Dans l'ordre que les enfants choisiront à la séance de la phase 1 :
 
 - les 28 autres lieux (contenu déjà prêt dans `lieux.json`), région par région ;
-- balance géante, stand de tir (Lice), pont des fractions : comme des lieux de l'île, plus des panneaux posés sur une salle ;
+- balance géante, stand de tir (Lice), pont des fractions : **le pont est fait le 15 novembre** (passerelle sur le plateau de la Citadelle, six ravins à planches fractionnaires, fractions exactes, un passage pour le Sphinx : `core/pont.ts`, `core/lice.ts`, `ui/PontBridge.tsx`) ; restent le stand de tir et la balance géante ;
 - Clairval en plein air et ses habitants (`villages.json`), quêtes du jour : **faits le 15 novembre** (trois habitants en 6e, quatre à Brumegarde en 2nde, une quête de trois questions par habitant et par jour, un passage pour le Sphinx à la deuxième ; le visuel « table » des enquêtes de Tom : `core/village.ts`, `ui/VillageQuest.tsx`) ; reste leurs repères sur la mini-carte et une voix enregistrée ;
 - Pierre du Jour (défi quotidien, série, coffre de la semaine, sans compte à rebours) : **faite le 14 novembre**, pierre sur le chemin de la Citadelle (`core/dailyRun.ts`, `ui/DailyChallenge.tsx`) ;
 - île du Sphinx : **faite le 15 novembre** dans sa version 2D : la barque sur la côte est, les passages gagnés (fin d'un lieu, défi du jour), le Sphinx, trois énigmes de blocs par traversée (`core/sphinx/`, `ui/SphinxVisit.tsx`, `ui/SphinxPuzzle.tsx`) ; reste le temple en 3D, le Sphinx et son compagnon ;

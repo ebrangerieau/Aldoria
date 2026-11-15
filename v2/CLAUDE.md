@@ -176,6 +176,18 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   se refait pas (l'habitant le dit : « Reviens demain »). Crochet de test : `world.interactables` (`habitant-<code>`), `world.villagers`, `save().quests`. Vérifier : captures `village`,
   `village-brumegarde`, `village-dialogue`, `village-enquete`, `village-enquete-croisee` ; parcours navigateur (les trois quêtes de Clairval : XP, objet, « ! » éteint, quête refusée le même jour,
   passage ; puis Brumegarde : les deux enquêtes avec leur tableau). Reste : les habitants ne figurent pas sur la mini-carte (seul le village y est) et n'ont pas de voix enregistrée.
+- **La Lice et le Pont des fractions** (portés de la v1 : `scenes/pont`, `core/world/chasm_bridge.gd` ; Jules, 6e seulement : `generatorFor('pont', classe)` ; tests `pont.test.ts`, `lice.test.ts`).
+  Des exercices calculés sur le plateau de la Citadelle, **sans chrono**, par **séries de six** (`core/lice.ts` : `ROUNDS`, `finishRound`, `roundGain` = 15 + 10 × difficulté, moitié moins après un premier
+  essai raté ; seul **le premier essai** de chaque cible est enregistré comme réponse, les suivants servent à corriger). **Le pont** (`ile.json` : `pont`, `GameWorld.buildBridge` : deux piles, une passerelle, des
+  rambardes et un tas de planches aux couleurs des réglettes, interaction `kind: 'pont'` et repère `pont` sur la mini-carte ; atteignable à pied, loin du château, testé) ouvre `ui/PontBridge.tsx` : un ravin
+  dont la largeur est une fraction de perche, une réserve de planches de longueurs fractionnaires (`visual = { kind: 'pont', gap, planks }`), posées bout à bout ; le pont tient si la somme vaut **exactement**
+  le ravin (`core/pont.ts` : fractions exactes `Frac`, **jamais de flottant**, `outcomeOf` juste, court ou long ; une somme juste quelconque est acceptée, la réponse enregistrée est la somme posée). Un
+  pont raté s'effondre (les planches reviennent), le conseil dit **la somme posée et le sens de l'erreur sans donner la réponse** (`adviceFor`), l'indice sort après trois essais (ou à la demande) ; un pont juste
+  fait traverser le héros, l'XP est rangée tout de suite. Chaque planche porte sa fraction écrite (jamais la couleur seule). Clavier : 1, 2, 3… prennent une planche, Retour arrière la retire, Entrée pose le pont,
+  Échap quitte. **Session** (`app/liceSession.ts`) : ferme « monde », ouvre « arene » avec `enigma` (le générateur, deux cibles d'avance), puis rouvre l'île ; en découverte, des cibles prises dans
+  `visual_samples.json` (vrais tirages des générateurs, régénérés par `tools/export_visual_samples.py`) remplacent le paquet le temps de la série. Une série menée au bout (six cibles enregistrées) rapporte un
+  **passage pour la barque du Sphinx** (`afterActivity`, mode « arene »). Crochet `&e2e` : `pont` (`gap`, `stock`, `solution`). Vérifier : captures `pont`, `pont-jeu`, `pont-tient` ; parcours navigateur (pont trop
+  court, conseil, retrait, bonne somme, six ravins dont un au clavier, bilan, passage). Reste : le stand de tir (même cadre, `rapporteur` et `repere_tir`).
 - **Musique** (`app/music.ts` joue, `core/music.ts` décide du volume, testé) : morceaux de `deploy/musique/` listés dans
   `content/monde/musique.json` (ordre de lecture, crédit des Options), servis sous `/musique/` par nginx ; `npm run dev` et
   `vite preview` les servent depuis le même dossier (`vite.config.ts`, requêtes `Range` comprises). Elle démarre à l'entrée
@@ -216,8 +228,8 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   (testés), dessin SVG dans `ui/widgets/Visuals.tsx`, réponses dans `ui/widgets/Widgets.tsx`. Aujourd'hui : balance, droite
   graduée, repère quadrillé (vecteurs), tableau de signes, carte à l'échelle, robot sur une grille, courbe : **les 30 lieux sont
   jouables** (chapitre et énigme, mesuré sur les vrais générateurs), et `table` (relevé statistique et tableau croisé des enquêtes de Brumegarde,
-  `TableView` : un vrai tableau HTML, en-têtes lus par un lecteur d'écran, totaux en gras avec leur nom écrit). Restent `pont`, `rapporteur`, `repere_tir` : leurs générateurs
-  (`combat=False`) ne servent qu'au pont des fractions et au stand de tir de la Citadelle, jamais dans un lieu. Ajouter un visuel : le composant, son calcul testé sur de
+  `TableView` : un vrai tableau HTML, en-têtes lus par un lecteur d'écran, totaux en gras avec leur nom écrit). `pont` (le Pont des fractions, ci-dessous). Restent `rapporteur` et `repere_tir` : leurs générateurs
+  (`combat=False`) ne servent qu'au stand de tir de la Lice, jamais dans un lieu. Ajouter un visuel : le composant, son calcul testé sur de
   vraies questions (`tests/fixtures/visual_samples.json`, régénéré par `uv run --directory api python ../tools/export_visual_samples.py`),
   puis son nom dans `SUPPORTED_VISUALS`.
 - **Voix enregistrées** (ElevenLabs : Maître Ysaline et le narrateur) : `deploy/voix/` (`manifest.json` : empreinte SHA-256 du
