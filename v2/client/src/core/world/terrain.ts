@@ -218,3 +218,12 @@ export class Terrain {
     }
   }
 }
+
+/** Où l'on se tient devant un lieu secret (la Tour de l'Oubli) : à cette distance de son centre, du côté du départ (un peu plus loin que la porte d'un lieu de quête, 7,5 m : la tour est plus large). */
+export const SECRET_DOOR = 8
+
+/** Le seuil d'un lieu secret : `SECRET_DOOR` mètres vers le point de départ. */
+export function secretDoor(layout: Pick<IslandLayout, 'depart'>, secret: Point): Point {
+  const toStart = Math.atan2(layout.depart.x - secret.x, layout.depart.z - secret.z)
+  return { x: secret.x + Math.sin(toStart) * SECRET_DOOR, z: secret.z + Math.cos(toStart) * SECRET_DOOR }
+}

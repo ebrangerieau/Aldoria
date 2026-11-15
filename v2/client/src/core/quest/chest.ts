@@ -11,6 +11,7 @@
  *   `page-<code>`). Ensuite : le mot de la fin (`outro`).
  */
 import lignes from '@content/voix/lignes.json'
+import { withoutCheckpoint } from '../checkpoint'
 import { foundText, type ItemId } from '../inventory'
 import { chestRelic, grantRelic, placesDone, type Relic } from '../relics'
 import type { SaveData } from '../save'
@@ -48,6 +49,8 @@ export function completePlace(save: SaveData, def: Pick<DungeonData, 'code' | 'c
       ...(relic ? grantRelic(withItems, relic.id) : withItems),
       xp: save.xp + Math.max(0, Math.round(def.chest_xp)),
       places: { ...save.places, [def.code]: done + 1 },
+      // Le lieu est terminé : il se rejoue depuis l'entrée (core/checkpoint.ts).
+      checkpoints: withoutCheckpoint(save, def.code).checkpoints,
       story: first && !save.story.includes(key) ? [...save.story, key] : save.story,
     },
   }

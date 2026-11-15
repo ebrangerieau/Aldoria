@@ -576,6 +576,9 @@ try {
     for (let k = 0; k < 12 && (await page.getByTestId('pv-ennemi').count()) > 0; k += 1) await turn(k % 2 ? '1' : '2', true)
     if ((await page.getByTestId('pv-ennemi').count()) > 0) throw new Error('l’ennemi ne tombe pas')
     await page.waitForFunction(() => window.__aldoria.world.interior.dungeon.isDoorOpen(1), null, { timeout: 15_000 * SLOW })
+    // La salle suivante est atteinte : le lieu se reprendra là (rangé dans la partie dès la victoire).
+    const reached = await page.evaluate(() => window.__aldoria.save().checkpoints?.tour_fractions)
+    if (reached !== 2) throw new Error(`la victoire de la salle 1 devrait garder la salle 2 comme point de reprise : ${reached}`)
     const won = await page.locator('.badge').innerText()
     if (/ 0 XP/.test(won)) throw new Error(`la victoire devrait rapporter de l'XP : ${won}`)
     await page.screenshot({ path: `${OUT}/03d-victoire.png` })
@@ -593,6 +596,7 @@ try {
     await page.keyboard.press('KeyE')
     await page.getByRole('button', { name: 'Sortir' }).click()
     await page.getByTestId('carte').waitFor({ timeout: 10_000 * SLOW })
+    await page.waitForFunction(() => window.__aldoria.world.interior === null, null, { timeout: 15_000 * SLOW })
   })
 
   await step('l’énigme : trois piédestaux, une erreur qui réarme, la porte s’ouvre au troisième cristal, le héros parle', async () => {
@@ -678,6 +682,7 @@ try {
 
   await step('la balance géante (Tour des Fractions) : renoncer puis revenir, enlever des deux côtés, un essai à côté, l’indice, trois manches, la porte s’ouvre', async () => {
     await page.evaluate(() => {
+      window.__aldoria.giveCheckpoint('tour_fractions', 3)
       const w = window.__aldoria.world
       const it = w.interactables.find((i) => i.id === 'tour_fractions')
       w.teleport(it.x, it.z - 1.5, it.x, it.z)
@@ -686,12 +691,12 @@ try {
     await page.keyboard.press('KeyE')
     await page.getByRole('button', { name: "J'y vais" }).click()
     await page.getByTestId('etage').waitFor({ timeout: 60_000 * SLOW })
-    await page.evaluate(() => {
+    // Le lieu a été quitté à la salle de l'énigme (point de reprise 3) : on y arrive directement, les trois portes d'avant ouvertes.
+    const resumed = await page.evaluate(() => {
       const i = window.__aldoria.world.interior
-      for (let d = 0; d < 3; d += 1) i.openDoor(d, false)
-      const e = i.dungeon.entryPoint(3)
-      i.teleport(e.x, e.z)
+      return { start: i.startRoom, doors: [0, 1, 2].map((d) => i.dungeon.isDoorOpen(d)), room: i.dungeon.roomAt(i.heroPosition().x) }
     })
+    if (resumed.start !== 3 || !resumed.doors.every(Boolean) || resumed.room !== 3) throw new Error(`reprise à la salle de l’énigme attendue : ${JSON.stringify(resumed)}`)
     // L'introduction parle de la balance géante (celle du lieu), pas de cristaux.
     await page.getByRole('heading', { name: 'Les Balances du Gardien' }).waitFor({ timeout: 10_000 * SLOW })
     if (!(await page.getByRole('dialog').innerText()).includes('balance géante')) throw new Error('l’introduction devrait parler de la balance géante')
@@ -828,6 +833,104 @@ try {
     await page.waitForFunction(() => window.__aldoria.world.interior === null, null, { timeout: 15_000 * SLOW })
   })
 
+  await step('la reprise d’un lieu : « Tu reprendras à l’étage 3 », portes ouvertes, ennemis d’avant vaincus, bandeau « Reprise », le lieu terminé s’efface', async () => {
+    // Après la balance : le lieu garde la salle 4 ; on le ramène à la salle 2 (un combat, des ennemis encore debout).
+    const checkpoint = () => page.evaluate(() => window.__aldoria.save().checkpoints?.tour_fractions)
+    if ((await checkpoint()) !== 4) throw new Error(`la porte de l’énigme ouverte devrait garder la salle 4 : ${await checkpoint()}`)
+    await page.evaluate(() => {
+      window.__aldoria.giveCheckpoint('tour_fractions', 2)
+      const w = window.__aldoria.world
+      const it = w.interactables.find((i) => i.id === 'tour_fractions')
+      w.teleport(it.x, it.z - 1.5, it.x, it.z)
+    })
+    await page.getByTestId('invite').filter({ hasText: 'Approcher' }).waitFor({ timeout: 10_000 * SLOW })
+    await page.keyboard.press('KeyE')
+    const seuil = await page.getByRole('dialog').innerText()
+    if (!seuil.includes("Tu reprendras à l'étage 3.")) throw new Error(`le seuil devrait annoncer la reprise : ${seuil}`)
+    await page.getByRole('button', { name: "J'y vais" }).click()
+    await page.getByTestId('etage').waitFor({ timeout: 60_000 * SLOW })
+    const at = await page.evaluate(() => {
+      const i = window.__aldoria.world.interior
+      return {
+        start: i.startRoom,
+        doors: [0, 1, 2].map((d) => i.dungeon.isDoorOpen(d)),
+        before: i.enemies.filter((e) => e.room < 2).length,
+        here: i.enemies.filter((e) => e.room === 2).length,
+        boss: i.enemies.filter((e) => e.boss).length,
+        room: i.dungeon.roomAt(i.heroPosition().x),
+        label: document.querySelector('[data-testid=etage]')?.textContent,
+      }
+    })
+    if (at.start !== 2 || at.room !== 2) throw new Error(`reprise à la salle 2 attendue : ${JSON.stringify(at)}`)
+    if (!at.doors[0] || !at.doors[1] || at.doors[2]) throw new Error(`les portes d’avant ouvertes, celle de la salle courante fermée : ${JSON.stringify(at.doors)}`)
+    if (at.before !== 0) throw new Error(`les ennemis des salles d’avant sont déjà vaincus : ${at.before} encore là`)
+    if (at.here < 1 || at.boss !== 1) throw new Error(`la salle courante garde ses ennemis et l’Effaceur l’attend : ${JSON.stringify(at)}`)
+    if (!at.label?.includes('3 / 6')) throw new Error(`l’étage affiché : ${at.label}`)
+    const banner = await page.getByTestId('annonce').filter({ hasText: 'Reprise :' }).innerText({ timeout: 10_000 * SLOW })
+    if (!/^Reprise : \S/.test(banner)) throw new Error(`le bandeau de reprise : ${banner}`)
+    await page.screenshot({ path: `${OUT}/03e6-reprise.png` })
+    // Sortir ne perd rien : le point de reprise reste.
+    await page.evaluate(() => window.__aldoria.world.interior.teleport(1.9, -10))
+    await page.getByTestId('invite').filter({ hasText: 'Sortir' }).waitFor({ timeout: 10_000 * SLOW })
+    await page.keyboard.press('KeyE')
+    await page.getByRole('button', { name: 'Sortir' }).click()
+    await page.getByTestId('carte').waitFor({ timeout: 10_000 * SLOW })
+    await page.waitForFunction(() => window.__aldoria.world.interior === null, null, { timeout: 15_000 * SLOW })
+    if ((await checkpoint()) !== 2) throw new Error(`quitter le lieu garde son point de reprise : ${await checkpoint()}`)
+    // Un lieu qui n'a rien à reprendre ne l'annonce pas (le boss, ensuite, se joue depuis l'entrée).
+    await page.evaluate(() => window.__aldoria.giveCheckpoint('tour_fractions', 0))
+    await page.evaluate(() => {
+      const w = window.__aldoria.world
+      const it = w.interactables.find((i) => i.id === 'tour_fractions')
+      w.teleport(it.x, it.z - 1.5, it.x, it.z)
+    })
+    await page.getByTestId('invite').filter({ hasText: 'Approcher' }).waitFor({ timeout: 10_000 * SLOW })
+    await page.keyboard.press('KeyE')
+    if ((await page.getByRole('dialog').innerText()).includes('reprendras')) throw new Error('sans point de reprise, le seuil ne parle pas de reprise')
+    await page.getByRole('button', { name: 'Pas maintenant' }).click()
+  })
+
+  await step('la Tour de l’Oubli : fermée, on s’en approche et Maître Ysaline en dit la raison de sa voix enregistrée', async () => {
+    const door = await page.evaluate(() => {
+      const w = window.__aldoria.world
+      const it = w.interactables.find((i) => i.id === 'tour_oubli')
+      if (!it) return null
+      // La distance du seuil au bord de la tour : devant elle, jamais dans son emprise (le héros pourrait ne pas l'atteindre).
+      const circles = []
+      for (let dx = -16; dx <= 16; dx += 16) for (let dz = -16; dz <= 16; dz += 16) circles.push(...w.obstacles.near(it.x + dx, it.z + dz))
+      return { x: it.x, z: it.z, open: it.open, gap: Math.min(...circles.map((c) => Math.hypot(c.x - it.x, c.z - it.z) - c.r)) }
+    })
+    if (!door) throw new Error('la Tour de l’Oubli devrait avoir un seuil dans l’île')
+    if (door.open) throw new Error('la Tour de l’Oubli est fermée')
+    if (door.gap < 0.5 || door.gap > 4) throw new Error(`le seuil doit être devant la tour, hors de son emprise : ${door.gap.toFixed(1)} m de son bord`)
+    await page.evaluate(() => {
+      const w = window.__aldoria.world
+      const it = w.interactables.find((i) => i.id === 'tour_oubli')
+      w.teleport(it.x, it.z - 1.5, it.x, it.z)
+    })
+    await page.getByTestId('invite').filter({ hasText: /Approcher : La Tour de l.Oubli/ }).waitFor({ timeout: 10_000 * SLOW })
+    await page.keyboard.press('KeyE')
+    await page.getByRole('heading', { name: /La Tour de l.Oubli/ }).waitFor({ timeout: 10_000 * SLOW })
+    const text = await page.getByRole('dialog').innerText()
+    if (!/Elle ne s.ouvrira que lorsque tu auras repris assez de pages/.test(text)) throw new Error(`le texte de la tour : ${text}`)
+    await page.screenshot({ path: `${OUT}/03g-tour-oubli.png` })
+    // Sa voix enregistrée : « Écouter » joue le fichier (le journal de la voix le dit : demandé, puis « joue »).
+    const from = await page.evaluate(() => window.__aldoria.services.voice.notedCount)
+    await page.getByRole('button', { name: /Écouter/ }).click()
+    await page.waitForFunction(
+      (start) => {
+        const voice = window.__aldoria.services.voice
+        const fresh = voice.trace.slice(Math.max(0, voice.trace.length - (voice.notedCount - start)))
+        const at = fresh.findIndex((line) => line.includes('son '))
+        return at >= 0 && fresh.slice(at).some((line) => line.endsWith('joue'))
+      },
+      from,
+      { timeout: 15_000 * SLOW },
+    )
+    await page.getByRole('button', { name: 'D’accord' }).click()
+    await page.getByRole('dialog').waitFor({ state: 'detached', timeout: 5000 * SLOW })
+  })
+
   await step('le boss : l’Effaceur parle de sa voix enregistrée, huit sceaux, le coffre, la page rendue, le lieu suivant s’ouvre, Maître Ysaline salue', async () => {
     // Les demandes de son vues depuis le début de l'étape : si une attente expire, le message dit lesquelles sont parties (aucune : le jeu n'a
     // rien demandé ; une demande sans réponse : le réseau ou le serveur) et quel dialogue était ouvert.
@@ -867,7 +970,8 @@ try {
         const it = w.interactables.find((i) => i.id === 'tour_fractions')
         w.teleport(it.x, it.z - 1.5, it.x, it.z)
       })
-      await page.getByTestId('invite').filter({ hasText: 'Approcher' }).waitFor({ timeout: 10_000 * SLOW })
+      // La Tour des Fractions précisément : l'invite de l'objet d'avant (la Tour de l'Oubli, juste devant) reste affichée une image après la téléportation, et E l'ouvrirait.
+      await page.getByTestId('invite').filter({ hasText: /Approcher : La Tour des Fractions/ }).waitFor({ timeout: 10_000 * SLOW })
       await page.keyboard.press('KeyE')
       await page.getByRole('button', { name: "J'y vais" }).click()
       await page.getByTestId('etage').waitFor({ timeout: 60_000 * SLOW })

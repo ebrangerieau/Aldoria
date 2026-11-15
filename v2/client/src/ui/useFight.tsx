@@ -24,6 +24,7 @@ import { unlockNews } from '../core/appearance'
 import { afterActivity, passesText, sphinxOf, takePassageNews } from '../core/sphinx/island'
 import { enigmaIntro, enigmaXp, ENIGMA_ITEMS, findItems, foundBanner, riddleItem } from '../core/quest/enigma'
 import { BALANCE_ROUNDS, isBalanceItem, roundXp } from '../core/balanceEnigma'
+import { checkpointOf, resumeBanner, withCheckpoint } from '../core/checkpoint'
 import { normalizeRating } from '../core/quest/rating'
 import type { SaveData } from '../core/save'
 import type { Accommodations } from '../core/accessibility'
@@ -303,6 +304,7 @@ export function useFight(options: FightOptions) {
       announce(pickOne(combatTexts(latest.current.worldName).victoire))
       const kind = lieu.dungeon.rooms[enemy.room]?.kind
       if (kind === 'combat' && interior.enemiesLeft(enemy.room) === 0) {
+        rememberRoom(enemy.room) // la salle suivante est atteinte : le lieu se reprendra là
         window.setTimeout(() => {
           interior.openDoor(enemy.room)
           announce("La porte s'ouvre !")
@@ -351,6 +353,15 @@ export function useFight(options: FightOptions) {
     openRiddleDoor(interior, ped.room, 1100)
   }
 
+  /** La porte de `room` s'ouvre : la salle suivante est atteinte, la partie en garde le point de reprise (core/checkpoint.ts ; effacé quand le lieu est terminé). */
+  function rememberRoom(room: number): void {
+    const lieu = place.current
+    if (!lieu) return
+    const before = latest.current.getSave()
+    const after = withCheckpoint(before, lieu.dungeon.code, room + 1, lieu.dungeon.rooms.length)
+    if (after !== before) latest.current.persist(after)
+  }
+
   /** L'XP d'une énigme réussie, et le niveau qu'elle fait peut-être gagner (le héros reprend alors ses forces maximales). */
   function reward(gained: number): void {
     const up = latest.current.grantXp(gained)
@@ -362,6 +373,7 @@ export function useFight(options: FightOptions) {
 
   /** La salle-énigme est résolue : la porte s'ouvre, un objet attendait, le héros dit un mot sur la salle suivante. */
   function openRiddleDoor(interior: InteriorWorld, room: number, delay: number): void {
+    rememberRoom(room) // la salle suivante est atteinte : le lieu se reprendra là
     window.setTimeout(() => {
       if (worldRef.current?.interior !== interior) return
       interior.openDoor(room)
@@ -482,8 +494,10 @@ export function useFight(options: FightOptions) {
       const opened = await startPlaceSession(services, target.dungeon, demo)
       if (!opened) return 'session'
       placeSession.current = opened
+      // Un lieu quitté en route se reprend à la salle atteinte (core/checkpoint.ts).
+      const resume = checkpointOf(latest.current.getSave(), target.dungeon.code, target.dungeon.rooms.length)
       try {
-        const entered = await w.enterPlace(target.dungeon.code, onProgress)
+        const entered = await w.enterPlace(target.dungeon.code, onProgress, resume)
         if (!entered) throw new Error('lieu inconnu')
       } catch (error) {
         console.error(error)
@@ -503,11 +517,16 @@ export function useFight(options: FightOptions) {
       if (handle) handle.encounter = encounter.current // tests dans le navigateur (?e2e)
       // Le héros se lance (l'écran de chargement se retire juste après).
       window.setTimeout(() => {
-        if (place.current === target) sayHero(heroBefore(1, true))
+        if (place.current !== target) return
+        const banner = resumeBanner(resume, target.dungeon.rooms.map((r) => r.title))
+        if (banner) announce(banner)
+        sayHero(heroBefore(Math.max(1, resume), true))
+        // La salle de reprise est annoncée avant que le lieu soit prêt (la scène l'annonce au démarrage) : l'introduction d'une salle-énigme se dit ici, une fois l'écran de chargement parti.
+        if (resume > 0) void roomRef.current(resume)
       }, 900)
       return 'ok'
     },
-    [services, demo, worldRef, heroName, worldName, accommodations.no_speed, sayHero, heroBefore],
+    [services, demo, worldRef, heroName, worldName, accommodations.no_speed, sayHero, heroBefore, announce],
   )
 
   /** Sort du lieu : l'île reprend, la session de l'île aussi. `rating` : la note de plaisir de 1 à 5, envoyée avec la fin de la session. */
