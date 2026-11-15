@@ -29,6 +29,8 @@ describe('Le prologue : les cinq tableaux', () => {
         expect(t.ligne).toBe(`prologue-${t.id}-${world}`)
         expect(t.texte.length, t.ligne).toBeGreaterThan(60)
         expect(t.titre.length).toBeGreaterThan(2)
+        expect(t.qui.length, `qui parle : ${t.id}`).toBeGreaterThan(2)
+        expect(t.qui, `le titre ne répète pas qui parle : ${t.id}`).not.toBe(t.titre)
       }
     }
     // Les deux mondes ne disent pas la même chose (le ton de Jules, celui de Tom).

@@ -26,6 +26,8 @@ export interface Shot {
 export interface Tableau {
   id: string
   titre: string
+  /** Qui parle, écrit sous le titre (« Le narrateur », « La gardienne de la Chronique »). */
+  qui: string
   voix: 'narrateur' | 'ysaline'
   /** Id de la réplique enregistrée, dans le monde de l'enfant. */
   ligne: string
@@ -39,6 +41,7 @@ export interface Tableau {
 interface Raw {
   id: string
   titre: string
+  qui: string
   voix: 'narrateur' | 'ysaline'
   ligne: string
   lieu: string

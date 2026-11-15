@@ -221,9 +221,11 @@ for (const name of views) {
     await page.keyboard.press('KeyE')
     await page.getByRole('button', { name: 'Revoir l’histoire' }).click()
     await page.getByTestId('prologue').waitFor()
+    // La voix ne finit jamais : le tableau ne change pas tout seul pendant que la caméra arrive (la capture montre le tableau demandé).
+    await page.evaluate(() => { window.__aldoria.services.voice.say = () => new Promise(() => {}) })
     for (let i = 1; i < view.prologue; i += 1) await page.getByTestId('prologue-suite').click()
     await page.getByTestId('prologue-bouton-texte').click()
-    await page.waitForTimeout(12_000)
+    await page.waitForTimeout(view.prologue === 1 ? 8_000 : 25_000) // la caméra glisse d'un plan au suivant (lent en rendu logiciel)
   }
   if (view.bag) {
     if (view.bag === 'garni') await page.evaluate(() => { window.__aldoria.give('plume', 3); window.__aldoria.give('parchemin', 1); window.__aldoria.give('potion', 2) })

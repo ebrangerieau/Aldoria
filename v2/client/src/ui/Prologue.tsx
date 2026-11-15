@@ -79,7 +79,7 @@ export function Prologue({ services, world, list, onDone }: { services: Services
       <section className="panel prologue-panel">
         <header className="prologue-head">
           <h2 data-testid="prologue-titre">{tableau.titre}</h2>
-          <span className="prologue-who">{tableau.voix === 'ysaline' ? 'Maître Ysaline' : 'Le narrateur'}</span>
+          <span className="prologue-who">{tableau.qui}</span>
           <ol className="prologue-dots" aria-label={`Tableau ${index + 1} sur ${list.length}`} data-testid="prologue-points">
             {list.map((t, i) => (
               <li key={t.id} className={i === index ? 'on' : i < index ? 'past' : ''} aria-hidden="true" />
