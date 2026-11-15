@@ -45,6 +45,11 @@ const VIEWS = {
   // (trois lieux) restent verrouillés ; la caméra passe devant le héros et le décale à gauche du panneau.
   'apparence-ecran': { query: '', at: [0, -30], face: [0, 30], beta: 1.3, radius: 9, turn: 0, interface: true, progress: [600, 2], wardrobe: true },
   'apparence-ecran-brouillard': { query: '&monde=brouillard&classe=2nde', at: [0, -30], face: [0, 30], beta: 1.3, radius: 9, turn: 0, interface: true, progress: [600, 2], wardrobe: true },
+  // Le village (Clairval en 6e, Brumegarde en 2nde) : les habitants autour du puits, chacun avec son « ! » doré tant que sa quête du jour attend.
+  village: { query: '', at: [-62, 8], face: [-82, 6], beta: 1.18, radius: 13, turn: 0.35 },
+  'village-brumegarde': { query: '&monde=brouillard&classe=2nde', at: [-62, 8], face: [-82, 6], beta: 1.18, radius: 13, turn: 0.35 },
+  // Le dialogue d'un habitant : le héros devant Barnabé, la demande ouverte (bouton « Parler » par E).
+  'village-dialogue': { query: '', at: [-72.5, 8.7], face: [-74.5, 8.7], beta: 1.25, radius: 5, turn: 0.4, interface: true, talk: 'barnabe' },
   // Une relique de l'île par élément (reliques.json) : le héros à 2,6 m, l'éclat et son anneau devant lui.
   'relique-flamme': { query: '', at: [-62.6, -42], face: [-60, -42], beta: 1.3, radius: 6, turn: 0.35 },
   'relique-onde': { query: '', at: [-148.6, 132], face: [-146, 132], beta: 1.3, radius: 6, turn: 0.35 },
@@ -129,6 +134,11 @@ for (const name of views) {
       w.teleport(v.at[0], v.at[1], v.face[0], v.face[1])
       w.frame(w.camera.alpha + v.turn, v.beta, v.radius)
     }, view)
+  }
+  if (view.talk) {
+    await page.getByTestId('invite').filter({ hasText: 'Parler à' }).waitFor({ timeout: 20_000 })
+    await page.keyboard.press('KeyE')
+    await page.getByTestId('habitant').waitFor()
   }
   if (view.wardrobe) {
     await page.getByTestId('bouton-apparence').click()

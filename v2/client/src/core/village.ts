@@ -14,6 +14,7 @@ import { type ItemId, foundText } from './inventory'
 import { levelForXp } from './progression'
 import { findItems } from './quest/enigma'
 import type { SaveData } from './save'
+import { afterActivity, PASS_ANSWERS, passesText, sphinxOf } from './sphinx/island'
 import type { World } from './wardrobe'
 
 export type QuestKind = 'revision' | 'veille' | 'enquete'
@@ -130,11 +131,13 @@ export const NO_QUESTION_TEXT = "Hum… mes papiers sont restés à l'abri. Revi
 // --- Fin de la quête ---------------------------------------------------------------------------------------------------------------------------
 
 export interface QuestReport {
-  /** La partie après la quête : XP, objet au sac, quête du jour faite. */
+  /** La partie après la quête : XP, objet au sac, quête du jour faite, passage du Sphinx. */
   save: SaveData
   xp: number
   found: ItemId[]
-  /** Le texte de fin : remerciement, bilan, trouvaille, niveau gagné, apparence débloquée. */
+  /** Un passage pour la barque du Sphinx vient d'être gagné (la deuxième quête du jour : six réponses, comme les autres activités). */
+  passage: boolean
+  /** Le texte de fin : remerciement, bilan, trouvaille, passage, niveau gagné, apparence débloquée. */
   lines: string[]
 }
 
@@ -143,16 +146,39 @@ const plural = (n: number): string => (n > 1 ? 's' : '')
 /** XP d'une quête menée à terme : le forfait, plus un bonus par bonne réponse. */
 export const questXp = (correct: number): number => QUEST_XP + ANSWER_XP * Math.max(0, Math.min(QUEST_SIZE, correct))
 
+/** Les quêtes faites ce jour-là (pour tous les habitants). */
+export const questsToday = (save: Pick<SaveData, 'quests'>, day: string): number => Object.values(save.quests).filter((d) => d === day).length
+
+export interface CompleteOptions {
+  day: string
+  /** Pour annoncer ce que le niveau gagné débloque dans l'apparence. */
+  world: World
+  /** La classe de l'enfant : fixe le palier de départ de l'île du Sphinx. */
+  level: string
+  /** Tirage de l'objet (tests). */
+  random?: () => number
+}
+
 /**
- * Termine la quête d'un habitant : XP, un objet pour le sac, la quête du jour enregistrée (même une quête ratée compte : l'habitant est aidé).
- * `world` : pour annoncer ce que le niveau gagné débloque dans l'apparence. `random` : tirage de l'objet (tests).
+ * Termine la quête d'un habitant : XP, un objet pour le sac, la quête du jour enregistrée (même une quête ratée compte : l'habitant est aidé). La deuxième
+ * quête du jour atteint les six réponses d'une activité : un passage pour la barque du Sphinx (jamais un de plus les jours suivants de la même journée).
  */
-export function completeQuest(save: SaveData, npc: Pick<Villager, 'code' | 'thanks'>, correct: number, day: string, world: World, random: () => number = Math.random): QuestReport {
+export function completeQuest(save: SaveData, npc: Pick<Villager, 'code' | 'thanks'>, correct: number, options: CompleteOptions): QuestReport {
+  const { day, world, level, random = Math.random } = options
   const xp = questXp(correct)
   const { save: withItem, found } = findItems(save, 1, random)
-  const next: SaveData = { ...withItem, xp: withItem.xp + xp, quests: { ...withItem.quests, [npc.code]: day } }
+  let next: SaveData = { ...withItem, xp: withItem.xp + xp, quests: { ...withItem.quests, [npc.code]: day } }
+  // Les quêtes du jour sont celles d'habitants distincts (l'écran refuse de refaire une quête faite) : le passage tombe quand leur total franchit six réponses.
+  const reachesPassage = questsToday(save, day) * QUEST_SIZE < PASS_ANSWERS && questsToday(next, day) * QUEST_SIZE >= PASS_ANSWERS
+  let passage = false
+  if (reachesPassage) {
+    const earned = afterActivity(next, level, GAME_MODE, PASS_ANSWERS)
+    next = earned.save
+    passage = earned.gained
+  }
   const lines = [npc.thanks, `${correct} bonne${plural(correct)} réponse${plural(correct)} sur ${QUEST_SIZE}. +${xp} XP`]
   if (found.length > 0) lines.push(foundText(found))
+  if (passage) lines.push(`Un passage pour la barque du Sphinx ! (${passesText(sphinxOf(next, level).passes)})`)
   const before = levelForXp(save.xp)
   const after = levelForXp(next.xp)
   if (after > before) {
@@ -160,5 +186,5 @@ export function completeQuest(save: SaveData, npc: Pick<Villager, 'code' | 'than
     const news = unlockNews(save, next, world)
     if (news.length > 0) lines.push(`Nouveau dans ton apparence : ${news.join(', ')}`)
   }
-  return { save: next, xp, found, lines }
+  return { save: next, xp, found, passage, lines }
 }

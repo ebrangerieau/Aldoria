@@ -1,14 +1,18 @@
 import { describe, expect, it } from 'vitest'
+import ile from '@content/monde/ile.json'
 import { EMPTY_SAVE, normalizeSave, type SaveData } from '../src/core/save'
 import type { Item } from '../src/core/items'
 import { findItems } from '../src/core/quest/enigma'
 import { QuestionService, type QuestionSource } from '../src/core/questionService'
 import { xpForLevel } from '../src/core/progression'
+import { MAX_PASSES, sphinxOf } from '../src/core/sphinx/island'
 import {
   ANSWER_XP, askText, completeQuest, contextOf, DONE_TEXT, normalizeQuests, pendingQuests, QUEST_SIZE, QUEST_XP, questDone, questXp, sessionParams,
-  veilleChapters, villageFor,
+  questsToday, veilleChapters, villageFor,
 } from '../src/core/village'
+import { type IslandLayout, SEA_LEVEL, Terrain } from '../src/core/world/terrain'
 import { PACK_6E } from './support'
+import { cellKey, reachableOnFoot } from './walk'
 
 const fresh = (over: Partial<SaveData> = {}): SaveData => ({ ...structuredClone(EMPTY_SAVE), ...over })
 const DAY = '2026-11-15'
@@ -106,10 +110,11 @@ describe('Les textes de la demande', () => {
 
 describe('La fin d’une quête', () => {
   const npc = { code: 'barnabe', thanks: 'Tout me revient !' }
+  const opts = { day: DAY, world: 'lumineux' as const, level: '6e', random: () => 0 }
 
   it('XP du forfait et de chaque bonne réponse, un objet, la quête du jour enregistrée, la partie d’origine intacte', () => {
     const save = fresh({ xp: 10 })
-    const report = completeQuest(save, npc, 2, DAY, 'lumineux', () => 0)
+    const report = completeQuest(save, npc, 2, opts)
     expect(questXp(2)).toBe(QUEST_XP + 2 * ANSWER_XP)
     expect(report.xp).toBe(70)
     expect(report.save.xp).toBe(80)
@@ -124,8 +129,8 @@ describe('La fin d’une quête', () => {
   })
 
   it('une quête sans bonne réponse compte aussi (l’habitant est aidé) ; au singulier une seule bonne réponse', () => {
-    expect(completeQuest(fresh(), npc, 0, DAY, 'lumineux', () => 0).lines[1]).toBe('0 bonne réponse sur 3. +50 XP')
-    expect(completeQuest(fresh(), npc, 1, DAY, 'lumineux', () => 0).lines[1]).toBe('1 bonne réponse sur 3. +60 XP')
+    expect(completeQuest(fresh(), npc, 0, opts).lines[1]).toBe('0 bonne réponse sur 3. +50 XP')
+    expect(completeQuest(fresh(), npc, 1, opts).lines[1]).toBe('1 bonne réponse sur 3. +60 XP')
     expect(questXp(9)).toBe(QUEST_XP + QUEST_SIZE * ANSWER_XP) // jamais plus de bonnes réponses que de questions
     expect(questXp(-1)).toBe(QUEST_XP)
   })
@@ -133,17 +138,40 @@ describe('La fin d’une quête', () => {
   it('sac plein : pas d’objet ni de ligne de trouvaille', () => {
     const full = fresh({ items: { plume: 5, parchemin: 5, bouclier: 5, potion: 5 } })
     expect(findItems(full, 1, () => 0).found).toEqual([])
-    const report = completeQuest(full, npc, 3, DAY, 'lumineux', () => 0)
+    const report = completeQuest(full, npc, 3, opts)
     expect(report.found).toEqual([])
     expect(report.lines.some((l) => l.startsWith('Dans ton sac'))).toBe(false)
   })
 
+  it('la deuxième quête du jour (six réponses) rapporte un passage pour la barque du Sphinx, une seule fois dans la journée', () => {
+    const first = completeQuest(fresh(), npc, 3, opts)
+    expect(first.passage).toBe(false)
+    expect(questsToday(first.save, DAY)).toBe(1)
+    const second = completeQuest(first.save, { code: 'oriel', thanks: 'Très bien.' }, 1, opts)
+    expect(second.passage).toBe(true)
+    expect(sphinxOf(second.save, '6e').passes).toBe(sphinxOf(fresh(), '6e').passes + 1)
+    expect(second.lines.some((l) => l.startsWith('Un passage pour la barque du Sphinx'))).toBe(true)
+    const third = completeQuest(second.save, { code: 'melisande', thanks: 'Parfait.' }, 3, opts)
+    expect(third.passage).toBe(false) // pas un second passage le même jour
+    expect(sphinxOf(third.save, '6e').passes).toBe(sphinxOf(second.save, '6e').passes)
+    // Le lendemain, tout recommence : une seule quête ne suffit pas.
+    expect(completeQuest(third.save, npc, 3, { ...opts, day: '2026-11-16' }).passage).toBe(false)
+  })
+
+  it('réserve de passages pleine : la deuxième quête n’en rapporte pas de plus', () => {
+    const save = fresh({ sphinx: { ...sphinxOf(fresh(), '6e'), passes: MAX_PASSES } })
+    const first = completeQuest(save, npc, 3, opts)
+    const second = completeQuest(first.save, { code: 'oriel', thanks: 'Très bien.' }, 3, opts)
+    expect(second.passage).toBe(false)
+    expect(sphinxOf(second.save, '6e').passes).toBe(MAX_PASSES)
+  })
+
   it('un niveau gagné est annoncé, avec ce qu’il débloque dans l’apparence', () => {
     const save = fresh({ xp: xpForLevel(2) - 10 })
-    const report = completeQuest(save, npc, 3, DAY, 'lumineux', () => 0)
+    const report = completeQuest(save, npc, 3, opts)
     expect(report.lines).toContain('Niveau 2 !')
     expect(report.lines.some((l) => l.startsWith('Nouveau dans ton apparence'))).toBe(true) // le Voleur, au niveau 2
-    const none = completeQuest(fresh({ xp: 0 }), npc, 0, DAY, 'lumineux', () => 0)
+    const none = completeQuest(fresh({ xp: 0 }), npc, 0, opts)
     expect(none.lines.some((l) => l.startsWith('Niveau'))).toBe(false)
   })
 })
@@ -194,5 +222,37 @@ describe('Les questions d’une quête (QuestionService.nextQuestItem)', () => {
     const three = Array.from({ length: QUEST_SIZE }, () => revision.nextQuestItem('revision')!)
     expect(new Set(three.map((it) => it.id)).size).toBe(QUEST_SIZE)
     expect(revision.repeats).toBe(0)
+  })
+})
+
+describe('Les habitants dans l’île', () => {
+  const layout = ile as unknown as IslandLayout
+  const terrain = new Terrain(layout)
+  const slots = layout.village.habitants.map((h) => ({ x: layout.village.x + h.dx, z: layout.village.z + h.dz, ...h }))
+
+  it('il y a un emplacement par habitant du plus grand village', () => {
+    expect(slots.length).toBeGreaterThanOrEqual(Math.max(...['6e', '2nde'].map((level) => villageFor(level)!.npcs.length)))
+  })
+
+  it('chaque emplacement est sur le replat du village, atteignable à pied, entre le puits et les maisons (anneau de 15 m)', () => {
+    const walkable = reachableOnFoot(layout, terrain)
+    const ground = terrain.heightAt(layout.village.x, layout.village.z)
+    for (const slot of slots) {
+      const h = terrain.heightAt(slot.x, slot.z)
+      expect(h, `habitant en ${slot.x}, ${slot.z} dans l'eau`).toBeGreaterThan(SEA_LEVEL + 0.5)
+      expect(Math.abs(h - ground), 'sur le replat').toBeLessThan(0.2)
+      expect(walkable.has(cellKey(slot.x, slot.z)) || walkable.has(cellKey(Math.round(slot.x / 2) * 2, Math.round(slot.z / 2) * 2))).toBe(true)
+      const fromWell = Math.hypot(slot.dx, slot.dz)
+      expect(fromWell, 'loin du puits').toBeGreaterThan(5)
+      expect(fromWell, 'loin des maisons').toBeLessThanOrEqual(9)
+    }
+  })
+
+  it('deux habitants ne se tiennent jamais l’un contre l’autre', () => {
+    for (let i = 0; i < slots.length; i += 1) {
+      for (let j = i + 1; j < slots.length; j += 1) {
+        expect(Math.hypot(slots[i]!.x - slots[j]!.x, slots[i]!.z - slots[j]!.z)).toBeGreaterThan(5)
+      }
+    }
   })
 })
