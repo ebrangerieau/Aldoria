@@ -5,6 +5,7 @@
  * Repère de la balance : x vers la droite de l'écran (la caméra est au sud), y vers le haut, z vers le fond ; l'origine est au pied de la colonne.
  */
 import type { Heavier } from './balanceEnigma'
+import { BALANCE_DISTANCE, BALANCE_REARM_MARGIN, BALANCE_TOUCH } from './world/dungeon'
 
 export const ARM = 2.4 // demi-longueur du fléau
 export const PIVOT_H = 2.3 // hauteur du pivot
@@ -100,3 +101,21 @@ export function tiltAt(from: number, goal: number, t: number, calm: boolean): nu
   const k = Math.min(1, Math.max(0, t / seconds))
   return from + (goal - from) * (calm ? sineInOut(k) : elasticOut(k))
 }
+
+/** Les trois obstacles ronds de la balance (le plateau gauche, la colonne, le plateau droit) autour de son pied. */
+export function footprints(base: { x: number; z: number }): { x: number; z: number; r: number }[] {
+  return [-ARM, 0, ARM].map((dx) => ({ x: base.x + dx, z: base.z, r: dx === 0 ? 0.9 : PLATE_R }))
+}
+
+/**
+ * Le héros est-il assez près de la balance pour que l'énigme commence ? À moins de `BALANCE_DISTANCE` de son pied (comme la v1), ou contre un plateau ou la colonne :
+ * de face, il passe sous les 3,4 m, mais de côté (à l'ouest) les plateaux l'arrêtent à plus de 4 m du pied. `extra` élargit les deux seuils : s'éloigner de `BALANCE_REARM_MARGIN`
+ * de plus après avoir renoncé, sinon la balance se relancerait dès qu'elle se réarme.
+ */
+export function isNear(hero: { x: number; z: number }, base: { x: number; z: number }, extra = 0): boolean {
+  if (Math.hypot(hero.x - base.x, hero.z - base.z) < BALANCE_DISTANCE + extra) return true
+  return footprints(base).some((f) => Math.hypot(hero.x - f.x, hero.z - f.z) - f.r < BALANCE_TOUCH + extra)
+}
+
+/** La balance se réarme quand le héros s'est éloigné d'elle de la marge de réarmement. */
+export const isFarEnough = (hero: { x: number; z: number }, base: { x: number; z: number }): boolean => !isNear(hero, base, BALANCE_REARM_MARGIN)

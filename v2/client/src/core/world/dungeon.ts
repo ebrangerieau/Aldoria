@@ -58,9 +58,12 @@ export const PEDESTAL_REARM = 2.6
 export const PEDESTAL_RADIUS = 0.55
 /** La balance géante de la salle-énigme du mode « balance » : x dans la salle et profondeur de son pied, comme dans la v1 (BALANCE_AT), au fond, loin de l'escalier. */
 export const BALANCE_AT: [number, number] = [7, 5]
-/** Le héros qui s'approche à cette distance du pied de la balance commence l'énigme (v1 : BALANCE_DISTANCE) ; s'il y renonce, il doit s'éloigner d'un mètre de plus avant de revenir. */
+/** Le héros qui s'approche à cette distance du pied de la balance commence l'énigme (v1 : BALANCE_DISTANCE) ; `isNear` (core/balanceRig.ts) y ajoute le contact avec un plateau ou la colonne. */
 export const BALANCE_DISTANCE = 3.4
-export const BALANCE_REARM = BALANCE_DISTANCE + 1
+/** Contact : à moins de cette distance d'un plateau ou de la colonne (le corps du héros, 0,45 m, s'arrête à 0,45 m d'un obstacle), l'énigme commence aussi : de côté, les plateaux l'arrêtent à plus de BALANCE_DISTANCE du pied. */
+export const BALANCE_TOUCH = 0.95
+/** Après avoir renoncé, il faut s'éloigner de ce mètre de plus (sur les deux distances) avant que la balance se réarme. */
+export const BALANCE_REARM_MARGIN = 1
 /** Où le héros se tient pendant l'énigme : à l'ouest de la balance, un peu en avant (v1 : BALANCE_SPOT), pour ne pas la cacher. */
 export const BALANCE_SPOT: [number, number] = [-4.4, 0.4]
 

@@ -35,13 +35,13 @@ import {
   Vector3,
 } from '@babylonjs/core'
 import { BALANCE_ROUNDS } from '../core/balanceEnigma'
-import { ARM, PLATE_R } from '../core/balanceRig'
+import { footprints, isFarEnough, isNear } from '../core/balanceRig'
 import { Combatant, type CombatEvent } from '../core/combat/encounter'
 import { Emitter } from '../core/events'
 import { bossOf } from '../core/quest/boss'
 import type { SaveData } from '../core/save'
 import {
-  AGGRO_DISTANCE, BALANCE_DISTANCE, BALANCE_REARM, CHEST_RADIUS, CHEST_REACH, Dungeon, ENEMY_RADIUS, PEDESTAL_DISTANCE, PEDESTAL_RADIUS, PEDESTAL_REARM, type Piece,
+  AGGRO_DISTANCE, CHEST_RADIUS, CHEST_REACH, Dungeon, ENEMY_RADIUS, PEDESTAL_DISTANCE, PEDESTAL_RADIUS, PEDESTAL_REARM, type Piece,
 } from '../core/world/dungeon'
 import { HERO_HEIGHT, isSkeleton, monsterFit, V1_TO_V2 } from '../core/world/monsters'
 import { angleDelta, RUN_SPEED, step, WALK_SPEED } from '../core/world/movement'
@@ -109,7 +109,7 @@ export interface BalanceStation {
   rig: BalanceRig
   /** Manches gagnées (`BALANCE_ROUNDS` ouvrent la porte). */
   rounds: number
-  /** Prête à commencer ; après un renoncement, elle ne se réarme qu'une fois le héros éloigné de BALANCE_REARM. */
+  /** Prête à commencer ; après un renoncement, elle ne se réarme qu'une fois le héros éloigné d'elle (`isFarEnough`). */
   armed: boolean
 }
 
@@ -461,7 +461,7 @@ export class InteriorWorld {
     const rig = BalanceRig.create(this.scene, CRYSTAL_COLORS[this.options.world], (mesh) => this.shadows.addShadowCaster(mesh, false))
     rig.root.position.set(at.x, dungeon.heightAt(at.x, at.z), at.z)
     rig.show({ state: { left: { boxes: 0, units: 0 }, right: { boxes: 0, units: 0 } }, names: { box: ['boîte', 'boîtes'], unit: ['bille', 'billes'] }, heavier: 0, shown: null }, true)
-    for (const dx of [-ARM, 0, ARM]) this.obstacles.add({ x: at.x + dx, z: at.z, r: dx === 0 ? 0.9 : PLATE_R })
+    for (const foot of footprints(at)) this.obstacles.add(foot)
     this.balance = { room, x: at.x, z: at.z, rig, rounds: 0, armed: true }
   }
 
@@ -476,17 +476,16 @@ export class InteriorWorld {
     return this.pedestalsLeft(room) + this.balanceLeft(room)
   }
 
-  /** La balance abordée : celle de la salle du héros, à portée, si elle est armée et pas résolue. */
+  /** La balance abordée : celle de la salle du héros, à portée (`isNear`), si elle est armée et pas résolue. */
   private nearestBalance(): BalanceStation | null {
     const b = this.balance
     if (!b || b.rounds >= BALANCE_ROUNDS) return null
     const p = this.hero.root.position
-    const d = Math.hypot(p.x - b.x, p.z - b.z)
     if (!b.armed) {
-      b.armed = b.room !== this.room || d > BALANCE_REARM // s'éloigner (ou quitter la salle) pour revenir plus tard
+      b.armed = b.room !== this.room || isFarEnough(p, b) // s'éloigner (ou quitter la salle) pour revenir plus tard
       return null
     }
-    return b.room === this.room && d < BALANCE_DISTANCE ? b : null
+    return b.room === this.room && isNear(p, b) ? b : null
   }
 
   /** Le héros se place à l'ouest de la balance, face à elle ; la caméra la cadre ; l'interface mène alors les manches. */

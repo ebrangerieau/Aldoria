@@ -5,11 +5,13 @@ import {
   removeLabel, roundXp, spoken, startRound, stepGuess, useHint, weigh,
 } from '../src/core/balanceEnigma'
 import {
-  ARM, boxSpots, BOX, elasticOut, HANG, marbleSpots, MARBLE_R, MAX_TILT, PIVOT_H, PLATE_R, platePositions, plateLabel, sineInOut, tiltAt, tiltFor,
+  ARM, boxSpots, BOX, elasticOut, footprints, HANG, isFarEnough, isNear, marbleSpots, MARBLE_R, MAX_TILT, PIVOT_H, PLATE_R, platePositions, plateLabel, sineInOut, tiltAt, tiltFor,
 } from '../src/core/balanceRig'
 import {
-  BALANCE_AT, BALANCE_DISTANCE, BALANCE_REARM, BALANCE_SPOT, CLIMB_RISE, Dungeon, type DungeonDecor, ROOM_W, VOID_HEIGHT,
+  BALANCE_AT, BALANCE_DISTANCE, BALANCE_REARM_MARGIN, BALANCE_SPOT, BALANCE_TOUCH, CLIMB_RISE, Dungeon, type DungeonDecor, ROOM_W, VOID_HEIGHT,
 } from '../src/core/world/dungeon'
+import { RUN_SPEED, step } from '../src/core/world/movement'
+import { Obstacles } from '../src/core/world/obstacles'
 import { DUNGEONS } from '../src/core/world/places'
 import { PACK_6E } from './support'
 
@@ -276,17 +278,55 @@ describe('La balance géante : sa place dans la salle-énigme', () => {
     }
   })
 
-  it('le héros peut l’aborder de tous les côtés praticables, se tient à l’ouest pendant l’énigme, et se réarme plus loin qu’il ne se déclenche', () => {
-    expect(BALANCE_REARM).toBeGreaterThan(BALANCE_DISTANCE)
+  it('le héros se tient à l’ouest de la balance pendant l’énigme, hors des plateaux, et ce poste est « près » tant qu’il n’a pas pris du champ', () => {
     const spot = dungeon.balanceSpot(room)
     expect(spot.x).toBeCloseTo(at.x + BALANCE_SPOT[0])
     expect(spot.x).toBeLessThan(at.x) // à l'ouest : la caméra du sud voit la balance et le héros
     expect(dungeon.heightAt(spot.x, spot.z)).toBeGreaterThan(VOID_HEIGHT)
     for (const f of feet) expect(Math.hypot(spot.x - f.x, spot.z - f.z)).toBeGreaterThan(f.r + 0.45) // pas dans un plateau
-    // Plus loin que la distance de déclenchement : revenir sur ses pas après avoir renoncé ne relance pas la manche tout de suite.
-    expect(Math.hypot(spot.x - at.x, spot.z - at.z)).toBeGreaterThan(BALANCE_DISTANCE)
-    // On l'atteint depuis la porte : le sol est libre sur l'arc de déclenchement côté porte (ouest) et côté fond.
-    const walkable = [Math.PI, Math.PI * 1.25, Math.PI * 0.75, Math.PI / 2].map((a) => ({ x: at.x + Math.cos(a) * (BALANCE_DISTANCE - 0.2), z: at.z + Math.sin(a) * (BALANCE_DISTANCE - 0.2) }))
-    for (const p of walkable) expect(dungeon.heightAt(p.x, p.z)).toBeGreaterThan(VOID_HEIGHT)
+    // Après avoir renoncé (« Plus tard »), il est encore au contact d'un plateau : la balance ne se relance pas avant qu'il s'éloigne.
+    expect(isNear(spot, at)).toBe(true)
+    expect(isFarEnough(spot, at)).toBe(false)
+    expect(BALANCE_REARM_MARGIN).toBeGreaterThan(0)
+  })
+
+  it('« près » : à 3,4 m du pied, ou contre un plateau ; loin de tout, non ; le réarmement demande un mètre de plus', () => {
+    const base = { x: 0, z: 0 }
+    expect(isNear({ x: 0, z: -3.3 }, base)).toBe(true)
+    expect(isNear({ x: 0, z: -3.5 }, base)).toBe(false) // de face, hors des plateaux : seule la distance au pied compte
+    const west = { x: -ARM - PLATE_R - BALANCE_TOUCH + 0.05, z: 0 } // contre le plateau gauche, à l'ouest
+    expect(Math.hypot(west.x, west.z)).toBeGreaterThan(BALANCE_DISTANCE) // le pied est trop loin : c'est le contact qui compte
+    expect(isNear(west, base)).toBe(true)
+    expect(isNear({ x: west.x - 0.4, z: 0 }, base)).toBe(false)
+    expect(isFarEnough({ x: west.x - 0.4, z: 0 }, base)).toBe(false) // pas encore : un mètre de plus
+    expect(isFarEnough({ x: west.x - 1.2, z: 0 }, base)).toBe(true)
+    expect(isFarEnough({ x: 0, z: -3.3 - BALANCE_REARM_MARGIN - 0.2 }, base)).toBe(true)
+    expect(footprints(base).map((f) => f.x)).toEqual([-ARM, 0, ARM])
+  })
+
+  it('un enfant qui marche vers la balance l’atteint : de la porte, de n’importe où dans la salle, et en droite ligne depuis l’ouest (les plateaux l’arrêtent, au contact)', () => {
+    const obstacles = new Obstacles()
+    for (const c of dungeon.obstacles()) obstacles.add(c)
+    for (const f of feet) obstacles.add(f)
+    const left = room * ROOM_W
+    const entry = dungeon.entryPoint(room)
+    const starts = [
+      { name: 'la porte', x: entry.x, z: entry.z },
+      { name: 'le sud-ouest', x: left + 2.5, z: -16 },
+      { name: 'le sud-est', x: left + 10, z: -15 },
+      { name: 'l’ouest, à hauteur de la balance', x: left + 1.5, z: at.z },
+      { name: 'le nord', x: left + 8.5, z: at.z + 3.5 },
+    ]
+    for (const start of starts) {
+      let p = { x: start.x, z: start.z }
+      expect(dungeon.heightAt(p.x, p.z), `départ ${start.name}`).toBeGreaterThan(VOID_HEIGHT)
+      let frames = 0
+      while (!isNear(p, at) && frames < 1500) {
+        const s = step(p, { x: at.x - p.x, z: at.z - p.z }, RUN_SPEED, 1 / 60, dungeon, obstacles)
+        p = { x: s.x, z: s.z }
+        frames += 1
+      }
+      expect(isNear(p, at), `en marchant depuis ${start.name} : arrêté en ${p.x.toFixed(1)}, ${p.z.toFixed(1)}`).toBe(true)
+    }
   })
 })

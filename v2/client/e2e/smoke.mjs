@@ -740,6 +740,10 @@ try {
     if (!(await page.getByRole('heading', { name: /Les Balances du Gardien · 1 \/ 3/ }).count())) throw new Error('le titre devrait dire la manche 1 / 3')
     await page.waitForFunction(() => window.__aldoria.world.interior.balancing !== null, null, { timeout: 5000 * SLOW })
     await page.screenshot({ path: `${OUT}/03e2-balance-geante.png` })
+    // Pendant la manche, la barre du haut est couverte : Archives (ou Options) ne s'ouvre pas par-dessus, la manche et sa touche Entrée ne sont pas dérangées.
+    // Un clic d'essai (rien n'est cliqué) : Playwright vérifie que le bouton reçoit bien les événements, et échoue sinon (un autre élément le couvre).
+    const archivesClickable = await page.getByTestId('bouton-archives').click({ trial: true, timeout: 2500 }).then(() => true, () => false)
+    if (archivesClickable) throw new Error('pendant une manche, la barre du haut ne doit pas rester cliquable (Archives ouvrirait un écran par-dessus la manche)')
     await page.keyboard.press('Escape')
     await page.getByTestId('balance-enigme').waitFor({ state: 'detached', timeout: 5000 * SLOW })
     let s = await state()
