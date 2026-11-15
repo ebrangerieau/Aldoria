@@ -24,6 +24,11 @@ export class Voice {
   private offUntil = 0
   private cache = new Map<string, string>()
   private speaking = false
+  /**
+   * Les dernières étapes de la lecture (une quarantaine, en mémoire seulement, jamais envoyées) : lue par les tests dans le navigateur quand un
+   * son attendu n'est pas parti (« qui a coupé la lecture, ou l'a-t-elle seulement demandé ? »). Du texte lu, seuls les 24 premiers caractères.
+   */
+  readonly trace: string[] = []
 
   constructor(
     private readonly api: ApiClient,
@@ -40,17 +45,43 @@ export class Voice {
     return this.speaking
   }
 
-  stop(): void {
+  /**
+   * Jeton de la lecture en cours : il change à chaque `say` et à chaque `stop`. Juste après `void say(...)`, il désigne cette lecture
+   * (le début de `say` s'exécute tout de suite) : un composant le garde pour ne couper plus tard que ce qu'il a lancé (`stopIf`).
+   */
+  get token(): number {
+    return this.generation
+  }
+
+  /**
+   * N'arrête la lecture que si personne n'a parlé depuis ce jeton. Un panneau de question qui se ferme ne doit pas couper la voix du
+   * dialogue qui s'ouvre au même moment (le dernier mot d'un Effaceur, lu d'office ou à l'appui sur « Écouter ») : son nettoyage
+   * s'exécute après coup, et un `stop()` aveugle annulait cette lecture avant même que le son soit demandé.
+   */
+  stopIf(token: number, why = 'stopIf'): void {
+    if (token === this.generation) this.stop(why)
+    else this.note(`${why} ignoré (g${token}, en cours g${this.generation})`)
+  }
+
+  /** `why` : qui arrête (pour le journal). */
+  stop(why = 'stop'): void {
     this.generation += 1
+    this.note(`${why} -> g${this.generation}`)
     this.speaking = false
     this.audio?.pause()
     this.audio = null
     if ('speechSynthesis' in window) window.speechSynthesis.cancel()
   }
 
+  private note(event: string): void {
+    this.trace.push(event)
+    if (this.trace.length > 40) this.trace.shift()
+  }
+
   async say(parts: string[], lang = 'fr-FR', rate = 0.95): Promise<void> {
-    this.stop()
+    this.stop('say')
     const generation = this.generation
+    this.note(`say g${generation} « ${(parts[0] ?? '').trim().slice(0, 24)} »`)
     this.speaking = true
     try {
       for (const text of parts.map((p) => p.trim()).filter(Boolean)) {
@@ -69,6 +100,7 @@ export class Voice {
   /** Vrai si le son enregistré a été joué (ou si la lecture a été interrompue entre-temps). */
   private async playRecorded(text: string, generation: number): Promise<boolean> {
     const url = await this.recordings.urlFor(text)
+    this.note(`g${generation} son ${url ? url.split('/').pop() : 'aucun'}${generation !== this.generation ? ` (annulé, en cours g${this.generation})` : ''}`)
     if (!url) return false
     if (generation !== this.generation) return true
     const audio = new Audio(url)
@@ -77,11 +109,21 @@ export class Voice {
     await new Promise<void>((resolve) => {
       audio.onplaying = () => {
         started = true
+        this.note(`g${generation} joue`)
       }
-      audio.onended = () => resolve()
+      audio.onended = () => {
+        this.note(`g${generation} fini`)
+        resolve()
+      }
       audio.onpause = () => resolve() // stop() : la lecture en cours s'interrompt
-      audio.onerror = () => resolve()
-      audio.play().catch(() => resolve())
+      audio.onerror = () => {
+        this.note(`g${generation} erreur du fichier`)
+        resolve()
+      }
+      audio.play().catch((error: unknown) => {
+        this.note(`g${generation} play refusé : ${error instanceof Error ? error.name : 'erreur'}`)
+        resolve()
+      })
     })
     // Fichier absent ou illisible avant le moindre son : Piper prend le relais pour ce morceau.
     return started || generation !== this.generation

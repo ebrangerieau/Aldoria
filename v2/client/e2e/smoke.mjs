@@ -27,16 +27,31 @@ mkdirSync(OUT, { recursive: true })
 const problems = []
 // E2E_RETARD_MUSIQUE=<ms> : chaque fichier de /musique/ arrive avec ce retard (réseau lent, CI chargée).
 const MUSIC_DELAY = Number(process.env.E2E_RETARD_MUSIQUE ?? 0)
+// E2E_RETARD_VOIX=<ms> : chaque fichier de /voix/ arrive avec ce retard (le réseau du VPS, que l'aperçu local n'a pas).
+const VOICE_DELAY = Number(process.env.E2E_RETARD_VOIX ?? 0)
 const browser = await chromium.launch({
   executablePath: process.env.CHROMIUM_PATH || undefined,
   args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'],
 })
 const page = await browser.newPage({ viewport: { width: 1280, height: 720 } })
+// E2E_CPU=<facteur> : le processeur de la page est ralenti de ce facteur (4 à 6 : un PC chargé ou le runner de la CI), pour retrouver les
+// courses entre un nettoyage de React et un clic (la voix coupée par le panneau de question qui se ferme, vue en production).
+const CPU_SLOWDOWN = Number(process.env.E2E_CPU ?? 0)
+if (CPU_SLOWDOWN > 1) {
+  const cdp = await page.context().newCDPSession(page)
+  await cdp.send('Emulation.setCPUThrottlingRate', { rate: CPU_SLOWDOWN })
+}
 // Seule tolérée : l'erreur d'essai levée exprès par `?erreur_test=1` (remontée des erreurs).
 const TEST_ERROR = "Erreur d'essai (erreur_test=1)"
 page.on('pageerror', (e) => { if (!e.message.includes(TEST_ERROR)) problems.push(`erreur de la page : ${e.message}`) })
 page.on('console', (m) => { if (m.type() === 'error' && !m.text().includes(TEST_ERROR)) problems.push(`console : ${m.text()}`) })
 page.on('response', (r) => { if (r.status() >= 400) problems.push(`${r.status()} ${r.url()}`) })
+if (VOICE_DELAY > 0) {
+  await page.route('**/voix/*.mp3', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, VOICE_DELAY))
+    await route.continue()
+  })
+}
 if (MUSIC_DELAY > 0) {
   await page.route('**/musique/**', async (route) => {
     await new Promise((resolve) => setTimeout(resolve, MUSIC_DELAY))
@@ -205,6 +220,47 @@ try {
     await page.waitForFunction(() => window.__aldoria.services.music.audio.currentTime > 0.3, null, { timeout: 8000 * SLOW })
   })
 
+  await step('une relique de l’île : on la ramasse (E), elle rejoint la partie et son éclat disparaît', async () => {
+    const spot = await page.evaluate(() => {
+      const w = window.__aldoria.world
+      const it = w.interactables.find((i) => i.kind === 'relique' && i.relic === 'flamme-1')
+      if (!it) return null
+      w.teleport(it.x - 1.4, it.z, it.x, it.z)
+      return { x: it.x, z: it.z }
+    })
+    if (!spot) throw new Error('la relique flamme-1 devrait être dans l’île')
+    await page.getByTestId('invite').filter({ hasText: 'Ramasser : Sceau de Flamme I' }).waitFor({ timeout: 10_000 * SLOW })
+    if (!(await page.evaluate(() => !!window.__aldoria.world.scene.getMeshByName('flamme-1-eclat')))) throw new Error('l’éclat de la relique devrait être visible')
+    await page.screenshot({ path: `${OUT}/02b-relique.png` })
+    if ((await page.evaluate(() => window.__aldoria.save().relics.length)) !== 0) throw new Error('aucune relique avant de ramasser')
+    await page.keyboard.press('KeyE')
+    await page.getByRole('heading', { name: 'Relique trouvée !' }).waitFor({ timeout: 10_000 * SLOW })
+    const text = await page.getByRole('dialog').innerText()
+    if (!text.includes('Sceau de Flamme I') || !text.includes('1 relique sur 16')) throw new Error(`le message de la relique : ${text}`)
+    const relics = await page.evaluate(() => window.__aldoria.save().relics)
+    if (relics.join() !== 'flamme-1') throw new Error(`la partie devrait garder flamme-1 : ${relics}`)
+    await page.getByRole('button', { name: 'Continuer' }).click()
+    const gone = await page.evaluate(() => {
+      const w = window.__aldoria.world
+      return !w.scene.getMeshByName('flamme-1-eclat') && !w.interactables.some((i) => i.relic === 'flamme-1')
+    })
+    if (!gone) throw new Error('la relique ramassée devrait avoir disparu de l’île')
+    if ((await page.getByTestId('invite').count()) !== 0) throw new Error('plus d’invitation à ramasser une fois la relique prise')
+    // Une seule relique ne suffit pas pour une table : la Table l'explique et se referme à Échap.
+    await page.evaluate(() => {
+      const w = window.__aldoria.world
+      const table = w.interactables.find((i) => i.id === 'table-reliques')
+      w.teleport(table.x + 2.6, table.z, table.x, table.z)
+    })
+    await page.getByTestId('invite').filter({ hasText: 'Ouvrir la Table des Reliques' }).waitFor({ timeout: 10_000 * SLOW })
+    await page.keyboard.press('KeyE')
+    const empty = await page.getByTestId('table-vide').innerText()
+    if (!empty.includes('tu en as 1')) throw new Error(`la table sans assez de reliques : ${empty}`)
+    await page.screenshot({ path: `${OUT}/02c-table-vide.png` })
+    await page.keyboard.press('Escape')
+    await page.getByTestId('table-reliques').waitFor({ state: 'detached', timeout: 5000 * SLOW })
+  })
+
   await step('un lieu de quête : on entre par le seuil, on monte à l’étage 2 au clavier, on sort', async () => {
     // Devant la porte de la Tour des Fractions (le premier lieu de maths de la 6e), face à elle.
     const door = await page.evaluate(() => {
@@ -213,7 +269,8 @@ try {
       w.teleport(it.x, it.z - 1.5, it.x, it.z)
       return { x: it.x, z: it.z }
     })
-    await page.getByTestId('invite').waitFor({ timeout: 10_000 * SLOW })
+    // L'invite du lieu, pas celle que la téléportation n'a pas encore effacée (la table, juste avant).
+    await page.getByTestId('invite').filter({ hasText: 'Tour des Fractions' }).waitFor({ timeout: 10_000 * SLOW })
     await page.keyboard.press('KeyE')
     await page.getByRole('dialog').waitFor()
     await page.getByRole('button', { name: "J'y vais" }).click()
@@ -463,7 +520,9 @@ try {
     const soundOk = async (pending, what) => {
       const res = await pending.catch(async (error) => {
         const dialog = await page.getByRole('dialog').first().innerText({ timeout: 2000 }).catch(() => '(aucun dialogue ouvert)')
-        throw new Error(`${what} : ${error.message.split('\n')[0]} ; demandes de son vues : ${voixVues.slice(-6).join(' | ') || 'aucune'} ; dialogue : ${dialog.replace(/\s+/g, ' ').slice(0, 140)}`)
+        // Le journal de la voix du jeu (core/voice.ts) : qui a parlé, qui a coupé, le son a-t-il été demandé, a-t-il joué.
+        const trace = await page.evaluate(() => window.__aldoria?.services?.voice?.trace?.slice(-14).join(' ; ') ?? '(pas de journal)').catch(() => '(page injoignable)')
+        throw new Error(`${what} : ${error.message.split('\n')[0]} ; demandes de son vues : ${voixVues.slice(-6).join(' | ') || 'aucune'} ; dialogue : ${dialog.replace(/\s+/g, ' ').slice(0, 140)} ; journal de la voix : ${trace}`)
       })
       // 200 sur l'aperçu local, 206 en production (nginx sert le son par morceaux).
       if (![200, 206].includes(res.status()) || !(res.headers()['content-type'] ?? '').startsWith('audio/mpeg')) throw new Error(`${what} : ${res.status()} ${res.headers()['content-type']} ${res.url()}`)
@@ -530,6 +589,8 @@ try {
         if (!message.includes(attendu)) throw new Error(`message du coffre sans « ${attendu} » : ${message}`)
       }
       if (!/Dans ton sac : /.test(message)) throw new Error(`le coffre devrait rendre deux objets : ${message}`)
+      // Une relique (core/relics.ts) : la première fois seulement, la première des reliques de coffre.
+      if (first !== message.includes('Relique trouvée : Sceau de Flamme II !')) throw new Error(`la relique du coffre : première fois = ${first} : ${message}`)
       await page.screenshot({ path: `${OUT}/03g-page.png` })
       await page.getByRole('button', { name: 'Continuer' }).click()
       // La note de plaisir, facultative : la première fois on donne quatre étoiles, la seconde on passe.
@@ -576,6 +637,91 @@ try {
 
   let xpBefore = 0
   const xpOf = async () => Number(((await page.locator('.badge').innerText()).match(/(\d+) XP/) ?? [])[1] ?? 0)
+  await step('la Table des Reliques : un conflit signalé, un indice contre un parchemin, le carré résolu, la récompense du jour une seule fois', async () => {
+    // Des reliques de plus (la table en demande au moins deux ; celle du coffre est déjà dans la partie), un parchemin pour l'indice.
+    await page.evaluate(() => {
+      window.__aldoria.giveRelics(['onde-1', 'feuille-1', 'etoile-1', 'flamme-3', 'onde-3'])
+      window.__aldoria.give('parchemin', 2)
+      const w = window.__aldoria.world
+      const table = w.interactables.find((i) => i.id === 'table-reliques')
+      w.teleport(table.x + 2.6, table.z, table.x, table.z)
+    })
+    const ring = await page.evaluate(() => window.__aldoria.world.interactables.find((i) => i.id === 'table-reliques').open)
+    if (!ring) throw new Error('avec des reliques et la récompense du jour à prendre, l’anneau de la table devrait briller')
+    await page.getByTestId('invite').filter({ hasText: 'Ouvrir la Table des Reliques' }).waitFor({ timeout: 10_000 * SLOW })
+    await page.keyboard.press('KeyE')
+    await page.getByTestId('table-reliques').waitFor({ timeout: 10_000 * SLOW })
+    const puzzle = await page.evaluate(() => window.__aldoria.table)
+    const holes = puzzle.fixed.flatMap((id, cell) => (id === null ? [cell] : []))
+    if (holes.length !== puzzle.pool.length || holes.length < 6) throw new Error(`les cases à remplir : ${holes.length} pour ${puzzle.pool.length} reliques`)
+    const engraved = await page.locator('[data-state="grave"]').count()
+    if (engraved !== 16 - holes.length) throw new Error(`cases gravées : ${engraved}`)
+    await page.screenshot({ path: `${OUT}/04a-table.png` })
+
+    // Une relique qui croise une autre de sa rangée ou de sa colonne (même élément, même rang) : la case porte un « ! », la table le dit.
+    const share = (a, b) => a.split('-')[0] === b.split('-')[0] || a.split('-')[1] === b.split('-')[1]
+    const clash = holes.flatMap((h) => puzzle.pool.map((r) => ({ h, r }))).find(({ h, r }) =>
+      puzzle.fixed.some((other, c) => other !== null && c !== h && (Math.floor(c / 4) === Math.floor(h / 4) || c % 4 === h % 4) && share(other, r)),
+    )
+    if (!clash) throw new Error('aucun conflit possible sur cette table : impossible')
+    await page.getByTestId(`relique-${clash.r}`).click()
+    await page.getByTestId(`case-${clash.h}`).click()
+    if ((await page.getByTestId(`case-${clash.h}`).getAttribute('data-clash')) !== 'oui') throw new Error('la case en conflit devrait être signalée')
+    const said = await page.getByTestId('table-message').innerText()
+    if (!said.includes('croise') || !said.includes('en conflit')) throw new Error(`le message du conflit : ${said}`)
+    if (!(await page.getByTestId(`case-${clash.h}`).getAttribute('aria-label')).includes('croise')) throw new Error('le lecteur d’écran devrait entendre le conflit')
+    await page.screenshot({ path: `${OUT}/04b-table-conflit.png` })
+    await page.getByTestId(`case-${clash.h}`).click() // reprise : la relique revient en bas
+    if ((await page.getByTestId(`case-${clash.h}`).getAttribute('data-state')) !== 'libre') throw new Error('toucher une relique posée devrait la reprendre')
+    await page.getByTestId(`relique-${clash.r}`).click() // reprise, elle reste choisie : un clic la lâche
+
+    // Un indice : un parchemin de moins, la bonne relique à la bonne case.
+    const before = await page.evaluate(() => window.__aldoria.save().items.parchemin ?? 0)
+    await page.getByTestId('table-indice').click()
+    const after = await page.evaluate(() => window.__aldoria.save().items.parchemin ?? 0)
+    if (after !== before - 1) throw new Error(`l’indice devrait coûter un parchemin : ${before} -> ${after}`)
+    if ((await page.locator('[data-state="posee"]').count()) !== 1) throw new Error('l’indice devrait poser une relique')
+
+    // On range le reste ; la table résolue rapporte l'XP du jour, une seule fois.
+    const place = async (puzzle) => {
+      for (const h of puzzle.fixed.flatMap((id, cell) => (id === null ? [cell] : []))) {
+        if ((await page.getByTestId(`case-${h}`).getAttribute('data-state')) === 'posee') continue
+        await page.getByTestId(`relique-${puzzle.solution[h]}`).click()
+        await page.getByTestId(`case-${h}`).click()
+      }
+    }
+    const xpBefore = await page.evaluate(() => window.__aldoria.save().xp)
+    await place(puzzle)
+    await page.getByTestId('table-resolue').waitFor({ timeout: 10_000 * SLOW })
+    const done = await page.getByTestId('table-resolue').innerText()
+    if (!done.includes('Table résolue !') || !done.includes(`+${holes.length * 8} XP`)) throw new Error(`le bilan de la table : ${done}`)
+    const saved = await page.evaluate(() => window.__aldoria.save())
+    if (saved.xp !== xpBefore + holes.length * 8) throw new Error(`l’XP de la table : ${xpBefore} -> ${saved.xp}`)
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(saved.table)) throw new Error(`le jour de la récompense : ${saved.table}`)
+    if (await page.evaluate(() => window.__aldoria.world.interactables.find((i) => i.id === 'table-reliques').open)) throw new Error('l’anneau devrait s’éteindre une fois la récompense prise')
+    await page.screenshot({ path: `${OUT}/04c-table-resolue.png` })
+
+    // Une autre table : de l'entraînement (rien de plus aujourd'hui), jouée au clavier : 1 choisit la relique, Entrée la pose.
+    await page.getByTestId('table-autre').click()
+    await page.getByTestId('table-reliques').getByText('entraînement').first().waitFor({ timeout: 5000 * SLOW })
+    const next = await page.evaluate(() => window.__aldoria.table)
+    const [first] = next.fixed.flatMap((id, cell) => (id === null ? [cell] : []))
+    await page.keyboard.press('Digit1')
+    if ((await page.getByTestId(`relique-${next.pool[0]}`).getAttribute('aria-pressed')) !== 'true') throw new Error('la touche 1 devrait choisir la première relique')
+    await page.getByTestId(`case-${first}`).focus()
+    await page.keyboard.press('Enter')
+    if ((await page.getByTestId(`case-${first}`).getAttribute('data-state')) !== 'posee') throw new Error('Entrée devrait poser la relique choisie')
+    await page.keyboard.press('Enter') // reprise de cette même relique
+    await page.getByTestId(`relique-${next.pool[0]}`).click() // on la lâche
+    await place(next)
+    await page.getByTestId('table-resolue').waitFor({ timeout: 10_000 * SLOW })
+    const practice = await page.getByTestId('table-resolue').innerText()
+    if (!practice.includes('Bien joué !') || practice.includes('+')) throw new Error(`l’entraînement ne rapporte rien : ${practice}`)
+    if ((await page.evaluate(() => window.__aldoria.save().xp)) !== saved.xp) throw new Error('l’XP ne devrait pas bouger sur la table d’entraînement')
+    await page.keyboard.press('Escape')
+    await page.getByTestId('table-reliques').waitFor({ state: 'detached', timeout: 5000 * SLOW })
+  })
+
   await step("question de la pierre d'éveil", async () => {
     xpBefore = await xpOf() // le combat d'avant a déjà rapporté de l'XP
     await page.evaluate(() => window.__aldoria.world.teleport(9, -24.5, 9, -22))

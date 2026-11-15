@@ -13,6 +13,7 @@ import lignes from '@content/voix/lignes.json'
 import { today as localDay } from '../core/dailyChallenge'
 import { DEFAULT_VOLUME, volumeOf } from '../core/music'
 import { levelForXp } from '../core/progression'
+import { grantRelic, normalizeRelics, relicOf, RELICS } from '../core/relics'
 import { EMPTY_SAVE, SaveGame, type SaveData } from '../core/save'
 import { pageGreeting } from '../core/quest/chest'
 import { regionTitle } from '../core/world/places'
@@ -21,6 +22,7 @@ import type { WorldName } from '../game/theme'
 import { PlayTimeGuard } from './PlayTimeGuard'
 import { Archives } from './Archives'
 import { DailyChallenge } from './DailyChallenge'
+import { RelicTable } from './RelicTable'
 import { E2eQuestion } from './E2eQuestion'
 import { give, type ItemId } from '../core/inventory'
 import { makeAids } from './aids'
@@ -40,6 +42,7 @@ type Modal =
   | { kind: 'options' }
   | { kind: 'archives' }
   | { kind: 'daily' }
+  | { kind: 'table' }
   | null
 
 /** Accueil de Maître Ysaline : le texte et sa voix enregistrée sont dans content/voix/lignes.json (un seul endroit : modifier ce texte demande de le réenregistrer). */
@@ -135,7 +138,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
         world.events.on('stats', setStats)
         world.events.on('interact', (target) => interactRef.current(target))
         setLoading(null)
-        if (params.has('e2e')) (window as unknown as { __aldoria: unknown }).__aldoria = { world, services, ...(demo ? { give: (id: ItemId, n = 1) => giveItems(id, n) } : {}) }
+        if (params.has('e2e')) (window as unknown as { __aldoria: unknown }).__aldoria = { world, services, save: () => dataRef.current, ...(demo ? { give: (id: ItemId, n = 1) => giveItems(id, n), giveRelics } : {}) }
       } catch (error) {
         if (reloadPending()) return // nouvelle version du jeu : la page se recharge
         console.error(error)
@@ -195,7 +198,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
 
   // Musique : à l'écran quand l'île est prête, réglée par l'enfant, muette pendant une question.
   const calm = accommodations.calm
-  const musicQuestion = modal?.kind === 'question' || modal?.kind === 'daily' || fight.questionOpen
+  const musicQuestion = modal?.kind === 'question' || modal?.kind === 'daily' || modal?.kind === 'table' || fight.questionOpen
   useEffect(() => {
     services.music.configure({ muted: !musicOn, volume: musicVolume, calm })
   }, [services, musicOn, musicVolume, calm])
@@ -228,6 +231,30 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
     persist({ ...dataRef.current, items: give(dataRef.current.items, Array<ItemId>(n).fill(id)) })
   }
 
+  /** Tests dans le navigateur (?e2e, mode découverte seulement) : met des reliques dans la partie. */
+  function giveRelics(ids: string[]) {
+    const next = { ...dataRef.current, relics: normalizeRelics([...dataRef.current.relics, ...ids]) }
+    persist(next)
+    worldRef.current?.setTableState(next)
+  }
+
+  /** Le héros ramasse une relique de l'île : elle rejoint la partie (jamais deux fois), l'éclat disparaît, l'enfant sait où il en est. */
+  function collectRelic(id: string) {
+    const relic = relicOf(id)
+    const before = dataRef.current
+    const next = grantRelic(before, id)
+    if (next !== before) persist(next)
+    worldRef.current?.relicCollected(id)
+    worldRef.current?.setTableState(next)
+    if (!relic) return close()
+    setModal({
+      kind: 'dialog',
+      title: 'Relique trouvée !',
+      text: `${relic.name}. Tu as ${next.relics.length} relique${next.relics.length > 1 ? 's' : ''} sur ${RELICS.length}. Chacune répond aux autres par son élément ou par son rang : range-les sur la Table des Reliques, près de la Citadelle.`,
+      actions: [{ label: 'Continuer', primary: true, run: close }],
+    })
+  }
+
   function persist(next: SaveData) {
     dataRef.current = next
     setData({ ...next })
@@ -253,6 +280,10 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
         return
       }
       setModal({ kind: 'question', item, target })
+    } else if (target.kind === 'relique' && target.relic) {
+      collectRelic(target.relic)
+    } else if (target.kind === 'table') {
+      setModal({ kind: 'table' })
     } else if (target.kind === 'coffre') {
       void openChest()
     } else if (target.kind === 'jour') {
@@ -343,7 +374,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
           label: 'Merci !',
           primary: true,
           run: () => {
-            services.voice.stop()
+            services.voice.stop('dialogue de l’île fermé')
             close()
           },
         },
@@ -450,13 +481,17 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
             ? `Toucher ${focus.label.toLowerCase()}`
             : focus.kind === 'jour'
               ? 'Relever le défi du jour'
-              : focus.kind === 'coffre'
-                ? 'Ouvrir le coffre'
-                : focus.kind === 'ysaline'
-                  ? 'Parler à Maître Ysaline'
-                  : focus.kind === 'sortie'
-                    ? focus.label
-                    : `Approcher : ${focus.label}`}
+              : focus.kind === 'table'
+                ? 'Ouvrir la Table des Reliques'
+                : focus.kind === 'relique'
+                  ? `Ramasser : ${focus.label}`
+                  : focus.kind === 'coffre'
+                    ? 'Ouvrir le coffre'
+                    : focus.kind === 'ysaline'
+                      ? 'Parler à Maître Ysaline'
+                      : focus.kind === 'sortie'
+                        ? focus.label
+                        : `Approcher : ${focus.label}`}
         </div>
       )}
 
@@ -519,6 +554,16 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
           onSave={(next) => {
             persist(next)
             worldRef.current?.setDayChallenge(!next.daily.days.includes(localDay()))
+          }}
+          onClose={close}
+        />
+      )}
+      {modal?.kind === 'table' && (
+        <RelicTable
+          data={data}
+          onSave={(next) => {
+            persist(next)
+            worldRef.current?.setTableState(next)
           }}
           onClose={close}
         />

@@ -30,6 +30,20 @@ const VIEWS = {
   sphinx: { query: '', at: [318, 10], face: [345, 15], beta: 1.3, radius: 11, turn: 0.3 },
   brouillard: { query: '&monde=brouillard&classe=2nde', at: [0, -30], face: [0, 30], beta: 1.25, radius: 12, turn: 0.3 },
   carte: { query: '', at: [70, 60], face: [120, 105], beta: 1.32, radius: 9, turn: 0.15, interface: true },
+  // La Table des Reliques (plateau de la Citadelle, `table_reliques` de ile.json), vue de trois quarts, puis dans le Brouillard.
+  table: { query: '', at: [-22.2, 8.4], face: [-18, 12], beta: 1.2, radius: 7, turn: 0.45 },
+  'table-brouillard': { query: '&monde=brouillard&classe=2nde', at: [-22.2, 8.4], face: [-18, 12], beta: 1.2, radius: 7, turn: 0.45 },
+  // Une relique de l'île par élément (reliques.json) : le héros à 2,6 m, l'éclat et son anneau devant lui.
+  'relique-flamme': { query: '', at: [-62.6, -42], face: [-60, -42], beta: 1.3, radius: 6, turn: 0.35 },
+  'relique-onde': { query: '', at: [-148.6, 132], face: [-146, 132], beta: 1.3, radius: 6, turn: 0.35 },
+  'relique-feuille': { query: '', at: [-164.6, -126], face: [-162, -126], beta: 1.3, radius: 6, turn: 0.35 },
+  'relique-etoile': { query: '', at: [73.4, 52], face: [76, 52], beta: 1.3, radius: 6, turn: 0.35 },
+  // Les quatre autres reliques de l'île : le décor (arbres, rochers) ne doit ni les cacher ni les toucher.
+  'relique-anglais': { query: '', at: [-190.6, 30], face: [-188, 30], beta: 1.3, radius: 6, turn: 0.35 },
+  'relique-francais': { query: '', at: [-28.6, -186], face: [-26, -186], beta: 1.3, radius: 6, turn: 0.35 },
+  'relique-histoire': { query: '', at: [203.4, -10], face: [206, -10], beta: 1.3, radius: 6, turn: 0.35 },
+  'relique-snt': { query: '', at: [123.4, -138], face: [126, -138], beta: 1.3, radius: 6, turn: 0.35 },
+  'relique-brouillard': { query: '&monde=brouillard&classe=2nde', at: [-62.6, -42], face: [-60, -42], beta: 1.3, radius: 6, turn: 0.35 },
   // Intérieur d'un lieu : `lieu` (code), `salle` (0 à 5), `at` : [x dans la salle, profondeur], caméra : écart au sud, inclinaison, distance.
   interieur: { query: '', lieu: 'tour_fractions', salle: 0, at: [6, 9], turn: 0, beta: 1.05, radius: 12, interface: true },
   escalier: { query: '', lieu: 'tour_fractions', salle: 0, at: [13.5, 10], turn: -0.4, beta: 1.0, radius: 11, interface: true },

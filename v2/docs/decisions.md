@@ -94,3 +94,35 @@ nouvelle qui la remplace, avec la date. D1 à D6 et D11 ont été prises avec Er
 - **Implique** : `api/` à la racine est gelé ; `v2/api` garde tous les tests de la v1, qui décrivent ce que le jeu v1 attend ;
   le parcours navigateur de la v1 tourne contre `v2/api` ; toute migration est sauvegardée avant d'être appliquée (job `deploy`
   de `v2.yml`) et ne doit jamais casser la v1. Remplace la partie « déploiement séparé » de D6 et du TRD.
+
+## D12 : jamais deux fois la même question dans un parcours (14 novembre 2026)
+
+- **Contexte** (demande d'Eric) : `QuestionService` recyclait tout le paquet d'un rôle quand il était épuisé. Un enfant qui ne fait que
+  frapper vide les 17 à 28 automatismes d'un paquet en vingt coups et revoyait les mêmes questions ; deux tirages d'un générateur
+  pouvaient aussi poser le même énoncé sous deux identifiants.
+- **Choix** : « la même question » se juge sur le contenu (`questionSignature`), par parcours (de `reset` à `reset`). Un rôle sans
+  question inédite emprunte l'autre ; une énigme toute posée rend `null` ; seul un paquet entièrement posé reprend la plus ancienne
+  (`repeats` le compte). Le paquet d'un lieu passe de 60 à 100 questions (mesuré : une soixantaine consommées au plus par une enfant en
+  difficulté, `lieux.json`), l'API refait les tirages qui retombent sur le même énoncé. Écarté : mémoriser les questions vues d'une
+  séance à l'autre côté serveur (le suivi par notion et la révision espacée s'en chargent déjà ; le client préfère seulement l'inédit
+  d'un parcours à l'autre de la même séance).
+- **Implique** : sous « Frappe », les maths (seule matière avec des automatismes, 28 sur 100) reçoivent des questions du chapitre un
+  cran plus faciles une fois les automatismes posés ; les autres matières n'ont jamais eu d'automatismes. Un paquet de lieu pèse
+  jusqu'à 237 Ko (maths de 2nde) et se garde sur l'appareil, un par lieu visité.
+
+## D13 : des reliques à ramasser, liées entre elles par deux traits, pour un jeu de logique (14 novembre 2026)
+
+- **Contexte** (demande d'Eric) : des objets récupérables dans le monde, qui auraient un lien entre eux et serviraient un jeu de logique
+  ou de réflexion. Les quatre objets du sac servent déjà en combat et en question ; il faut une autre sorte d'objet, à collectionner.
+- **Choix** : seize **sceaux** (les reliques de la Grande Chronique), un par couple d'un **élément** (flamme, onde, feuille, étoile) et d'un
+  **rang** (I à IV). Le lien entre deux reliques est ce qu'elles partagent : même élément, ou même rang. Huit se ramassent dans l'île
+  (une lueur au sol, on s'en approche et on appuie sur E), huit tombent du coffre des premiers lieux terminés. Elles servent à la **Table des
+  Reliques** (la Citadelle) : un carré de 4 × 4 où chaque rangée et chaque colonne ne doit répéter ni un élément ni un rang (les « seize
+  officiers » d'Euler à l'ordre quatre). Les reliques qu'on possède sont à placer, les autres sont déjà gravées dans la pierre : plus on en a,
+  plus la table est ouverte. Toujours soluble par construction (on part d'un carré complet). Un indice coûte un parchemin du sac. Le
+  premier carré résolu du jour rapporte de l'XP et un objet du sac ; les suivants sont de l'entraînement.
+- **Écartés** : des engrenages (une chaîne d'engrenages ne dépend que du premier et du dernier : les autres ne servent à rien) ; une chaîne de
+  dominos (trop proche d'un jeu de hasard) ; lier les reliques à l'île du Sphinx tout de suite (son écran n'est pas encore branché : elle
+  pourra recevoir la Table plus tard, la logique est pure).
+- **Implique** : la partie garde `relics` (identifiants possédés) et `table` (dernier jour récompensé) ; une relique n'est jamais perdue ni
+  gagnée deux fois ; aucune question de leçon dans ce jeu (comme le Sphinx de la v1) mais il s'appuie sur le sac (le parchemin).

@@ -10,6 +10,7 @@
 import type { ApiClient } from './api'
 import { EMPTY_DAILY, normalizeDaily, type DailyState } from './dailyChallenge'
 import { normalizeOwned, type Owned } from './inventory'
+import { normalizeRelics } from './relics'
 import type { Store } from './storage'
 
 export const SCHEMA_VERSION = 1
@@ -27,6 +28,10 @@ export interface SaveData {
   daily: DailyState
   /** Objets du sac (core/inventory.ts). */
   items: Owned
+  /** Reliques trouvées (identifiants des sceaux, dans l'ordre où on les a trouvées : core/relics.ts). */
+  relics: string[]
+  /** Dernier jour (ISO) où la Table des Reliques a rapporté sa récompense ; vide si jamais. */
+  table: string
 }
 
 export const EMPTY_SAVE: SaveData = {
@@ -37,12 +42,21 @@ export const EMPTY_SAVE: SaveData = {
   look: { model: 'Knight', main: '1H_Sword', off: 'Round_Shield', cape: 'origine' },
   daily: EMPTY_DAILY,
   items: {},
+  relics: [],
+  table: '',
 }
 
 /** Partie relue (locale ou du serveur) : les champs absents d'une ancienne partie reprennent leur valeur par défaut. */
 export function normalizeSave(data: Partial<SaveData> | null | undefined): SaveData {
   const given = data ?? {}
-  return { ...structuredClone(EMPTY_SAVE), ...given, daily: normalizeDaily(given.daily), items: normalizeOwned(given.items) }
+  return {
+    ...structuredClone(EMPTY_SAVE),
+    ...given,
+    daily: normalizeDaily(given.daily),
+    items: normalizeOwned(given.items),
+    relics: normalizeRelics(given.relics),
+    table: typeof given.table === 'string' ? given.table : '',
+  }
 }
 
 interface ServerSave {

@@ -85,7 +85,7 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   et monstres Quaternius, dont l'échelle est mesurée une fois (`content/monde/monstres.json`, `node tools/mesurer_monstres.mjs` avec
   la prévisualisation lancée : une boîte au repos ne dit rien d'une armature à l'échelle 100). `&e2e` : `world.enterPlace(code)`,
   `world.interior` (`teleport(x, z)`, `frame(écart, beta, distance)`, `heroPosition()`, `enemies`, `fighting`, `pedestals`, `riddling`, `solvePedestal(p)`), `world.places`,
-  `world.measureMonster(modèle)`, et `encounter` (le combat en cours : `hero.hp`…).
+  `world.measureMonster(modèle)`, `encounter` (le combat en cours : `hero.hp`…) et `save()` (la partie en cours, lecture seule).
 - **Effaceur, coffre et page** (étape 1.4) : le gardien de la dernière salle de chaque lieu (`core/quest/boss.ts`, `Enemy.boss` dans `game/interior.ts`)
   se combat avec `Encounter` en mode `boss` : huit sceaux (`sealsLeft(hp, maxHp)`, **dérivés des PV**, jamais comptés à part : un indice ou un
   coup critique change le nombre de sceaux brisés), difficulté qui monte, héros aux forces rendues avant le combat. L'Effaceur se présente une
@@ -128,6 +128,29 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   (`helpCounted` : seul « Un indice ? » baisse la puissance du coup). Tests dans le navigateur (`&e2e`) : `__aldoria.give(id, n)` met des objets
   au sac. Reste à faire : le sac n'est pas consultable hors combat (les objets gagnés s'annoncent, mais aucun écran ne les liste), pas d'objet
   gagné par une quête de village ni à l'arène (ni village ni arène dans la v2).
+- **Reliques et Table des Reliques** (décision D13 ; `core/relics.ts`, `content/monde/reliques.json`, tests `reliques.test.ts`) : seize **sceaux**, un par couple
+  d'un élément (flamme, onde, feuille, étoile : chacun a une couleur **et une forme**, jamais la couleur seule) et d'un rang (I à IV) ; deux reliques
+  « se répondent » quand elles partagent un élément ou un rang. Huit se ramassent dans l'île (une par région, positions de `reliques.json`, vérifiées sur
+  la terre ferme, atteignables à pied et à l'écart des bâtiments par `reliques.test.ts`), huit tombent du **coffre** des premiers lieux terminés
+  (`completePlace` : `chestRelic` à **chaque** fin de lieu rend la relique due et pas encore trouvée, donc le tour d'un lieu terminé la première fois et le rattrapage d'une
+  partie ancienne, même en rejouant un lieu, jamais de doublon ; `Completion.relic`, ligne « Relique trouvée : … ! »).
+  Rangées dans la partie (`SaveData.relics`, `normalizeRelics`, jamais deux fois ; `SaveData.table` : dernier jour récompensé). **La table** : un carré de 4 × 4
+  où chaque rangée et chaque colonne ne répète ni un élément ni un rang ; les reliques de l'enfant (neuf au plus, `MAX_HOLES`) sont à placer, toutes les autres
+  sont gravées dans la pierre ; `makePuzzle(owned, graine)` part d'un carré complet (`randomSquare`), donc **toujours soluble** (une seule solution jusqu'à huit
+  cases, parfois deux à neuf : `isSolved` juge la règle, pas le carré d'origine). `place` / `lift` / `hint` / `applyHint` rendent une nouvelle table ; l'indice
+  coûtera un parchemin du sac. `claimTable` : le premier carré du jour rapporte l'XP (`TABLE_XP_PER_HOLE` par case) et, à partir de cinq cases, un objet ;
+  les suivants sont de l'entraînement. **Dans l'île** (`game/GameWorld.ts` : `buildRelics`, `relicCollected`) : un éclat de la forme et de la couleur de l'élément sur un anneau lumineux
+  (interaction `kind: 'relique'`, rayon 2,4 m ; **jamais sur la mini-carte** : on les trouve en se promenant) ; E la ramasse (`GameScreen.collectRelic` : la partie la
+  garde, l'éclat disparaît, « Relique trouvée ! … sur 16 »). Celles que la partie possède déjà ne sont pas posées. Captures `relique-flamme`, `-onde`, `-feuille`,
+  `-etoile`, `-brouillard`. **L'écran de la Table** (`ui/RelicTable.tsx`, plateau de pierre sur le plateau de la Citadelle : `table_reliques` de `ile.json`, `GameWorld.buildRelicTable`, interaction
+  `kind: 'table'`, repère sur la mini-carte, anneau allumé tant qu'une table du jour attend : `setTableState`) : le carré à gauche, à droite le message (lu par
+  `role="status"`), les reliques à placer, l'indice et « Recommencer ». On choisit une relique en bas (ou 1 à 9) puis une case libre ; toucher une relique posée la reprend ;
+  flèches, Entrée, Échap au clavier ; une case en conflit porte un « ! » et une bordure rouge (jamais la couleur seule), chaque élément sa forme, chaque case un libellé
+  pour lecteur d'écran (`describeCell`). **Aucune table sans deux reliques** (message qui dit où en trouver). Le premier carré du jour rapporte (`claimTable`, la partie est
+  rangée par `onSave`), une table déjà récompensée s'ouvre directement en entraînement ; « Une autre table » en donne une autre. Crochets `&e2e` : `table` (la table en
+  cours : `fixed`, `pool`, `solution`), `save()`, et en découverte `giveRelics(ids)` et `give`. Parcours navigateur : table vide, conflit signalé, indice, carré résolu, récompense
+  une seule fois, entraînement au clavier ; captures `table`, `table-brouillard` ; `node e2e/table-a11y.mjs` (aménagements les plus larges : à texte agrandi la table passe sur une colonne et le panneau défile, Échap ferme). Reste à faire : brancher la Table à l'île du Sphinx quand son écran existera ; un indice de Maître Ysaline vers
+  la première relique ; un bestiaire des reliques (chaque sceau avec son histoire).
 - **Musique** (`app/music.ts` joue, `core/music.ts` décide du volume, testé) : morceaux de `deploy/musique/` listés dans
   `content/monde/musique.json` (ordre de lecture, crédit des Options), servis sous `/musique/` par nginx ; `npm run dev` et
   `vite preview` les servent depuis le même dossier (`vite.config.ts`, requêtes `Range` comprises). Elle démarre à l'entrée
@@ -180,6 +203,11 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   d'un lieu fait échouer `tests/recordedVoices.test.ts` : relancer `python tools/voix_elevenlabs.py` (clé ElevenLabs dans
   l'environnement, jamais dans le dépôt ; `--essai` liste ce qui serait généré, sans clé). Un nouveau texte de Maître Ysaline
   s'ajoute à `lignes.json` (groupe, id, texte, voix), puis le script génère son son. Crédit ElevenLabs dans les Options.
+  **Couper la voix** : un composant qui se ferme ne doit couper que **sa** lecture. `Voice.token` désigne la lecture en cours (juste après `void say(…)`), `Voice.stopIf(token)` n'arrête
+  que si personne n'a parlé depuis (`QuestionPanel` le fait) ; un `voice.stop()` aveugle, arrivé après coup, annule la lecture d'un dialogue qui s'ouvre avant même la demande du son.
+  `Voice.trace` (une quarantaine d'étapes en mémoire, jamais envoyées : « say », « qui a coupé », « son demandé », « joue », « fini ») est lu par le parcours navigateur quand un son
+  attendu n'est pas parti (message d'échec : `journal de la voix`). Réglages du parcours : `E2E_CPU=<facteur>` ralentit le processeur de la page, `E2E_RETARD_VOIX=<ms>` retarde chaque
+  fichier de `/voix/`, `E2E_RETARD_MUSIQUE=<ms>` ceux de `/musique/` (la CI et le VPS sont plus lents que l'aperçu local : un parcours qui passe en local peut échouer là-bas).
   L'accueil de Maître Ysaline dans l'île (`ile-accueil`) est lu **depuis** `lignes.json` par `GameScreen` : texte et voix au même endroit.
   Les pages rapportées et le prologue parlent de l'île (« le chemin s'éclaire sur l'île »), jamais d'une carte du royaume, que la v2 n'a
   pas ; les `seuil-*` parlent, eux, de vraies cartes (atlas, plans) : ne pas les « corriger ». Les 60 répliques des

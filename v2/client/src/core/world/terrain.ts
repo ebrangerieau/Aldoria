@@ -31,6 +31,8 @@ export interface IslandLayout {
   pierre_eveil: Point
   /** Pierre du Jour (défi quotidien), sur le chemin de la Citadelle. */
   pierre_jour: Point
+  /** La Table des Reliques (core/relics.ts), sur le plateau de la Citadelle. */
+  table_reliques: Point
   ysaline: Point
   village: Point & { rayon_plat: number }
   regions: Record<string, RegionLayout>

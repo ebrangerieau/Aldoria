@@ -4,12 +4,15 @@
  * modifiée sur place ; l'interface la range par `persist`.
  *
  * - À chaque fin de lieu : l'XP du coffre (`chest_xp`) et deux objets du sac.
+ * - Aussi une relique quand l'une d'elles est due et pas encore trouvée (`chestRelic`, core/relics.ts : le tour d'un lieu terminé pour la première fois,
+ *   ou le rattrapage d'une partie ancienne, même en rejouant un lieu).
  * - La première fois seulement : la page est rendue (`page_text`, titre « La page des X retrouvée ! ») et Maître Ysaline salue
  *   l'Archiviste au retour sur l'île en annonçant le chemin qui s'ouvre (texte et voix enregistrée : content/voix/lignes.json,
  *   `page-<code>`). Ensuite : le mot de la fin (`outro`).
  */
 import lignes from '@content/voix/lignes.json'
 import { foundText, type ItemId } from '../inventory'
+import { chestRelic, grantRelic, placesDone, type Relic } from '../relics'
 import type { SaveData } from '../save'
 import { findItems } from './enigma'
 import type { DungeonData } from '../world/places'
@@ -23,6 +26,8 @@ export interface Completion {
   /** Première fois que ce lieu est terminé : la page est rendue et Maître Ysaline salue au retour. */
   first: boolean
   found: ItemId[]
+  /** La relique du coffre, quand l'une d'elles est due et pas encore trouvée, sinon null. */
+  relic: Relic | null
 }
 
 /** Termine un lieu : calcule la nouvelle partie. `random` : tirage des objets (tests). */
@@ -31,11 +36,16 @@ export function completePlace(save: SaveData, def: Pick<DungeonData, 'code' | 'c
   const first = done === 0
   const { save: withItems, found } = findItems(save, CHEST_ITEMS, random)
   const key = `page-${def.code}`
+  // La relique due et pas encore possédée : à chaque fin de lieu, pas seulement la première (une partie ancienne rattrape son retard au
+  // fil des coffres, même en rejouant un lieu) ; sans retard, un lieu rejoué n'en rend aucune.
+  const places = { ...save.places, [def.code]: done + 1 }
+  const relic = chestRelic(save.relics, placesDone({ places }))
   return {
     first,
     found,
+    relic,
     save: {
-      ...withItems,
+      ...(relic ? grantRelic(withItems, relic.id) : withItems),
       xp: save.xp + Math.max(0, Math.round(def.chest_xp)),
       places: { ...save.places, [def.code]: done + 1 },
       story: first && !save.story.includes(key) ? [...save.story, key] : save.story,
@@ -50,7 +60,7 @@ const plural = (n: number, one: string, many: string): string => (n > 1 ? many :
 /** Ce qui s'affiche à l'ouverture du coffre : la page rendue (première fois) ou le mot de la fin. */
 export function chestMessage(
   def: Pick<DungeonData, 'title' | 'page' | 'page_text' | 'outro' | 'chest_xp'>,
-  facts: { first: boolean; answered: number; correct: number; found: readonly ItemId[] },
+  facts: { first: boolean; answered: number; correct: number; found: readonly ItemId[]; relic?: Pick<Relic, 'name'> | null },
 ): { title: string; text: string } {
   const story = facts.first && def.page_text ? def.page_text : def.outro
   const lines = [
@@ -59,6 +69,7 @@ export function chestMessage(
   ]
   const items = foundText(facts.found)
   if (items) lines.push(items)
+  if (facts.relic) lines.push(`Relique trouvée : ${facts.relic.name} !`)
   const title = facts.first && def.page ? `${capitalize(def.page)} retrouvée !` : `${def.title} : terminé !`
   return { title, text: lines.join('\n') }
 }

@@ -22,6 +22,7 @@ import {
 } from '@babylonjs/core'
 import ile from '@content/monde/ile.json'
 import { Emitter } from '../core/events'
+import { ELEMENTS, elementOf, ISLAND_RELICS, MIN_RELICS } from '../core/relics'
 import type { SaveData } from '../core/save'
 import type { HeightGrid } from '../core/world/heightGrid'
 import type { Obstacles } from '../core/world/obstacles'
@@ -40,7 +41,7 @@ import { buildGround, buildSea } from './island'
 import { chooseQuality, type Quality } from './quality'
 import { THEMES, type WorldName } from './theme'
 
-export type InteractableKind = 'lieu' | 'pierre' | 'ysaline' | 'sortie' | 'jour' | 'coffre'
+export type InteractableKind = 'lieu' | 'pierre' | 'ysaline' | 'sortie' | 'jour' | 'coffre' | 'relique' | 'table'
 
 export interface Interactable {
   id: string
@@ -51,6 +52,8 @@ export interface Interactable {
   radius: number
   place?: Place
   open?: boolean
+  /** Une relique à ramasser (core/relics.ts) : son identifiant. */
+  relic?: string
 }
 
 export type WorldEvents = {
@@ -128,6 +131,10 @@ export class GameWorld {
   private region: string | null = null
   private lastCameraInput = 0
   private stones = new Map<string, Mesh>()
+  /** Les reliques encore à ramasser : leur éclat et leur anneau, par identifiant. */
+  private relicMeshes = new Map<string, { gem: Mesh; ring: Mesh }>()
+  /** Les quatre éclats de la Table des Reliques (ils tournent), et son anneau (allumé tant qu'une table du jour attend). */
+  private tableGems: Mesh[] = []
   private disposers: (() => void)[] = []
   private statsTimer = 0
   private regionTimer = 0
@@ -486,13 +493,120 @@ export class GameWorld {
       this.interactables.push({ id: stone.id, kind: 'pierre', label: stone.label, x: stone.x, z: stone.z, radius: 2.8, open: !awake })
     }
     this.buildDayStone()
+    this.buildRelics()
+    this.buildRelicTable()
     // Les cristaux tournent doucement sur eux-mêmes (immobiles en mode calme).
     if (!this.options.calm) {
       this.scene.onBeforeRenderObservable.add(() => {
         const dt = this.engine.getDeltaTime() / 1000
         for (const crystal of this.stones.values()) crystal.rotation.y += dt * 0.8
         if (this.dayCrystal) this.dayCrystal.rotation.y += dt * 0.8
+        for (const { gem } of this.relicMeshes.values()) gem.rotation.y += dt * 1.1
+        for (const gem of this.tableGems) gem.rotation.y += dt * 0.9
       })
+    }
+  }
+
+  /**
+   * Les reliques de l'île (core/relics.ts, positions de reliques.json) : un éclat flottant de la couleur et de la forme de leur élément,
+   * sur un anneau lumineux. Celles que la partie possède déjà ne sont pas posées. Elles ne figurent pas sur la mini-carte : on les trouve
+   * en se promenant.
+   */
+  private buildRelics(): void {
+    const owned = new Set(this.options.save.relics)
+    for (const relic of ISLAND_RELICS) {
+      if (owned.has(relic.id)) continue
+      const { x, z } = relic.source
+      const y = this.grid.heightAt(x, z)
+      if (y < 1) continue
+      const element = elementOf(relic)
+      const gem =
+        element.forme === 'cercle'
+          ? MeshBuilder.CreateSphere(`${relic.id}-eclat`, { diameter: 0.7, segments: 8 }, this.scene)
+          : MeshBuilder.CreatePolyhedron(`${relic.id}-eclat`, { type: element.forme === 'triangle' ? 0 : element.forme === 'losange' ? 1 : 3, size: 0.42 }, this.scene)
+      if (element.forme === 'losange') gem.scaling.y = 1.5
+      gem.position.set(x, y + 1.3, z)
+      const glow = new StandardMaterial(`${relic.id}-eclat`, this.scene)
+      glow.disableLighting = true
+      glow.diffuseColor = Color3.Black()
+      glow.emissiveColor = Color3.FromHexString(element.couleur).scale(1.1)
+      gem.material = glow
+      gem.isPickable = false
+      const ring = beacon(this.scene, `relique-${relic.id}`, new Vector3(x, y, z), element.couleur, true)
+      this.relicMeshes.set(relic.id, { gem, ring })
+      this.interactables.push({ id: `relique-${relic.id}`, kind: 'relique', label: relic.name, x, z, radius: 2.4, relic: relic.id })
+    }
+  }
+
+  /**
+   * La Table des Reliques (décision D13), sur le plateau de la Citadelle (`table_reliques` de ile.json) : un plateau de pierre sur son socle, quatre
+   * éclats aux coins (un par élément) et un anneau qui brille tant qu'une table du jour attend (au moins deux reliques, récompense pas encore prise).
+   */
+  private buildRelicTable(): void {
+    const { x, z } = layout.table_reliques
+    const y = this.grid.heightAt(x, z)
+    if (y < 1) return
+    const stone = new StandardMaterial('table-reliques-pierre', this.scene)
+    stone.diffuseColor = Color3.FromHexString('#8c8674')
+    stone.specularColor = new Color3(0.08, 0.08, 0.1)
+    const base = MeshBuilder.CreateCylinder('table-reliques-socle', { diameterTop: 1.5, diameterBottom: 2.1, height: 0.95, tessellation: 8 }, this.scene)
+    base.position.set(x, y + 0.47, z)
+    const slab = MeshBuilder.CreateBox('table-reliques-plateau', { width: 3.1, depth: 3.1, height: 0.3 }, this.scene)
+    slab.position.set(x, y + 1.1, z)
+    for (const mesh of [base, slab]) {
+      mesh.material = stone
+      mesh.receiveShadows = true
+      mesh.isPickable = false
+      this.atmosphere.shadows.addShadowCaster(mesh, false)
+    }
+    this.obstacles.add({ x, z, r: 1.7 })
+    ELEMENTS.forEach((element, i) => {
+      const gem =
+        element.forme === 'cercle'
+          ? MeshBuilder.CreateSphere(`table-reliques-${element.id}`, { diameter: 0.5, segments: 8 }, this.scene)
+          : MeshBuilder.CreatePolyhedron(`table-reliques-${element.id}`, { type: element.forme === 'triangle' ? 0 : element.forme === 'losange' ? 1 : 3, size: 0.3 }, this.scene)
+      if (element.forme === 'losange') gem.scaling.y = 1.5
+      gem.position.set(x + (i % 2 === 0 ? -1.05 : 1.05), y + 1.65, z + (i < 2 ? -1.05 : 1.05))
+      const glow = new StandardMaterial(`table-reliques-${element.id}`, this.scene)
+      glow.disableLighting = true
+      glow.diffuseColor = Color3.Black()
+      glow.emissiveColor = Color3.FromHexString(element.couleur).scale(1.1)
+      gem.material = glow
+      gem.isPickable = false
+      this.tableGems.push(gem)
+    })
+    const ready = this.tableReady(this.options.save)
+    beacon(this.scene, 'table-reliques', new Vector3(x, y, z), '#c8a2e8', ready)
+    this.interactables.push({ id: 'table-reliques', kind: 'table', label: 'La Table des Reliques', x, z, radius: 3.4, open: ready })
+  }
+
+  private tableReady(save: Pick<SaveData, 'relics' | 'table'>): boolean {
+    return save.relics.length >= MIN_RELICS && save.table !== localDay()
+  }
+
+  /** Les reliques ou la récompense du jour ont changé : l'anneau de la table s'allume ou s'éteint. */
+  setTableState(save: Pick<SaveData, 'relics' | 'table'>): void {
+    const target = this.interactables.find((it) => it.id === 'table-reliques')
+    if (!target) return
+    target.open = this.tableReady(save)
+    setBeacon(this.scene, 'table-reliques', '#c8a2e8', target.open)
+  }
+
+  /** Une relique vient d'être ramassée : elle disparaît de l'île dans une gerbe d'étincelles. */
+  relicCollected(id: string): void {
+    const mesh = this.relicMeshes.get(id)
+    const at = this.interactables.findIndex((it) => it.relic === id)
+    if (at >= 0) this.interactables.splice(at, 1)
+    if (mesh) {
+      this.sparkle(mesh.gem.position.clone())
+      mesh.gem.dispose(false, true)
+      mesh.ring.dispose(false, true)
+      this.relicMeshes.delete(id)
+    }
+    this.hero.playOnce('cheer')
+    if (this.focused?.relic === id) {
+      this.focused = null
+      this.events.emit('focus', null)
     }
   }
 
