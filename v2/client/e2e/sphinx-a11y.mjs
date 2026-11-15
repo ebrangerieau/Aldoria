@@ -82,15 +82,11 @@ for (const [name, accommodations] of [['defaut', false], ['amenagements', true]]
       console.error(`${name} : un coin de la salle 3D sort de la part libre de l'écran (${Math.round(c.x)}, ${Math.round(c.y)}), le panneau commence à ${Math.round(room.panelLeft)}`)
     }
   }
-  // Sans défilement, tout doit être dans la fenêtre ; avec, le panneau doit défiler (jamais un débordement hors du panneau).
-  const inside = info.panel.bottom <= 720 && info.buttons.every((b) => b.bottom <= 720)
-  if (!inside && !info.scrolls) {
+  // Le plateau est dans la salle 3D : le panneau latéral peut défiler à texte agrandi, mais le message et chaque bouton restent dans la fenêtre sans défiler.
+  const reachable = info.panel.bottom <= 720 && info.statusBottom <= 720 && info.buttons.every((b) => b.bottom <= 720)
+  if (!reachable) {
     failed = true
-    console.error(`${name} : le panneau déborde sans défiler`)
-  }
-  if (!accommodations && !inside) {
-    failed = true
-    console.error(`${name} : par défaut, le plus grand plateau doit tenir en entier à 1280 x 720`)
+    console.error(`${name} : le message ou un bouton du panneau sort de la fenêtre à 1280 x 720 (${JSON.stringify(info.buttons)})`)
   }
   await page.close()
 }

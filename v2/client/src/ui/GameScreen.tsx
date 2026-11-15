@@ -589,9 +589,14 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
                 Sac
               </button>
             )}
-            <button type="button" className="secondary small" data-testid="bouton-archives" onClick={() => { worldRef.current?.setInputEnabled(false); setModal({ kind: 'archives' }) }}>Archives</button>
-            <button type="button" className="secondary small" onClick={() => { worldRef.current?.setInputEnabled(false); setModal({ kind: 'options' }) }}>Options</button>
-            <button type="button" className="secondary small" onClick={onQuit}>Quitter</button>
+            {/* Dans le temple du Sphinx, l'énigme est elle-même la fenêtre ouverte : un autre écran (Archives, Options) la fermerait et ferait perdre le passage ; « Quitter l'île » en est la sortie. */}
+            {!inTemple && (
+              <>
+                <button type="button" className="secondary small" data-testid="bouton-archives" onClick={() => { worldRef.current?.setInputEnabled(false); setModal({ kind: 'archives' }) }}>Archives</button>
+                <button type="button" className="secondary small" onClick={() => { worldRef.current?.setInputEnabled(false); setModal({ kind: 'options' }) }}>Options</button>
+                <button type="button" className="secondary small" onClick={onQuit}>Quitter</button>
+              </>
+            )}
           </div>
           {world && mapVisible && !loading && !inside && !wardrobeOpen && <Minimap world={world} place={region?.title ?? ''} />}
         </div>

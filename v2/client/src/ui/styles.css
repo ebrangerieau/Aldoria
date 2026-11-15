@@ -466,9 +466,12 @@ html[data-calm='true'] .hero-bubble { animation: bubble-calm 6s linear forwards;
 /* Le temple en 3D occupe l'écran : le panneau (titre, plan à plat, message, boutons) se range sur le côté droit et laisse passer les clics sur la salle. */
 .sphinx-overlay.on-stage { background: none; pointer-events: none; place-items: end end; padding: 0.7rem 0.8rem; }
 .sphinx-overlay.on-stage .sphinx-panel { pointer-events: auto; width: min(21rem, 38vw); max-height: calc(100% - 3.6rem); overflow-y: auto; }
-.sphinx-overlay.on-stage .sphinx-layout { flex-direction: column; align-items: stretch; flex-wrap: nowrap; gap: 0.5rem; }
-.sphinx-overlay.on-stage .sphinx-board { width: 100%; max-width: 13rem; max-height: 11rem; margin: 0 auto; }
-.sphinx-overlay.on-stage .sphinx-status { min-height: 3rem; }
+/* Le titre, le message et les boutons d'abord, le plan à plat en dernier : à texte agrandi le panneau défile, mais les boutons restent à portée sans défiler. */
+.sphinx-overlay.on-stage .sphinx-panel { display: flex; flex-direction: column; }
+.sphinx-overlay.on-stage .sphinx-layout, .sphinx-overlay.on-stage .sphinx-side { display: contents; }
+.sphinx-overlay.on-stage .sphinx-status { order: 1; min-height: 3rem; }
+.sphinx-overlay.on-stage .sphinx-side .actions { order: 2; }
+.sphinx-overlay.on-stage .sphinx-board { order: 3; width: 100%; max-width: 13rem; max-height: 11rem; margin: 0.6rem auto 0; }
 .sphinx-layout { display: flex; flex-wrap: wrap; gap: 0.6rem 1.4rem; align-items: flex-start; justify-content: center; }
 .sphinx-side { flex: 1 1 13rem; min-width: 12rem; }
 .sphinx-detail { margin: 0 0 0.4rem; color: var(--ink-soft); font-weight: 600; }

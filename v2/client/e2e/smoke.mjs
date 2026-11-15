@@ -1004,6 +1004,8 @@ try {
     }
     if (!(await page.evaluate(() => window.__aldoria.world.temple !== null))) throw new Error('la salle 3D du temple devrait être ouverte pendant l’énigme')
     await inSync('au départ')
+    // Pendant l'énigme, la barre du haut n'offre ni Archives ni Options : ouvrir un autre écran fermerait l'énigme et ferait perdre le passage.
+    if ((await page.getByTestId('bouton-archives').count()) !== 0) throw new Error('Archives ne devrait pas être proposé pendant une énigme du temple')
 
     // Énigme 1 : un mur ne bouge pas, annuler et recommencer, l'aide du Sphinx, puis la fin.
     let p1 = await puzzle()
