@@ -1059,6 +1059,8 @@ try {
       const i = w.interactables.find((x) => x.id === `habitant-${c}`)
       return i ? { x: i.x, z: i.z, open: i.open, label: i.label, marker: w.villagers.get(c).marker.isEnabled() } : null
     }, code)
+    // Les habitants se chargent après l'entrée dans l'île (leurs modèles pèsent plusieurs Mo) : on attend les trois de Clairval.
+    await page.waitForFunction(() => window.__aldoria.world.villagers.size >= 3, null, { timeout: 60_000 * SLOW })
     const talk = async (code) => {
       const v = await villager(code)
       if (!v) throw new Error(`l'habitant ${code} manque dans le village`)
@@ -1072,6 +1074,7 @@ try {
       await talk(code)
       const ask = await page.getByTestId('habitant').innerText()
       if (!ask.includes('Plus tard') || !ask.includes('t\'aide')) throw new Error(`la demande de ${code} : ${ask}`)
+      if ((await page.getByTestId('habitant-ecouter').count()) !== 1) throw new Error(`la demande de ${code} se lit à voix haute (bouton « Écouter »)`)
       if (code === 'barnabe') await page.screenshot({ path: `${OUT}/07a-habitant.png` })
       await page.getByRole('button', { name: "Je t'aide !" }).click()
       for (const [i, right] of answers.entries()) {
@@ -1275,6 +1278,7 @@ try {
   await step('le village de la 2nde (Brumegarde) : les enquêtes de Vesna et du capitaine Brann dessinent leur tableau et se terminent', async () => {
     await page.goto(`${BASE}/?decouverte&e2e&classe=2nde&monde=brouillard&qualite=${QUALITY}&musique=0&sons=0`)
     await page.waitForFunction(() => window.__aldoria?.world, null, { timeout: 180_000 * SLOW })
+    await page.waitForFunction(() => window.__aldoria.world.villagers.size >= 4, null, { timeout: 60_000 * SLOW }) // les quatre habitants de Brumegarde
     const enquete = async (code, captionPattern, shot) => {
       const npc = await page.evaluate((c) => {
         const i = window.__aldoria.world.interactables.find((x) => x.id === `habitant-${c}`)

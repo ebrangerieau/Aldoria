@@ -249,9 +249,6 @@ export class GameWorld {
     for (const m of ysaline.meshes) this.atmosphere.shadows.addShadowCaster(m, false)
     this.obstacles.add({ x: ys.x, z: ys.z, r: 0.6 })
 
-    this.progress('Les habitants', 0.9)
-    await this.buildVillagers()
-
     this.buildInteractables(places)
     this.bindInput()
     // Compteurs par image (?perf et tests) : appels de dessin, durée d'une image.
@@ -260,6 +257,10 @@ export class GameWorld {
       this.instrumentation.captureFrameTime = true
     }
     this.progress("L'île est prête", 1)
+    // Les habitants arrivent après : leurs modèles (3,6 Mo chacun) ne retardent pas l'entrée dans l'île ; chacun apparaît quand il est chargé.
+    void this.buildVillagers().catch((error: unknown) => {
+      if (!this.closed) console.error('Les habitants du village n’ont pas pu être chargés', error)
+    })
 
     this.lastFrame = performance.now()
     this.islandLoop = () => {
@@ -714,6 +715,7 @@ export class GameWorld {
       const y = this.grid.heightAt(x, z)
       const parts = defaultsFor(npc.model)
       const character = await loadNpc(this.scene, npc.model, `habitant-${npc.code}`, parts.main, parts.off)
+      if (this.closed) return // le monde s'est fermé pendant le chargement
       character.root.position.set(x, y, z)
       character.yaw = Math.atan2(center.x - x, center.z - z)
       for (const m of character.meshes) this.atmosphere.shadows.addShadowCaster(m, false)

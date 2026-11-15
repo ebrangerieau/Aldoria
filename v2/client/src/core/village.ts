@@ -14,7 +14,7 @@ import { type ItemId, foundText } from './inventory'
 import { levelForXp } from './progression'
 import { findItems } from './quest/enigma'
 import type { SaveData } from './save'
-import { afterActivity, PASS_ANSWERS, passesText, sphinxOf } from './sphinx/island'
+import { afterActivity, PASS_ANSWERS, passesText, sphinxOf, takePassageNews } from './sphinx/island'
 import type { World } from './wardrobe'
 
 export type QuestKind = 'revision' | 'veille' | 'enquete'
@@ -173,8 +173,9 @@ export function completeQuest(save: SaveData, npc: Pick<Villager, 'code' | 'than
   let passage = false
   if (reachesPassage) {
     const earned = afterActivity(next, level, GAME_MODE, PASS_ANSWERS)
-    next = earned.save
     passage = earned.gained
+    // Annoncé tout de suite par la dernière ligne du remerciement : la carte n'a rien à rappeler plus tard (comme le défi du jour et les lieux).
+    next = passage ? { ...earned.save, sphinx: takePassageNews(sphinxOf(earned.save, level)).state } : earned.save
   }
   const lines = [npc.thanks, `${correct} bonne${plural(correct)} réponse${plural(correct)} sur ${QUEST_SIZE}. +${xp} XP`]
   if (found.length > 0) lines.push(foundText(found))

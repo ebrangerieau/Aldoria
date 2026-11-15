@@ -151,6 +151,7 @@ describe('La fin d’une quête', () => {
     expect(second.passage).toBe(true)
     expect(sphinxOf(second.save, '6e').passes).toBe(sphinxOf(fresh(), '6e').passes + 1)
     expect(second.lines.some((l) => l.startsWith('Un passage pour la barque du Sphinx'))).toBe(true)
+    expect(sphinxOf(second.save, '6e').news).toBe(sphinxOf(fresh(), '6e').news) // annoncé par le remerciement : rien à rappeler sur la carte
     const third = completeQuest(second.save, { code: 'melisande', thanks: 'Parfait.' }, 3, opts)
     expect(third.passage).toBe(false) // pas un second passage le même jour
     expect(sphinxOf(third.save, '6e').passes).toBe(sphinxOf(second.save, '6e').passes)

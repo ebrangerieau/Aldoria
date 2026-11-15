@@ -107,6 +107,7 @@ for (const name of views) {
   })
   await page.goto(`${BASE}/?decouverte&e2e&qualite=${QUALITY}${view.query}`)
   await page.waitForFunction(() => window.__aldoria?.world, null, { timeout: 300_000 })
+  await page.waitForFunction(() => window.__aldoria.world.villagers.size > 0, null, { timeout: 120_000 }) // les habitants arrivent après l'île
   if (view.lieu) {
     // Intérieur d'un lieu : x dans le monde intérieur = 16 × salle + x ; z = -profondeur.
     await page.evaluate(async (v) => {

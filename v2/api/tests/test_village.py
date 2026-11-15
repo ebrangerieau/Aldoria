@@ -118,3 +118,26 @@ async def test_context_names_the_chapters_set_by_the_parent(client, login, profi
     chapter_items = [i for i in body["items"] if i["category"] == "chapitre"]
     on_angles = [i for i in chapter_items if i["notions"][0].startswith("6e.maths.angles.")]
     assert len(on_angles) > len(chapter_items) / 2
+
+
+async def test_clairval_survey_for_jules_is_a_map_with_its_own_generator(client, login, curriculum):
+    """Mélisande (6e) : l'enquête de Clairval est la carte à l'échelle."""
+    headers = await login("jules", "1234")
+    body = (
+        await client.post(
+            f"{API}/session/start",
+            json={
+                "mode": "village",
+                "enigmas": [{"generator": "6e.proportionnalite.carte", "count": 6}],
+            },
+            headers=headers,
+        )
+    ).json()
+    quest = [i for i in body["items"] if i.get("generator") == "6e.proportionnalite.carte"]
+    assert len(quest) == 6 and all(i["role"] == "enigme" for i in quest)
+    assert {i["visual"]["kind"] for i in quest} == {"map"}
+    assert len({i["id"] for i in quest}) == 6
+    # Le reste du paquet sert la révision et la veille de contrôle : jamais de l'énigme.
+    others = [i for i in body["items"] if i["role"] != "enigme"]
+    assert others and {i["category"] for i in others} <= {"automatisme", "chapitre", "revision"}
+    assert set(body["context"]) == {"test_soon", "current"}

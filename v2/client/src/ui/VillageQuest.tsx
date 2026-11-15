@@ -23,13 +23,36 @@ type Phase =
   | { kind: 'question'; item: Item }
   | { kind: 'thanks'; lines: string[] }
 
-function Card({ npc, lines, actions }: { npc: Villager; lines: string[]; actions: { label: string; primary?: boolean; run: () => void }[] }) {
+function Card({ services, accommodations, npc, lines, actions }: {
+  services: Services
+  accommodations: Accommodations
+  npc: Villager
+  lines: string[]
+  actions: { label: string; primary?: boolean; run: () => void }[]
+}) {
+  const paragraphs = lines.flatMap((line) => line.split('\n'))
+  const text = paragraphs.join(' ')
+  /** Jeton de la dernière lecture lancée par cette carte : à la fermeture, on ne coupe que celle-là (jamais la voix d'un dialogue qui s'ouvre). */
+  const spoke = useRef<number | null>(null)
+  const say = () => {
+    void services.voice.say([text])
+    spoke.current = services.voice.token
+  }
+  // Comme les dialogues de Maître Ysaline : « Écouter », et lecture d'office avec la « lecture automatique » (aménagement des enfants dys).
+  useEffect(() => {
+    if (accommodations.auto_read) say()
+    return () => {
+      if (spoke.current !== null) services.voice.stopIf(spoke.current, 'dialogue d’habitant')
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [text])
   return (
     <div className="overlay" role="dialog" aria-modal="true" aria-labelledby="habitant-titre" data-testid="habitant">
       <section className="panel dialog">
         <h2 id="habitant-titre">{npc.name}</h2>
-        {lines.flatMap((line) => line.split('\n')).map((line, i) => <p key={i}>{line}</p>)}
+        {paragraphs.map((line, i) => <p key={i}>{line}</p>)}
         <div className="actions">
+          <button type="button" className="secondary" data-testid="habitant-ecouter" onClick={say}>🔊 Écouter</button>
           {actions.map((a, i) => (
             <button key={a.label} type="button" className={a.primary ? 'primary' : 'secondary'} autoFocus={i === actions.length - 1} onClick={a.run}>
               {a.label}
@@ -112,9 +135,11 @@ export function VillageQuest({ services, accommodations, demo, data, village, np
   const e2e = new URLSearchParams(location.search).has('e2e')
   return (
     <>
-      {phase.kind === 'ask' && done && <Card npc={npc} lines={[DONE_TEXT]} actions={[{ label: 'À demain !', primary: true, run: onClose }]} />}
+      {phase.kind === 'ask' && done && <Card services={services} accommodations={accommodations} npc={npc} lines={[DONE_TEXT]} actions={[{ label: 'À demain !', primary: true, run: onClose }]} />}
       {phase.kind === 'ask' && !done && (
         <Card
+          services={services}
+          accommodations={accommodations}
           npc={npc}
           lines={[askText(npc, islandContext(services))]}
           actions={[{ label: 'Plus tard', run: onClose }, { label: "Je t'aide !", primary: true, run: () => void begin() }]}
@@ -126,9 +151,9 @@ export function VillageQuest({ services, accommodations, demo, data, village, np
         </div>
       )}
       {phase.kind === 'unavailable' && (
-        <Card npc={npc} lines={['Il faut une connexion pour préparer cette quête. Reviens quand le royaume sera de nouveau connecté.']} actions={[{ label: "Retour à l'île", primary: true, run: onClose }]} />
+        <Card services={services} accommodations={accommodations} npc={npc} lines={['Il faut une connexion pour préparer cette quête. Reviens quand le royaume sera de nouveau connecté.']} actions={[{ label: "Retour à l'île", primary: true, run: onClose }]} />
       )}
-      {phase.kind === 'empty' && <Card npc={npc} lines={[NO_QUESTION_TEXT]} actions={[{ label: "D'accord", primary: true, run: onClose }]} />}
+      {phase.kind === 'empty' && <Card services={services} accommodations={accommodations} npc={npc} lines={[NO_QUESTION_TEXT]} actions={[{ label: "D'accord", primary: true, run: onClose }]} />}
       {phase.kind === 'question' && (
         <>
           {e2e && <E2eQuestion item={phase.item} />}
@@ -145,7 +170,7 @@ export function VillageQuest({ services, accommodations, demo, data, village, np
           />
         </>
       )}
-      {phase.kind === 'thanks' && <Card npc={npc} lines={phase.lines} actions={[{ label: 'Avec plaisir !', primary: true, run: onClose }]} />}
+      {phase.kind === 'thanks' && <Card services={services} accommodations={accommodations} npc={npc} lines={phase.lines} actions={[{ label: 'Avec plaisir !', primary: true, run: onClose }]} />}
     </>
   )
 }
