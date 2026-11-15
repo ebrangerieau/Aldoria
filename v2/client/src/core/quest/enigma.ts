@@ -7,7 +7,6 @@
  * Hors connexion, ou si la session n'a pas d'énigme jouable (visuel non dessiné), une question du chapitre la remplace :
  * aucun lieu ne reste infranchissable.
  */
-import combat from '@content/monde/combat.json'
 import type { Item } from '../items'
 import { describe, draw, give, type ItemId } from '../inventory'
 import { answerXp } from '../progression'
@@ -20,13 +19,9 @@ export const PEDESTALS = 3
 /** Objets du sac trouvés quand l'énigme est résolue. */
 export const ENIGMA_ITEMS = 1
 
-/**
- * L'introduction de la salle-énigme : celle du lieu, sauf si elle décrit un décor que la v2 n'a pas encore (la balance géante,
- * phase 2) : `enigme_introductions` de combat.json donne alors le texte des trois cristaux.
- */
+/** L'introduction de la salle-énigme : celle du lieu (trois cristaux, ou la balance géante pour la Tour des Fractions). */
 export function enigmaIntro(def: Pick<DungeonData, 'enigma'>): string {
-  const byMode = combat.enigme_introductions as Record<string, string>
-  return byMode[def.enigma.mode] ?? def.enigma.intro
+  return def.enigma.intro
 }
 
 /** L'XP d'une bonne réponse à un piédestal : celle du lieu (`enigma.xp`) et celle de la question. */

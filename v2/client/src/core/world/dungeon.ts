@@ -56,6 +56,16 @@ export const PEDESTAL_DISTANCE = 1.7
 export const PEDESTAL_REARM = 2.6
 /** Rayon de l'obstacle d'un piédestal (colonne de pierre). */
 export const PEDESTAL_RADIUS = 0.55
+/** La balance géante de la salle-énigme du mode « balance » : x dans la salle et profondeur de son pied, comme dans la v1 (BALANCE_AT), au fond, loin de l'escalier. */
+export const BALANCE_AT: [number, number] = [7, 5]
+/** Le héros qui s'approche à cette distance du pied de la balance commence l'énigme (v1 : BALANCE_DISTANCE) ; `isNear` (core/balanceRig.ts) y ajoute le contact avec un plateau ou la colonne. */
+export const BALANCE_DISTANCE = 3.4
+/** Contact : à moins de cette distance d'un plateau ou de la colonne (le corps du héros, 0,45 m, s'arrête à 0,45 m d'un obstacle), l'énigme commence aussi : de côté, les plateaux l'arrêtent à plus de BALANCE_DISTANCE du pied. */
+export const BALANCE_TOUCH = 0.95
+/** Après avoir renoncé, il faut s'éloigner de ce mètre de plus (sur les deux distances) avant que la balance se réarme. */
+export const BALANCE_REARM_MARGIN = 1
+/** Où le héros se tient pendant l'énigme : à l'ouest de la balance, un peu en avant (v1 : BALANCE_SPOT), pour ne pas la cacher. */
+export const BALANCE_SPOT: [number, number] = [-4.4, 0.4]
 
 export type Vec3 = [number, number, number]
 
@@ -200,6 +210,17 @@ export class Dungeon {
   /** Les trois piédestaux de la salle `room` (position de la v1, sans miroir). */
   pedestalPoints(room: number): { x: number; z: number }[] {
     return PEDESTAL_SPOTS.map(([x, depth]) => this.point(room, x, depth))
+  }
+
+  /** Le pied de la balance géante de la salle `room` (position de la v1, sans miroir). */
+  balancePoint(room: number): { x: number; z: number } {
+    return this.point(room, BALANCE_AT[0], BALANCE_AT[1])
+  }
+
+  /** Où se tient le héros pendant l'énigme de la balance. */
+  balanceSpot(room: number): { x: number; z: number } {
+    const at = this.balancePoint(room)
+    return { x: at.x + BALANCE_SPOT[0], z: at.z - BALANCE_SPOT[1] }
   }
 
   /** Où apparaît le coffre dans la salle de l'Effaceur. */

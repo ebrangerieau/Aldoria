@@ -23,6 +23,7 @@ import { chestMessage, completePlace } from '../core/quest/chest'
 import { unlockNews } from '../core/appearance'
 import { afterActivity, passesText, sphinxOf, takePassageNews } from '../core/sphinx/island'
 import { enigmaIntro, enigmaXp, ENIGMA_ITEMS, findItems, foundBanner, riddleItem } from '../core/quest/enigma'
+import { BALANCE_ROUNDS, isBalanceItem, roundXp } from '../core/balanceEnigma'
 import { normalizeRating } from '../core/quest/rating'
 import type { SaveData } from '../core/save'
 import type { Accommodations } from '../core/accessibility'
@@ -30,10 +31,11 @@ import type { Item } from '../core/items'
 import { heroMaxHp, levelForXp } from '../core/progression'
 import type { Place } from '../core/world/places'
 import type { GameWorld } from '../game/GameWorld'
-import type { Enemy, Pedestal } from '../game/interior'
+import type { BalanceStation, Enemy, InteriorWorld, Pedestal } from '../game/interior'
 import type { WorldName } from '../game/theme'
 import { makeAids } from './aids'
 import { BagPanel } from './Bag'
+import { BalanceEnigma, type BalanceOutcome } from './BalanceEnigma'
 import { ActionBar, type Choice, FightBars, type Floating, Floats } from './Combat'
 import { Dialog } from './Dialogs'
 import { QuestionPanel, type QuestionOutcome } from './QuestionPanel'
@@ -77,6 +79,8 @@ export function useFight(options: FightOptions) {
     aside: boolean
     resolve: (o: QuestionOutcome) => void
   } | null>(null)
+  /** Une manche de la balance géante (la question, son titre, et la fin de la manche). */
+  const [balance, setBalance] = useState<{ item: Item; title: string; resolve: (o: BalanceOutcome) => void } | null>(null)
   const [rating, setRating] = useState<{ title: string; resolve: (value: number) => void } | null>(null)
   /** Le sac ouvert en plein combat : ce qu'il propose, et la réponse (l'objet choisi, ou null : fermé). */
   const [bag, setBag] = useState<{ entries: BagEntry[]; forQuestions: string; resolve: (id: ItemId | null) => void } | null>(null)
@@ -341,26 +345,92 @@ export function useFight(options: FightOptions) {
     interior.solvePedestal(ped)
     s.sfx.play('crit')
     announce(pickOne(texts.encouragements))
-    const gained = enigmaXp(def, outcome.item.difficulty)
+    reward(enigmaXp(def, outcome.item.difficulty))
+    if (interior.pedestalsLeft(ped.room) > 0) return
+    // Le troisième cristal est éveillé : la porte s'ouvre, et un objet attendait sur le dernier piédestal.
+    openRiddleDoor(interior, ped.room, 1100)
+  }
+
+  /** L'XP d'une énigme réussie, et le niveau qu'elle fait peut-être gagner (le héros reprend alors ses forces maximales). */
+  function reward(gained: number): void {
     const up = latest.current.grantXp(gained)
     if (up) {
       encounter.current?.hero.raiseMax(heroMaxHp(up.level))
       window.setTimeout(() => announceLevel(up), 1300)
     }
-    if (interior.pedestalsLeft(ped.room) > 0) return
-    // Le troisième cristal est éveillé : la porte s'ouvre, et un objet attendait sur le dernier piédestal.
+  }
+
+  /** La salle-énigme est résolue : la porte s'ouvre, un objet attendait, le héros dit un mot sur la salle suivante. */
+  function openRiddleDoor(interior: InteriorWorld, room: number, delay: number): void {
     window.setTimeout(() => {
       if (worldRef.current?.interior !== interior) return
-      interior.openDoor(ped.room)
-      s.sfx.play('spell')
+      interior.openDoor(room)
+      latest.current.services.sfx.play('spell')
       announce("La porte s'ouvre !")
       const { found, save } = findItems(latest.current.getSave(), ENIGMA_ITEMS)
       if (found.length > 0) {
         latest.current.persist(save)
         window.setTimeout(() => announce(foundBanner(found)), NOTICE_MS - 200)
       }
-      sayHero(heroBefore(ped.room + 1))
-    }, 1100)
+      sayHero(heroBefore(room + 1))
+    }, delay)
+  }
+
+  // --- L'énigme : la balance géante ---------------------------------------------------------
+
+  const pause = (ms: number): Promise<void> => new Promise((resolve) => window.setTimeout(resolve, ms))
+
+  /**
+   * Trois manches sur la balance elle-même (Tour des Fractions) : une question de balance chacune (`riddleItem`), l'XP de l'énigme (toute si la masse est trouvée du premier
+   * coup, la moitié après correction). Une question sans plateaux (paquet sans énigme de balance, hors connexion) se pose en question ordinaire : la porte ne reste jamais
+   * fermée faute de balance. Renoncer (« Plus tard », une réponse fausse à une question ordinaire) rend la main : la balance se réarme quand le héros s'éloigne.
+   */
+  const balanceRef = useRef<(station: BalanceStation) => Promise<void>>(async () => {})
+  balanceRef.current = async (station: BalanceStation) => {
+    const current = worldRef.current
+    const interior = current?.interior
+    const lieu = place.current
+    if (!current || !interior || !lieu) return
+    const { services: s } = latest.current
+    const def = lieu.dungeon
+    let finished = true
+    while (station.rounds < BALANCE_ROUNDS) {
+      const item = riddleItem(s.questions)
+      if (!item) {
+        announce('Énigme indisponible hors connexion')
+        finished = false
+        break
+      }
+      const title = `${def.enigma.title} · ${station.rounds + 1} / ${BALANCE_ROUNDS}`
+      if (isBalanceItem(item)) {
+        const outcome = await new Promise<BalanceOutcome>((resolve) => setBalance({ item, title, resolve }))
+        setBalance(null)
+        if (worldRef.current?.interior !== interior) return // écran quitté pendant la manche
+        if (outcome.kind === 'later') {
+          finished = false
+          break
+        }
+        reward(roundXp(enigmaXp(def, item.difficulty), outcome.firstTry))
+      } else {
+        const outcome = await new Promise<QuestionOutcome>((resolve) => {
+          setQuestion({ item, title: def.enigma.title, success: pickOne(texts.encouragements), gameMode: 'enigme', aside: false, resolve })
+        })
+        setQuestion(null)
+        if (worldRef.current?.interior !== interior) return
+        if (!outcome.result?.correct) {
+          finished = false
+          break
+        }
+        reward(enigmaXp(def, outcome.item.difficulty))
+      }
+      interior.balanceRoundDone()
+      s.sfx.play('crit')
+      announce(pickOne(texts.encouragements))
+      await pause(800)
+      if (worldRef.current?.interior !== interior) return
+    }
+    interior.endBalance(finished)
+    if (finished) openRiddleDoor(interior, station.room, 900)
   }
 
   /** On entre dans une salle : l'énigme se présente la première fois (v1 : le titre et l'introduction du lieu). */
@@ -370,7 +440,7 @@ export function useFight(options: FightOptions) {
     const lieu = place.current
     if (!interior || !lieu || visited.current.has(index)) return
     visited.current.add(index)
-    if (lieu.dungeon.rooms[index]?.kind !== 'enigme' || interior.pedestalsLeft(index) === 0) return
+    if (lieu.dungeon.rooms[index]?.kind !== 'enigme' || interior.riddleLeft(index) === 0) return
     interior.setInputEnabled(false)
     const intro = enigmaIntro(lieu.dungeon)
     await speak(lieu.dungeon.enigma.title, intro, "C'est parti", intro)
@@ -393,6 +463,7 @@ export function useFight(options: FightOptions) {
     const offs = [
       world.events.on('fight', (enemy) => void fightRef.current(enemy)),
       world.events.on('riddle', (ped) => void riddleRef.current(ped)),
+      world.events.on('balance', (station) => void balanceRef.current(station)),
       world.events.on('floor', ({ index }) => void roomRef.current(index)),
       world.events.on('float', (f) => addFloat(f)),
     ]
@@ -536,11 +607,23 @@ export function useFight(options: FightOptions) {
           onDone={question.resolve}
         />
       )}
+      {balance && (
+        <BalanceEnigma
+          key={balance.title}
+          services={services}
+          item={balance.item}
+          title={balance.title}
+          accommodations={accommodations}
+          onShow={(next) => worldRef.current?.interior?.showBalance(next)}
+          onBurst={() => worldRef.current?.interior?.balanceBurst()}
+          onDone={balance.resolve}
+        />
+      )}
       {dialog && <Dialog title={dialog.title} text={dialog.text} actions={dialog.actions} />}
       {rating && <Rating title={rating.title} onRated={rating.resolve} />}
       {bag && <BagPanel entries={bag.entries} forQuestions={bag.forQuestions} onUse={(id) => bag.resolve(id)} onClose={() => bag.resolve(null)} />}
     </>
   )
 
-  return { hud, overlay, enter, leave, openChest, active: view !== null || dialog !== null, questionOpen: question !== null, overlayOpen: question !== null || dialog !== null || rating !== null || bag !== null }
+  return { hud, overlay, enter, leave, openChest, active: view !== null || dialog !== null, questionOpen: question !== null || balance !== null, overlayOpen: question !== null || balance !== null || dialog !== null || rating !== null || bag !== null }
 }

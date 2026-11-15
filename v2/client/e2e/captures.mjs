@@ -120,9 +120,16 @@ for (const name of ['blob', 'dragon', 'ghost', 'yeti', 'guerrier']) {
   VIEWS[`boss-combat-${name}`] = { query, lieu, salle: 5, boss: 'combat', turn: 0, beta: 1.0, radius: 10, interface: true }
 }
 // Salle-énigme (quatrième salle) : les trois cristaux endormis, puis `cristaux` d'entre eux éveillés (verts, plus grands, immobiles).
-VIEWS['enigme'] = { query: '', lieu: 'tour_fractions', salle: 3, at: [6, 10], turn: 0, beta: 1.05, radius: 12, interface: true }
-VIEWS['enigme-eveillee'] = { query: '', lieu: 'tour_fractions', salle: 3, at: [6, 10], cristaux: 2, turn: 0, beta: 1.05, radius: 12, interface: true }
+VIEWS['enigme'] = { query: '', lieu: 'moulin_phrases', salle: 3, at: [6, 10], turn: 0, beta: 1.05, radius: 12, interface: true }
+VIEWS['enigme-eveillee'] = { query: '', lieu: 'moulin_phrases', salle: 3, at: [6, 10], cristaux: 2, turn: 0, beta: 1.05, radius: 12, interface: true }
 VIEWS['enigme-brouillard'] = { query: '&monde=brouillard&classe=2nde', lieu: 'labyrinthe_vecteurs', salle: 3, at: [6, 10], turn: 0, beta: 1.05, radius: 12, interface: true }
+// La balance géante de la Tour des Fractions : `balance` = 'attente' (la salle, plateaux vides), 'manche' (le héros s'est approché, le panneau de la manche 1),
+// 'penche' (un essai trop fort), 'equilibre' (la bonne masse).
+VIEWS['balance-attente'] = { query: '', at: [0, -30], face: [0, 30], beta: 1.25, radius: 6, turn: 0, interface: true, balance: 'attente', cam: [0, 1.05, 12] }
+VIEWS['balance-manche'] = { query: '', at: [0, -30], face: [0, 30], beta: 1.25, radius: 6, turn: 0, interface: true, balance: 'manche' }
+VIEWS['balance-penche'] = { query: '', at: [0, -30], face: [0, 30], beta: 1.25, radius: 6, turn: 0, interface: true, balance: 'penche' }
+VIEWS['balance-equilibre'] = { query: '', at: [0, -30], face: [0, 30], beta: 1.25, radius: 6, turn: 0, interface: true, balance: 'equilibre' }
+VIEWS['balance-brouillard'] = { query: '&monde=brouillard', at: [0, -30], face: [0, 30], beta: 1.25, radius: 6, turn: 0, interface: true, balance: 'penche' }
 VIEWS['coffre'] = { query: '', lieu: 'tour_fractions', salle: 5, chest: 'ferme', turn: -0.2, beta: 1.0, radius: 8, interface: true }
 VIEWS['coffre-ouvert'] = { query: '', lieu: 'tour_fractions', salle: 5, chest: 'ouvert', turn: -0.2, beta: 1.0, radius: 8, interface: true }
 
@@ -256,6 +263,52 @@ for (const name of views) {
       }
     }
   }
+  if (view.balance) {
+    await page.evaluate(() => {
+      const w = window.__aldoria.world
+      const it = w.interactables.find((i) => i.id === 'tour_fractions')
+      w.teleport(it.x, it.z - 1.5, it.x, it.z)
+    })
+    await page.getByTestId('invite').filter({ hasText: 'Approcher' }).waitFor({ timeout: 20_000 })
+    await page.keyboard.press('KeyE')
+    await page.getByRole('button', { name: "J'y vais" }).click()
+    await page.getByTestId('etage').waitFor({ timeout: 120_000 })
+    await page.evaluate(() => {
+      const i = window.__aldoria.world.interior
+      for (let d = 0; d < 3; d += 1) i.openDoor(d, false)
+      const e = i.dungeon.entryPoint(3)
+      i.teleport(e.x, e.z)
+    })
+    await page.getByRole('button', { name: "C'est parti" }).click()
+    await page.getByRole('dialog').waitFor({ state: 'detached' })
+    if (view.balance === 'attente') {
+      await page.evaluate((cam) => {
+        const i = window.__aldoria.world.interior
+        i.teleport(i.balance.x - 5, i.balance.z - 6)
+        i.frame(...cam)
+      }, view.cam)
+    } else {
+      await page.evaluate(() => {
+        const i = window.__aldoria.world.interior
+        i.teleport(i.balance.x - 1.0, i.balance.z - 3.0)
+      })
+      await page.getByTestId('balance-enigme').waitFor({ timeout: 30_000 })
+      if (view.balance !== 'manche') {
+        const item = await page.evaluate(() => window.__aldoria.balance.item)
+        const x = Number(item.answer.value)
+        const target = view.balance === 'penche' ? x + 2 : x
+        for (let n = 0; n < 80; n += 1) {
+          const now = Number(await page.getByTestId('balance-valeur').innerText())
+          if (now === target) break
+          await page.keyboard.press(now < target ? 'ArrowUp' : 'ArrowDown')
+        }
+        await page.getByTestId('balance-essayer').click()
+        await page.waitForTimeout(view.balance === 'equilibre' ? 350 : 1500) // le fléau rebondit avant de se poser
+        // En équilibre, la manche suivante vient 1,4 s plus tard : la vue est prise tout de suite.
+        if (view.balance === 'equilibre') await page.screenshot({ path: `${OUT}/${name}.png`, timeout: 180_000 })
+      }
+    }
+  }
   if (view.bag) {
     if (view.bag === 'garni') await page.evaluate(() => { window.__aldoria.give('plume', 3); window.__aldoria.give('parchemin', 1); window.__aldoria.give('potion', 2) })
     await page.getByTestId('bouton-sac').click()
@@ -267,8 +320,10 @@ for (const name of views) {
   }
   // Interface cachée (sauf vue `interface`), le temps que les ombres et le halo se stabilisent.
   if (!view.interface) await page.evaluate(() => document.documentElement.classList.add('sans-interface'))
-  await page.waitForTimeout(6000)
-  await page.screenshot({ path: `${OUT}/${name}.png`, timeout: 180_000 })
+  if (view.balance !== 'equilibre') {
+    await page.waitForTimeout(6000)
+    await page.screenshot({ path: `${OUT}/${name}.png`, timeout: 180_000 })
+  }
   console.log(`✓ ${name}`)
   await page.close()
 }
