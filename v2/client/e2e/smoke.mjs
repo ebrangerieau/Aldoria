@@ -1080,7 +1080,7 @@ try {
       if ((await stateOf('silhouette-Mage')) !== 'verrouille') throw new Error('le Mage doit être verrouillé avant le niveau 5')
       const text = await page.getByTestId('apparence-silhouette-Mage').innerText()
       if (!text.includes('Niveau 5')) throw new Error(`la condition de déblocage est écrite : ${text}`)
-      await page.getByTestId('apparence-silhouette-Mage').click()
+      await page.getByTestId('apparence-silhouette-Mage').click({ force: true }) // aria-disabled : Playwright attendrait qu'il s'active, l'enfant, lui, peut le toucher
       const message = await page.getByTestId('apparence-message').innerText()
       if (!message.includes('Niveau 5')) throw new Error(`le choix verrouillé s’explique : ${message}`)
       if ((await look()).model !== start.model) throw new Error('un choix verrouillé ne change rien')
@@ -1112,7 +1112,7 @@ try {
     l = await look()
     if (l.main !== '2H_Staff' || l.off !== '') throw new Error(`le bâton prend les deux mains : ${l.main} / ${l.off}`)
     if ((await stateOf('main-gauche-Spellbook')) !== 'impossible') throw new Error('le grimoire est impossible avec un bâton à deux mains')
-    await page.getByTestId('apparence-main-gauche-Spellbook').click()
+    await page.getByTestId('apparence-main-gauche-Spellbook').click({ force: true })
     if ((await look()).off !== '') throw new Error('un choix impossible ne change rien')
     if (!(await page.getByTestId('apparence-message').innerText()).includes('deux mains')) throw new Error('la raison est dite')
 
