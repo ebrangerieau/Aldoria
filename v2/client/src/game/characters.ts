@@ -7,12 +7,15 @@ import {
   type AnimationGroup,
   type AbstractMesh,
   type AssetContainer,
+  Color3,
   LoadAssetContainerAsync,
+  type Material,
+  type PBRMaterial,
   type Scene,
   TransformNode,
   Vector3,
 } from '@babylonjs/core'
-import type { SaveData } from '../core/save'
+import { CAPE_COLORS, type Look, type PetFur } from '../core/wardrobe'
 import { boundsOf, loadContainer, MODELS } from './assets'
 
 /** Pièces d'équipement de chaque silhouette (noms des nœuds glTF, repris de la v1). */
@@ -157,6 +160,14 @@ export class Character {
     this.play(then)
   }
 
+  /** Retire le personnage de la scène (animations arrêtées, maillages et nœuds supprimés ; les matériaux partagés restent). */
+  dispose(): void {
+    this.once?.stop()
+    this.current?.stop()
+    for (const group of this.anims.values()) group.dispose()
+    this.root.dispose(false, false)
+  }
+
   set yaw(value: number) {
     this.root.rotation.y = value
   }
@@ -267,23 +278,74 @@ export function skinnedHeights(character: Character): { lowest: number; highest:
   return { lowest, highest }
 }
 
-/** Cache les pièces d'équipement non choisies (une arme par main, couvre-chef, cape). */
-export function dress(character: Character, model: string, look: { main: string; off: string; head?: boolean; cape?: boolean }): void {
+/** Les choix d'habillage d'un personnage (le `Look` de la personnalisation, ou seulement ses pièces pour un habitant). */
+export interface Outfit {
+  main: string
+  off: string
+  head?: boolean
+  cape?: boolean
+  /** Identifiant de couleur de cape (core/wardrobe.ts : `CAPE_COLORS`) ; « origine » : la cape du modèle. */
+  cape_color?: string
+}
+
+/**
+ * Habille un personnage : seule la pièce choisie de chaque main, le couvre-chef et la cape si on les veut ; la cape prend sa couleur. Répétable :
+ * chaque appel remet toutes les pièces d'équipement dans l'état voulu (changer d'arme ne laisse pas l'ancienne cachée).
+ */
+export function dress(character: Character, model: string, look: Outfit): void {
   const parts = PARTS[model]
   if (!parts) return
+  const equipment = new Set([...parts.main, ...parts.off, parts.head, parts.cape].filter(Boolean))
   const hidden = new Set([...parts.main, ...parts.off].filter((p) => p !== look.main && p !== look.off))
   if (look.head === false && parts.head) hidden.add(parts.head)
   if (look.cape === false && parts.cape) hidden.add(parts.cape)
+  const hex = CAPE_COLORS.find((c) => c.id === look.cape_color && c.id !== 'origine')?.color ?? null
   for (const mesh of character.meshes) {
     const node = mesh.name.replace(/^.*?-/, '').replace(/_primitive\d+$/, '')
-    if (hidden.has(node)) mesh.setEnabled(false)
+    if (!equipment.has(node)) continue
+    mesh.setEnabled(!hidden.has(node))
+    if (node === parts.cape) tintCape(mesh, hex)
   }
 }
 
-export async function loadHero(scene: Scene, look: SaveData['look']): Promise<Character> {
+/**
+ * Une cape de couleur : le matériau d'un modèle KayKit est un atlas partagé par tout le corps, on en clone un pour la seule cape et on lui donne
+ * une couleur unie (multiplier la texture rouge d'origine par du bleu la ferait noire). `null` : la cape d'origine.
+ */
+function tintCape(mesh: AbstractMesh, hex: string | null): void {
+  const meta = (mesh.metadata ??= {}) as { base?: Material | null; tint?: PBRMaterial | null }
+  meta.base ??= mesh.material
+  if (!hex) {
+    mesh.material = meta.base
+    return
+  }
+  if (!meta.tint) {
+    meta.tint = (meta.base as PBRMaterial | null)?.clone(`${mesh.name}-teinte`) ?? null
+    if (meta.tint) meta.tint.albedoTexture = null
+  }
+  if (!meta.tint) return
+  meta.tint.albedoColor = Color3.FromHexString(hex).toLinearSpace()
+  mesh.material = meta.tint
+}
+
+/** Le pelage du renard : ses matériaux « Main » et « Main_Light » (plats, propres à ce modèle : un seul renard dans la scène). */
+export function tintFox(character: Character, fur: Pick<PetFur, 'main' | 'light'>): void {
+  const seen = new Set<Material>()
+  for (const mesh of character.meshes) {
+    const material = mesh.material as (Material & { subMaterials?: (Material | null)[] }) | null
+    for (const m of material?.subMaterials ?? [material]) if (m) seen.add(m)
+  }
+  for (const m of seen) {
+    const pbr = m as PBRMaterial
+    if (m.name.endsWith('Main_Light')) pbr.albedoColor = Color3.FromHexString(fur.light).toLinearSpace()
+    else if (m.name.endsWith('Main')) pbr.albedoColor = Color3.FromHexString(fur.main).toLinearSpace()
+  }
+}
+
+export async function loadHero(scene: Scene, look: Look): Promise<Character> {
   const model = look.model in PARTS ? look.model : 'Knight'
   const hero = await loadCharacter(scene, `kaykit/characters/${model}.glb`, 'heros', 1.75, KAYKIT_ANIMS)
-  dress(hero, model, { main: look.main, off: look.off })
+  dress(hero, model, look)
   return hero
 }
 

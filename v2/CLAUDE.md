@@ -98,7 +98,7 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   s'ouvre. `GameWorld.placeCompleted(places)` allume le lieu suivant et son repère de la mini-carte : le monde garde la partie de sa création, il
   faut le prévenir. Vérifier un Effaceur : captures `boss-*`, `boss-combat-*`, `coffre`, `coffre-ouvert` (`npm run captures`). Les modèles de
   Quaternius sont sombres par construction (couleurs de base très foncées : la gelée verte et le dragon paraissent presque noirs) : ce n'est pas
-  un défaut d'éclairage. Le coffre se referme sur la note de plaisir (étape 1.5, ci-dessous) ; reste à faire : le déblocage d'apparence annoncé au coffre.
+  un défaut d'éclairage. Le coffre se referme sur la note de plaisir (étape 1.5, ci-dessous) ; il annonce aussi ce que le niveau et le lieu débloquent dans l'apparence (ci-dessous).
 - **Énigme, héros qui parle, note de plaisir** (étape 1.5) : la quatrième salle de chaque lieu a **trois piédestaux** (`PEDESTAL_SPOTS` de
   `core/world/dungeon.ts`, positions de la v1, `Dungeon.pedestalPoints`), un cristal chacun (`game/interior.ts` : `Pedestal`, `buildPedestals`,
   événement `riddle`). Le héros qui s'approche à `PEDESTAL_DISTANCE` reçoit une question et ne marche plus (`riddling`) ; `ui/useFight.tsx`
@@ -232,8 +232,24 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   `python tools/voix_elevenlabs.py --lieux` la reporte dans `lignes.json`, puis le script la génère. Le script tourne aussi dans la session
   cloud : la clé s'enregistre par `request_credential` (hôte `api.elevenlabs.io`, en-tête `xi-api-key`, jamais dans le dépôt) et le script
   reçoit `ELEVENLABS_API_KEY=proxy-injected` ; une clé limitée à la synthèse n'a pas le droit `voices_read` (inutile : les voix sont au manifeste).
-- **Logique de la v1 portée, pas encore branchée à l'écran** (pure, testée, `core/`) : apparence du héros et du renard (`wardrobe.ts`, `content/monde/apparence.json`) ;
-  son écran de personnalisation et les déblocages annoncés au coffre restent à faire. Un état se rend toujours neuf (jamais modifié sur place).
+- **Apparence du héros et du renard** (PRD V2-08, portée de la v1 ; règles dans `core/wardrobe.ts` et `content/monde/apparence.json`, lien avec la partie dans
+  `core/appearance.ts` : `lookOf`, `choose`, `menuOf`, `unlockNews`, `unseenCount`, `markSeen` ; tests `wardrobe.test.ts`, `apparence.test.ts`). Un `Look`
+  (silhouette, arme, main gauche, couvre-chef, cape et sa couleur, renard : nom et pelage) est rangé dans `SaveData.look` et **relu partout par
+  `sanitizeLook`** avec ce que l'enfant a débloqué (niveau du héros, lieux terminés) : un choix inconnu, verrouillé ou incompatible (arme à deux mains et main
+  gauche) reprend sa valeur par défaut, une partie d'un autre appareil reste jouable. Jamais d'accès direct à `save.look` : `lookOf(save, world)`. Le
+  compagnon n'existe que dans le monde lumineux (`hasPet`). Monde : `game/characters.ts` (`dress` idempotent, `tintCape`, `tintFox`, `loadHero(scene, look)`) ;
+  les personnages KayKit partagent **un seul matériau à atlas** : la cape colorée est un clone à couleur unie (`toLinearSpace()` pour un PBR), jamais une
+  teinte posée sur le matériau commun ; le renard a ses propres matériaux `Main` / `Main_Light`. `GameWorld.setLook` rhabille le héros (autre silhouette : un
+  nouveau modèle au même endroit, dans le même sens, ombre comprise) ; **ses demandes se font à la file** (le chargement d'un modèle est asynchrone : sans file,
+  des clics rapprochés laissaient trois héros à l'écran, mesuré), chacune avec le dernier choix, et `shownModel` dit ce qui est vraiment affiché ; un lieu recharge son
+  héros avec `this.look`. Écran : `ui/Wardrobe.tsx`, bouton
+  « Apparence » du bandeau (hors intérieur) avec la pastille des nouveautés (`unseenCount`, effacée à l'ouverture par `markSeen`), panneau à droite et
+  `GameWorld.setShowcase` qui passe la caméra devant le héros, décalé à gauche du panneau, puis la ramène derrière lui. Un choix verrouillé reste visible avec
+  sa condition (« Niveau 5 », « Termine 2 lieux ») ; le toucher l'explique sans rien changer ; jamais la couleur seule (nom, coche, texte de verrou). Le coffre
+  (`chestMessage`, fait `unlocked`) et le niveau gagné en combat (`announce`) annoncent les nouveautés. Vérifier : captures `apparence-*` (héros), `apparence-ecran*`
+  (écran, niveau 3 et deux lieux), `e2e/wardrobe-a11y.mjs` (texte agrandi à 1280 × 720) et l'étape « l'apparence » du parcours (`giveProgress(xp, lieux)`,
+  mode découverte seulement). Reste : le nom du renard n'est affiché nulle part dans le monde.
+- **Un état se rend toujours neuf** (jamais modifié sur place) dans `core/`.
 - **Textes visibles par les enfants en français**, tutoiement ; aucune donnée personnelle hors du serveur d'Aldoria.
 - **Erreurs du jeu** : tout ce qui passe par une exception, une promesse rejetée ou `console.error` remonte à l'exploitant
   (`core/errorReport.ts`, `app/errors.ts`). Ne jamais mettre de prénom, de question ni de réponse dans un message d'erreur ;

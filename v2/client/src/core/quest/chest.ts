@@ -60,7 +60,7 @@ const plural = (n: number, one: string, many: string): string => (n > 1 ? many :
 /** Ce qui s'affiche à l'ouverture du coffre : la page rendue (première fois) ou le mot de la fin. */
 export function chestMessage(
   def: Pick<DungeonData, 'title' | 'page' | 'page_text' | 'outro' | 'chest_xp'>,
-  facts: { first: boolean; answered: number; correct: number; found: readonly ItemId[]; relic?: Pick<Relic, 'name'> | null },
+  facts: { first: boolean; answered: number; correct: number; found: readonly ItemId[]; relic?: Pick<Relic, 'name'> | null; unlocked?: readonly string[] },
 ): { title: string; text: string } {
   const story = facts.first && def.page_text ? def.page_text : def.outro
   const lines = [
@@ -70,6 +70,7 @@ export function chestMessage(
   const items = foundText(facts.found)
   if (items) lines.push(items)
   if (facts.relic) lines.push(`Relique trouvée : ${facts.relic.name} !`)
+  if (facts.unlocked && facts.unlocked.length > 0) lines.push(`Nouveau dans ton apparence : ${facts.unlocked.join(', ')}.`)
   const title = facts.first && def.page ? `${capitalize(def.page)} retrouvée !` : `${def.title} : terminé !`
   return { title, text: lines.join('\n') }
 }

@@ -19,6 +19,7 @@ import { combatTexts, pickOne } from '../core/combat/texts'
 import { count, type ItemId } from '../core/inventory'
 import { HeroVoice } from '../core/heroVoice'
 import { chestMessage, completePlace } from '../core/quest/chest'
+import { unlockNews } from '../core/appearance'
 import { afterActivity, passesText, sphinxOf, takePassageNews } from '../core/sphinx/island'
 import { enigmaIntro, enigmaXp, ENIGMA_ITEMS, findItems, foundBanner, riddleItem } from '../core/quest/enigma'
 import { normalizeRating } from '../core/quest/rating'
@@ -53,8 +54,8 @@ export interface FightOptions {
   worldName: WorldName
   heroName: string
   accommodations: Accommodations
-  /** Les XP gagnées : rend le nouveau niveau si on en a gagné un. */
-  grantXp: (amount: number) => number | null
+  /** Les XP gagnées : rend le nouveau niveau, et les choix d'apparence qu'il débloque, si on en a gagné un. */
+  grantXp: (amount: number) => { level: number; news: string[] } | null
   /** XP actuelle, pour le niveau d'entrée dans le lieu. */
   currentXp: () => number
   /** La partie à jour (même dans un combat qui dure) et son rangement : la fin d'un lieu y écrit le lieu terminé, l'XP du coffre, les objets. */
@@ -109,6 +110,15 @@ export function useFight(options: FightOptions) {
     setNotice({ id, text })
     window.setTimeout(() => setNotice((current) => (current?.id === id ? null : current)), NOTICE_MS)
   }, [])
+
+  /** Un niveau de gagné : « Niveau N ! », puis ce que ce niveau débloque dans l'apparence (une seule annonce à la fois). */
+  const announceLevel = useCallback(
+    (up: { level: number; news: string[] }) => {
+      announce(`Niveau ${up.level} !`)
+      if (up.news.length > 0) window.setTimeout(() => announce(`Nouveau dans ton apparence : ${up.news.join(', ')}`), NOTICE_MS - 200)
+    },
+    [announce],
+  )
 
   /** Le héros parle (bulle sous la vue, lue à voix haute avec « lecture automatique ») : un mot sur la salle suivante, ou le départ. */
   const sayHero = useCallback((text: string) => {
@@ -198,10 +208,10 @@ export function useFight(options: FightOptions) {
       let shown = viewRef.current ?? viewOf(enc)
       await interior.present(events, (event) => {
         if (event.kind === 'xp') {
-          const level = latest.current.grantXp(event.amount)
-          if (level) {
-            enc.hero.raiseMax(heroMaxHp(level))
-            announce(`Niveau ${level} !`)
+          const up = latest.current.grantXp(event.amount)
+          if (up) {
+            enc.hero.raiseMax(heroMaxHp(up.level))
+            announceLevel(up)
             shown = { ...shown, hero: { hp: enc.hero.hp, maxHp: enc.hero.maxHp } }
             show(shown)
           }
@@ -325,10 +335,10 @@ export function useFight(options: FightOptions) {
     s.sfx.play('crit')
     announce(pickOne(texts.encouragements))
     const gained = enigmaXp(def, outcome.item.difficulty)
-    const level = latest.current.grantXp(gained)
-    if (level) {
-      encounter.current?.hero.raiseMax(heroMaxHp(level))
-      window.setTimeout(() => announce(`Niveau ${level} !`), 1300)
+    const up = latest.current.grantXp(gained)
+    if (up) {
+      encounter.current?.hero.raiseMax(heroMaxHp(up.level))
+      window.setTimeout(() => announceLevel(up), 1300)
     }
     if (interior.pedestalsLeft(ped.room) > 0) return
     // Le troisième cristal est éveillé : la porte s'ouvre, et un objet attendait sur le dernier piédestal.
@@ -464,7 +474,7 @@ export function useFight(options: FightOptions) {
     const done = completePlace(before, lieu.dungeon)
     persist(done.save)
     w.placeCompleted(done.save.places)
-    const message = chestMessage(lieu.dungeon, { first: done.first, answered: s.questions.answered, correct: s.questions.correctCount, found: done.found, relic: done.relic })
+    const message = chestMessage(lieu.dungeon, { first: done.first, answered: s.questions.answered, correct: s.questions.correctCount, found: done.found, relic: done.relic, unlocked: unlockNews(before, done.save, latest.current.worldName === 'brouillard' ? 'brouillard' : 'lumineux') })
     const level = levelForXp(done.save.xp)
     const text = level > levelForXp(before.xp) ? `${message.text}\nNiveau ${level} !` : message.text
     const code = lieu.dungeon.code
