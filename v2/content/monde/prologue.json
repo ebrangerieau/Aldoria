@@ -42,10 +42,10 @@
       "plan": {
         "x": -112,
         "z": -112,
-        "haut": 4,
+        "haut": 2,
         "alpha": 0.2,
-        "beta": 1.34,
-        "rayon": 85
+        "beta": 1.0,
+        "rayon": 120
       },
       "qui": "Le narrateur"
     },
@@ -58,9 +58,9 @@
       "plan": {
         "x": -6,
         "z": -12,
-        "haut": 1.5,
+        "haut": 0.3,
         "alpha": -1.5707963,
-        "beta": 1.36,
+        "beta": 1.32,
         "rayon": 6.5
       },
       "qui": "La gardienne de la Chronique"
