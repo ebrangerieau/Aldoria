@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { bagEntries, COMBAT_ITEMS, featherHides, hasCombatItems, helpCounted, questionAids, questionItemsText, spendInCombat } from '../src/core/bag'
+import { BAG_SOURCES, bagEntries, bagOverview, COMBAT_ITEMS, featherHides, hasCombatItems, helpCounted, isBagEmpty, questionAids, questionItemsText, spendInCombat } from '../src/core/bag'
 import { Combatant, Encounter } from '../src/core/combat/encounter'
 import type { Item } from '../src/core/items'
 import { PACK_6E } from './support'
@@ -119,5 +119,25 @@ describe('aide reçue', () => {
     expect(helpCounted(false, ['parchemin'])).toEqual({ tracking: true, power: false })
     expect(helpCounted(false, ['plume', 'parchemin'])).toEqual({ tracking: true, power: false })
     expect(helpCounted(true, ['plume'])).toEqual({ tracking: true, power: true })
+  })
+})
+
+describe('sac consultable sur l’île', () => {
+  it('liste les quatre objets dans l’ordre de la v1, même ceux qu’on n’a pas, avec où ils servent', () => {
+    const lines = bagOverview({ plume: 2, bouclier: 1 })
+    expect(lines.map((l) => l.id)).toEqual(['plume', 'parchemin', 'bouclier', 'potion'])
+    expect(lines.map((l) => l.count)).toEqual([2, 0, 1, 0])
+    expect(lines.find((l) => l.id === 'plume')?.where).toContain('question')
+    expect(lines.find((l) => l.id === 'potion')?.where).toContain('combat')
+    for (const line of lines) expect(line.help.length).toBeGreaterThan(5)
+  })
+
+  it('un sac vide est reconnu (et dit où trouver des objets) ; un sac abîmé se lit sans planter', () => {
+    expect(isBagEmpty({})).toBe(true)
+    expect(isBagEmpty({ plume: 0, potion: 0 })).toBe(true)
+    expect(isBagEmpty({ potion: 1 })).toBe(false)
+    expect(bagOverview({ plume: -3, parchemin: Number.NaN }).map((l) => l.count)).toEqual([0, 0, 0, 0])
+    expect(BAG_SOURCES).toContain('coffres')
+    expect(BAG_SOURCES).toContain('5')
   })
 })

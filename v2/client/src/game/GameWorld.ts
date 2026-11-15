@@ -848,6 +848,7 @@ export class GameWorld {
       const done = questDone(this.options.save, npc.code, localDay())
       marker.setEnabled(!done)
       this.interactables.push({ id: `habitant-${npc.code}`, kind: 'habitant', label: npc.name, x, z, radius: 2.6, open: !done, npc })
+      this.events.emit('markers', this.mapMarkers()) // le repère du village s'allume dès qu'un habitant attend
     }
     // Le « ! » monte et descend doucement (immobile en mode calme).
     if (!this.options.calm) {
@@ -867,6 +868,7 @@ export class GameWorld {
       const target = this.interactables.find((it) => it.id === `habitant-${npc.code}`)
       if (target) target.open = waiting
     }
+    this.events.emit('markers', this.mapMarkers()) // le repère du village suit les quêtes qui attendent
   }
 
   /** Le héros parle à un habitant : ils se tournent l'un vers l'autre, l'habitant fait un geste (la quête faite : il se réjouit). */

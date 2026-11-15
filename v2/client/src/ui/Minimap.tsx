@@ -44,6 +44,7 @@ const STATE_TEXT: Record<MapMarker['state'], string> = {
   eveillee: 'éveillée',
   a_faire: 'à relever',
   faite: 'relevé aujourd’hui',
+  quetes: 'des quêtes t’attendent',
 }
 
 export function Minimap({ world, place }: { world: GameWorld; place: string }) {
@@ -118,7 +119,12 @@ function MarkerShape({ marker }: { marker: MapMarker }) {
     case 'citadelle':
       return <path d="M-6 6 V-3 H-4 V-6 H-1.5 V-3 H1.5 V-6 H4 V-3 H6 V6 Z" />
     case 'village':
-      return <path d="M-5 5 V-1 L0 -5.5 L5 -1 V5 Z" />
+      return (
+        <>
+          <path d="M-5 5 V-1 L0 -5.5 L5 -1 V5 Z" />
+          {marker.state === 'quetes' && <circle className="mark-badge" cx={6} cy={-5} r={3.4} />}
+        </>
+      )
     case 'sphinx':
       return <path d="M-6.5 4.5 L0 -6 L6.5 4.5 Z" />
     case 'lieu':

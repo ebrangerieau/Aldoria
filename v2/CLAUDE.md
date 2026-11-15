@@ -126,7 +126,7 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   plume cache deux mauvaises propositions d'un QCM d'au moins trois choix (**une seule sur trois choix**, la v1 en retirait deux et laissait la
   bonne réponse seule), le parchemin montre l'indice. Une aide d'objet compte comme indice pour le suivi mais **sans baisse de puissance**
   (`helpCounted` : seul « Un indice ? » baisse la puissance du coup). Tests dans le navigateur (`&e2e`) : `__aldoria.give(id, n)` met des objets
-  au sac. Reste à faire : le sac n'est pas consultable hors combat (les objets gagnés s'annoncent, mais aucun écran ne les liste) ; une quête de village rapporte un objet, l'arène n'existe pas encore dans la v2.
+  au sac. **Sur l'île**, le bouton « Sac » de la barre (hors intérieur, `ui/BagView.tsx`, `bagOverview` / `isBagEmpty` de `core/bag.ts`) liste les quatre objets avec ce qu'il en reste, ce qu'ils font et où ils servent, en lecture seule (rien ne s'y dépense) ; un sac vide dit où en trouver (`BAG_SOURCES`). Captures `sac-vide`, `sac-garni`. Reste à faire : l'arène n'existe pas encore dans la v2 (une quête de village rapporte un objet).
 - **Reliques et Table des Reliques** (décision D13 ; `core/relics.ts`, `content/monde/reliques.json`, tests `reliques.test.ts`) : seize **sceaux**, un par couple
   d'un élément (flamme, onde, feuille, étoile : chacun a une couleur **et une forme**, jamais la couleur seule) et d'un rang (I à IV) ; deux reliques
   « se répondent » quand elles partagent un élément ou un rang. Huit se ramassent dans l'île (une par région, positions de `reliques.json`, vérifiées sur
@@ -175,7 +175,7 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   gagné et ce qu'il débloque dans l'apparence annoncés ; **la deuxième quête du jour (six réponses) rapporte un passage pour la barque du Sphinx**, jamais un second le même jour. Une quête faite ne
   se refait pas (l'habitant le dit : « Reviens demain »). Crochet de test : `world.interactables` (`habitant-<code>`), `world.villagers`, `save().quests`. Vérifier : captures `village`,
   `village-brumegarde`, `village-dialogue`, `village-enquete`, `village-enquete-croisee` ; parcours navigateur (les trois quêtes de Clairval : XP, objet, « ! » éteint, quête refusée le même jour,
-  passage ; puis Brumegarde : les deux enquêtes avec leur tableau). Reste : les habitants ne figurent pas sur la mini-carte (seul le village y est) et n'ont pas de voix enregistrée.
+  passage ; puis Brumegarde : les deux enquêtes avec leur tableau). **Mini-carte** : les habitants n'y figurent pas (trois points au même endroit ne se liraient pas) mais le repère du village s'allume (pastille dorée, état `quetes`, `mapMarkers`) tant qu'une quête du jour attend, et s'éteint quand toutes sont faites. Reste : les habitants n'ont pas de voix enregistrée.
 - **La Lice et le Pont des fractions** (portés de la v1 : `scenes/pont`, `core/world/chasm_bridge.gd` ; Jules, 6e seulement : `generatorFor('pont', classe)` ; tests `pont.test.ts`, `lice.test.ts`).
   Des exercices calculés sur le plateau de la Citadelle, **sans chrono**, par **séries de six** (`core/lice.ts` : `ROUNDS`, `finishRound`, `roundGain` = 15 + 10 × difficulté, moitié moins après un premier
   essai raté ; seul **le premier essai** de chaque cible est enregistré comme réponse, les suivants servent à corriger). **Le pont** (`ile.json` : `pont`, `GameWorld.buildBridge` : deux piles, une passerelle, des

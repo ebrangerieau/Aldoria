@@ -1254,6 +1254,8 @@ try {
     // Barnabé (révision) : trois bonnes réponses, 50 XP de forfait et 30 de bonus ; la partie garde la quête du jour, le « ! » s'éteint.
     const before = await save()
     if (!(await villager('barnabe')).marker) throw new Error('le « ! » de Barnabé devrait briller avant sa quête')
+    const villageMark = () => page.locator('[data-testid="carte"] g[data-id="village"]').getAttribute('class')
+    if (!(await villageMark())?.includes('mark-quetes')) throw new Error(`le village de la mini-carte devrait s'allumer tant que des quêtes attendent : ${await villageMark()}`)
     const first = await quest('barnabe', [true, true, true], ['3 bonnes réponses sur 3. +80 XP'])
     await page.screenshot({ path: `${OUT}/07b-quete-faite.png` })
     if (first.includes('passage pour la barque')) throw new Error('une seule quête ne rapporte pas de passage')
@@ -1291,6 +1293,7 @@ try {
       const v = await villager(code)
       if (v.open || v.marker) throw new Error(`le « ! » de ${code} doit être éteint`)
     }
+    if ((await villageMark())?.includes('mark-quetes')) throw new Error(`les trois quêtes faites, le village de la mini-carte s'éteint : ${await villageMark()}`)
   })
 
   await step('le pont des fractions : un pont trop court s’effondre et s’explique, la bonne somme fait traverser, six ravins, le bilan et un passage pour le Sphinx', async () => {
@@ -1369,6 +1372,27 @@ try {
     const report = await playTirSeries({ droite: false, shots: '09f' })
     if (!report.includes('Un passage pour la barque du Sphinx')) throw new Error(`six cibles : un passage pour le Sphinx : ${report}`)
     if ((await page.evaluate(() => window.__aldoria.save().sphinx.passes)) !== 1) throw new Error('le passage du tir est rangé dans la partie')
+  })
+
+  await step('le sac sur l’île : les objets gagnés se consultent, rien ne se dépense, Échap ferme', async () => {
+    await page.evaluate(() => {
+      window.__aldoria.give('plume', 2)
+      window.__aldoria.give('potion', 1)
+    })
+    const owned = await page.evaluate(() => ({ ...window.__aldoria.save().items }))
+    if ((owned.plume ?? 0) < 2 || (owned.potion ?? 0) < 1) throw new Error(`le sac de la partie : ${JSON.stringify(owned)}`)
+    await page.getByTestId('bouton-sac').click()
+    await page.getByTestId('sac-ile').waitFor({ timeout: 10_000 * SLOW })
+    for (const id of ['plume', 'parchemin', 'bouclier', 'potion']) {
+      const shown = Number(await page.getByTestId(`sac-ile-${id}`).getAttribute('data-count'))
+      if (shown !== (owned[id] ?? 0)) throw new Error(`${id} : ${shown} affiché pour ${owned[id] ?? 0} dans la partie`)
+    }
+    if ((await page.getByTestId('sac-ile-vide').count()) !== 0) throw new Error('un sac qui contient des objets ne se dit pas vide')
+    await page.screenshot({ path: `${OUT}/09g-sac.png` })
+    await page.keyboard.press('Escape')
+    await page.getByTestId('sac-ile').waitFor({ state: 'detached', timeout: 5000 * SLOW })
+    const after = await page.evaluate(() => ({ ...window.__aldoria.save().items }))
+    if (JSON.stringify(after) !== JSON.stringify(owned)) throw new Error(`consulter le sac ne dépense rien : ${JSON.stringify(owned)} puis ${JSON.stringify(after)}`)
   })
 
   await step('l’apparence : un choix verrouillé l’explique sans rien changer, un déblocage se signale puis se choisit, le héros change à l’écran et la partie le garde', async () => {

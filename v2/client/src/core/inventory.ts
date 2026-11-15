@@ -20,7 +20,10 @@ export const ITEMS: Record<ItemId, { name: string; short: string; help: string }
   potion: { name: "Potion d'urgence", short: 'Potion', help: 'Rend toute ta vie, sans question.' },
 }
 
-export const count = (owned: Owned, id: ItemId): number => Math.max(0, Math.floor(owned[id] ?? 0))
+export const count = (owned: Owned, id: ItemId): number => {
+  const n = Math.floor(owned[id] ?? 0)
+  return Number.isFinite(n) ? Math.max(0, n) : 0 // un sac abîmé (NaN, infini) se lit comme vide, jamais comme « NaN »
+}
 
 /** `n` objets tirés au hasard, plutôt ceux que l'on a peu ; jamais au-delà de MAX_PER_ITEM. */
 export function draw(owned: Owned, n: number, random: () => number = Math.random): ItemId[] {
