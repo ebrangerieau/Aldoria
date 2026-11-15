@@ -78,7 +78,7 @@ export function QuestionPanel({ services, item: first, title, gameMode, accommod
     shownAt.current = performance.now()
     if (accommodations.auto_read || item.listen) listen()
     return () => {
-      if (spoke.current !== null) services.voice.stopIf(spoke.current)
+      if (spoke.current !== null) services.voice.stopIf(spoke.current, 'panneau de question')
     }
   }, [item])
 

@@ -79,6 +79,20 @@ describe('Voice : arrêter sa propre lecture, jamais celle d’un autre', () => 
     expect(v.isSpeaking).toBe(false)
   })
 
+  it('le journal dit qui a parlé, qui a coupé et si le son a été demandé (lu par les tests dans le navigateur)', async () => {
+    const v = voice()
+    const reading = v.say(['a'])
+    v.stop('panneau de question')
+    await reading
+    expect(v.trace.join(' ; ')).toMatch(/say g\d+ « a »/)
+    expect(v.trace.some((line) => line.startsWith('panneau de question ->'))).toBe(true)
+    expect(v.trace.some((line) => line.includes('son a.mp3 (annulé'))).toBe(true) // le son n'a pas été demandé : la lecture était annulée
+    asked.length = 0
+    await v.say(['b'])
+    expect(v.trace.some((line) => line.endsWith('fini'))).toBe(true)
+    expect(v.trace.length).toBeLessThanOrEqual(40)
+  })
+
   it('le jeton change à chaque lecture et à chaque arrêt', () => {
     const v = voice()
     const start = v.token

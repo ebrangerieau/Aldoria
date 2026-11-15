@@ -138,7 +138,7 @@ export function useFight(options: FightOptions) {
         const { services: s, accommodations: acc } = latest.current
         const say = () => void s.voice.say([voice ?? text])
         const done = () => {
-          s.voice.stop()
+          s.voice.stop('dialogue fermé')
           setDialog(null)
           resolve()
         }

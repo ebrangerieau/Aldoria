@@ -374,7 +374,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
           label: 'Merci !',
           primary: true,
           run: () => {
-            services.voice.stop()
+            services.voice.stop('dialogue de l’île fermé')
             close()
           },
         },

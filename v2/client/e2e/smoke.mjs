@@ -27,6 +27,8 @@ mkdirSync(OUT, { recursive: true })
 const problems = []
 // E2E_RETARD_MUSIQUE=<ms> : chaque fichier de /musique/ arrive avec ce retard (réseau lent, CI chargée).
 const MUSIC_DELAY = Number(process.env.E2E_RETARD_MUSIQUE ?? 0)
+// E2E_RETARD_VOIX=<ms> : chaque fichier de /voix/ arrive avec ce retard (le réseau du VPS, que l'aperçu local n'a pas).
+const VOICE_DELAY = Number(process.env.E2E_RETARD_VOIX ?? 0)
 const browser = await chromium.launch({
   executablePath: process.env.CHROMIUM_PATH || undefined,
   args: ['--enable-unsafe-swiftshader', '--use-angle=swiftshader', '--ignore-gpu-blocklist'],
@@ -44,6 +46,12 @@ const TEST_ERROR = "Erreur d'essai (erreur_test=1)"
 page.on('pageerror', (e) => { if (!e.message.includes(TEST_ERROR)) problems.push(`erreur de la page : ${e.message}`) })
 page.on('console', (m) => { if (m.type() === 'error' && !m.text().includes(TEST_ERROR)) problems.push(`console : ${m.text()}`) })
 page.on('response', (r) => { if (r.status() >= 400) problems.push(`${r.status()} ${r.url()}`) })
+if (VOICE_DELAY > 0) {
+  await page.route('**/voix/*.mp3', async (route) => {
+    await new Promise((resolve) => setTimeout(resolve, VOICE_DELAY))
+    await route.continue()
+  })
+}
 if (MUSIC_DELAY > 0) {
   await page.route('**/musique/**', async (route) => {
     await new Promise((resolve) => setTimeout(resolve, MUSIC_DELAY))
@@ -512,7 +520,9 @@ try {
     const soundOk = async (pending, what) => {
       const res = await pending.catch(async (error) => {
         const dialog = await page.getByRole('dialog').first().innerText({ timeout: 2000 }).catch(() => '(aucun dialogue ouvert)')
-        throw new Error(`${what} : ${error.message.split('\n')[0]} ; demandes de son vues : ${voixVues.slice(-6).join(' | ') || 'aucune'} ; dialogue : ${dialog.replace(/\s+/g, ' ').slice(0, 140)}`)
+        // Le journal de la voix du jeu (core/voice.ts) : qui a parlé, qui a coupé, le son a-t-il été demandé, a-t-il joué.
+        const trace = await page.evaluate(() => window.__aldoria?.services?.voice?.trace?.slice(-14).join(' ; ') ?? '(pas de journal)').catch(() => '(page injoignable)')
+        throw new Error(`${what} : ${error.message.split('\n')[0]} ; demandes de son vues : ${voixVues.slice(-6).join(' | ') || 'aucune'} ; dialogue : ${dialog.replace(/\s+/g, ' ').slice(0, 140)} ; journal de la voix : ${trace}`)
       })
       // 200 sur l'aperçu local, 206 en production (nginx sert le son par morceaux).
       if (![200, 206].includes(res.status()) || !(res.headers()['content-type'] ?? '').startsWith('audio/mpeg')) throw new Error(`${what} : ${res.status()} ${res.headers()['content-type']} ${res.url()}`)
