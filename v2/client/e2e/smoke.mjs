@@ -829,6 +829,13 @@ try {
       if (finished > 0) lit += 1
     }
     if (lit === 0) throw new Error('un lieu terminé doit éclairer sa région')
+    // La mini-carte voile les régions qui manquent de lumière, et pas les éclairées.
+    for (const [code, region] of Object.entries(state.lights)) {
+      const missing = 1 - region.light
+      const veil = await page.locator(`[data-testid="carte"] circle.mark-fog[data-region="${code}"]`).count()
+      const expected = 0.62 * missing * missing >= 0.01 ? 1 : 0
+      if (veil !== expected) throw new Error(`mini-carte, région ${code} : ${veil} voile(s) pour une lumière de ${region.light}`)
+    }
     // En 6e, la Vallée du Vivant n'a pas de lieu : le héros y entre, l'air s'épaissit et la bannière dit le brouillard.
     if (state.lights.svt?.state !== 'brume') throw new Error(`la Vallée du Vivant devrait être sous le brouillard : ${JSON.stringify(state.lights.svt)}`)
     const fogBase = await page.evaluate(() => window.__aldoria.world.fogBase())

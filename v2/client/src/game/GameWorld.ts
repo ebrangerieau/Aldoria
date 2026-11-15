@@ -77,6 +77,8 @@ export type WorldEvents = {
   hero: HeroPose
   /** L'état d'un repère de la carte a changé (pierre éveillée…). */
   markers: MapMarker[]
+  /** La lumière des régions a changé (une page rapportée) : code de matière → 0 à 1. */
+  lights: Record<string, number>
   /** On entre dans un lieu de quête (son intérieur est à l'écran), ou on en sort (null). */
   interior: { place: Place } | null
   /** Salle du héros dans l'intérieur d'un lieu (« Étage 2 / 6 »). */
@@ -102,6 +104,9 @@ export interface MapInfo {
   extent: number
   palette: ReliefPalette
   markers: MapMarker[]
+  /** Les régions (code de matière et centre) et leur lumière actuelle, pour le voile de brouillard de la carte. */
+  regions: { code: string; x: number; z: number }[]
+  lights: Record<string, number>
 }
 
 export interface WorldOptions {
@@ -1029,6 +1034,7 @@ export class GameWorld {
   private relight(): void {
     this.lights = regionLights(this.places, this.placesDone)
     this.ground?.setLights(this.lightLevels())
+    this.events.emit('lights', this.lightLevels())
     this.fogTarget = this.fogFor(this.region)
     if (this.options.calm) this.scene.fogDensity = this.fogTarget
   }
@@ -1127,6 +1133,8 @@ export class GameWorld {
       extent: layout.taille,
       palette: { water: theme.waterColor, regions: Object.values(layout.regions), desaturate: theme.desaturate },
       markers: this.mapMarkers(),
+      regions: Object.entries(layout.regions).map(([code, r]) => ({ code, x: r.x, z: r.z })),
+      lights: this.lightLevels(),
     }
   }
 

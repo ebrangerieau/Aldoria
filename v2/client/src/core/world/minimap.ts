@@ -6,7 +6,7 @@
  */
 import villages from '@content/monde/villages.json'
 import { regionTitle } from './places'
-import { type IslandLayout, type Point, SEA_LEVEL, smoothstep } from './terrain'
+import { type IslandLayout, type Point, REGION_RADIUS, SEA_LEVEL, smoothstep } from './terrain'
 
 const VILLAGES = (villages as unknown as { villages: { title: string; level: string }[] }).villages
 
@@ -132,6 +132,36 @@ export function mapMarkers(layout: IslandLayout, level: string, sources: MarkerS
     } else if (s.kind === 'table') {
       out.push({ id: s.id, kind: 'table', state: 'repere', label: s.label, x: s.x, z: s.z })
     }
+  }
+  return out
+}
+
+// --- Lumière des régions ------------------------------------------------------------------
+
+/** Voile de brouillard d'une région sur la carte : centre et rayon sur l'image, opacité (0 : région éclairée, rien à dessiner). */
+export interface FogDisc {
+  code: string
+  u: number
+  v: number
+  r: number
+  opacity: number
+}
+
+/** Opacité maximale du voile d'une région sans aucune lumière (la carte reste lisible dessous). */
+export const FOG_OPACITY = 0.62
+
+/**
+ * Les régions qui ne sont pas encore éclairées se voilent de gris sur la carte, comme le sol dans le monde (core/world/regionLight.ts) : l'opacité suit le carré du
+ * manque de lumière, une région éclairée n'a plus de voile. `lights` : code de matière → 0 à 1 ; une région absente est éclairée.
+ */
+export function fogDiscs(regions: readonly { code: string; x: number; z: number }[], lights: Record<string, number>, frame: MapFrame): FogDisc[] {
+  const out: FogDisc[] = []
+  for (const region of regions) {
+    const missing = 1 - Math.min(1, Math.max(0, lights[region.code] ?? 1))
+    const opacity = FOG_OPACITY * missing * missing
+    if (opacity < 0.01) continue
+    const { u, v } = toMap(frame, region.x, region.z)
+    out.push({ code: region.code, u, v, r: REGION_RADIUS * frame.scale, opacity })
   }
   return out
 }
