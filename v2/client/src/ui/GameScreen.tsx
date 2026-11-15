@@ -81,6 +81,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
   const [modal, setModal] = useState<Modal>(null)
   // Dans l'intérieur d'un lieu (l'île est en pause) : son nom et l'étage du héros.
   const [inside, setInside] = useState<{ title: string } | null>(null)
+  const [inTemple, setInTemple] = useState(false)
   const [floor, setFloor] = useState('')
   const [stats, setStats] = useState<WorldEvents['stats'] | null>(null)
   const [online, setOnline] = useState(services.api.online)
@@ -170,6 +171,11 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
         setWorld(world)
         world.events.on('region', setRegion)
         world.events.on('interior', (entered) => setInside(entered ? { title: entered.place.dungeon.title } : null))
+        // Le temple du Sphinx : l'île est en pause, la barre du haut se réduit comme dans un lieu.
+        world.events.on('temple', (entered) => {
+          setInTemple(entered)
+          setInside(entered ? { title: 'Le temple du Sphinx' } : null)
+        })
         world.events.on('floor', (current) => setFloor(current.label))
         world.events.on('focus', setFocus)
         world.events.on('stats', setStats)
@@ -524,7 +530,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
 
   return (
     <div className="game">
-      <canvas ref={canvasRef} className="world-canvas" tabIndex={-1} aria-label="L'île d'Aldoria" data-testid="monde" />
+      <canvas ref={canvasRef} className="world-canvas" tabIndex={-1} aria-label={inTemple ? 'Le temple du Sphinx' : "L'île d'Aldoria"} data-testid="monde" />
 
       <div className="hud-top">
         <div className="badge-column">
@@ -735,7 +741,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
       )}
       {modal?.kind === 'pont' && <PontBridge services={services} accommodations={accommodations} demo={demo} data={data} onSave={persist} onClose={close} />}
       {modal?.kind === 'tir' && <TirRange services={services} accommodations={accommodations} demo={demo} data={data} onSave={persist} onClose={close} />}
-      {modal?.kind === 'sphinx' && <SphinxVisit services={services} data={data} demo={demo} onSave={persist} onClose={close} />}
+      {modal?.kind === 'sphinx' && <SphinxVisit services={services} world={world} data={data} demo={demo} onSave={persist} onClose={close} />}
       {modal?.kind === 'wardrobe' && <Wardrobe data={data} world={(profile.world as WorldName) ?? 'lumineux'} onPick={chooseLook} onClose={() => { close(); canvasRef.current?.focus() }} />}
       {modal?.kind === 'options' && (
         <Options

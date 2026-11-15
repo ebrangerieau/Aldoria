@@ -987,6 +987,24 @@ try {
       return page.getByTestId('sphinx-carte').innerText()
     }
 
+    // La salle 3D montre toujours ce que dit le plan : le héros et chaque bloc sont sur la case du plan (annuler, recommencer et l'aide sautent plusieurs pas d'un coup).
+    const inSync = async (label) => {
+      await page.waitForFunction(() => window.__aldoria.world.temple?.snapshot().settled, null, { timeout: 5000 * SLOW })
+      const snap = await page.evaluate(() => window.__aldoria.world.temple?.snapshot() ?? null)
+      if (!snap) throw new Error(`${label} : la salle 3D du temple n’est pas ouverte`)
+      const hero = await heroAt()
+      if (snap.seen.player.x !== hero[0] || snap.seen.player.y !== hero[1]) throw new Error(`${label} : le héros 3D est en ${JSON.stringify(snap.seen.player)}, le plan le met en ${hero}`)
+      const plan = await page.locator('[data-testid^="bloc-"]').evaluateAll((els) => els.map((g) => [Number(g.dataset.x), Number(g.dataset.y), g.dataset.state]))
+      if (plan.length !== snap.seen.boxes.length) throw new Error(`${label} : ${snap.seen.boxes.length} blocs en 3D, ${plan.length} sur le plan`)
+      plan.forEach(([x, y, state], i) => {
+        const seen = snap.seen.boxes[i]
+        if (seen.x !== x || seen.y !== y) throw new Error(`${label} : le bloc ${i} est en ${JSON.stringify(seen)} en 3D, en ${[x, y]} sur le plan`)
+        if (snap.states[i] !== state) throw new Error(`${label} : le bloc ${i} est « ${snap.states[i]} » en 3D, « ${state} » sur le plan`)
+      })
+    }
+    if (!(await page.evaluate(() => window.__aldoria.world.temple !== null))) throw new Error('la salle 3D du temple devrait être ouverte pendant l’énigme')
+    await inSync('au départ')
+
     // Énigme 1 : un mur ne bouge pas, annuler et recommencer, l'aide du Sphinx, puis la fin.
     let p1 = await puzzle()
     if (p1.round !== 0) throw new Error(`la première énigme : rang ${p1.round}`)
@@ -996,11 +1014,14 @@ try {
     const first = p1.solution[0].toLowerCase()
     await play(first)
     if ((await heroAt()).join() === start.join()) throw new Error('le premier pas de la solution devrait faire avancer le héros')
+    await inSync('après un pas')
     await page.keyboard.press('Backspace')
     if ((await heroAt()).join() !== start.join()) throw new Error('annuler devrait ramener le héros au départ')
+    await inSync('après annuler')
     await play(first)
     await page.getByTestId('sphinx-recommencer').click()
     if ((await heroAt()).join() !== start.join()) throw new Error('recommencer devrait remettre la salle comme au départ')
+    await inSync('après recommencer')
     // Un pas dans le mur le plus proche : « Ça ne bouge pas ».
     for (const wall of ['ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight']) {
       await page.keyboard.press(wall)
@@ -1011,6 +1032,7 @@ try {
     await page.getByTestId('sphinx-aide').click() // le Sphinx rejoue le début de sa solution
     await page.waitForFunction(() => /À toi de continuer|Énigme résolue/.test(document.querySelector('[data-testid="sphinx-message"]')?.textContent ?? ''), null, { timeout: 30_000 * SLOW })
     await page.screenshot({ path: `${OUT}/05c-aide-du-sphinx.png` })
+    if (!(await page.getByTestId('sphinx-carte').count())) await inSync('après l’aide du Sphinx')
     // La suite de la solution depuis l'état où l'aide a laissé le plateau : on recommence et on rejoue tout (même résultat, l'aide a déjà compté).
     if (!(await page.getByTestId('sphinx-carte').count())) {
       await page.getByTestId('sphinx-recommencer').click()
@@ -1040,11 +1062,37 @@ try {
       } catch { /* dalle hors d'atteinte sans pousser : on essaie la suivante */ }
     }
     if (!walked) throw new Error('cliquer sur une dalle libre devrait y mener le héros')
+    await inSync('après une dalle du plan cliquée')
+    // Cliquer sur la dalle dans la salle 3D y mène aussi le héros (le clic sur le canevas passe à travers le calque de l'énigme).
+    await page.getByTestId('sphinx-recommencer').click()
+    const canvas = await page.getByTestId('monde').boundingBox()
+    const home = await heroAt()
+    let walked3d = false
+    for (const [x, y] of spots.slice(0, 12)) {
+      if (x === home[0] && y === home[1]) continue
+      const at = await page.evaluate(([cx, cy]) => window.__aldoria.world.temple.projectCell({ x: cx, y: cy }), [x, y])
+      await page.mouse.click(canvas.x + at.x, canvas.y + at.y)
+      try {
+        await page.waitForFunction(([tx, ty]) => {
+          const g = document.querySelector('[data-testid="sphinx-heros"]')
+          return g && Number(g.dataset.x) === tx && Number(g.dataset.y) === ty
+        }, [x, y], { timeout: 4000 * SLOW })
+        walked3d = true
+        break
+      } catch { /* dalle hors d'atteinte sans pousser : on essaie la suivante */ }
+    }
+    if (!walked3d) throw new Error('cliquer sur une dalle de la salle 3D devrait y mener le héros')
+    await inSync('après une dalle de la salle 3D cliquée')
+    await page.screenshot({ path: `${OUT}/05d0-temple-3d.png` })
     await page.getByTestId('sphinx-recommencer').click()
     await play(p2.solution)
     card = await solvedCard()
     if (!card.includes('Le moins de poussées possible')) throw new Error(`l’énigme résolue seul : ${card}`)
     await page.screenshot({ path: `${OUT}/05d-enigme-resolue.png` })
+    // Résolue : la carte du Sphinx a pris la place du plan, la salle 3D garde les blocs sur leurs dalles gravées.
+    await page.waitForFunction(() => window.__aldoria.world.temple?.snapshot().settled, null, { timeout: 5000 * SLOW })
+    const done = await page.evaluate(() => window.__aldoria.world.temple.snapshot())
+    if (!done.shown?.solved || done.states.length === 0 || !done.states.every((st) => st === 'pose')) throw new Error(`énigme résolue : la salle 3D montre ${JSON.stringify(done.states)}`)
     await page.getByRole('button', { name: 'Énigme suivante' }).click()
 
     // Énigme 3, la dernière : « Terminer », le bilan, le retour sur l'île.
@@ -1059,6 +1107,7 @@ try {
     if (s.sphinx.solved !== 3) throw new Error(`trois énigmes résolues : ${s.sphinx.solved}`)
     await page.getByRole('button', { name: 'Retour à l’île' }).click()
     await page.getByTestId('sphinx-carte').waitFor({ state: 'detached', timeout: 5000 * SLOW })
+    if (await page.evaluate(() => window.__aldoria.world.temple !== null)) throw new Error('de retour sur l’île, la salle du temple devrait être fermée')
 
     // Une seconde visite (le dernier passage) : le Sphinx ne se présente plus ; Échap quitte l'île, le passage est dépensé.
     await openBoat()
@@ -1069,6 +1118,7 @@ try {
     await page.getByTestId('sphinx-enigme').waitFor({ timeout: 10_000 * SLOW })
     await page.keyboard.press('Escape')
     await page.getByTestId('sphinx-enigme').waitFor({ state: 'detached', timeout: 10_000 * SLOW })
+    if (await page.evaluate(() => window.__aldoria.world.temple !== null)) throw new Error('Échap devrait refermer la salle du temple')
     s = await save()
     if (s.sphinx.passes !== 0) throw new Error(`le passage de la seconde visite : ${s.sphinx.passes}`)
   })

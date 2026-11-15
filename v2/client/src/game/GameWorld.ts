@@ -42,6 +42,7 @@ import { type IslandLayout, SEA_LEVEL, Terrain } from '../core/world/terrain'
 import { type Atmosphere, createAtmosphere } from './atmosphere'
 import { type Character, dress, loadFox, loadHero, loadMonster, loadNpc, settleOnGround, skinnedHeights, tintFox } from './characters'
 import { type Enemy, type FloatTone, InteriorWorld, type Pedestal } from './interior'
+import { TempleWorld } from './temple'
 import { today as localDay } from '../core/dailyChallenge'
 import { beacon, buildDecor, setBeacon } from './decor'
 import { sparkle } from './effects'
@@ -82,6 +83,8 @@ export type WorldEvents = {
   lights: Record<string, number>
   /** On entre dans un lieu de quête (son intérieur est à l'écran), ou on en sort (null). */
   interior: { place: Place } | null
+  /** On entre dans le temple du Sphinx (sa scène est à l'écran), ou on en sort (faux). */
+  temple: boolean
   /** Salle du héros dans l'intérieur d'un lieu (« Étage 2 / 6 »). */
   floor: { index: number; label: string }
   /** Le héros a approché un ennemi : l'interface mène le combat (ui/useFight.tsx). */
@@ -190,6 +193,8 @@ export class GameWorld {
   private lastFrame = 0
   /** Intérieur d'un lieu à l'écran : l'île est en pause. */
   interior: InteriorWorld | null = null
+  /** Temple du Sphinx à l'écran (énigmes de blocs) : l'île est en pause, comme dans un lieu. */
+  temple: TempleWorld | null = null
 
   private constructor(
     private readonly canvas: HTMLCanvasElement,
@@ -387,7 +392,7 @@ export class GameWorld {
    * temps la souris ne la tient plus (l'interface a la main : `setInputEnabled(false)`) et sa distance maximale est levée, les cadrages étant bien plus larges que le jeu.
    */
   setCinematic(shot: Shot | null): void {
-    if (this.interior) return
+    if (this.interior || this.temple) return
     const camera = this.camera
     if (shot) {
       if (!this.cinematic) {
@@ -423,7 +428,7 @@ export class GameWorld {
    * (à droite), puis revient derrière lui comme avant. Le héros ne bouge pas pendant ce temps (l'interface a la main) ; la souris peut tourner autour.
    */
   setShowcase(on: boolean): void {
-    if (this.interior) return
+    if (this.interior || this.temple) return
     const camera = this.camera
     const behind = Math.atan2(-Math.cos(this.hero.yaw), -Math.sin(this.hero.yaw))
     if (on) {
@@ -473,6 +478,7 @@ export class GameWorld {
       this.interior.setInputEnabled(enabled)
       return
     }
+    if (this.temple) return // l'énigme a la main : les touches de l'île (E, flèches) ne doivent rien faire tant que le temple est à l'écran
     this.inputEnabled = enabled
     if (!enabled) {
       this.keys.clear()
@@ -1040,7 +1046,7 @@ export class GameWorld {
       tintFox(this.fox, fur(wanted.pet_fur))
       this.shownFur = wanted.pet_fur
     }
-    if (this.interior) return // `leavePlace` remet l'île à jour
+    if (this.interior || this.temple) return // `leavePlace` et `leaveTemple` remettent l'île à jour
     if (wanted.model === this.shownModel) {
       dress(this.hero, wanted.model, wanted)
       return
@@ -1249,7 +1255,7 @@ export class GameWorld {
    */
   async enterPlace(code: string, onProgress?: (label: string, ratio: number) => void): Promise<boolean> {
     const place = this.places.find((p) => p.dungeon.code === code)
-    if (!place || this.interior) return false
+    if (!place || this.interior || this.temple) return false
     this.setInputEnabled(false)
     const interior = await InteriorWorld.create(this.engine, this.canvas, {
       place,
@@ -1294,8 +1300,57 @@ export class GameWorld {
     void this.setLook(this.look) // une apparence choisie pendant le lieu (jamais par l'écran, mais sans risque) est mise à l'écran
   }
 
+  // --- Temple du Sphinx -----------------------------------------------------------------------
+
+  /**
+   * Entre dans le temple du Sphinx : sa salle (scène à part, même moteur) remplace l'île à l'écran, qui est mise en pause. `rows` : la salle d'accueil
+   * si omis. Rend la scène, ou null si elle n'a pas pu s'ouvrir (l'île continue alors, l'interface garde le plan à plat).
+   */
+  async enterTemple(rows?: readonly string[]): Promise<TempleWorld | null> {
+    if (this.interior || this.temple || this.closed) return null
+    this.setInputEnabled(false)
+    let temple: TempleWorld
+    try {
+      temple = await TempleWorld.create(this.engine, this.canvas, { world: this.options.world, look: this.look, quality: this.quality, calm: this.options.calm, pet: this.fox ? this.look.pet_fur : undefined, rows })
+    } catch (error) {
+      console.error('Le temple du Sphinx ne s’est pas ouvert', error)
+      this.setInputEnabled(true)
+      return null
+    }
+    if (this.closed || this.interior || this.temple) {
+      temple.dispose()
+      return null
+    }
+    // L'île se met en pause : plus d'image, plus d'événement de la souris pour sa caméra.
+    if (this.islandLoop) this.engine.stopRenderLoop(this.islandLoop)
+    this.camera.detachControl()
+    this.temple = temple
+    this.focused = null
+    temple.start()
+    this.events.emit('temple', true)
+    this.events.emit('focus', null)
+    return temple
+  }
+
+  /** Sort du temple : l'île reprend là où le héros l'avait laissée, devant la barque. */
+  leaveTemple(): void {
+    const temple = this.temple
+    if (!temple) return
+    temple.dispose()
+    this.temple = null
+    this.camera.attachControl(this.canvas, true)
+    this.lastFrame = performance.now()
+    if (this.islandLoop) this.engine.runRenderLoop(this.islandLoop)
+    this.setInputEnabled(true)
+    this.events.emit('temple', false)
+    this.events.emit('focus', this.focused)
+    void this.setLook(this.look)
+  }
+
   dispose(): void {
     this.closed = true
+    this.temple?.dispose()
+    this.temple = null
     this.interior?.dispose()
     this.interior = null
     for (const d of this.disposers) d()

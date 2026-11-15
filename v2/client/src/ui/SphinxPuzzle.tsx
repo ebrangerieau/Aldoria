@@ -8,7 +8,9 @@
 import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { type Cell, type Dir } from '../core/sphinx/board'
 import { helpSteps, type SphinxLevel } from '../core/sphinx/island'
+import { boxStates } from '../core/sphinx/stage'
 import { boardFor, boardSummary, statusLine, stepMessage } from '../core/sphinx/visit'
+import type { TempleWorld } from '../game/temple'
 
 const SIZE = 44
 const HELP_STEP_MS = 260
@@ -29,7 +31,9 @@ export interface Played {
 
 const key = (c: Cell): string => `${c.x},${c.y}`
 
-export function SphinxPuzzle({ level, tier, round, onSolved, onQuit }: {
+export function SphinxPuzzle({ temple, level, tier, round, onSolved, onQuit }: {
+  /** La salle 3D qui montre le plateau (null : seul le plan à plat est là, en grand). */
+  temple: TempleWorld | null
   level: SphinxLevel
   tier: number
   /** Rang de l'énigme dans la traversée (0, 1, 2). */
@@ -41,12 +45,13 @@ export function SphinxPuzzle({ level, tier, round, onSolved, onQuit }: {
   const [, setVersion] = useState(0)
   const refresh = () => setVersion((v) => v + 1)
   const [hints, setHints] = useState(0)
-  const [facing, setFacing] = useState<Dir>('r')
+  const [facing, setFacing] = useState<Dir>('d')
   const [message, setMessage] = useState('Pousse chaque bloc sur une dalle gravée.')
   const [solved, setSolved] = useState(false)
   const timer = useRef<number | null>(null)
   const busy = useRef(false)
   const hintsRef = useRef(0)
+  const panel = useRef<HTMLElement>(null)
   const b = board.current
 
   const walls = useMemo(() => new Set(b.walls.map(key)), [b])
@@ -56,6 +61,27 @@ export function SphinxPuzzle({ level, tier, round, onSolved, onQuit }: {
   useEffect(() => () => {
     if (timer.current !== null) window.clearTimeout(timer.current)
   }, [])
+
+  // La salle 3D : dressée pour cette énigme (le composant est recréé à chaque énigme), cliquer sur une dalle y mène, le panneau latéral lui laisse la place.
+  const walkRef = useRef<(cell: Cell) => void>(() => {})
+  useEffect(() => {
+    if (!temple) return
+    temple.load(level.rows)
+    const off = temple.events.on('tile', (cell) => walkRef.current(cell))
+    const element = panel.current
+    const fit = () => {
+      if (element) temple.setInset(Math.max(0, window.innerWidth - element.getBoundingClientRect().left))
+    }
+    fit()
+    const observer = element && typeof ResizeObserver !== 'undefined' ? new ResizeObserver(fit) : null
+    if (element) observer?.observe(element)
+    window.addEventListener('resize', fit)
+    return () => {
+      off()
+      observer?.disconnect()
+      window.removeEventListener('resize', fit)
+    }
+  }, [temple, level])
 
   // Tests dans le navigateur (&e2e) : l'énigme en cours et sa solution, comme `table` pour la Table des Reliques.
   useEffect(() => {
@@ -143,6 +169,7 @@ export function SphinxPuzzle({ level, tier, round, onSolved, onQuit }: {
     if (path.length === 0) return
     replay(path.join(''), WALK_STEP_MS, () => setMessage(''))
   }
+  walkRef.current = walkTo
 
   useEffect(() => {
     const down = (e: KeyboardEvent) => {
@@ -164,6 +191,11 @@ export function SphinxPuzzle({ level, tier, round, onSolved, onQuit }: {
 
   const status = statusLine(round, tier, b)
   const stuck = b.stuckBox()
+  // La salle montre à chaque rendu l'état du plateau : tout l'état, jamais un morceau (annuler, recommencer et l'aide sautent plusieurs pas d'un coup).
+  useEffect(() => {
+    temple?.show({ player: b.player, boxes: b.boxes, facing, solved, stuck })
+  })
+  const states = boxStates(b.boxes, b.goals, stuck)
   const cells: ReactNode[] = []
   for (let y = 0; y < b.height; y += 1) {
     for (let x = 0; x < b.width; x += 1) {
@@ -190,7 +222,7 @@ export function SphinxPuzzle({ level, tier, round, onSolved, onQuit }: {
   const pieces = b.boxes.map((box, i) => {
     const onGoal = goals.has(key(box))
     return (
-      <g key={`b${i}`} className={`sphinx-box${onGoal ? ' placed' : ''}${i === stuck ? ' stuck' : ''}`} transform={`translate(${box.x * SIZE} ${box.y * SIZE})`} data-testid={`bloc-${i}`} data-state={onGoal ? 'pose' : i === stuck ? 'coince' : 'libre'}>
+      <g key={`b${i}`} className={`sphinx-box${onGoal ? ' placed' : ''}${i === stuck ? ' stuck' : ''}`} transform={`translate(${box.x * SIZE} ${box.y * SIZE})`} data-testid={`bloc-${i}`} data-state={states[i]} data-x={box.x} data-y={box.y}>
         <rect x="5" y="5" width={SIZE - 10} height={SIZE - 10} rx="4" />
         <path d={`M9 9 L${SIZE - 9} ${SIZE - 9} M${SIZE - 9} 9 L9 ${SIZE - 9}`} />
         {onGoal && <path className="sphinx-check" d={`M${SIZE * 0.27} ${SIZE * 0.52} L${SIZE * 0.44} ${SIZE * 0.7} L${SIZE * 0.75} ${SIZE * 0.3}`} />}
@@ -203,15 +235,15 @@ export function SphinxPuzzle({ level, tier, round, onSolved, onQuit }: {
   const nose = { l: '-15,0 -4,-6 -4,6', r: '15,0 4,-6 4,6', u: '0,-15 -6,-4 6,-4', d: '0,15 -6,4 6,4' }[facing]
 
   return (
-    <div className="overlay sphinx-overlay" role="dialog" aria-modal="true" aria-labelledby="sphinx-titre" data-testid="sphinx-enigme">
-      <section className="panel dialog sphinx-panel">
+    <div className={`overlay sphinx-overlay${temple ? ' on-stage' : ''}`} role="dialog" aria-modal="true" aria-labelledby="sphinx-titre" data-testid="sphinx-enigme">
+      <section ref={panel} className="panel dialog sphinx-panel">
         <h2 id="sphinx-titre">{status.title}</h2>
         <p className="sphinx-detail" data-testid="sphinx-detail">{status.detail}</p>
         <div className="sphinx-layout">
           <svg
             className="sphinx-board"
             viewBox={`0 0 ${b.width * SIZE} ${b.height * SIZE}`}
-            style={{ width: `${b.width * 3.3}rem` }}
+            style={temple ? undefined : { width: `${b.width * 3.3}rem` }}
             role="img"
             aria-label={boardSummary(b)}
             data-testid="sphinx-plateau"

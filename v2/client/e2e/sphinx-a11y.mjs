@@ -67,6 +67,21 @@ for (const [name, accommodations] of [['defaut', false], ['amenagements', true]]
   })
   console.log(name, JSON.stringify(info))
   await page.screenshot({ path: `${OUT}/sphinx-grand-plateau-${name}.png` })
+  // La salle 3D tient en entier à gauche du panneau : les quatre coins du plateau, projetés à l'écran, ne passent ni sous le panneau ni hors de la fenêtre.
+  const room = await page.evaluate(() => {
+    const t = window.__aldoria.world.temple
+    const rows = t.snapshot().rows
+    const w = Math.max(...rows.map((r) => r.length))
+    const h = rows.length
+    const corners = [[0, 0], [w - 1, 0], [0, h - 1], [w - 1, h - 1]].map(([x, y]) => t.projectCell({ x, y }))
+    return { corners, panelLeft: document.querySelector('.sphinx-panel').getBoundingClientRect().left }
+  })
+  for (const c of room.corners) {
+    if (c.x < 0 || c.x > room.panelLeft || c.y < 0 || c.y > 720) {
+      failed = true
+      console.error(`${name} : un coin de la salle 3D sort de la part libre de l'écran (${Math.round(c.x)}, ${Math.round(c.y)}), le panneau commence à ${Math.round(room.panelLeft)}`)
+    }
+  }
   // Sans défilement, tout doit être dans la fenêtre ; avec, le panneau doit défiler (jamais un débordement hors du panneau).
   const inside = info.panel.bottom <= 720 && info.buttons.every((b) => b.bottom <= 720)
   if (!inside && !info.scrolls) {
