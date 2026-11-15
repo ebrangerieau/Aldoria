@@ -7,8 +7,8 @@ import {
   tableReward, tray,
 } from '../src/core/relics'
 import { EMPTY_SAVE, normalizeSave, type SaveData } from '../src/core/save'
-import { MAX_CLIMB, MAX_WATER_DEPTH } from '../src/core/world/movement'
 import { placesFor } from '../src/core/world/places'
+import { cellKey, reachableOnFoot } from './walk'
 import { type IslandLayout, SEA_LEVEL, Terrain } from '../src/core/world/terrain'
 
 const ALL = RELICS.map((r) => r.id)
@@ -57,30 +57,8 @@ describe('Les reliques de l’île', () => {
   const layout = ile as unknown as IslandLayout
   const terrain = new Terrain(layout)
 
-  /** Les cases de 2 m atteignables à pied depuis le départ, avec la règle de pente et d’eau du déplacement (movement.ts). */
-  function reachable(): Set<string> {
-    const CELL = 2
-    const key = (i: number, j: number): string => `${i},${j}`
-    const seen = new Set<string>([key(Math.round(layout.depart.x / CELL), Math.round(layout.depart.z / CELL))])
-    const queue: [number, number][] = [[Math.round(layout.depart.x / CELL), Math.round(layout.depart.z / CELL)]]
-    while (queue.length > 0) {
-      const [i, j] = queue.pop()!
-      const h0 = terrain.heightAt(i * CELL, j * CELL)
-      for (const [di, dj] of [[1, 0], [-1, 0], [0, 1], [0, -1], [1, 1], [1, -1], [-1, 1], [-1, -1]] as const) {
-        const ni = i + di
-        const nj = j + dj
-        if (Math.abs(ni * CELL) > 300 || Math.abs(nj * CELL) > 300 || seen.has(key(ni, nj))) continue
-        const h = terrain.heightAt(ni * CELL, nj * CELL)
-        if (h < SEA_LEVEL - MAX_WATER_DEPTH || (h - h0) / (Math.hypot(di, dj) * CELL) > MAX_CLIMB) continue
-        seen.add(key(ni, nj))
-        queue.push([ni, nj])
-      }
-    }
-    return seen
-  }
-
   it('sont sur la terre ferme, atteignables à pied depuis le départ, à l’écart de tout bâtiment', () => {
-    const walkable = reachable()
+    const walkable = reachableOnFoot(layout, terrain)
     const fixed = [layout.citadelle, layout.village, layout.depart, layout.pierre_eveil, layout.pierre_jour, layout.ysaline]
     const places = [...placesFor('6e', terrain), ...placesFor('2nde', terrain)]
     expect(ISLAND_RELICS).toHaveLength(8)
@@ -89,7 +67,7 @@ describe('Les reliques de l’île', () => {
       const { x, z, region } = relic.source
       expect(layout.regions[region], region).toBeDefined()
       expect(terrain.heightAt(x, z), `${relic.id} sur l’eau`).toBeGreaterThan(SEA_LEVEL + 2)
-      expect(walkable.has(`${x / 2},${z / 2}`), `${relic.id} inatteignable à pied`).toBe(true)
+      expect(walkable.has(cellKey(x, z)), `${relic.id} inatteignable à pied`).toBe(true)
       for (const other of [...fixed, ...places]) expect(Math.hypot(other.x - x, other.z - z), `${relic.id} trop près`).toBeGreaterThan(12)
     }
   })
@@ -98,11 +76,24 @@ describe('Les reliques de l’île', () => {
     const table = layout.table_reliques
     expect(terrain.heightAt(table.x, table.z)).toBeGreaterThan(SEA_LEVEL + 2)
     expect(terrain.slopeAt(table.x, table.z)).toBeLessThan(0.05)
-    expect(reachable().has(`${table.x / 2},${table.z / 2}`)).toBe(true)
+    expect(reachableOnFoot(layout, terrain).has(cellKey(table.x, table.z))).toBe(true)
     for (const other of [layout.depart, layout.pierre_eveil, layout.pierre_jour, layout.ysaline, ...placesFor('6e', terrain), ...placesFor('2nde', terrain)]) {
       expect(Math.hypot(other.x - table.x, other.z - table.z)).toBeGreaterThan(14)
     }
     expect(Math.hypot(layout.citadelle.x - table.x, layout.citadelle.z - table.z)).toBeGreaterThan(18) // pas dans le bâtiment
+  })
+
+  it('la barque du Sphinx : on y monte à pied depuis la plage, elle flotte en eau profonde, loin de tout', () => {
+    const { x, z, bateau } = layout.barque
+    expect(reachableOnFoot(layout, terrain).has(cellKey(x, z))).toBe(true) // dans l'eau peu profonde du bord
+    expect(terrain.heightAt(x, z)).toBeGreaterThan(SEA_LEVEL - 0.7)
+    expect(terrain.heightAt(x, z)).toBeLessThan(SEA_LEVEL + 1.5) // au bord de l'eau, pas sur une colline
+    expect(terrain.heightAt(bateau.x, bateau.z)).toBeLessThan(SEA_LEVEL - 1) // la barque flotte vraiment
+    expect(Math.hypot(bateau.x - x, bateau.z - z)).toBeLessThan(6) // et reste à portée du bord
+    expect(bateau.x).toBeGreaterThan(x) // vers l'est, vers l'île du Sphinx
+    for (const other of [...ISLAND_RELICS.map((r) => r.source), layout.depart, layout.citadelle, layout.village, ...placesFor('6e', terrain), ...placesFor('2nde', terrain)]) {
+      expect(Math.hypot(other.x - x, other.z - z)).toBeGreaterThan(14)
+    }
   })
 
   it('sont toutes distinctes les unes des autres', () => {

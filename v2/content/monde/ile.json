@@ -8,6 +8,7 @@
   "pierre_eveil": { "x": 9, "z": -22 },
   "pierre_jour": { "x": 14, "z": 8 },
   "table_reliques": { "x": -18, "z": 12 },
+  "barque": { "x": 243, "z": 20, "bateau": { "x": 247, "z": 20 } },
   "ysaline": { "x": -6, "z": -12 },
   "village": { "x": -82, "z": 6, "rayon_plat": 24 },
   "regions": {

@@ -19,6 +19,7 @@ import { combatTexts, pickOne } from '../core/combat/texts'
 import { count, type ItemId } from '../core/inventory'
 import { HeroVoice } from '../core/heroVoice'
 import { chestMessage, completePlace } from '../core/quest/chest'
+import { afterActivity, passesText, sphinxOf, takePassageNews } from '../core/sphinx/island'
 import { enigmaIntro, enigmaXp, ENIGMA_ITEMS, findItems, foundBanner, riddleItem } from '../core/quest/enigma'
 import { normalizeRating } from '../core/quest/rating'
 import type { SaveData } from '../core/save'
@@ -424,6 +425,16 @@ export function useFight(options: FightOptions) {
   /** Sort du lieu : l'île reprend, la session de l'île aussi. `rating` : la note de plaisir de 1 à 5, envoyée avec la fin de la session. */
   const leave = useCallback(
     async (rating = 0) => {
+      // Une visite où l'enfant a répondu assez rapporte un passage pour la barque du Sphinx (comme dans la v1) ; à lire avant la fin de la
+      // session, qui remet le compte à zéro.
+      const { services: s, getSave, persist } = latest.current
+      const level = s.session.profile?.level ?? '6e'
+      const earned = afterActivity(getSave(), level, 'donjon', s.questions.answered)
+      if (earned.gained) {
+        const sphinx = sphinxOf(earned.save, level)
+        persist({ ...earned.save, sphinx: takePassageNews(sphinx).state }) // annoncé tout de suite : rien à rappeler plus tard
+        announce(`Un passage pour la barque du Sphinx ! (${passesText(sphinx.passes)})`)
+      }
       worldRef.current?.leavePlace()
       encounter.current = null
       place.current = null
@@ -433,7 +444,7 @@ export function useFight(options: FightOptions) {
       placeSession.current = null
       await closing?.end(normalizeRating(rating))
     },
-    [worldRef, show],
+    [worldRef, show, announce],
   )
 
   /**

@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest'
 import niveaux from '@content/monde/sphinx_niveaux.json'
 import { SphinxBoard } from '../src/core/sphinx/board'
+import { boardFor, boardSummary, celebrateLines, finishText, noPassageText, statusLine, stepMessage, STORY_KEY, welcomeText } from '../src/core/sphinx/visit'
+import { EMPTY_SAVE, normalizeSave } from '../src/core/save'
 import {
-  earnPassage, earnsPassage, HOW_TO_EARN, helpSteps, initialSphinx, levelAt, MAX_PASSES, nextPuzzle, normalizeSphinx, PASS_ANSWERS,
-  passesText, recordSolved, spendPassage, startTier, takePassageNews, TIER_UP, tierCount, VISIT_PUZZLES,
+  afterActivity, earnPassage, earnsPassage, HOW_TO_EARN, helpSteps, initialSphinx, levelAt, MAX_PASSES, nextPuzzle, normalizeSphinx, PASS_ANSWERS,
+  passesText, recordSolved, spendPassage, sphinxOf, startTier, takePassageNews, TIER_UP, tierCount, VISIT_PUZZLES,
 } from '../src/core/sphinx/island'
 
 const ROWS = ['######', '#@ $.#', '#    #', '######']
@@ -184,6 +186,35 @@ describe('île du Sphinx : passages', () => {
     expect(earnsPassage('donjon', PASS_ANSWERS - 1)).toBe(false) // à peine commencée
     expect(earnsPassage('defi', PASS_ANSWERS)).toBe(true)
     expect(earnsPassage('sphinx', 40)).toBe(false)
+    expect(earnsPassage('monde', 40)).toBe(false) // les pierres de l'île principale ne sont pas une activité
+  })
+
+  it('à la fin d’un lieu ou du défi, la partie reçoit un passage (nouvelle partie, jamais modifiée sur place)', () => {
+    const save = structuredClone(EMPTY_SAVE)
+    expect(save.sphinx).toBeUndefined()
+    const none = afterActivity(save, '6e', 'donjon', PASS_ANSWERS - 1)
+    expect(none).toEqual({ save, gained: false })
+    const got = afterActivity(save, '6e', 'donjon', PASS_ANSWERS)
+    expect(got.gained).toBe(true)
+    expect(got.save.sphinx).toMatchObject({ passes: 1, news: 1, tier: 1 })
+    expect(save.sphinx).toBeUndefined()
+    // La classe de l'enfant fixe le palier de départ de la première fois.
+    expect(afterActivity(save, '2nde', 'defi', PASS_ANSWERS).save.sphinx?.tier).toBe(2)
+    expect(sphinxOf(save, '2nde').tier).toBe(2)
+    // Jamais pour l'île du Sphinx ni pour les pierres ; réserve pleine : pas de passage de plus, ni d'annonce.
+    expect(afterActivity(save, '6e', 'sphinx', 40).gained).toBe(false)
+    expect(afterActivity(save, '6e', 'monde', 40).gained).toBe(false)
+    let full = save
+    for (let i = 0; i < MAX_PASSES; i++) full = afterActivity(full, '6e', 'donjon', 10).save
+    expect(full.sphinx?.passes).toBe(MAX_PASSES)
+    expect(afterActivity(full, '6e', 'donjon', 10)).toEqual({ save: full, gained: false })
+  })
+
+  it('l’état du Sphinx se range dans la partie et se relit sans rien perdre ni inventer', () => {
+    const earned = afterActivity(structuredClone(EMPTY_SAVE), '6e', 'donjon', 10).save
+    expect(normalizeSave(JSON.parse(JSON.stringify(earned))).sphinx).toEqual(earned.sphinx)
+    expect(normalizeSave({ xp: 5 }).sphinx).toBeUndefined() // une ancienne partie n'en a pas
+    expect(normalizeSave({ sphinx: { passes: 99, tier: -4, next: { '1': 'x' } } as never }).sphinx).toMatchObject({ passes: MAX_PASSES, tier: 1, next: {} })
   })
 
   it('la réserve est limitée, les gains sont annoncés une seule fois', () => {
@@ -297,5 +328,47 @@ describe('état relu de la partie', () => {
       expect(levelAt(p.tier, p.index).rows.length).toBeGreaterThan(0)
     }
     expect(VISIT_PUZZLES).toBe(3)
+  })
+})
+
+describe('traversée : les textes du Sphinx (repris de la v1)', () => {
+  it('l’accueil : la présentation complète la première fois, un mot ensuite', () => {
+    expect(welcomeText(true)).toContain('Je suis le Sphinx')
+    expect(welcomeText(true)).toContain('jamais le tirer')
+    expect(welcomeText(false)).toBe(`Te revoilà, Archiviste ! ${VISIT_PUZZLES} énigmes t'attendent dans mon temple.`)
+    expect(noPassageText()).toContain(HOW_TO_EARN)
+    expect(STORY_KEY).toBe('sphinx-vu')
+  })
+
+  it('une énigme résolue : le minimum de poussées est salué, l’aide est dite, la montée de palier annoncée', () => {
+    const base = { moves: 12, pushes: 4, hints: 0, best: 4, up: false, tier: 2 }
+    expect(celebrateLines(base)).toEqual(['Résolue en 12 pas et 4 poussées.', "Le moins de poussées possible : même moi, je n'aurais pas fait mieux !"])
+    expect(celebrateLines({ ...base, pushes: 5 })).toEqual(['Résolue en 12 pas et 5 poussées.']) // seul, mais pas au plus court
+    expect(celebrateLines({ ...base, hints: 1 })[1]).toContain('Avec mon aide')
+    expect(celebrateLines({ ...base, hints: 2, up: true, tier: 3 }).at(-1)).toBe("Tu es digne d'énigmes plus difficiles : palier 3 !")
+    expect(celebrateLines({ ...base, pushes: 1, best: 1 })[0]).toBe('Résolue en 12 pas et 1 poussée.')
+  })
+
+  it('le bilan, le bandeau et les messages après un pas', () => {
+    expect(finishText(3, 17)).toBe('Énigmes résolues pendant cette traversée : 3. Énigmes du Sphinx résolues en tout : 17. La barque te ramène sur la grande île.')
+    const board = boardFor({ rows: ROWS })
+    board.step('r')
+    board.step('r')
+    expect(statusLine(1, 2, board)).toEqual({ title: `Énigme du temple 2 / ${VISIT_PUZZLES}`, detail: 'Palier 2 · 2 pas · 1 poussée' })
+    expect(stepMessage(false, false, -1)).toContain('Ça ne bouge pas')
+    expect(stepMessage(true, true, -1)).toBe('Bloc poussé.')
+    expect(stepMessage(true, false, -1)).toBe('')
+    expect(stepMessage(true, true, 0)).toContain('coincé')
+    expect(boardSummary(board)).toBe('Temple de 6 colonnes et 4 rangées : 1 bloc à pousser sur 1 dalle gravée.')
+  })
+
+  it('tous les niveaux du jeu se décrivent et ont une solution qui les résout (le palier 6 n’est pas régénéré)', () => {
+    for (let tier = 1; tier <= tierCount(); tier += 1) {
+      const level = levelAt(tier, 0)
+      const board = boardFor(level)
+      expect(boardSummary(board)).toMatch(/^Temple de \d+ colonnes/)
+      expect(board.play(level.solution)).toBe(true)
+      expect(board.isSolved()).toBe(true)
+    }
   })
 })

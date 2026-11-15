@@ -49,9 +49,12 @@ export function passesText(passes: number): string {
   return `${passes} passage${passes > 1 ? 's' : ''}`
 }
 
-/** Une activité de ce mode et de ce nombre de réponses rapporte-t-elle un passage ? (l'île elle-même n'en rapporte pas) */
+/**
+ * Une activité de ce mode et de ce nombre de réponses rapporte-t-elle un passage ? Ni l'île du Sphinx, ni les pierres de l'île principale
+ * (session « monde » de la v2 : elles ne sont pas une activité, la v1 n'avait pas ce mode) n'en rapportent.
+ */
 export function earnsPassage(mode: string, answered: number): boolean {
-  return mode !== 'sphinx' && answered >= PASS_ANSWERS
+  return mode !== 'sphinx' && mode !== 'monde' && answered >= PASS_ANSWERS
 }
 
 /**
@@ -110,6 +113,21 @@ export function normalizeSphinx(raw: unknown, level: string): SphinxState {
     next,
     news: whole(r.news, 0, MAX_PASSES, base.news),
   }
+}
+
+/** L'état du Sphinx d'une partie, relu avec la classe de l'enfant (la partie n'en a pas avant la première activité : palier de départ). */
+export function sphinxOf(save: { sphinx?: unknown }, level: string): SphinxState {
+  return normalizeSphinx(save.sphinx, level)
+}
+
+/**
+ * Fin d'une activité (`mode` : « donjon », « defi », « village », « arene » ; jamais l'île elle-même, ni « sphinx ») : si l'enfant y a enregistré
+ * assez de réponses, la partie reçoit un passage (réserve pleine : aucun de plus). Rend une nouvelle partie, jamais modifiée sur place.
+ */
+export function afterActivity<T extends { sphinx?: SphinxState }>(save: T, level: string, mode: string, answered: number): { save: T; gained: boolean } {
+  if (!earnsPassage(mode, answered)) return { save, gained: false }
+  const earned = earnPassage(sphinxOf(save, level))
+  return earned.gained ? { save: { ...save, sphinx: earned.state }, gained: true } : { save, gained: false }
 }
 
 /** Activité assez remplie : un passage de plus, sauf réserve pleine. */

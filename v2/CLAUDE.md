@@ -151,6 +151,19 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   cours : `fixed`, `pool`, `solution`), `save()`, et en découverte `giveRelics(ids)` et `give`. Parcours navigateur : table vide, conflit signalé, indice, carré résolu, récompense
   une seule fois, entraînement au clavier ; captures `table`, `table-brouillard` ; `node e2e/table-a11y.mjs` (aménagements les plus larges : à texte agrandi la table passe sur une colonne et le panneau défile, Échap ferme). Reste à faire : brancher la Table à l'île du Sphinx quand son écran existera ; un indice de Maître Ysaline vers
   la première relique ; un bestiaire des reliques (chaque sceau avec son histoire).
+- **Île du Sphinx** (idée de Jules ; jeux de logique, **aucune question de leçon** ; règles `core/sphinx/board.ts`, passages et paliers `core/sphinx/island.ts`, textes et déroulé
+  `core/sphinx/visit.ts`, 180 énigmes de `content/monde/sphinx_niveaux.json` converties de la v1 ; `tests/sphinx.test.ts`). **Les passages** : une visite de lieu où l'enfant a répondu à au moins
+  `PASS_ANSWERS` (6) questions, ou un défi du jour terminé, rapporte un passage (`afterActivity`, réserve de `MAX_PASSES` = 3, annoncé par un bandeau ou une ligne du bilan) ; **jamais** les
+  pierres de l'île principale (session « monde ») ni l'île du Sphinx ; un défi interrompu n'en rapporte pas (comme pour sa série). L'état (`SaveData.sphinx`, relu par `sphinxOf(save, classe)` :
+  la classe fixe le palier de départ) est rendu neuf à chaque changement. **La barque** (`ile.json` : `barque`, `GameWorld.buildBoat` : coque, proue, mât et voile en formes simples, qui tangue ;
+  interaction `kind: 'barque'`, repère sur la mini-carte ; atteignable à pied et en eau profonde, testé) ouvre `ui/SphinxVisit.tsx` : sans passage elle l'explique (`noPassageText`) ; avec, « Traverser »
+  en dépense un, le Sphinx se présente (la première fois : `STORY_KEY`, texte lu par Piper, pas de voix enregistrée), puis `VISIT_PUZZLES` (3) énigmes (`ui/SphinxPuzzle.tsx`, SVG : flèches ou Z, Q, S, D,
+  Retour arrière ou U pour annuler, R pour recommencer, H pour l'aide, Échap pour quitter ; cliquer sur une dalle libre y mène sans pousser de bloc ; l'aide remet la salle au départ et rejoue un tiers de plus de la
+  solution à chaque appel) ; jamais la couleur seule (dalle gravée = losange creux, bloc = croix, bloc posé = coche, bloc coincé = « ! »). Trois énigmes de suite sans aide font monter d'un palier.
+  La traversée ouvre une session « sphinx » (`app/sphinxSession.ts`, paquet vide côté API) : elle compte le temps de jeu fixé par le parent. Crochets `&e2e` : `sphinx` (l'énigme en cours : `rows`, `solution`,
+  `tier`, `round`) et, en découverte, `giveSphinxPasses(n, patch)` (le patch change le palier, `next`…). Parcours navigateur : barque sans passage, traversée, présentation, trois énigmes (annuler, recommencer, aide, dalle cliquée), bilan, seconde visite
+  quittée à Échap ; captures `barque`, `barque-brouillard`. **Pas encore fait** : le temple en 3D de la v1 (`SphinxTemple`, le Sphinx et son compagnon) : l'énigme se joue sur un plateau 2D ; les passages gagnés au
+  village et à l'arène (ni l'un ni l'autre n'existe dans la v2).
 - **Musique** (`app/music.ts` joue, `core/music.ts` décide du volume, testé) : morceaux de `deploy/musique/` listés dans
   `content/monde/musique.json` (ordre de lecture, crédit des Options), servis sous `/musique/` par nginx ; `npm run dev` et
   `vite preview` les servent depuis le même dossier (`vite.config.ts`, requêtes `Range` comprises). Elle démarre à l'entrée
@@ -204,10 +217,12 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   l'environnement, jamais dans le dépôt ; `--essai` liste ce qui serait généré, sans clé). Un nouveau texte de Maître Ysaline
   s'ajoute à `lignes.json` (groupe, id, texte, voix), puis le script génère son son. Crédit ElevenLabs dans les Options.
   **Couper la voix** : un composant qui se ferme ne doit couper que **sa** lecture. `Voice.token` désigne la lecture en cours (juste après `void say(…)`), `Voice.stopIf(token)` n'arrête
-  que si personne n'a parlé depuis (`QuestionPanel` le fait) ; un `voice.stop()` aveugle, arrivé après coup, annule la lecture d'un dialogue qui s'ouvre avant même la demande du son.
-  `Voice.trace` (une quarantaine d'étapes en mémoire, jamais envoyées : « say », « qui a coupé », « son demandé », « joue », « fini ») est lu par le parcours navigateur quand un son
-  attendu n'est pas parti (message d'échec : `journal de la voix`). Réglages du parcours : `E2E_CPU=<facteur>` ralentit le processeur de la page, `E2E_RETARD_VOIX=<ms>` retarde chaque
-  fichier de `/voix/`, `E2E_RETARD_MUSIQUE=<ms>` ceux de `/musique/` (la CI et le VPS sont plus lents que l'aperçu local : un parcours qui passe en local peut échouer là-bas).
+  que si personne n'a parlé depuis (`QuestionPanel` le fait) ; un `voice.stop()` aveugle, arrivé après coup, annulerait la lecture d'un dialogue qui s'ouvre avant même la demande du son.
+  **Vérifier qu'un son enregistré a été joué** : le journal de la voix (`Voice.trace`, une quarantaine d'étapes en mémoire, jamais envoyées : « say », « qui a coupé », « son <fichier> », « joue », « fini » ;
+  `Voice.notedCount` pour n'attendre que ce qui suit un repère) et non une réponse réseau. **Piège rencontré en production** : à la seconde visite d'un lieu, Chromium rejoue un son déjà reçu
+  **sans nouvelle demande** ; le parcours qui exigeait une réponse réseau pour chaque lecture a échoué quatre fois à l'étape du boss alors que le journal montrait le son de défaite demandé, joué et fini
+  (la voix marchait : l'échec était dans le test). `joue` (l'événement `playing` du lecteur) prouve que le fichier est présent, bien typé et décodable. Réglages du parcours : `E2E_CPU=<facteur>` ralentit le
+  processeur de la page, `E2E_RETARD_VOIX=<ms>` retarde chaque fichier de `/voix/`, `E2E_RETARD_MUSIQUE=<ms>` ceux de `/musique/`.
   L'accueil de Maître Ysaline dans l'île (`ile-accueil`) est lu **depuis** `lignes.json` par `GameScreen` : texte et voix au même endroit.
   Les pages rapportées et le prologue parlent de l'île (« le chemin s'éclaire sur l'île »), jamais d'une carte du royaume, que la v2 n'a
   pas ; les `seuil-*` parlent, eux, de vraies cartes (atlas, plans) : ne pas les « corriger ». Les 60 répliques des
@@ -217,12 +232,8 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   `python tools/voix_elevenlabs.py --lieux` la reporte dans `lignes.json`, puis le script la génère. Le script tourne aussi dans la session
   cloud : la clé s'enregistre par `request_credential` (hôte `api.elevenlabs.io`, en-tête `xi-api-key`, jamais dans le dépôt) et le script
   reçoit `ELEVENLABS_API_KEY=proxy-injected` ; une clé limitée à la synthèse n'a pas le droit `voices_read` (inutile : les voix sont au manifeste).
-- **Logiques de la v1 portées, pas encore branchées à l'écran** (pures, testées, `core/`) : apparence du héros et du renard
-  (`wardrobe.ts`, `content/monde/apparence.json`), île du Sphinx (`sphinx/board.ts` : jeu de blocs ; `sphinx/island.ts` : passages de barque, paliers, aide du Sphinx ;
-  180 énigmes dans `content/monde/sphinx_niveaux.json`, converties de `game/worlds/shared/sphinx_levels.gd` de la v1 ;
-  `python tools/make_sphinx_levels.py` les régénère (graine fixe, mais le palier 6 est très long à calculer : relancé jusqu'au
-  palier 5 seulement, jamais comparé en entier à la v1). Leur état se range dans
-  la partie (`core/save.ts`) et leur écran vient avec les étapes 1.x : un état se rend toujours neuf (jamais modifié sur place).
+- **Logique de la v1 portée, pas encore branchée à l'écran** (pure, testée, `core/`) : apparence du héros et du renard (`wardrobe.ts`, `content/monde/apparence.json`) ;
+  son écran de personnalisation et les déblocages annoncés au coffre restent à faire. Un état se rend toujours neuf (jamais modifié sur place).
 - **Textes visibles par les enfants en français**, tutoiement ; aucune donnée personnelle hors du serveur d'Aldoria.
 - **Erreurs du jeu** : tout ce qui passe par une exception, une promesse rejetée ou `console.error` remonte à l'exploitant
   (`core/errorReport.ts`, `app/errors.ts`). Ne jamais mettre de prénom, de question ni de réponse dans un message d'erreur ;

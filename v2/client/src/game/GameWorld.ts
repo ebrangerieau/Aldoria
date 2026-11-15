@@ -29,7 +29,7 @@ import type { Obstacles } from '../core/world/obstacles'
 import { heading, type MapMarker, mapMarkers, type ReliefPalette } from '../core/world/minimap'
 import { angleDelta, RUN_SPEED, step, WALK_SPEED } from '../core/world/movement'
 import { isOpen, type Place, placesFor, regionTitle } from '../core/world/places'
-import { type IslandLayout, Terrain } from '../core/world/terrain'
+import { type IslandLayout, SEA_LEVEL, Terrain } from '../core/world/terrain'
 import { type Atmosphere, createAtmosphere } from './atmosphere'
 import { type Character, loadFox, loadHero, loadMonster, loadNpc, settleOnGround, skinnedHeights } from './characters'
 import { type Enemy, type FloatTone, InteriorWorld, type Pedestal } from './interior'
@@ -41,7 +41,7 @@ import { buildGround, buildSea } from './island'
 import { chooseQuality, type Quality } from './quality'
 import { THEMES, type WorldName } from './theme'
 
-export type InteractableKind = 'lieu' | 'pierre' | 'ysaline' | 'sortie' | 'jour' | 'coffre' | 'relique' | 'table'
+export type InteractableKind = 'lieu' | 'pierre' | 'ysaline' | 'sortie' | 'jour' | 'coffre' | 'relique' | 'table' | 'barque'
 
 export interface Interactable {
   id: string
@@ -135,6 +135,8 @@ export class GameWorld {
   private relicMeshes = new Map<string, { gem: Mesh; ring: Mesh }>()
   /** Les quatre éclats de la Table des Reliques (ils tournent), et son anneau (allumé tant qu'une table du jour attend). */
   private tableGems: Mesh[] = []
+  /** La barque du Sphinx, qui tangue doucement sur l'eau (immobile en mode calme). */
+  private boat: Mesh | null = null
   private disposers: (() => void)[] = []
   private statsTimer = 0
   private regionTimer = 0
@@ -495,6 +497,7 @@ export class GameWorld {
     this.buildDayStone()
     this.buildRelics()
     this.buildRelicTable()
+    this.buildBoat()
     // Les cristaux tournent doucement sur eux-mêmes (immobiles en mode calme).
     if (!this.options.calm) {
       this.scene.onBeforeRenderObservable.add(() => {
@@ -503,6 +506,11 @@ export class GameWorld {
         if (this.dayCrystal) this.dayCrystal.rotation.y += dt * 0.8
         for (const { gem } of this.relicMeshes.values()) gem.rotation.y += dt * 1.1
         for (const gem of this.tableGems) gem.rotation.y += dt * 0.9
+        if (this.boat) {
+          const t = performance.now() / 1000
+          this.boat.position.y = SEA_LEVEL - 0.05 + Math.sin(t * 1.3) * 0.07
+          this.boat.rotation.z = Math.sin(t * 1.1) * 0.025
+        }
       })
     }
   }
@@ -578,6 +586,45 @@ export class GameWorld {
     const ready = this.tableReady(this.options.save)
     beacon(this.scene, 'table-reliques', new Vector3(x, y, z), '#c8a2e8', ready)
     this.interactables.push({ id: 'table-reliques', kind: 'table', label: 'La Table des Reliques', x, z, radius: 3.4, open: ready })
+  }
+
+  /**
+   * La barque de l'île du Sphinx (core/sphinx), sur la côte est : une coque de bois avec une proue, un mât et une voile claire, qui flotte juste
+   * au large de la plage ; le héros s'en approche par la plage (`barque` de ile.json) et E le fait monter à bord. Pas de modèle : des formes simples.
+   */
+  private buildBoat(): void {
+    const { x, z, bateau } = layout.barque
+    if (this.grid.heightAt(bateau.x, bateau.z) > SEA_LEVEL - 0.5) return // pas d'eau là : pas de barque (le test de la disposition le garde)
+    const wood = new StandardMaterial('barque-bois', this.scene)
+    wood.diffuseColor = Color3.FromHexString('#8b5a2b')
+    wood.specularColor = new Color3(0.05, 0.05, 0.05)
+    const sail = new StandardMaterial('barque-voile', this.scene)
+    sail.diffuseColor = Color3.FromHexString('#f3ead2')
+    sail.emissiveColor = Color3.FromHexString('#f3ead2').scale(0.08) // à peine : trop clair, la voile devenait un aplat blanc
+    sail.backFaceCulling = false
+    const hull = MeshBuilder.CreateBox('barque-coque', { width: 3.6, height: 0.8, depth: 1.7 }, this.scene)
+    hull.position.set(bateau.x, SEA_LEVEL - 0.05, bateau.z)
+    hull.material = wood
+    const bow = MeshBuilder.CreateBox('barque-proue', { width: 1.2, height: 0.8, depth: 1.2 }, this.scene)
+    bow.rotation.y = Math.PI / 4
+    bow.position.set(1.8, 0, 0) // vers l'est, vers l'île du Sphinx
+    bow.material = wood
+    bow.parent = hull
+    const mast = MeshBuilder.CreateCylinder('barque-mat', { diameter: 0.14, height: 3.2, tessellation: 8 }, this.scene)
+    mast.position.set(-0.2, 1.9, 0)
+    mast.material = wood
+    mast.parent = hull
+    const cloth = MeshBuilder.CreatePlane('barque-toile', { width: 2.1, height: 2.2 }, this.scene)
+    cloth.rotation.y = Math.PI / 2 // la voile est tendue dans le sens de la coque
+    cloth.position.set(-0.2, 2.2, 0)
+    cloth.material = sail
+    cloth.parent = hull
+    for (const mesh of [hull, bow, mast, cloth]) mesh.isPickable = false
+    this.atmosphere.shadows.addShadowCaster(hull, false)
+    this.obstacles.add({ x: bateau.x, z: bateau.z, r: 2.1 })
+    this.boat = hull
+    beacon(this.scene, 'barque', new Vector3(x, SEA_LEVEL, z), '#f3ead2', true)
+    this.interactables.push({ id: 'barque', kind: 'barque', label: 'La barque du Sphinx', x, z, radius: 4.2, open: true })
   }
 
   private tableReady(save: Pick<SaveData, 'relics' | 'table'>): boolean {

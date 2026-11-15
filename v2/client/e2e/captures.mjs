@@ -30,6 +30,9 @@ const VIEWS = {
   sphinx: { query: '', at: [318, 10], face: [345, 15], beta: 1.3, radius: 11, turn: 0.3 },
   brouillard: { query: '&monde=brouillard&classe=2nde', at: [0, -30], face: [0, 30], beta: 1.25, radius: 12, turn: 0.3 },
   carte: { query: '', at: [70, 60], face: [120, 105], beta: 1.32, radius: 9, turn: 0.15, interface: true },
+  // La barque de l'île du Sphinx, vue depuis la plage (côte est, `barque` de ile.json), puis dans le Brouillard.
+  barque: { query: '', at: [236, 20], face: [247, 20], beta: 1.25, radius: 9, turn: 0.45 },
+  'barque-brouillard': { query: '&monde=brouillard&classe=2nde', at: [236, 20], face: [247, 20], beta: 1.25, radius: 9, turn: 0.45 },
   // La Table des Reliques (plateau de la Citadelle, `table_reliques` de ile.json), vue de trois quarts, puis dans le Brouillard.
   table: { query: '', at: [-22.2, 8.4], face: [-18, 12], beta: 1.2, radius: 7, turn: 0.45 },
   'table-brouillard': { query: '&monde=brouillard&classe=2nde', at: [-22.2, 8.4], face: [-18, 12], beta: 1.2, radius: 7, turn: 0.45 },

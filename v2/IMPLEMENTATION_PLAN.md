@@ -143,7 +143,7 @@ Dans l'ordre que les enfants choisiront à la séance de la phase 1 :
 - balance géante, stand de tir (Lice), pont des fractions : comme des lieux de l'île, plus des panneaux posés sur une salle ;
 - Clairval en plein air et ses habitants (`villages.json`), quêtes du jour ;
 - Pierre du Jour (défi quotidien, série, coffre de la semaine, sans compte à rebours) : **faite le 14 novembre**, pierre sur le chemin de la Citadelle (`core/dailyRun.ts`, `ui/DailyChallenge.tsx`) ;
-- île du Sphinx : barque, passages, blocs du temple (niveaux de `tools/make_sphinx_levels.py` sortis en JSON) ;
+- île du Sphinx : **faite le 15 novembre** dans sa version 2D : la barque sur la côte est, les passages gagnés (fin d'un lieu, défi du jour), le Sphinx, trois énigmes de blocs par traversée (`core/sphinx/`, `ui/SphinxVisit.tsx`, `ui/SphinxPuzzle.tsx`) ; reste le temple en 3D, le Sphinx et son compagnon ;
 - apparence du héros (silhouettes, armes, capes, déblocages) ; **sac d'objets : fait le 14 novembre** (bouton « Sac » du combat, plume et parchemin dans les questions : `core/bag.ts`, `ui/Bag.tsx`) ;
 - prologue en cinq tableaux joués dans l'île, voix enregistrées de Maître Ysaline (`deploy/voix/manifest.json` ; **seuils faits le 14 novembre** : les 30 textes de lieu sont lus de
   sa vraie voix ; **l'accueil dans l'île et les textes des pages et du prologue réenregistrés le 14 novembre** (« sur l'île », plus de carte du royaume) ; restent à brancher les pages rendues, le prologue, le brouillard, Clairval et la Tour de l'Oubli quand ces

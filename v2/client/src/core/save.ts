@@ -11,6 +11,7 @@ import type { ApiClient } from './api'
 import { EMPTY_DAILY, normalizeDaily, type DailyState } from './dailyChallenge'
 import { normalizeOwned, type Owned } from './inventory'
 import { normalizeRelics } from './relics'
+import { normalizeSphinx, type SphinxState } from './sphinx/island'
 import type { Store } from './storage'
 
 export const SCHEMA_VERSION = 1
@@ -32,6 +33,8 @@ export interface SaveData {
   relics: string[]
   /** Dernier jour (ISO) où la Table des Reliques a rapporté sa récompense ; vide si jamais. */
   table: string
+  /** Île du Sphinx : passages, palier, énigmes (core/sphinx/island.ts). Absent avant la première activité : se relit par `sphinxOf(save, classe)`. */
+  sphinx?: SphinxState
 }
 
 export const EMPTY_SAVE: SaveData = {
@@ -56,6 +59,8 @@ export function normalizeSave(data: Partial<SaveData> | null | undefined): SaveD
     items: normalizeOwned(given.items),
     relics: normalizeRelics(given.relics),
     table: typeof given.table === 'string' ? given.table : '',
+    // Une partie sans état du Sphinx n'en reçoit pas ici (la classe de l'enfant fixe le palier de départ : `sphinxOf`).
+    ...(given.sphinx ? { sphinx: normalizeSphinx(given.sphinx, '6e') } : { sphinx: undefined }),
   }
 }
 
