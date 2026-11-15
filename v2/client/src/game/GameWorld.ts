@@ -21,9 +21,11 @@ import {
   Vector3,
 } from '@babylonjs/core'
 import ile from '@content/monde/ile.json'
+import { lookOf } from '../core/appearance'
 import { Emitter } from '../core/events'
 import { ELEMENTS, elementOf, ISLAND_RELICS, MIN_RELICS } from '../core/relics'
 import type { SaveData } from '../core/save'
+import { fur, type Look } from '../core/wardrobe'
 import type { HeightGrid } from '../core/world/heightGrid'
 import type { Obstacles } from '../core/world/obstacles'
 import { heading, type MapMarker, mapMarkers, type ReliefPalette } from '../core/world/minimap'
@@ -31,7 +33,7 @@ import { angleDelta, RUN_SPEED, step, WALK_SPEED } from '../core/world/movement'
 import { isOpen, type Place, placesFor, regionTitle } from '../core/world/places'
 import { type IslandLayout, SEA_LEVEL, Terrain } from '../core/world/terrain'
 import { type Atmosphere, createAtmosphere } from './atmosphere'
-import { type Character, loadFox, loadHero, loadMonster, loadNpc, settleOnGround, skinnedHeights } from './characters'
+import { type Character, dress, loadFox, loadHero, loadMonster, loadNpc, settleOnGround, skinnedHeights, tintFox } from './characters'
 import { type Enemy, type FloatTone, InteriorWorld, type Pedestal } from './interior'
 import { today as localDay } from '../core/dailyChallenge'
 import { beacon, buildDecor, setBeacon } from './decor'
@@ -114,6 +116,8 @@ export class GameWorld {
   engine!: AbstractEngine
   engineKind: EngineKind = 'webgl2'
   hero!: Character
+  /** L'apparence du héros et du renard à l'écran (validée : core/appearance.ts) ; `setLook` la change. */
+  look!: Look
   camera!: ArcRotateCamera
   private grid!: HeightGrid
   private obstacles!: Obstacles
@@ -202,13 +206,15 @@ export class GameWorld {
     this.obstacles = decor.obstacles
 
     this.progress('Le héros', 0.75)
-    this.hero = await loadHero(scene, this.options.save.look)
+    this.look = lookOf(this.options.save, this.options.world)
+    this.hero = await loadHero(scene, this.look)
     this.hero.root.position.set(start.x, grid.heightAt(start.x, start.z), start.z)
     this.hero.yaw = (start.cap * Math.PI) / 180
     for (const m of this.hero.meshes) this.atmosphere.shadows.addShadowCaster(m, false)
     // Renard de Jules, dans le monde lumineux (`?renard=0` pour l'enlever, par exemple en capture).
     if (this.options.world === 'lumineux' && this.params.get('renard') !== '0') {
       this.fox = await loadFox(scene)
+      tintFox(this.fox, fur(this.look.pet_fur))
       this.fox.root.position.set(start.x - 1.5, grid.heightAt(start.x - 1.5, start.z - 1.5), start.z - 1.5)
       for (const m of this.fox.meshes) this.atmosphere.shadows.addShadowCaster(m, false)
       const fox = this.fox
@@ -691,6 +697,30 @@ export class GameWorld {
   }
 
   /**
+   * Habille le héros et son renard avec cette apparence (celle de l'écran de personnalisation, déjà validée par `lookOf`). La même silhouette : seulement
+   * ses pièces, sa cape et le pelage ; une autre : un nouveau modèle prend la place de l'ancien, au même endroit et dans le même sens (ombre comprise).
+   * Pas pendant un lieu : son héros est rechargé à chaque entrée avec `this.look`.
+   */
+  async setLook(next: Look): Promise<void> {
+    const previous = this.look
+    this.look = next
+    if (this.fox && next.pet_fur !== previous.pet_fur) tintFox(this.fox, fur(next.pet_fur))
+    if (this.interior) return
+    if (next.model === previous.model) {
+      dress(this.hero, next.model, next)
+      return
+    }
+    const old = this.hero
+    const replacement = await loadHero(this.scene, next)
+    replacement.root.position.copyFrom(old.root.position)
+    replacement.yaw = old.yaw
+    for (const m of replacement.meshes) this.atmosphere.shadows.addShadowCaster(m, false)
+    for (const m of old.meshes) this.atmosphere.shadows.removeShadowCaster(m, false)
+    this.hero = replacement
+    old.dispose()
+  }
+
+  /**
    * Un lieu vient d'être terminé : les lieux qui s'ouvrent (le suivant de sa région) s'allument, leur repère sur la mini-carte aussi.
    * Le monde garde la partie de sa création : sans cet appel, le lieu suivant n'apparaîtrait ouvert qu'après un rechargement.
    */
@@ -846,7 +876,7 @@ export class GameWorld {
     const interior = await InteriorWorld.create(this.engine, this.canvas, {
       place,
       world: this.options.world,
-      look: this.options.save.look,
+      look: this.look,
       quality: this.quality,
       calm: this.options.calm,
       onProgress,

@@ -36,6 +36,11 @@ const VIEWS = {
   // La Table des Reliques (plateau de la Citadelle, `table_reliques` de ile.json), vue de trois quarts, puis dans le Brouillard.
   table: { query: '', at: [-22.2, 8.4], face: [-18, 12], beta: 1.2, radius: 7, turn: 0.45 },
   'table-brouillard': { query: '&monde=brouillard&classe=2nde', at: [-22.2, 8.4], face: [-18, 12], beta: 1.2, radius: 7, turn: 0.45 },
+  // Apparence du héros et du renard (core/wardrobe.ts) : le héros de dos, de près, avec son renard.
+  'apparence-chevalier': { query: '', at: [0, -30], face: [0, 30], beta: 1.25, radius: 5.5, turn: 0.55, look: { model: 'Knight', main: '2H_Sword', off: '', head: true, cape: true, cape_color: 'bleu', pet_name: 'Roux', pet_fur: 'roux', seen: 0 } },
+  'apparence-mage': { query: '', at: [0, -30], face: [0, 30], beta: 1.25, radius: 5.5, turn: 0.55, look: { model: 'Mage', main: '2H_Staff', off: '', head: true, cape: true, cape_color: 'or', pet_name: 'Comète', pet_fur: 'arctique', seen: 0 } },
+  'apparence-barbare': { query: '', at: [0, -30], face: [0, 30], beta: 1.25, radius: 5.5, turn: 0.55, look: { model: 'Barbarian', main: '1H_Axe', off: 'Barbarian_Round_Shield', head: false, cape: true, cape_color: 'violet', pet_name: 'Filou', pet_fur: 'sable', seen: 0 } },
+  'apparence-rodeur': { query: '&monde=brouillard&classe=2nde', at: [0, -30], face: [0, 30], beta: 1.25, radius: 5.5, turn: 0.55, look: { model: 'Rogue_Hooded', main: '1H_Crossbow', off: 'Knife_Offhand', head: false, cape: true, cape_color: 'vert', pet_name: 'Roux', pet_fur: 'roux', seen: 0 } },
   // Une relique de l'île par élément (reliques.json) : le héros à 2,6 m, l'éclat et son anneau devant lui.
   'relique-flamme': { query: '', at: [-62.6, -42], face: [-60, -42], beta: 1.3, radius: 6, turn: 0.35 },
   'relique-onde': { query: '', at: [-148.6, 132], face: [-146, 132], beta: 1.3, radius: 6, turn: 0.35 },
@@ -113,8 +118,9 @@ for (const name of views) {
       interior.frame(v.turn, v.beta, v.radius)
     }, view)
   } else {
-    await page.evaluate((v) => {
+    await page.evaluate(async (v) => {
       const w = window.__aldoria.world
+      if (v.look) await w.setLook(v.look) // l'apparence de la vue (silhouette, cape, pelage), sans passer par les déblocages
       w.teleport(v.at[0], v.at[1], v.face[0], v.face[1])
       w.frame(w.camera.alpha + v.turn, v.beta, v.radius)
     }, view)
