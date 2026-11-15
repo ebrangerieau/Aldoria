@@ -1143,9 +1143,9 @@ try {
     await close()
     await page.getByTestId('apparence').waitFor({ state: 'detached', timeout: 5000 * SLOW })
     if ((await badge()) !== 0) throw new Error('rien de nouveau après avoir tout vu')
-    await page.keyboard.down('KeyZ')
-    await page.waitForTimeout(700 * SLOW)
-    await page.keyboard.up('KeyZ')
+    await page.keyboard.down('KeyS') // un pas en arrière : le héros fait face au lieu, on ne le pousse pas contre ses murs
+    await page.waitForTimeout(900 * SLOW)
+    await page.keyboard.up('KeyS')
     const after = await pos()
     if (after.join() === before.join()) throw new Error('le héros doit pouvoir marcher de nouveau')
 
