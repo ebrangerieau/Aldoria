@@ -449,6 +449,8 @@ html[data-calm='true'] .hero-bubble { animation: bubble-calm 6s linear forwards;
 .sphinx-alert { fill: var(--bad-ink); font: 700 18px var(--title-font); }
 .sphinx-hero circle { fill: #2f4c9a; stroke: #12204a; stroke-width: 3; }
 .sphinx-hero polygon { fill: #f4e9d2; stroke: #12204a; stroke-width: 1.5; }
+/* Texte agrandi : sans cette borne le plateau (33 rem pour 10 colonnes) prend toute la largeur et rejette le message et les boutons sous le pli. */
+@media (min-width: 900px) { .sphinx-board { max-width: 58%; } }
 .sphinx-status { min-height: 4.4rem; margin: 0 0 0.5rem; font-weight: 600; }
 
 .shield-badge {
