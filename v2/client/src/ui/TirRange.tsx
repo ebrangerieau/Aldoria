@@ -415,6 +415,7 @@ export function TirRange({ services, accommodations, demo, data, onSave, onClose
             <p className="pont-prompt">{item.prompt}</p>
             {protractor && <ProtractorView spec={protractor} shots={shots.map((s) => ({ angle: (s as { angle: number }).angle, hit: s.hit }))} hit={hit} flying={flying} />}
             {line && <LineView spec={line} shots={shots.map((s) => ({ n: (s as { n: number }).n, d: (s as { d: number }).d, hit: s.hit }))} hit={hit} flying={flying} />}
+            <p className={`pont-feedback ${feedback ? (feedback.ok ? 'good' : 'bad') : ''}`} role="status" data-testid="tir-message">{feedback?.text ?? ''}</p>
             <div className="tir-controls">
               {protractor ? (
                 <>
@@ -437,7 +438,6 @@ export function TirRange({ services, accommodations, demo, data, onSave, onClose
                 <button type="button" className="primary" data-testid="tir-tirer" disabled={locked} onClick={fire}>Tirer <kbd>Entrée</kbd></button>
               )}
             </div>
-            <p className={`pont-feedback ${feedback ? (feedback.ok ? 'good' : 'bad') : ''}`} role="status" data-testid="tir-message">{feedback?.text ?? ''}</p>
           </section>
         </div>
       )}

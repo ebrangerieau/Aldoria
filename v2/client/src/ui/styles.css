@@ -573,6 +573,8 @@ html[data-calm='true'] .hero-bubble { animation: bubble-calm 6s linear forwards;
 .tir-point-label { fill: var(--ink); stroke: #f6efd8; stroke-width: 3px; paint-order: stroke; font-size: 15px; font-weight: 700; }
 .tir-bow .body { fill: #a8703f; stroke: var(--ink); stroke-width: 1.5; }
 .tir-bow .arc { fill: #5a3d0c; stroke: var(--ink); stroke-width: 1.5; }
+/* Texte agrandi : le panneau défile, mais le bouton qui fait avancer (Tirer, Poser le pont) reste toujours sous le doigt, collé en bas. */
+.tir-controls, .pont-panel .actions { position: sticky; bottom: 0; z-index: 1; padding: 0.5rem 0; background: var(--parchment); box-shadow: 0 -8px 8px -8px rgb(0 0 0 / 30%); }
 .tir-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.6rem; margin: 0.5rem 0 0.2rem; }
 .tir-label { font-weight: 700; font-size: 1.15rem; }
 .tir-stepper { display: inline-flex; align-items: center; gap: 0.35rem; }
