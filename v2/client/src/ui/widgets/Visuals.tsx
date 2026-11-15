@@ -16,6 +16,7 @@ import {
   gridFrom,
   gridPixel,
   HEADING_NAMES,
+  isTotalCell,
   mapFrom,
   mapPixel,
   mapRoute,
@@ -28,6 +29,8 @@ import {
   type NumberLineSpec,
   tickCount,
   tickFraction,
+  tableFrom,
+  tableSummary,
   tickLabel,
   ticksOf,
   type BalanceState,
@@ -356,6 +359,39 @@ export function GraphView({ item }: { item: Item }) {
   )
 }
 
+// --- Tableau d'une enquête (relevé statistique, tableau croisé) ------------------------------------
+
+/**
+ * Le document d'une enquête du village : un vrai tableau HTML (en-têtes de colonnes et de lignes lus par un lecteur d'écran). Les totaux d'un tableau croisé
+ * sont en gras sur un fond plus clair, jamais la couleur seule (« Total » est écrit dans l'en-tête de la ligne et de la colonne).
+ */
+export function TableView({ item }: { item: Item }) {
+  const spec = tableFrom(item.visual ?? {})
+  if (spec.header.length === 0) return null
+  return (
+    <figure className="visual table">
+      <table aria-label={tableSummary(spec)}>
+        {spec.title && <caption>{spec.title}</caption>}
+        <thead>
+          <tr>
+            {spec.header.map((cell, c) => <th key={c} scope="col">{cell}</th>)}
+          </tr>
+        </thead>
+        <tbody>
+          {spec.body.map((row, r) => (
+            <tr key={r}>
+              {row.map((cell, c) => {
+                const total = isTotalCell(spec, r, c)
+                return c === 0 ? <th key={c} scope="row" className={total ? 'total' : undefined}>{cell}</th> : <td key={c} className={total ? 'total' : undefined}>{cell}</td>
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </figure>
+  )
+}
+
 /** Visuel d'une question, au-dessus de sa réponse ; null si le type n'en a pas ou s'il ne sait pas le dessiner. */
 export function VisualFor({ item, revealed }: { item: Item; revealed: Revealed | null }) {
   const kind = item.visual?.kind
@@ -374,6 +410,8 @@ export function VisualFor({ item, revealed }: { item: Item; revealed: Revealed |
       return <RobotView item={item} revealed={revealed} />
     case 'graph':
       return <GraphView item={item} />
+    case 'table':
+      return <TableView item={item} />
     case 'number_line': {
       const v = item.visual ?? {}
       return <NumberLine spec={numberLineFrom(v)} point={v.point !== undefined ? String(v.point) : undefined} label={v.label !== undefined ? String(v.label) : 'A'} correctText={revealed?.answer} />

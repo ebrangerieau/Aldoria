@@ -1,4 +1,4 @@
-"""Exporte des questions à visuel (carte, robot, courbe), tirées des vrais générateurs, pour les tests du client.
+"""Exporte des questions à visuel (carte, robot, courbe, tableaux d'enquête), tirées des vrais générateurs, pour les tests du client.
 
 Usage (depuis v2/) :
     uv run --directory api python ../tools/export_visual_samples.py
@@ -22,6 +22,8 @@ GENERATORS = [
     "6e.algorithmique.sequences",
     "6e.algorithmique.boucles",
     "2nde.automatismes.lecture_graphique",
+    "2nde.statistiques.enquete",
+    "2nde.probabilites.enquete",
 ]
 SEEDS = (11, 22, 33, 44)
 OUT = ROOT / "client" / "tests" / "fixtures" / "visual_samples.json"

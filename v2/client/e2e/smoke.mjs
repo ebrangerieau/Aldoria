@@ -1271,6 +1271,39 @@ try {
     await page.getByRole('button', { name: 'Terminer' }).click()
     await page.getByTestId('decouvrir').waitFor({ timeout: 10_000 * SLOW })
   })
+
+  await step('le village de la 2nde (Brumegarde) : les enquêtes de Vesna et du capitaine Brann dessinent leur tableau et se terminent', async () => {
+    await page.goto(`${BASE}/?decouverte&e2e&classe=2nde&monde=brouillard&qualite=${QUALITY}&musique=0&sons=0`)
+    await page.waitForFunction(() => window.__aldoria?.world, null, { timeout: 180_000 * SLOW })
+    const enquete = async (code, captionPattern, shot) => {
+      const npc = await page.evaluate((c) => {
+        const i = window.__aldoria.world.interactables.find((x) => x.id === `habitant-${c}`)
+        return i ? { x: i.x, z: i.z, label: i.label } : null
+      }, code)
+      if (!npc) throw new Error(`l'habitant ${code} manque dans Brumegarde`)
+      await page.evaluate(({ x, z }) => window.__aldoria.world.teleport(x + 1.8, z, x, z), npc)
+      await page.getByTestId('invite').filter({ hasText: `Parler à ${npc.label}` }).waitFor({ timeout: 10_000 * SLOW })
+      await page.keyboard.press('KeyE')
+      await page.getByRole('button', { name: "Je t'aide !" }).click()
+      for (let i = 1; i <= 3; i += 1) {
+        await page.getByRole('heading', { name: new RegExp(`${i} / 3`) }).waitFor({ timeout: 10_000 * SLOW })
+        const table = page.locator('figure.visual.table table')
+        await table.waitFor({ timeout: 5000 * SLOW })
+        const caption = await table.locator('caption').innerText()
+        if (!captionPattern.test(caption)) throw new Error(`titre du tableau de ${code} : ${caption}`)
+        if ((await table.locator('th[scope="col"]').count()) < 3 || (await table.locator('tbody tr').count()) < 1) throw new Error(`le tableau de ${code} est incomplet`)
+        if (i === 1) await page.screenshot({ path: `${OUT}/${shot}` })
+        await answerQuestion(true)
+      }
+      await page.getByRole('button', { name: 'Avec plaisir !' }).waitFor({ timeout: 10_000 * SLOW })
+      const thanks = await page.getByTestId('habitant').innerText()
+      if (!thanks.includes('3 bonnes réponses sur 3. +80 XP')) throw new Error(`fin de la quête de ${code} : ${thanks}`)
+      await page.getByRole('button', { name: 'Avec plaisir !' }).click()
+      await page.getByTestId('habitant').waitFor({ state: 'detached', timeout: 5000 * SLOW })
+    }
+    await enquete('vesna', /./, '11a-enquete-releve.png') // relevé statistique : valeurs et effectifs
+    await enquete('brann', /Registre/, '11b-enquete-croisee.png') // tableau croisé, avec ses totaux
+  })
 } catch (error) {
   const where = error instanceof Error ? (error.stack ?? '').split('\n').find((l) => l.includes('smoke.mjs'))?.trim() ?? '?' : '?'
   problems.push(error instanceof Error ? `${error.message.split('\n')[0]} (${where})` : String(error))
