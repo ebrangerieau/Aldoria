@@ -69,16 +69,6 @@ function ProtractorView({ spec, shots, hit, flying }: { spec: ProtractorSpec; sh
         const to = at(t.k, PR - (t.long ? 0.6 : 0.3) * PS)
         return <line key={t.k} x1={from.x} y1={from.y} x2={to.x} y2={to.y} className="tir-tick" />
       })}
-      {ticksOf(spec).filter((t) => t.long).map((t) => {
-        const outer = at(t.k, PR + 0.62 * PS)
-        const inner = at(t.k, PR - 1.0 * PS)
-        return (
-          <g key={t.k}>
-            <text x={outer.x} y={outer.y + 5} textAnchor="middle" className={`tir-number${dense ? ' dense' : ''}`}>{t.k}</text>
-            {spec.doubleScale && <text x={inner.x} y={inner.y + 4} textAnchor="middle" className="tir-number second">{180 - t.k}</text>}
-          </g>
-        )
-      })}
       <line x1={PCX - PR - 14} y1={PCY} x2={PCX + PR + 14} y2={PCY} className="tir-diameter" />
       <line x1={PCX} y1={PCY} x2={PCX + side * (PR + 1.2 * PS)} y2={PCY} className="tir-start" data-testid="tir-ligne-depart" />
       <text x={PCX + side * (PR - 0.4 * PS)} y={PCY + 26} textAnchor="middle" className="tir-start-label">ligne de départ</text>
@@ -99,6 +89,18 @@ function ProtractorView({ spec, shots, hit, flying }: { spec: ProtractorSpec; sh
             <line x1={from.x} y1={from.y} x2={to.x} y2={to.y} pathLength={1} />
             <circle cx={to.x} cy={to.y} r={5} />
             {!s.hit && <text x={to.x + dir.x * 22} y={to.y - dir.y * 22 + 5} textAnchor="middle" className="tir-shot-label">{s.angle}°</text>}
+          </g>
+        )
+      })}
+      {ticksOf(spec).filter((t) => t.long).map((t) => {
+        // Les nombres passent au-dessus des flèches (une flèche juste traverse la graduation de la cible) ; 0 et 180 se lisent sous la ligne, pas dessus.
+        const edge = t.k === 0 || t.k === 180
+        const outer = at(t.k, PR + 0.45 * PS)
+        const inner = at(t.k, PR - 1.0 * PS)
+        return (
+          <g key={t.k} className="tir-numbers">
+            <text x={outer.x} y={outer.y + (edge ? 20 : 5)} textAnchor="middle" className={`tir-number${dense ? ' dense' : ''}`}>{t.k}</text>
+            {spec.doubleScale && <text x={inner.x} y={inner.y + 4} textAnchor="middle" className="tir-number second">{180 - t.k}</text>}
           </g>
         )
       })}
@@ -133,8 +135,8 @@ function LineView({ spec, shots, hit, flying }: { spec: LineSpec; shots: { n: nu
       {Array.from({ length: spec.height + 1 }, (_, y) => <line key={`gy${y}`} x1={px(0)} y1={py(y)} x2={px(spec.width)} y2={py(y)} className="tir-grid" />)}
       <line x1={px(0)} y1={py(0)} x2={px(spec.width) + 16} y2={py(0)} className="tir-axis" />
       <line x1={px(0)} y1={py(0)} x2={px(0)} y2={py(spec.height) - 16} className="tir-axis" />
-      {Array.from({ length: spec.width }, (_, i) => <text key={`lx${i}`} x={px(i + 1)} y={py(0) + 20} textAnchor="middle" className="tir-number second">{i + 1}</text>)}
-      {Array.from({ length: spec.height + 1 }, (_, y) => <text key={`ly${y}`} x={px(0) - 12} y={py(y) + 5} textAnchor="end" className="tir-number second">{y}</text>)}
+      {Array.from({ length: spec.width }, (_, i) => <text key={`lx${i}`} x={px(i + 1)} y={py(0) + 20} textAnchor="middle" className="tir-number axis">{i + 1}</text>)}
+      {Array.from({ length: spec.height + 1 }, (_, y) => <text key={`ly${y}`} x={px(0) - 12} y={py(y) + 5} textAnchor="end" className="tir-number axis">{y}</text>)}
       <text x={px(spec.width) + 24} y={py(0) + 5} className="tir-number">x</text>
       <text x={px(0) - 5} y={py(spec.height) - 22} textAnchor="end" className="tir-number">y</text>
       {shots.map((s, i) => {

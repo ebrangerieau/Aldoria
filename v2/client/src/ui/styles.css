@@ -529,6 +529,7 @@ html[data-calm='true'] .hero-bubble { animation: bubble-calm 6s linear forwards;
 .tir-number { fill: var(--ink); stroke: #f8f1da; stroke-width: 3px; paint-order: stroke; font-size: 15px; font-weight: 700; }
 .tir-number.dense { font-size: 12px; }
 .tir-number.second { fill: #5b2f7a; font-size: 12px; }
+.tir-number.axis { font-size: 14px; }
 .tir-archer circle { fill: var(--gold); stroke: var(--ink); stroke-width: 2; }
 .tir-archer circle.core { fill: var(--ink); stroke: none; }
 .tir-target .ring-a { fill: #c93c34; stroke: var(--ink); stroke-width: 1.5; }
