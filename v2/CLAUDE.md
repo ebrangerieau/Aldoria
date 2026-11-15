@@ -126,8 +126,7 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   plume cache deux mauvaises propositions d'un QCM d'au moins trois choix (**une seule sur trois choix**, la v1 en retirait deux et laissait la
   bonne réponse seule), le parchemin montre l'indice. Une aide d'objet compte comme indice pour le suivi mais **sans baisse de puissance**
   (`helpCounted` : seul « Un indice ? » baisse la puissance du coup). Tests dans le navigateur (`&e2e`) : `__aldoria.give(id, n)` met des objets
-  au sac. Reste à faire : le sac n'est pas consultable hors combat (les objets gagnés s'annoncent, mais aucun écran ne les liste), pas d'objet
-  gagné par une quête de village ni à l'arène (ni village ni arène dans la v2).
+  au sac. Reste à faire : le sac n'est pas consultable hors combat (les objets gagnés s'annoncent, mais aucun écran ne les liste) ; une quête de village rapporte un objet, l'arène n'existe pas encore dans la v2.
 - **Reliques et Table des Reliques** (décision D13 ; `core/relics.ts`, `content/monde/reliques.json`, tests `reliques.test.ts`) : seize **sceaux**, un par couple
   d'un élément (flamme, onde, feuille, étoile : chacun a une couleur **et une forme**, jamais la couleur seule) et d'un rang (I à IV) ; deux reliques
   « se répondent » quand elles partagent un élément ou un rang. Huit se ramassent dans l'île (une par région, positions de `reliques.json`, vérifiées sur
@@ -162,8 +161,21 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   solution à chaque appel) ; jamais la couleur seule (dalle gravée = losange creux, bloc = croix, bloc posé = coche, bloc coincé = « ! »). Trois énigmes de suite sans aide font monter d'un palier.
   La traversée ouvre une session « sphinx » (`app/sphinxSession.ts`, paquet vide côté API) : elle compte le temps de jeu fixé par le parent. Crochets `&e2e` : `sphinx` (l'énigme en cours : `rows`, `solution`,
   `tier`, `round`) et, en découverte, `giveSphinxPasses(n, patch)` (le patch change le palier, `next`…). Parcours navigateur : barque sans passage, traversée, présentation, trois énigmes (annuler, recommencer, aide, dalle cliquée), bilan, seconde visite
-  quittée à Échap ; captures `barque`, `barque-brouillard`. **Pas encore fait** : le temple en 3D de la v1 (`SphinxTemple`, le Sphinx et son compagnon) : l'énigme se joue sur un plateau 2D ; les passages gagnés au
-  village et à l'arène (ni l'un ni l'autre n'existe dans la v2).
+  quittée à Échap ; captures `barque`, `barque-brouillard`. **Pas encore fait** : le temple en 3D de la v1 (`SphinxTemple`, le Sphinx et son compagnon) : l'énigme se joue sur un plateau 2D ; le village rapporte un passage
+  (la deuxième quête du jour, six réponses), l'arène n'existe pas encore dans la v2.
+- **Le village** (Clairval en 6e, Brumegarde en 2nde ; portés de la v1 : `core/village.ts`, `content/monde/villages.json` exporté de la v1, tests `village.test.ts`). Les habitants se tiennent
+  en plein air autour du puits (`ile.json` : `village.habitants`, écarts au puits dans l'ordre de `villages.json`, testés : sur le replat, atteignables à pied, loin des maisons et les uns des autres ;
+  `GameWorld.buildVillagers`, `Interactable` de sorte « habitant », invite « Parler à … ») avec un « ! » doré (un trait et un point, jamais de texte dans le monde) tant que leur quête du jour
+  attend (`setQuestState`) ; `talkTo` les tourne l'un vers l'autre et joue un geste. **Une quête par habitant et par jour** (`SaveData.quests`, code → jour ISO local, `questDone`, `normalizeQuests`) :
+  `revision` (notions à revoir, catégorie « revision » du paquet), `veille` (chapitre « contrôle bientôt » du parent, sinon en cours : `context` du paquet, `askText` le nomme), `enquete` (trois
+  questions sur un même document : générateur d'énigme, `shared_document` côté API). `QuestionService.nextQuestItem` choisit (jamais deux fois la même ; sans candidate, ou toutes posées, une
+  question inédite de n'importe quel chapitre ; une enquête rend `null` quand ses énigmes sont posées). `ui/VillageQuest.tsx` (demande, « Je t'aide ! » ou « Plus tard », trois `QuestionPanel`
+  `gameMode` « village », remerciement) et `app/villageSession.ts` (ferme la session « monde », ouvre « village » avec les `enigmas` du village, puis rouvre l'île : comme le défi du jour ; hors
+  connexion sans paquet gardé : « il faut une connexion »). `completeQuest` (pur, état neuf) : 50 XP de forfait + 10 par bonne réponse (une quête sans bonne réponse compte aussi), un objet au sac, le niveau
+  gagné et ce qu'il débloque dans l'apparence annoncés ; **la deuxième quête du jour (six réponses) rapporte un passage pour la barque du Sphinx**, jamais un second le même jour. Une quête faite ne
+  se refait pas (l'habitant le dit : « Reviens demain »). Crochet de test : `world.interactables` (`habitant-<code>`), `world.villagers`, `save().quests`. Vérifier : captures `village`,
+  `village-brumegarde`, `village-dialogue`, `village-enquete`, `village-enquete-croisee` ; parcours navigateur (les trois quêtes de Clairval : XP, objet, « ! » éteint, quête refusée le même jour,
+  passage ; puis Brumegarde : les deux enquêtes avec leur tableau). Reste : les habitants ne figurent pas sur la mini-carte (seul le village y est) et n'ont pas de voix enregistrée.
 - **Musique** (`app/music.ts` joue, `core/music.ts` décide du volume, testé) : morceaux de `deploy/musique/` listés dans
   `content/monde/musique.json` (ordre de lecture, crédit des Options), servis sous `/musique/` par nginx ; `npm run dev` et
   `vite preview` les servent depuis le même dossier (`vite.config.ts`, requêtes `Range` comprises). Elle démarre à l'entrée
@@ -203,9 +215,9 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   `SUPPORTED_TYPES`, `SUPPORTED_VISUALS`, `isPlayable`), sinon l'énoncé serait incompréhensible. Calculs dans `core/visuals.ts`
   (testés), dessin SVG dans `ui/widgets/Visuals.tsx`, réponses dans `ui/widgets/Widgets.tsx`. Aujourd'hui : balance, droite
   graduée, repère quadrillé (vecteurs), tableau de signes, carte à l'échelle, robot sur une grille, courbe : **les 30 lieux sont
-  jouables** (chapitre et énigme, mesuré sur les vrais générateurs). Restent `pont`, `rapporteur`, `repere_tir` : leurs générateurs
-  (`combat=False`) ne servent qu'au pont des fractions et au stand de tir de la Citadelle, jamais dans un lieu ; les énigmes
-  d'enquête de Clairval (tableau, relevé) viendront avec le village. Ajouter un visuel : le composant, son calcul testé sur de
+  jouables** (chapitre et énigme, mesuré sur les vrais générateurs), et `table` (relevé statistique et tableau croisé des enquêtes de Brumegarde,
+  `TableView` : un vrai tableau HTML, en-têtes lus par un lecteur d'écran, totaux en gras avec leur nom écrit). Restent `pont`, `rapporteur`, `repere_tir` : leurs générateurs
+  (`combat=False`) ne servent qu'au pont des fractions et au stand de tir de la Citadelle, jamais dans un lieu. Ajouter un visuel : le composant, son calcul testé sur de
   vraies questions (`tests/fixtures/visual_samples.json`, régénéré par `uv run --directory api python ../tools/export_visual_samples.py`),
   puis son nom dans `SUPPORTED_VISUALS`.
 - **Voix enregistrées** (ElevenLabs : Maître Ysaline et le narrateur) : `deploy/voix/` (`manifest.json` : empreinte SHA-256 du
