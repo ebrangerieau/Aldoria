@@ -13,7 +13,7 @@ import lignes from '@content/voix/lignes.json'
 import { today as localDay } from '../core/dailyChallenge'
 import { DEFAULT_VOLUME, volumeOf } from '../core/music'
 import { levelForXp } from '../core/progression'
-import { choose, lookOf, markSeen, progressOf, unlockNews, unseenCount, type LookChoice } from '../core/appearance'
+import { choose, companionLabel, lookOf, markSeen, progressOf, unlockNews, unseenCount, type LookChoice } from '../core/appearance'
 import { grantRelic, normalizeRelics, relicOf, RELICS } from '../core/relics'
 import { MAX_PASSES, sphinxOf, type SphinxState } from '../core/sphinx/island'
 import { EMPTY_SAVE, SaveGame, type SaveData } from '../core/save'
@@ -497,15 +497,19 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
   }
 
   const news = unseenCount(data, (profile.world as WorldName) ?? 'lumineux')
+  const companion = companionLabel(data, (profile.world as WorldName) ?? 'lumineux')
 
   return (
     <div className="game">
       <canvas ref={canvasRef} className="world-canvas" tabIndex={-1} aria-label="L'île d'Aldoria" data-testid="monde" />
 
       <div className="hud-top">
-        <div className="badge">
-          <strong>{profile.name}</strong> · {data.xp} XP{demo && ' · découverte'}
-          {!online && <span className="offline" title="Les réponses partiront au retour du réseau"> · hors connexion</span>}
+        <div className="badge-column">
+          <div className="badge">
+            <strong>{profile.name}</strong> · {data.xp} XP{demo && ' · découverte'}
+            {!online && <span className="offline" title="Les réponses partiront au retour du réseau"> · hors connexion</span>}
+          </div>
+          {companion && !inside && <div className="pet-badge" data-testid="compagnon"><span aria-hidden="true">🦊</span> {companion}<span className="sr-only">, ton compagnon</span></div>}
         </div>
         <div className="hud-right">
           <div className="hud-buttons">
