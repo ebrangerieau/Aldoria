@@ -44,8 +44,16 @@ if (CPU_SLOWDOWN > 1) {
 // Seule tolérée : l'erreur d'essai levée exprès par `?erreur_test=1` (remontée des erreurs).
 const TEST_ERROR = "Erreur d'essai (erreur_test=1)"
 page.on('pageerror', (e) => { if (!e.message.includes(TEST_ERROR)) problems.push(`erreur de la page : ${e.message}`) })
-page.on('console', (m) => { if (m.type() === 'error' && !m.text().includes(TEST_ERROR)) problems.push(`console : ${m.text()}`) })
-page.on('response', (r) => { if (r.status() >= 400) problems.push(`${r.status()} ${r.url()}`) })
+// Les refus du serveur que l'étape de la connexion expirée provoque exprès (401, 503 sur l'ouverture de la session) : seuls tolérés pendant cette étape.
+let refusalsExpected = false
+page.on('console', (m) => {
+  if (m.type() !== 'error' || m.text().includes(TEST_ERROR)) return
+  if (refusalsExpected && m.text().includes('Failed to load resource')) return
+  problems.push(`console : ${m.text()}`)
+})
+page.on('response', (r) => {
+  if (r.status() >= 400 && !(refusalsExpected && r.url().includes('/play/session/start'))) problems.push(`${r.status()} ${r.url()}`)
+})
 if (VOICE_DELAY > 0) {
   await page.route('**/voix/*.mp3', async (route) => {
     await new Promise((resolve) => setTimeout(resolve, VOICE_DELAY))
@@ -116,6 +124,7 @@ try {
       await page.getByTestId('jouer').filter({ hasText: 'Continuer, Tom' }).waitFor({ timeout: 10_000 * SLOW })
     }
     const now = Math.floor(Date.now() / 1000)
+    refusalsExpected = true
 
     // 1. Connexion gardée depuis plus de 12 heures : le code est redemandé tout de suite, sans même appeler le serveur.
     let called = false
@@ -146,6 +155,7 @@ try {
     if (!(await page.getByTestId('titre-avis').innerText()).includes('Le serveur ne répond pas')) throw new Error('un serveur en panne doit être expliqué')
     if (!(await page.getByTestId('jouer').isEnabled())) throw new Error('le bouton doit se rendre après un échec')
     await page.screenshot({ path: `${OUT}/01c-serveur-muet.png` })
+    refusalsExpected = false
     await page.unroute('**/api/v1/play/session/start')
     await page.evaluate(() => { localStorage.removeItem('aldoria2.auth'); localStorage.removeItem('aldoria2.device') })
   })
