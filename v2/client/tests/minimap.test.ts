@@ -93,6 +93,13 @@ describe('Mini-carte : repères', () => {
     expect(done.find((m) => m.id === 'pierre-jour')?.state).toBe('faite')
   })
 
+  it('montre le pont des fractions de la Lice quand le monde l’a posé, et seulement alors', () => {
+    const pont = { id: 'pont-fractions', kind: 'pont', label: 'Le pont des fractions', x: layout.pont.x, z: layout.pont.z - 1.8, open: true }
+    const withBridge = mapMarkers(layout, '6e', [...sources, pont], {})
+    expect(withBridge.find((m) => m.id === 'pont-fractions')).toMatchObject({ kind: 'pont', state: 'repere', label: 'Le pont des fractions' })
+    expect(markers.some((m) => m.kind === 'pont')).toBe(false) // pas de pont, pas de repère (une classe sans ce jeu)
+  })
+
   it('ne révèle pas les lieux secrets et laisse les personnages de côté', () => {
     const secret = layout.secrets.tour_oubli!
     expect(markers.some((m) => Math.hypot(m.x - secret.x, m.z - secret.z) < 20)).toBe(false)

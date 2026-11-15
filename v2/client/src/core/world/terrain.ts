@@ -36,6 +36,8 @@ export interface IslandLayout {
   /** La barque de l'île du Sphinx, sur la côte est : le point où le héros monte (dans l'eau peu profonde) et l'endroit où la barque flotte. */
   barque: Point & { bateau: Point }
   ysaline: Point
+  /** Le pont des fractions (la Lice, sur le plateau de la Citadelle). */
+  pont: Point
   /** Le puits au centre ; `habitants` : où se tiennent les habitants (écart au puits, dans l'ordre de `villages.json`). */
   village: Point & { rayon_plat: number; habitants: { dx: number; dz: number }[] }
   regions: Record<string, RegionLayout>

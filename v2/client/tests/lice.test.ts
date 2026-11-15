@@ -1,4 +1,7 @@
 import { describe, expect, it } from 'vitest'
+import ile from '@content/monde/ile.json'
+import { type IslandLayout, SEA_LEVEL, Terrain } from '../src/core/world/terrain'
+import { cellKey, reachableOnFoot } from './walk'
 import {
   finishRound, finishText, generatorFor, introText, isOver, roundGain, roundLabel, ROUNDS, sessionParams, START, statusLine, successText,
 } from '../src/core/lice'
@@ -65,5 +68,27 @@ describe('Une série de six', () => {
     expect(introText('tir', '6e')).toContain('rapporteur')
     expect(introText('tir', '2nde')).toContain('coefficient directeur')
     expect(introText('pont', '6e')).toContain('ni plus court, ni plus long')
+  })
+})
+
+describe('Le pont dans l’île', () => {
+  const layout = ile as unknown as IslandLayout
+  const terrain = new Terrain(layout)
+  const { x, z } = layout.pont
+
+  it('il se tient sur le plateau de la Citadelle : sur la terre ferme, à plat, atteignable à pied', () => {
+    expect(terrain.heightAt(x, z)).toBeGreaterThan(SEA_LEVEL + 0.5)
+    const around = [[x - 4, z], [x + 4, z], [x, z + 4], [x, z - 4]].map(([px, pz]) => terrain.heightAt(px!, pz!))
+    for (const h of around) expect(Math.abs(h - terrain.heightAt(x, z)), 'le sol est plat sous la passerelle').toBeLessThan(0.3)
+    expect(reachableOnFoot(layout, terrain).has(cellKey(x, z))).toBe(true)
+  })
+
+  it('il est loin du château, de la Table des Reliques, de la Pierre du Jour et de Maître Ysaline (rien ne se chevauche)', () => {
+    const far = (other: { x: number; z: number }, min: number) => Math.hypot(x - other.x, z - other.z) >= min
+    expect(far(layout.citadelle, 20)).toBe(true)
+    expect(far(layout.table_reliques, 10)).toBe(true)
+    expect(far(layout.pierre_jour, 10)).toBe(true)
+    expect(far(layout.ysaline, 10)).toBe(true)
+    expect(far(layout.depart, 10)).toBe(true)
   })
 })
