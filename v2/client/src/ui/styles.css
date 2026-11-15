@@ -153,6 +153,10 @@ html[data-big-targets='true'] .minimap { width: 300px; }
 .mark-barque path { fill: #f3ead2; stroke: #5a3d0c; }
 .mark-table path { fill: #c8a2e8; stroke: #3d2260; }
 .mark-pont path { fill: #e09f3e; stroke: #5a3d0c; }
+.minimap-marks .fog-core { stop-color: #3f4a5a; stop-opacity: 1; }
+.minimap-marks .fog-mid { stop-color: #3f4a5a; stop-opacity: 0.9; }
+.minimap-marks .fog-edge { stop-color: #3f4a5a; stop-opacity: 0; }
+.mark-fog { pointer-events: none; }
 .mark-village .mark-badge { fill: #ffd447; stroke: #5a3d0c; stroke-width: 1.2; }
 .mark-tir path { fill: #d9534f; stroke: #5a1a18; }
 .mark-jour path { fill: #ffd447; stroke: #5a3d0c; }

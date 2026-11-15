@@ -6,7 +6,7 @@
  * texte, le lieu où l'on est, est du HTML.
  */
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { landBounds, type MapFrame, type MapMarker, mapFrame, paintRelief, toMap } from '../core/world/minimap'
+import { fogDiscs, landBounds, type MapFrame, type MapMarker, mapFrame, paintRelief, toMap } from '../core/world/minimap'
 import type { GameWorld, HeroPose } from '../game/GameWorld'
 
 /** Largeur de la carte en unités du dessin (pixels CSS au réglage normal). */
@@ -52,10 +52,13 @@ export function Minimap({ world, place }: { world: GameWorld; place: string }) {
   const relief = useMemo(() => reliefOf(world), [world])
   const [markers, setMarkers] = useState<MapMarker[]>(() => world.mapInfo().markers)
   const [pose, setPose] = useState<HeroPose>(() => world.heroPose())
+  const [lights, setLights] = useState<Record<string, number>>(() => world.mapInfo().lights)
+  const regions = useMemo(() => world.mapInfo().regions, [world])
 
   useEffect(() => {
-    const offs = [world.events.on('hero', setPose), world.events.on('markers', setMarkers)]
+    const offs = [world.events.on('hero', setPose), world.events.on('markers', setMarkers), world.events.on('lights', setLights)]
     setMarkers(world.mapInfo().markers)
+    setLights(world.mapInfo().lights)
     return () => {
       for (const off of offs) off()
     }
@@ -76,6 +79,17 @@ export function Minimap({ world, place }: { world: GameWorld; place: string }) {
       <div className="minimap-map">
         <canvas ref={canvasRef} className="minimap-relief" width={relief.fine.width} height={relief.fine.height} />
         <svg className="minimap-marks" viewBox={`0 0 ${frame.width} ${frame.height}`} aria-hidden="true" focusable="false">
+          <defs>
+            <radialGradient id="minimap-fog">
+              <stop offset="0%" className="fog-core" />
+              <stop offset="60%" className="fog-mid" />
+              <stop offset="100%" className="fog-edge" />
+            </radialGradient>
+          </defs>
+          {/* Le brouillard des régions pas encore éclairées, sous tout le reste (il se lève page après page). */}
+          {fogDiscs(regions, lights, frame).map((d) => (
+            <circle key={d.code} className="mark-fog" data-region={d.code} data-opacity={d.opacity.toFixed(2)} cx={d.u.toFixed(1)} cy={d.v.toFixed(1)} r={d.r.toFixed(1)} fill="url(#minimap-fog)" opacity={d.opacity.toFixed(2)} />
+          ))}
           {/* Le regard sous les repères (ils restent lisibles), le héros par-dessus tout. */}
           <path className="mark-view" d={VIEW_CONE} transform={`translate(${hero.u.toFixed(1)} ${hero.v.toFixed(1)}) rotate(${pose.view.toFixed(0)})`} />
           {markers.map((m) => {

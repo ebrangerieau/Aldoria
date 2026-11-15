@@ -108,7 +108,8 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   La **brume locale** : la densité de la brume du monde est multipliée par `fogDensityFactor(lumière)` (1 à 1,8, au carré du manque de lumière) dans la région du héros, en douceur (d'un coup en mode calme).
   Crochets `&e2e` : `world.regionLights()` et, en découverte, `giveRegion(code)` (tous les lieux d'une région). Vérifier : captures `region-brume`, `region-endormie`, `region-eclairee`,
   `region-panorama` ; parcours navigateur (lumière de chaque région d'après la partie, Vallée du Vivant sous le brouillard avec son texte, brume qui s'épaissit puis se lève).
-  Reste : la mini-carte ne montre pas la lumière des régions.
+  **Mini-carte** : chaque région qui manque de lumière y porte un voile de brouillard (`fogDiscs` de `core/world/minimap.ts`, `FOG_OPACITY` 0,62 au carré du manque de lumière, `circle.mark-fog`,
+  événement `lights` du monde) qui se lève page après page ; capture `carte-lumiere`.
 - **Énigme, héros qui parle, note de plaisir** (étape 1.5) : la quatrième salle de chaque lieu a **trois piédestaux** (`PEDESTAL_SPOTS` de
   `core/world/dungeon.ts`, positions de la v1, `Dungeon.pedestalPoints`), un cristal chacun (`game/interior.ts` : `Pedestal`, `buildPedestals`,
   événement `riddle`). Le héros qui s'approche à `PEDESTAL_DISTANCE` reçoit une question et ne marche plus (`riddling`) ; `ui/useFight.tsx`

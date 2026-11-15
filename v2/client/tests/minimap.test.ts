@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import ile from '@content/monde/ile.json'
 import { HeightGrid } from '../src/core/world/heightGrid'
-import { heading, hexColor, landBounds, mapFrame, mapMarkers, paintRelief, toMap } from '../src/core/world/minimap'
-import { type IslandLayout, SEA_LEVEL, Terrain } from '../src/core/world/terrain'
+import { FOG_OPACITY, fogDiscs, heading, hexColor, landBounds, mapFrame, mapMarkers, paintRelief, toMap } from '../src/core/world/minimap'
+import { type IslandLayout, REGION_RADIUS, SEA_LEVEL, Terrain } from '../src/core/world/terrain'
 
 const layout = ile as unknown as IslandLayout
 const terrain = new Terrain(layout)
@@ -157,5 +157,35 @@ describe('Mini-carte : relief', () => {
 
   it('lit les couleurs écrites en hexadécimal', () => {
     expect(hexColor('#2f86ad')).toEqual([0x2f, 0x86, 0xad])
+  })
+})
+
+describe('Mini-carte : brouillard des régions', () => {
+  const frame = mapFrame({ minX: -250, maxX: 250, minZ: -250, maxZ: 250 }, 240)
+  const regions = [
+    { code: 'maths', x: 120, z: 105 },
+    { code: 'svt', x: -112, z: -112 },
+  ]
+
+  it('voile les régions qui manquent de lumière, au carré du manque, et pas les régions éclairées', () => {
+    const discs = fogDiscs(regions, { maths: 0.5, svt: 0 }, frame)
+    expect(discs.map((d) => d.code)).toEqual(['maths', 'svt'])
+    expect(discs[1]!.opacity).toBeCloseTo(FOG_OPACITY, 5) // brouillard : voile plein
+    expect(discs[0]!.opacity).toBeCloseTo(FOG_OPACITY * 0.25, 5) // une demi-lumière : un quart du voile
+    expect(fogDiscs(regions, { maths: 1, svt: 0 }, frame).map((d) => d.code)).toEqual(['svt'])
+    expect(fogDiscs(regions, { maths: 1, svt: 1 }, frame)).toEqual([])
+    expect(fogDiscs(regions, {}, frame)).toEqual([]) // lumière inconnue : éclairée, rien à dessiner
+  })
+
+  it('le voile est centré sur la région, à l’échelle de la carte', () => {
+    const [disc] = fogDiscs(regions, { maths: 0 }, frame)
+    const centre = toMap(frame, 120, 105)
+    expect(disc).toMatchObject({ u: centre.u, v: centre.v })
+    expect(disc!.r).toBeCloseTo(REGION_RADIUS * frame.scale, 5)
+  })
+
+  it('une lumière hors de 0 à 1 est ramenée dans ces bornes', () => {
+    expect(fogDiscs(regions, { maths: -4 }, frame)[0]!.opacity).toBeCloseTo(FOG_OPACITY, 5)
+    expect(fogDiscs(regions, { maths: 7 }, frame)).toEqual([])
   })
 })

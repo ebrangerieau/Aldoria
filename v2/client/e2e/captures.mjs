@@ -69,6 +69,8 @@ const VIEWS = {
   'region-endormie': { query: '', at: [-50, -40], face: [-50, -62], beta: 1.1, radius: 26, turn: 0.4 },
   'region-eclairee': { query: '', at: [-50, -40], face: [-50, -62], beta: 1.1, radius: 26, turn: 0.4, region: 'emc' },
   'region-panorama': { query: '', at: [0, -30], face: [0, 30], beta: 1.05, radius: 60, turn: 0.2 },
+  // La mini-carte voile les régions pas encore éclairées (ici : les Cimes Fractales ont toutes leurs pages, la Vallée du Vivant et le Carrefour des Messagers sont sous le brouillard).
+  'carte-lumiere': { query: '', at: [0, -30], face: [0, 30], beta: 1.25, radius: 6, turn: 0, interface: true, region: 'maths' },
   // Le sac consulté sur l'île : vide (où trouver des objets), puis garni (quatre objets, ce qu'ils font, où ils servent).
   'sac-vide': { query: '', at: [0, -30], face: [0, 30], beta: 1.25, radius: 6, turn: 0, interface: true, bag: 'vide' },
   'sac-garni': { query: '&monde=brouillard', at: [0, -30], face: [0, 30], beta: 1.25, radius: 6, turn: 0, interface: true, bag: 'garni' },
