@@ -12,6 +12,7 @@ import { EMPTY_DAILY, normalizeDaily, type DailyState } from './dailyChallenge'
 import { normalizeOwned, type Owned } from './inventory'
 import { normalizeRelics } from './relics'
 import { normalizeLook } from './appearance'
+import { normalizeQuests } from './village'
 import { normalizeSphinx, type SphinxState } from './sphinx/island'
 import { defaultLook, type Look } from './wardrobe'
 import type { Store } from './storage'
@@ -38,6 +39,8 @@ export interface SaveData {
   table: string
   /** Île du Sphinx : passages, palier, énigmes (core/sphinx/island.ts). Absent avant la première activité : se relit par `sphinxOf(save, classe)`. */
   sphinx?: SphinxState
+  /** Quêtes du village : jour (ISO) de la dernière quête faite pour chaque habitant, code → jour (core/village.ts). Une quête par habitant et par jour. */
+  quests: Record<string, string>
 }
 
 export const EMPTY_SAVE: SaveData = {
@@ -50,6 +53,7 @@ export const EMPTY_SAVE: SaveData = {
   items: {},
   relics: [],
   table: '',
+  quests: {},
 }
 
 /** Partie relue (locale ou du serveur) : les champs absents d'une ancienne partie reprennent leur valeur par défaut. */
@@ -63,6 +67,7 @@ export function normalizeSave(data: Partial<SaveData> | null | undefined): SaveD
     look: normalizeLook(given.look),
     relics: normalizeRelics(given.relics),
     table: typeof given.table === 'string' ? given.table : '',
+    quests: normalizeQuests(given.quests),
     // Une partie sans état du Sphinx n'en reçoit pas ici (la classe de l'enfant fixe le palier de départ : `sphinxOf`).
     ...(given.sphinx ? { sphinx: normalizeSphinx(given.sphinx, '6e') } : { sphinx: undefined }),
   }

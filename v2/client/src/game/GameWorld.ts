@@ -19,6 +19,7 @@ import {
   Scene,
   SceneInstrumentation,
   StandardMaterial,
+  TransformNode,
   Vector3,
 } from '@babylonjs/core'
 import ile from '@content/monde/ile.json'
@@ -26,7 +27,8 @@ import { lookOf } from '../core/appearance'
 import { Emitter } from '../core/events'
 import { ELEMENTS, elementOf, ISLAND_RELICS, MIN_RELICS } from '../core/relics'
 import type { SaveData } from '../core/save'
-import { fur, type Look } from '../core/wardrobe'
+import { defaultsFor, fur, type Look } from '../core/wardrobe'
+import { questDone, type Villager, villageFor } from '../core/village'
 import type { HeightGrid } from '../core/world/heightGrid'
 import type { Obstacles } from '../core/world/obstacles'
 import { heading, type MapMarker, mapMarkers, type ReliefPalette } from '../core/world/minimap'
@@ -44,7 +46,7 @@ import { buildGround, buildSea } from './island'
 import { chooseQuality, type Quality } from './quality'
 import { THEMES, type WorldName } from './theme'
 
-export type InteractableKind = 'lieu' | 'pierre' | 'ysaline' | 'sortie' | 'jour' | 'coffre' | 'relique' | 'table' | 'barque'
+export type InteractableKind = 'lieu' | 'pierre' | 'ysaline' | 'sortie' | 'jour' | 'coffre' | 'relique' | 'table' | 'barque' | 'habitant'
 
 export interface Interactable {
   id: string
@@ -57,6 +59,8 @@ export interface Interactable {
   open?: boolean
   /** Une relique à ramasser (core/relics.ts) : son identifiant. */
   relic?: string
+  /** Un habitant du village (core/village.ts) : `open` tant que sa quête du jour n'est pas faite. */
+  npc?: Villager
 }
 
 export type WorldEvents = {
@@ -132,6 +136,8 @@ export class GameWorld {
   private inputEnabled = true
   private interactables: Interactable[] = []
   private dayCrystal: Mesh | null = null
+  /** Les habitants du village de la classe : leur personnage et le « ! » au-dessus de leur tête tant que leur quête du jour attend. */
+  private villagers = new Map<string, { npc: Villager; character: Character; marker: TransformNode }>()
   /** Lieux terminés (code → nombre de fois) : la partie du monde est celle de sa création, celle-ci suit les fins de lieu. */
   private placesDone: Record<string, number>
   private dayRing: Mesh | null = null
@@ -251,6 +257,10 @@ export class GameWorld {
       this.instrumentation.captureFrameTime = true
     }
     this.progress("L'île est prête", 1)
+    // Les habitants arrivent après : leurs modèles (3,6 Mo chacun) ne retardent pas l'entrée dans l'île ; chacun apparaît quand il est chargé.
+    void this.buildVillagers().catch((error: unknown) => {
+      if (!this.closed) console.error('Les habitants du village n’ont pas pu être chargés', error)
+    })
 
     this.lastFrame = performance.now()
     this.islandLoop = () => {
@@ -683,6 +693,80 @@ export class GameWorld {
     this.boat = hull
     beacon(this.scene, 'barque', new Vector3(x, SEA_LEVEL, z), '#f3ead2', true)
     this.interactables.push({ id: 'barque', kind: 'barque', label: 'La barque du Sphinx', x, z, radius: 4.2, open: true })
+  }
+
+  /**
+   * Les habitants du village de la classe (core/village.ts) : chacun se tient à son emplacement autour du puits (`ile.json`, village.habitants), tourné vers le puits ;
+   * un « ! » doré flotte au-dessus de sa tête tant que sa quête du jour attend. L'interaction (E) ouvre son dialogue (`interact`, kind « habitant »).
+   */
+  private async buildVillagers(): Promise<void> {
+    const village = villageFor(this.options.level)
+    if (!village) return
+    const center = layout.village
+    const material = new StandardMaterial('habitant-appel', this.scene)
+    material.disableLighting = true
+    material.diffuseColor = Color3.Black()
+    material.emissiveColor = Color3.FromHexString('#ffd447')
+    for (const [index, npc] of village.npcs.entries()) {
+      const slot = center.habitants[index]
+      if (!slot) continue
+      const x = center.x + slot.dx
+      const z = center.z + slot.dz
+      const y = this.grid.heightAt(x, z)
+      const parts = defaultsFor(npc.model)
+      const character = await loadNpc(this.scene, npc.model, `habitant-${npc.code}`, parts.main, parts.off)
+      if (this.closed) return // le monde s'est fermé pendant le chargement
+      character.root.position.set(x, y, z)
+      character.yaw = Math.atan2(center.x - x, center.z - z)
+      for (const m of character.meshes) this.atmosphere.shadows.addShadowCaster(m, false)
+      this.obstacles.add({ x, z, r: 0.6 })
+      // Le « ! » : un trait effilé et un point, dorés (jamais de texte dans le monde : pas de police à charger).
+      const marker = new TransformNode(`habitant-${npc.code}-appel`, this.scene)
+      const bar = MeshBuilder.CreateCylinder(`habitant-${npc.code}-trait`, { diameterTop: 0.36, diameterBottom: 0.16, height: 0.62, tessellation: 8 }, this.scene)
+      const dot = MeshBuilder.CreateSphere(`habitant-${npc.code}-point`, { diameter: 0.2, segments: 8 }, this.scene)
+      bar.parent = marker
+      dot.parent = marker
+      bar.position.y = 0.2
+      dot.position.y = -0.26
+      for (const mesh of [bar, dot]) {
+        mesh.material = material
+        mesh.isPickable = false
+      }
+      marker.position.set(x, y + 2.55, z)
+      this.villagers.set(npc.code, { npc, character, marker })
+      const done = questDone(this.options.save, npc.code, localDay())
+      marker.setEnabled(!done)
+      this.interactables.push({ id: `habitant-${npc.code}`, kind: 'habitant', label: npc.name, x, z, radius: 2.6, open: !done, npc })
+    }
+    // Le « ! » monte et descend doucement (immobile en mode calme).
+    if (!this.options.calm) {
+      this.scene.onBeforeRenderObservable.add(() => {
+        const bob = Math.sin(performance.now() / 1000 * 2.6) * 0.09
+        for (const { marker, character } of this.villagers.values()) marker.position.y = character.root.position.y + 2.55 + bob
+      })
+    }
+  }
+
+  /** Les quêtes du jour ont changé (une quête vient d'être faite) : le « ! » de chaque habitant s'éteint ou s'allume. */
+  setQuestState(quests: Record<string, string>): void {
+    const day = localDay()
+    for (const { npc, marker } of this.villagers.values()) {
+      const waiting = quests[npc.code] !== day
+      marker.setEnabled(waiting)
+      const target = this.interactables.find((it) => it.id === `habitant-${npc.code}`)
+      if (target) target.open = waiting
+    }
+  }
+
+  /** Le héros parle à un habitant : ils se tournent l'un vers l'autre, l'habitant fait un geste (la quête faite : il se réjouit). */
+  talkTo(code: string, cheer = false): void {
+    const talker = this.villagers.get(code)
+    if (!talker) return
+    const hero = this.hero.root.position
+    const at = talker.character.root.position
+    talker.character.yaw = Math.atan2(hero.x - at.x, hero.z - at.z)
+    this.hero.yaw = Math.atan2(at.x - hero.x, at.z - hero.z)
+    void talker.character.playOnce(cheer ? 'cheer' : 'interact')
   }
 
   private tableReady(save: Pick<SaveData, 'relics' | 'table'>): boolean {

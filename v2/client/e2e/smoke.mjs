@@ -1044,6 +1044,91 @@ try {
     if (!/étapes, une énigme/.test(note)) throw new Error(`indication des étapes absente : ${note}`)
   })
 
+  await step('le village : un habitant confie sa quête du jour (trois questions, récompense), une quête faite ne se refait pas, la deuxième quête rapporte un passage pour le Sphinx', async () => {
+    // Le seuil du lieu, resté ouvert par l'étape d'avant, recouvre l'interface : « Pas maintenant » rend la main au monde.
+    await page.getByRole('button', { name: 'Pas maintenant' }).click()
+    await page.locator('.dialog').waitFor({ state: 'detached', timeout: 10_000 * SLOW })
+    const save = () => page.evaluate(() => window.__aldoria.save())
+    const day = await page.evaluate(() => {
+      const d = new Date()
+      const pad = (n) => String(n).padStart(2, '0')
+      return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+    })
+    const villager = (code) => page.evaluate((c) => {
+      const w = window.__aldoria.world
+      const i = w.interactables.find((x) => x.id === `habitant-${c}`)
+      return i ? { x: i.x, z: i.z, open: i.open, label: i.label, marker: w.villagers.get(c).marker.isEnabled() } : null
+    }, code)
+    // Les habitants se chargent après l'entrée dans l'île (leurs modèles pèsent plusieurs Mo) : on attend les trois de Clairval.
+    await page.waitForFunction(() => window.__aldoria.world.villagers.size >= 3, null, { timeout: 60_000 * SLOW })
+    const talk = async (code) => {
+      const v = await villager(code)
+      if (!v) throw new Error(`l'habitant ${code} manque dans le village`)
+      await page.evaluate(({ x, z }) => window.__aldoria.world.teleport(x + 1.8, z, x, z), v)
+      // L'invite de l'endroit précédent reste une image après la téléportation : on attend celle de l'habitant.
+      await page.getByTestId('invite').filter({ hasText: `Parler à ${v.label}` }).waitFor({ timeout: 10_000 * SLOW })
+      await page.keyboard.press('KeyE')
+      await page.getByTestId('habitant').waitFor({ timeout: 10_000 * SLOW })
+    }
+    const quest = async (code, answers, expected) => {
+      await talk(code)
+      const ask = await page.getByTestId('habitant').innerText()
+      if (!ask.includes('Plus tard') || !ask.includes('t\'aide')) throw new Error(`la demande de ${code} : ${ask}`)
+      if ((await page.getByTestId('habitant-ecouter').count()) !== 1) throw new Error(`la demande de ${code} se lit à voix haute (bouton « Écouter »)`)
+      if (code === 'barnabe') await page.screenshot({ path: `${OUT}/07a-habitant.png` })
+      await page.getByRole('button', { name: "Je t'aide !" }).click()
+      for (const [i, right] of answers.entries()) {
+        await page.getByRole('heading', { name: new RegExp(`${i + 1} / 3`) }).waitFor({ timeout: 10_000 * SLOW })
+        await answerQuestion(right)
+      }
+      await page.getByRole('button', { name: 'Avec plaisir !' }).waitFor({ timeout: 10_000 * SLOW })
+      const thanks = await page.getByTestId('habitant').innerText()
+      for (const line of expected) if (!thanks.includes(line)) throw new Error(`fin de la quête de ${code} sans « ${line} » : ${thanks}`)
+      return thanks
+    }
+
+    // Barnabé (révision) : trois bonnes réponses, 50 XP de forfait et 30 de bonus ; la partie garde la quête du jour, le « ! » s'éteint.
+    const before = await save()
+    if (!(await villager('barnabe')).marker) throw new Error('le « ! » de Barnabé devrait briller avant sa quête')
+    const first = await quest('barnabe', [true, true, true], ['3 bonnes réponses sur 3. +80 XP'])
+    await page.screenshot({ path: `${OUT}/07b-quete-faite.png` })
+    if (first.includes('passage pour la barque')) throw new Error('une seule quête ne rapporte pas de passage')
+    await page.getByRole('button', { name: 'Avec plaisir !' }).click()
+    await page.getByTestId('habitant').waitFor({ state: 'detached', timeout: 5000 * SLOW })
+    let s = await save()
+    if (s.quests.barnabe !== day) throw new Error(`quête du jour de Barnabé : ${JSON.stringify(s.quests)}`)
+    if (s.xp < before.xp + 80) throw new Error(`XP après la quête : ${before.xp} → ${s.xp}`)
+    const barnabe = await villager('barnabe')
+    if (barnabe.open || barnabe.marker) throw new Error('le « ! » de Barnabé doit s’éteindre une fois sa quête faite')
+
+    // Une quête faite ne se refait pas : l'habitant le dit et la partie ne bouge pas.
+    await talk('barnabe')
+    const again = await page.getByTestId('habitant').innerText()
+    if (!again.includes('Reviens demain') || again.includes("t'aide")) throw new Error(`la quête de Barnabé refaite : ${again}`)
+    await page.getByRole('button', { name: 'À demain !' }).click()
+    await page.getByTestId('habitant').waitFor({ state: 'detached', timeout: 5000 * SLOW })
+    if ((await save()).xp !== s.xp) throw new Error('une quête déjà faite ne rapporte rien')
+
+    // Maître Oriel (veille), une réponse fausse : 50 + 20 ; c'est la deuxième quête du jour, donc six réponses : un passage pour la barque du Sphinx.
+    await quest('oriel', [true, false, true], ['2 bonnes réponses sur 3. +70 XP', 'Un passage pour la barque du Sphinx'])
+    await page.getByRole('button', { name: 'Avec plaisir !' }).click()
+    await page.getByTestId('habitant').waitFor({ state: 'detached', timeout: 5000 * SLOW })
+    s = await save()
+    if (s.quests.oriel !== day) throw new Error(`quête du jour d'Oriel : ${JSON.stringify(s.quests)}`)
+
+    // Mélisande (enquête sur un document) : trois questions du même générateur ; la troisième quête du jour ne rapporte pas un second passage.
+    const third = await quest('melisande', [true, true, true], ['3 bonnes réponses sur 3. +80 XP'])
+    if (third.includes('passage pour la barque')) throw new Error('un seul passage par jour pour les quêtes du village')
+    await page.getByRole('button', { name: 'Avec plaisir !' }).click()
+    await page.getByTestId('habitant').waitFor({ state: 'detached', timeout: 5000 * SLOW })
+    s = await save()
+    if (Object.keys(s.quests).length !== 3) throw new Error(`les trois quêtes du jour : ${JSON.stringify(s.quests)}`)
+    for (const code of ['barnabe', 'oriel', 'melisande']) {
+      const v = await villager(code)
+      if (v.open || v.marker) throw new Error(`le « ! » de ${code} doit être éteint`)
+    }
+  })
+
   await step('l’apparence : un choix verrouillé l’explique sans rien changer, un déblocage se signale puis se choisit, le héros change à l’écran et la partie le garde', async () => {
     const look = () => page.evaluate(() => ({ ...window.__aldoria.world.look }))
     const savedLook = () => page.evaluate(() => ({ ...window.__aldoria.save().look }))
@@ -1058,9 +1143,6 @@ try {
       await page.getByTestId('apparence').waitFor({ state: 'detached', timeout: 10_000 * SLOW })
     }
     const pos = () => page.evaluate(() => { const p = window.__aldoria.world.hero.root.position; return [p.x, p.z].map((v) => Math.round(v * 100) / 100) })
-    // Le seuil du lieu, resté ouvert par l'étape d'avant, recouvre l'interface : « Pas maintenant » rend la main au monde.
-    await page.getByRole('button', { name: 'Pas maintenant' }).click()
-    await page.locator('.dialog').waitFor({ state: 'detached', timeout: 10_000 * SLOW })
     const before = await pos()
     const start = await look()
 
@@ -1191,6 +1273,40 @@ try {
     if (!/Tu as joué 7 minutes/.test(text) || !/Ta progression est sauvegardée/.test(text)) throw new Error(`phrase de fin de séance : ${text}`)
     await page.getByRole('button', { name: 'Terminer' }).click()
     await page.getByTestId('decouvrir').waitFor({ timeout: 10_000 * SLOW })
+  })
+
+  await step('le village de la 2nde (Brumegarde) : les enquêtes de Vesna et du capitaine Brann dessinent leur tableau et se terminent', async () => {
+    await page.goto(`${BASE}/?decouverte&e2e&classe=2nde&monde=brouillard&qualite=${QUALITY}&musique=0&sons=0`)
+    await page.waitForFunction(() => window.__aldoria?.world, null, { timeout: 180_000 * SLOW })
+    await page.waitForFunction(() => window.__aldoria.world.villagers.size >= 4, null, { timeout: 60_000 * SLOW }) // les quatre habitants de Brumegarde
+    const enquete = async (code, captionPattern, shot) => {
+      const npc = await page.evaluate((c) => {
+        const i = window.__aldoria.world.interactables.find((x) => x.id === `habitant-${c}`)
+        return i ? { x: i.x, z: i.z, label: i.label } : null
+      }, code)
+      if (!npc) throw new Error(`l'habitant ${code} manque dans Brumegarde`)
+      await page.evaluate(({ x, z }) => window.__aldoria.world.teleport(x + 1.8, z, x, z), npc)
+      await page.getByTestId('invite').filter({ hasText: `Parler à ${npc.label}` }).waitFor({ timeout: 10_000 * SLOW })
+      await page.keyboard.press('KeyE')
+      await page.getByRole('button', { name: "Je t'aide !" }).click()
+      for (let i = 1; i <= 3; i += 1) {
+        await page.getByRole('heading', { name: new RegExp(`${i} / 3`) }).waitFor({ timeout: 10_000 * SLOW })
+        const table = page.locator('figure.visual.table table')
+        await table.waitFor({ timeout: 5000 * SLOW })
+        const caption = await table.locator('caption').innerText()
+        if (!captionPattern.test(caption)) throw new Error(`titre du tableau de ${code} : ${caption}`)
+        if ((await table.locator('th[scope="col"]').count()) < 3 || (await table.locator('tbody tr').count()) < 1) throw new Error(`le tableau de ${code} est incomplet`)
+        if (i === 1) await page.screenshot({ path: `${OUT}/${shot}` })
+        await answerQuestion(true)
+      }
+      await page.getByRole('button', { name: 'Avec plaisir !' }).waitFor({ timeout: 10_000 * SLOW })
+      const thanks = await page.getByTestId('habitant').innerText()
+      if (!thanks.includes('3 bonnes réponses sur 3. +80 XP')) throw new Error(`fin de la quête de ${code} : ${thanks}`)
+      await page.getByRole('button', { name: 'Avec plaisir !' }).click()
+      await page.getByTestId('habitant').waitFor({ state: 'detached', timeout: 5000 * SLOW })
+    }
+    await enquete('vesna', /./, '11a-enquete-releve.png') // relevé statistique : valeurs et effectifs
+    await enquete('brann', /Registre/, '11b-enquete-croisee.png') // tableau croisé, avec ses totaux
   })
 } catch (error) {
   const where = error instanceof Error ? (error.stack ?? '').split('\n').find((l) => l.includes('smoke.mjs'))?.trim() ?? '?' : '?'

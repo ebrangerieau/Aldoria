@@ -271,3 +271,42 @@ export const graphTicks = (min: number, max: number): number[] => Array.from({ l
 
 /** Écriture d'un nombre avec le vrai signe moins (lecture à voix haute : « moins »). */
 export const signed = (n: number): string => (n < 0 ? `−${-n}` : String(n))
+
+// --- Tableau d'une enquête (relevé statistique, tableau croisé : village de la 2nde) ---------------------
+
+export interface TableSpec {
+  title: string
+  /** Première ligne : les en-têtes de colonnes. */
+  header: string[]
+  /** Les autres lignes : leur première case dit ce que décrit la ligne (« À cheval », « Effectif »). */
+  body: string[][]
+  /** Dernière ligne et dernière colonne : les totaux (tableau croisé). */
+  totals: boolean
+}
+
+/**
+ * Le tableau d'une enquête, relu avec prudence (`rows` : liste de lignes de textes, la première est l'en-tête). Une ligne trop courte est complétée de cases
+ * vides, une ligne trop longue coupée : le tableau est toujours rectangulaire, sans quoi la lecture par colonne serait fausse.
+ */
+export function tableFrom(visual: Visual): TableSpec {
+  const rows = Array.isArray(visual.rows) ? (visual.rows as unknown[]).map((r) => (Array.isArray(r) ? r.map((c) => String(c ?? '')) : [])) : []
+  const columns = rows[0]?.length ?? 0
+  const fit = (row: string[]): string[] => Array.from({ length: columns }, (_, i) => row[i] ?? '')
+  const [header = [], ...body] = rows.map(fit)
+  return { title: String(visual.title ?? ''), header, body, totals: visual.totals === true }
+}
+
+/** Une case de total : dernière ligne ou dernière colonne d'un tableau à totaux (jamais l'en-tête). */
+export function isTotalCell(spec: Pick<TableSpec, 'totals' | 'body' | 'header'>, row: number, column: number): boolean {
+  return spec.totals && (row === spec.body.length - 1 || column === spec.header.length - 1)
+}
+
+/** Le tableau lu à haute voix, ligne par ligne (alternative textuelle pour un lecteur d'écran) : « Effectif : 0 vaut 3, 1 vaut 1… ». */
+export function tableSummary(spec: TableSpec): string {
+  const lines = spec.body.map((row) => {
+    const [name = '', ...cells] = row
+    const parts = cells.map((value, i) => `${spec.header[i + 1] || `colonne ${i + 1}`} : ${value}`)
+    return `${name || 'Ligne'} — ${parts.join(', ')}`.replace(' — ', ' : ')
+  })
+  return `${spec.title ? `${spec.title}. ` : ''}${lines.join(' ; ')}`
+}

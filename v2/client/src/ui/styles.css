@@ -314,6 +314,13 @@ figure.visual.grid { max-width: 300px; }
 .v-beam-ray.bad { stroke: var(--bad-ink); stroke-dasharray: 8 6; }
 
 figure.visual.map { max-width: 600px; }
+figure.visual.table { max-width: 640px; overflow-x: auto; }
+.visual.table table { border-collapse: separate; border-spacing: 3px; margin: 0 auto; font-size: 1.1rem; }
+.visual.table caption { font-family: var(--title-font); font-size: 1.1rem; padding-bottom: 0.4rem; }
+.visual.table th, .visual.table td { background: rgb(255 255 255 / 55%); border: 1px solid var(--ink-soft); border-radius: 4px; padding: 0.35rem 0.8rem; text-align: center; min-width: 3rem; }
+.visual.table thead th { background: var(--gold-light); font-weight: 700; }
+.visual.table tbody th { text-align: left; background: var(--parchment-dark); font-weight: 700; white-space: nowrap; }
+.visual.table .total { font-weight: 700; background: var(--parchment-dark); border-style: double; border-width: 3px; }
 figure.visual.robot { max-width: 300px; }
 figure.visual.graph { max-width: 460px; }
 .v-map-bg { fill: rgb(255 255 255 / 55%); stroke: var(--ink-soft); stroke-width: 2; }

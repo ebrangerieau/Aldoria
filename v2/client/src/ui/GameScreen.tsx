@@ -27,6 +27,8 @@ import { DailyChallenge } from './DailyChallenge'
 import { RelicTable } from './RelicTable'
 import { Wardrobe } from './Wardrobe'
 import { SphinxVisit } from './SphinxVisit'
+import { VillageQuest } from './VillageQuest'
+import { type Villager, villageFor } from '../core/village'
 import { E2eQuestion } from './E2eQuestion'
 import { give, type ItemId } from '../core/inventory'
 import { makeAids } from './aids'
@@ -49,6 +51,7 @@ type Modal =
   | { kind: 'table' }
   | { kind: 'sphinx' }
   | { kind: 'wardrobe' }
+  | { kind: 'village'; npc: Villager }
   | null
 
 /** Accueil de Maître Ysaline : le texte et sa voix enregistrée sont dans content/voix/lignes.json (un seul endroit : modifier ce texte demande de le réenregistrer). */
@@ -211,7 +214,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
 
   // Musique : à l'écran quand l'île est prête, réglée par l'enfant, muette pendant une question.
   const calm = accommodations.calm
-  const musicQuestion = modal?.kind === 'question' || modal?.kind === 'daily' || modal?.kind === 'table' || modal?.kind === 'sphinx' || fight.questionOpen
+  const musicQuestion = modal?.kind === 'question' || modal?.kind === 'daily' || modal?.kind === 'table' || modal?.kind === 'sphinx' || modal?.kind === 'village' || fight.questionOpen
   useEffect(() => {
     services.music.configure({ muted: !musicOn, volume: musicVolume, calm })
   }, [services, musicOn, musicVolume, calm])
@@ -329,6 +332,9 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
       setModal({ kind: 'question', item, target })
     } else if (target.kind === 'relique' && target.relic) {
       collectRelic(target.relic)
+    } else if (target.kind === 'habitant' && target.npc) {
+      worldRef.current?.talkTo(target.npc.code)
+      setModal({ kind: 'village', npc: target.npc })
     } else if (target.kind === 'table') {
       setModal({ kind: 'table' })
     } else if (target.kind === 'barque') {
@@ -542,6 +548,8 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
           <kbd>E</kbd>{' '}
           {focus.kind === 'pierre'
             ? `Toucher ${focus.label.toLowerCase()}`
+            : focus.kind === 'habitant'
+              ? `Parler à ${focus.label}`
             : focus.kind === 'jour'
               ? 'Relever le défi du jour'
               : focus.kind === 'barque'
@@ -630,6 +638,24 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
             persist(next)
             worldRef.current?.setTableState(next)
           }}
+          onClose={close}
+        />
+      )}
+      {modal?.kind === 'village' && villageFor(profile.level) && (
+        <VillageQuest
+          services={services}
+          accommodations={accommodations}
+          demo={demo}
+          data={data}
+          village={villageFor(profile.level)!}
+          npc={modal.npc}
+          world={(profile.world as WorldName) ?? 'lumineux'}
+          aids={makeAids(() => dataRef.current, persist)}
+          onSave={(next) => {
+            persist(next)
+            worldRef.current?.setQuestState(next.quests)
+          }}
+          onCheer={() => worldRef.current?.talkTo(modal.npc.code, true)}
           onClose={close}
         />
       )}

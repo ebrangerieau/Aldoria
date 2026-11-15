@@ -28,6 +28,9 @@ import {
   signColumns,
   signsComplete,
   signTableFrom,
+  isTotalCell,
+  tableFrom,
+  tableSummary,
   tickCount,
   tickFraction,
   tickLabel,
@@ -168,7 +171,7 @@ describe('questions jouables (registre des types et des visuels)', () => {
   })
 
   it('ne déclare que des visuels que l’interface dessine', () => {
-    expect([...SUPPORTED_VISUALS].sort()).toEqual(['balance', 'graph', 'grid', 'map', 'number_line', 'robot', 'sign_table'])
+    expect([...SUPPORTED_VISUALS].sort()).toEqual(['balance', 'graph', 'grid', 'map', 'number_line', 'robot', 'sign_table', 'table'])
   })
 })
 
@@ -297,3 +300,71 @@ function eval_(text: string): number {
   const [n, d] = text.split('/')
   return Number(n) / Number(d ?? 1)
 }
+
+describe('tableau d’une enquête (relevé statistique, tableau croisé)', () => {
+  const surveys = SAMPLES.filter((s) => s.generator === '2nde.statistiques.enquete')
+  const crosses = SAMPLES.filter((s) => s.generator === '2nde.probabilites.enquete')
+  const num = (text: string): number => Number(text.replace(',', '.'))
+
+  it('les deux enquêtes de la 2nde se dessinent (le visuel « table » est jouable)', () => {
+    expect(SUPPORTED_VISUALS.has('table')).toBe(true)
+    expect(surveys.length).toBeGreaterThan(0)
+    expect(crosses.length).toBeGreaterThan(0)
+    for (const sample of [...surveys, ...crosses]) expect(isPlayable(sample as unknown as Item)).toBe(true)
+  })
+
+  it('le tableau est toujours rectangulaire, avec son titre et son en-tête', () => {
+    for (const sample of [...surveys, ...crosses]) {
+      const spec = tableFrom(sample.visual ?? {})
+      expect(spec.title.length).toBeGreaterThan(3)
+      expect(spec.header.length).toBeGreaterThanOrEqual(3)
+      expect(spec.body.length).toBeGreaterThanOrEqual(1)
+      for (const row of spec.body) expect(row).toHaveLength(spec.header.length)
+    }
+  })
+
+  it('le relevé statistique : « Combien ont répondu ? » est la somme des effectifs du tableau affiché', () => {
+    const counted = surveys.filter((s) => /Combien de personnes ont répondu/.test(s.prompt))
+    expect(counted.length).toBeGreaterThan(0)
+    for (const sample of counted) {
+      const spec = tableFrom(sample.visual ?? {})
+      expect(spec.totals).toBe(false)
+      const total = spec.body[0]!.slice(1).reduce((n, cell) => n + num(cell), 0)
+      expect((sample.answer as { value: string }).value).toBe(String(total))
+    }
+  })
+
+  it('le tableau croisé : les totaux affichés sont les sommes de leurs rangées et colonnes, et le registre annonce le bon nombre de voyageurs', () => {
+    for (const sample of crosses) {
+      const spec = tableFrom(sample.visual ?? {})
+      expect(spec.totals).toBe(true)
+      const rows = spec.body.map((r) => r.slice(1).map(num))
+      for (const row of rows) expect(row.slice(0, -1).reduce((a, b) => a + b, 0)).toBe(row[row.length - 1])
+      const last = rows[rows.length - 1]!
+      for (let c = 0; c < last.length; c += 1) expect(rows.slice(0, -1).reduce((n, r) => n + r[c]!, 0)).toBe(last[c])
+      expect(spec.title).toContain(String(last[last.length - 1]))
+    }
+  })
+
+  it('les cases de total : la dernière rangée et la dernière colonne d’un tableau à totaux seulement', () => {
+    const spec = tableFrom({ kind: 'table', title: 'T', totals: true, rows: [['', 'A', 'B', 'Total'], ['x', '1', '2', '3'], ['Total', '1', '2', '3']] })
+    expect(isTotalCell(spec, 0, 0)).toBe(false)
+    expect(isTotalCell(spec, 0, 3)).toBe(true) // colonne des totaux
+    expect(isTotalCell(spec, 1, 1)).toBe(true) // dernière rangée
+    expect(isTotalCell(spec, 0, 1)).toBe(false)
+    const plain = tableFrom({ kind: 'table', title: 'T', rows: [['v', '0', '1'], ['Effectif', '4', '5']] })
+    expect(isTotalCell(plain, 0, 2)).toBe(false) // sans « totals », rien n'est un total
+  })
+
+  it('un tableau abîmé ne casse rien : lignes complétées ou coupées, valeurs non textuelles lues comme du texte', () => {
+    expect(tableFrom({})).toEqual({ title: '', header: [], body: [], totals: false })
+    const ragged = tableFrom({ kind: 'table', rows: [['a', 'b'], ['x'], ['y', 'z', 'w'], 5, [null, 3]] })
+    expect(ragged.header).toEqual(['a', 'b'])
+    expect(ragged.body).toEqual([['x', ''], ['y', 'z'], ['', ''], ['', '3']])
+  })
+
+  it('l’alternative textuelle lit le titre puis chaque ligne avec ses en-têtes de colonnes', () => {
+    const spec = tableFrom({ kind: 'table', title: 'Livres empruntés', rows: [['Livres', '0', '1'], ['Effectif', '3', '1']] })
+    expect(tableSummary(spec)).toBe('Livres empruntés. Effectif : 0 : 3, 1 : 1')
+  })
+})

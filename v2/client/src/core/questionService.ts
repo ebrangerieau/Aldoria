@@ -35,7 +35,7 @@ export const SUPPORTED_TYPES = new Set(['mcq', 'numeric', 'expression', 'text', 
  * leurs générateurs (`combat=False`) ne servent qu'au pont des fractions et au stand de tir de la Citadelle,
  * jamais dans un lieu ; les 30 lieux sont jouables avec ce qui est dessiné.
  */
-export const SUPPORTED_VISUALS = new Set(['balance', 'number_line', 'grid', 'sign_table', 'map', 'robot', 'graph'])
+export const SUPPORTED_VISUALS = new Set(['balance', 'number_line', 'grid', 'sign_table', 'map', 'robot', 'graph', 'table'])
 
 export function isPlayable(item: Item): boolean {
   if (!SUPPORTED_TYPES.has(item.type)) return false
@@ -156,6 +156,30 @@ export class QuestionService {
       }
     }
     return this.take(this.closest(pool, target))
+  }
+
+  /**
+   * Prochaine question d'une quête du village (core/village.ts), portée de la v1 : `enquete` = les énigmes du générateur, dans l'ordre du paquet (trois
+   * questions sur un même document), null quand elles sont toutes posées ; `revision` = les notions à revoir (catégorie « revision ») ; `veille` = les
+   * questions des `chapters` donnés. Sans candidate (ou quand elles sont toutes posées), révision et veille prennent une question inédite de n'importe quel chapitre. Jamais deux fois la même dans le
+   * parcours (une quête est un parcours : `reset` à son début).
+   */
+  nextQuestItem(quest: 'revision' | 'veille' | 'enquete', generator = '', chapters: string[] = []): Item | null {
+    const items = this.source.items()
+    const matching = (it: Item): boolean => {
+      if (quest === 'enquete') return it.role === 'enigme' && (it.generator ?? '') === generator
+      if (quest === 'revision') return it.category === 'revision'
+      const chapter = (it.notions[0] ?? '').replace(/\.[^.]*$/, '')
+      return it.category === 'chapitre' && chapters.includes(chapter)
+    }
+    let candidates = this.playable(items.filter(matching))
+    if (candidates.length === 0 && quest !== 'enquete') candidates = this.playable(items.filter((it) => it.category === 'chapitre'))
+    let pool = this.fresh(candidates)
+    if (quest === 'enquete') return pool.length > 0 ? this.take(pool[0]!) : null
+    // Les candidates sont toutes posées : une question inédite d'un autre chapitre vaut mieux que reposer la plus ancienne.
+    if (pool.length === 0) pool = this.fresh(this.playable(items.filter((it) => it.category === 'chapitre')))
+    if (pool.length === 0) return this.repeat(candidates, this.levelFor('chapitre'))
+    return this.take(this.closest(pool, this.levelFor('chapitre')))
   }
 
   /** Les questions que ce parcours n'a pas posées (même contenu compris), de préférence celles que la séance n'a pas vues. */
