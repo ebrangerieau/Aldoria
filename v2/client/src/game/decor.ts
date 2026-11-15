@@ -105,6 +105,7 @@ export async function buildDecor(
     { x: layout.pierre_jour.x, z: layout.pierre_jour.z, r: 6 },
     // Les reliques de l'île et la Table des Reliques : ni tronc ni rocher dessus ou contre elles (core/relics.ts).
     { x: layout.table_reliques.x, z: layout.table_reliques.z, r: 8 },
+    { x: layout.barque.x, z: layout.barque.z, r: 9 }, // la barque du Sphinx et la plage devant elle
     ...ISLAND_RELICS.map((r) => ({ x: r.source.x, z: r.source.z, r: 6 })),
     ...terrain.pads.map((p) => ({ x: p.x, z: p.z, r: p.radius + 7 })),
   ]

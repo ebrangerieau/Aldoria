@@ -150,6 +150,7 @@ html[data-big-targets='true'] .minimap { width: 300px; }
 .mark-lieu .mark-check { fill: none; stroke: var(--good-ink); stroke-width: 1.6; }
 .mark-pierre circle { fill: #6fb6ff; stroke: #123a56; }
 .mark-pierre.mark-eveillee circle { fill: #ffd27a; stroke: #5a3d0c; }
+.mark-barque path { fill: #f3ead2; stroke: #5a3d0c; }
 .mark-table path { fill: #c8a2e8; stroke: #3d2260; }
 .mark-jour path { fill: #ffd447; stroke: #5a3d0c; }
 .mark-jour.mark-faite path { fill: #d9c9a0; stroke: #6b5a3a; }
@@ -429,6 +430,24 @@ html[data-calm='true'] .hero-bubble { animation: bubble-calm 6s linear forwards;
 .relic-pick.chosen { border-color: var(--accent); outline: 3px solid var(--accent); background: #fff8e8; }
 .relic-result { padding: 0.4rem 0.9rem; border-left: 4px solid var(--good-ink); background: rgb(255 255 255 / 55%); }
 .relic-result h3 { margin: 0 0 0.3rem; color: var(--good-ink); }
+
+/* L'île du Sphinx (ui/SphinxPuzzle.tsx) : jamais la couleur seule (dalle = losange creux, bloc = croix, bloc posé = coche, bloc coincé = « ! »). */
+.sphinx-panel { width: min(640px, 96vw); }
+.sphinx-detail { margin: 0 0 0.4rem; color: var(--ink-soft); font-weight: 600; }
+.sphinx-board { display: block; width: 100%; margin: 0.3rem auto; border-radius: 0.5rem; background: #d9c58a; }
+.sphinx-tile { fill: #efe3c6; stroke: #b9a77c; stroke-width: 1; cursor: pointer; }
+.sphinx-goal { fill: none; stroke: #7a5a1e; stroke-width: 3; stroke-dasharray: 5 3; pointer-events: none; }
+.sphinx-wall rect { fill: #5d574b; }
+.sphinx-wall path { fill: none; stroke: #3f3a31; stroke-width: 2; }
+.sphinx-box rect { fill: #b8763a; stroke: #3a2410; stroke-width: 3; }
+.sphinx-box path { fill: none; stroke: #3a2410; stroke-width: 3; stroke-linecap: round; }
+.sphinx-box.placed rect { fill: #e3b341; }
+.sphinx-box .sphinx-check { stroke: #1f6b3a; stroke-width: 6; }
+.sphinx-box.stuck rect { stroke: var(--bad-ink); stroke-dasharray: 5 3; }
+.sphinx-alert { fill: var(--bad-ink); font: 700 18px var(--title-font); }
+.sphinx-hero circle { fill: #2f4c9a; stroke: #12204a; stroke-width: 3; }
+.sphinx-hero polygon { fill: #f4e9d2; stroke: #12204a; stroke-width: 1.5; }
+.sphinx-status { min-height: 2.9rem; margin: 0.3rem 0; font-weight: 600; }
 
 .shield-badge {
   display: inline-block; margin-top: 0.3rem; padding: 0.2rem 0.7rem; border-radius: 999px; background: rgb(251 244 228 / 94%); color: var(--ink);

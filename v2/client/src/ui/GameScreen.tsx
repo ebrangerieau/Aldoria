@@ -14,6 +14,7 @@ import { today as localDay } from '../core/dailyChallenge'
 import { DEFAULT_VOLUME, volumeOf } from '../core/music'
 import { levelForXp } from '../core/progression'
 import { grantRelic, normalizeRelics, relicOf, RELICS } from '../core/relics'
+import { MAX_PASSES, sphinxOf } from '../core/sphinx/island'
 import { EMPTY_SAVE, SaveGame, type SaveData } from '../core/save'
 import { pageGreeting } from '../core/quest/chest'
 import { regionTitle } from '../core/world/places'
@@ -23,6 +24,7 @@ import { PlayTimeGuard } from './PlayTimeGuard'
 import { Archives } from './Archives'
 import { DailyChallenge } from './DailyChallenge'
 import { RelicTable } from './RelicTable'
+import { SphinxVisit } from './SphinxVisit'
 import { E2eQuestion } from './E2eQuestion'
 import { give, type ItemId } from '../core/inventory'
 import { makeAids } from './aids'
@@ -43,6 +45,7 @@ type Modal =
   | { kind: 'archives' }
   | { kind: 'daily' }
   | { kind: 'table' }
+  | { kind: 'sphinx' }
   | null
 
 /** Accueil de Maître Ysaline : le texte et sa voix enregistrée sont dans content/voix/lignes.json (un seul endroit : modifier ce texte demande de le réenregistrer). */
@@ -138,7 +141,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
         world.events.on('stats', setStats)
         world.events.on('interact', (target) => interactRef.current(target))
         setLoading(null)
-        if (params.has('e2e')) (window as unknown as { __aldoria: unknown }).__aldoria = { world, services, save: () => dataRef.current, ...(demo ? { give: (id: ItemId, n = 1) => giveItems(id, n), giveRelics } : {}) }
+        if (params.has('e2e')) (window as unknown as { __aldoria: unknown }).__aldoria = { world, services, save: () => dataRef.current, ...(demo ? { give: (id: ItemId, n = 1) => giveItems(id, n), giveRelics, giveSphinxPasses } : {}) }
       } catch (error) {
         if (reloadPending()) return // nouvelle version du jeu : la page se recharge
         console.error(error)
@@ -198,7 +201,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
 
   // Musique : à l'écran quand l'île est prête, réglée par l'enfant, muette pendant une question.
   const calm = accommodations.calm
-  const musicQuestion = modal?.kind === 'question' || modal?.kind === 'daily' || modal?.kind === 'table' || fight.questionOpen
+  const musicQuestion = modal?.kind === 'question' || modal?.kind === 'daily' || modal?.kind === 'table' || modal?.kind === 'sphinx' || fight.questionOpen
   useEffect(() => {
     services.music.configure({ muted: !musicOn, volume: musicVolume, calm })
   }, [services, musicOn, musicVolume, calm])
@@ -236,6 +239,12 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
     const next = { ...dataRef.current, relics: normalizeRelics([...dataRef.current.relics, ...ids]) }
     persist(next)
     worldRef.current?.setTableState(next)
+  }
+
+  /** Tests dans le navigateur (?e2e, mode découverte seulement) : met des passages dans la réserve du Sphinx. */
+  function giveSphinxPasses(n: number) {
+    const current = sphinxOf(dataRef.current, profile.level)
+    persist({ ...dataRef.current, sphinx: { ...current, passes: Math.min(MAX_PASSES, Math.max(0, current.passes + n)) } })
   }
 
   /** Le héros ramasse une relique de l'île : elle rejoint la partie (jamais deux fois), l'éclat disparaît, l'enfant sait où il en est. */
@@ -284,6 +293,8 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
       collectRelic(target.relic)
     } else if (target.kind === 'table') {
       setModal({ kind: 'table' })
+    } else if (target.kind === 'barque') {
+      setModal({ kind: 'sphinx' })
     } else if (target.kind === 'coffre') {
       void openChest()
     } else if (target.kind === 'jour') {
@@ -481,6 +492,8 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
             ? `Toucher ${focus.label.toLowerCase()}`
             : focus.kind === 'jour'
               ? 'Relever le défi du jour'
+              : focus.kind === 'barque'
+                ? 'Monter dans la barque du Sphinx'
               : focus.kind === 'table'
                 ? 'Ouvrir la Table des Reliques'
                 : focus.kind === 'relique'
@@ -568,6 +581,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
           onClose={close}
         />
       )}
+      {modal?.kind === 'sphinx' && <SphinxVisit services={services} data={data} demo={demo} onSave={persist} onClose={close} />}
       {modal?.kind === 'options' && (
         <Options
           accommodations={accommodations}

@@ -33,6 +33,8 @@ export interface IslandLayout {
   pierre_jour: Point
   /** La Table des Reliques (core/relics.ts), sur le plateau de la Citadelle. */
   table_reliques: Point
+  /** La barque de l'île du Sphinx, sur la côte est : le point où le héros monte (dans l'eau peu profonde) et l'endroit où la barque flotte. */
+  barque: Point & { bateau: Point }
   ysaline: Point
   village: Point & { rayon_plat: number }
   regions: Record<string, RegionLayout>

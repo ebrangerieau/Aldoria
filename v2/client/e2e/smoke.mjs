@@ -722,6 +722,141 @@ try {
     await page.getByTestId('table-reliques').waitFor({ state: 'detached', timeout: 5000 * SLOW })
   })
 
+  await step('l’île du Sphinx : sans passage la barque ne part pas, puis trois énigmes (annuler, recommencer, aide, une dalle touchée), le bilan, et une visite quittée à Échap', async () => {
+    const save = () => page.evaluate(() => window.__aldoria.save())
+    const toBoat = () =>
+      page.evaluate(() => {
+        const w = window.__aldoria.world
+        const boat = w.interactables.find((i) => i.id === 'barque')
+        w.teleport(boat.x - 1.8, boat.z, boat.x + 4, boat.z)
+      })
+    const openBoat = async () => {
+      await toBoat()
+      await page.getByTestId('invite').filter({ hasText: 'Monter dans la barque du Sphinx' }).waitFor({ timeout: 10_000 * SLOW })
+      await page.keyboard.press('KeyE')
+      await page.getByTestId('sphinx-carte').waitFor({ timeout: 10_000 * SLOW })
+    }
+    // Sans passage : la barque l'explique et ne part pas.
+    await page.evaluate(() => window.__aldoria.giveSphinxPasses(-3))
+    await openBoat()
+    const none = await page.getByTestId('sphinx-carte').innerText()
+    if (!none.includes("Tu n'as pas de passage") || none.includes('Traverser')) throw new Error(`la barque sans passage : ${none}`)
+    await page.screenshot({ path: `${OUT}/05a-barque-sans-passage.png` })
+    await page.getByRole('button', { name: 'Retour à l’île' }).click()
+    await page.getByTestId('sphinx-carte').waitFor({ state: 'detached', timeout: 5000 * SLOW })
+
+    // Avec deux passages : on traverse, le Sphinx se présente (la première fois), trois énigmes.
+    await page.evaluate(() => window.__aldoria.giveSphinxPasses(2))
+    await openBoat()
+    if (!(await page.getByTestId('sphinx-carte').innerText()).includes('2 passages en réserve')) throw new Error('la réserve de passages devrait s’afficher')
+    await page.getByRole('button', { name: 'Traverser' }).click()
+    await page.getByRole('button', { name: 'Au premier bloc !' }).waitFor({ timeout: 10_000 * SLOW })
+    if (!(await page.getByTestId('sphinx-carte').innerText()).includes('Je suis le Sphinx')) throw new Error('la présentation du Sphinx')
+    let s = await save()
+    if (s.sphinx.passes !== 1) throw new Error(`la traversée coûte un passage : ${s.sphinx.passes}`)
+    await page.getByRole('button', { name: 'Au premier bloc !' }).click()
+    await page.getByTestId('sphinx-enigme').waitFor({ timeout: 10_000 * SLOW })
+    s = await save()
+    if (!s.story.includes('sphinx-vu')) throw new Error('la présentation du Sphinx devrait être marquée vue')
+
+    const KEY = { l: 'ArrowLeft', r: 'ArrowRight', u: 'ArrowUp', d: 'ArrowDown' }
+    const play = async (letters) => {
+      for (const c of letters) await page.keyboard.press(KEY[c.toLowerCase()])
+    }
+    const puzzle = () => page.evaluate(() => window.__aldoria.sphinx)
+    const heroAt = () => page.getByTestId('sphinx-heros').evaluate((g) => [Number(g.dataset.x), Number(g.dataset.y)])
+    const message = () => page.getByTestId('sphinx-message').innerText()
+    const solvedCard = async () => {
+      await page.getByTestId('sphinx-carte').waitFor({ timeout: 15_000 * SLOW })
+      return page.getByTestId('sphinx-carte').innerText()
+    }
+
+    // Énigme 1 : un mur ne bouge pas, annuler et recommencer, l'aide du Sphinx, puis la fin.
+    let p1 = await puzzle()
+    if (p1.round !== 0) throw new Error(`la première énigme : rang ${p1.round}`)
+    await page.screenshot({ path: `${OUT}/05b-enigme.png` })
+    const start = await heroAt()
+    await page.keyboard.press('Backspace') // rien à annuler : sans effet
+    const first = p1.solution[0].toLowerCase()
+    await play(first)
+    if ((await heroAt()).join() === start.join()) throw new Error('le premier pas de la solution devrait faire avancer le héros')
+    await page.keyboard.press('Backspace')
+    if ((await heroAt()).join() !== start.join()) throw new Error('annuler devrait ramener le héros au départ')
+    await play(first)
+    await page.getByTestId('sphinx-recommencer').click()
+    if ((await heroAt()).join() !== start.join()) throw new Error('recommencer devrait remettre la salle comme au départ')
+    // Un pas dans le mur le plus proche : « Ça ne bouge pas ».
+    for (const wall of ['ArrowUp', 'ArrowLeft', 'ArrowDown', 'ArrowRight']) {
+      await page.keyboard.press(wall)
+      if ((await message()).includes('Ça ne bouge pas')) break
+      await page.getByTestId('sphinx-recommencer').click({ timeout: 800 }).catch(() => {}) // désactivé tant qu'il n'y a rien à annuler
+    }
+    await page.getByTestId('sphinx-recommencer').click({ timeout: 800 }).catch(() => {}) // désactivé tant qu'il n'y a rien à annuler
+    await page.getByTestId('sphinx-aide').click() // le Sphinx rejoue le début de sa solution
+    await page.waitForFunction(() => /À toi de continuer|Énigme résolue/.test(document.querySelector('[data-testid="sphinx-message"]')?.textContent ?? ''), null, { timeout: 30_000 * SLOW })
+    await page.screenshot({ path: `${OUT}/05c-aide-du-sphinx.png` })
+    // La suite de la solution depuis l'état où l'aide a laissé le plateau : on recommence et on rejoue tout (même résultat, l'aide a déjà compté).
+    if (!(await page.getByTestId('sphinx-carte').count())) {
+      await page.getByTestId('sphinx-recommencer').click()
+      await play(p1.solution)
+    }
+    let card = await solvedCard()
+    if (!card.includes('Résolue en') || !card.includes('Avec mon aide')) throw new Error(`l’énigme résolue avec l’aide : ${card}`)
+    await page.getByRole('button', { name: 'Énigme suivante' }).click()
+
+    // Énigme 2 : on touche une dalle pour y aller (sans pousser de bloc), puis on recommence et on résout seul : le Sphinx salue le minimum de poussées.
+    await page.getByTestId('sphinx-enigme').waitFor({ timeout: 10_000 * SLOW })
+    const p2 = await puzzle()
+    if (p2.round !== 1) throw new Error(`la deuxième énigme : rang ${p2.round}`)
+    const spots = p2.rows.flatMap((row, y) => [...row].flatMap((c, x) => (c === ' ' || c === '.' ? [[x, y]] : [])))
+    const origin = await heroAt()
+    let walked = false
+    for (const [x, y] of spots.slice(0, 12)) {
+      if (x === origin[0] && y === origin[1]) continue
+      await page.getByTestId(`dalle-${x}-${y}`).click()
+      try {
+        await page.waitForFunction(([tx, ty]) => {
+          const g = document.querySelector('[data-testid="sphinx-heros"]')
+          return g && Number(g.dataset.x) === tx && Number(g.dataset.y) === ty
+        }, [x, y], { timeout: 4000 * SLOW })
+        walked = true
+        break
+      } catch { /* dalle hors d'atteinte sans pousser : on essaie la suivante */ }
+    }
+    if (!walked) throw new Error('toucher une dalle libre devrait y mener le héros')
+    await page.getByTestId('sphinx-recommencer').click()
+    await play(p2.solution)
+    card = await solvedCard()
+    if (!card.includes('Le moins de poussées possible')) throw new Error(`l’énigme résolue seul : ${card}`)
+    await page.screenshot({ path: `${OUT}/05d-enigme-resolue.png` })
+    await page.getByRole('button', { name: 'Énigme suivante' }).click()
+
+    // Énigme 3, la dernière : « Terminer », le bilan, le retour sur l'île.
+    await page.getByTestId('sphinx-enigme').waitFor({ timeout: 10_000 * SLOW })
+    const p3 = await puzzle()
+    await play(p3.solution)
+    await solvedCard()
+    await page.getByRole('button', { name: 'Terminer' }).click()
+    const bilan = await solvedCard()
+    if (!bilan.includes('Énigmes résolues pendant cette traversée : 3')) throw new Error(`le bilan de la traversée : ${bilan}`)
+    s = await save()
+    if (s.sphinx.solved !== 3) throw new Error(`trois énigmes résolues : ${s.sphinx.solved}`)
+    await page.getByRole('button', { name: 'Retour à l’île' }).click()
+    await page.getByTestId('sphinx-carte').waitFor({ state: 'detached', timeout: 5000 * SLOW })
+
+    // Une seconde visite (le dernier passage) : le Sphinx ne se présente plus ; Échap quitte l'île, le passage est dépensé.
+    await openBoat()
+    await page.getByRole('button', { name: 'Traverser' }).click()
+    await page.getByRole('button', { name: 'J’entre' }).waitFor({ timeout: 10_000 * SLOW })
+    if ((await page.getByTestId('sphinx-carte').innerText()).includes('Je suis le Sphinx')) throw new Error('le Sphinx ne se présente qu’une fois')
+    await page.getByRole('button', { name: 'J’entre' }).click()
+    await page.getByTestId('sphinx-enigme').waitFor({ timeout: 10_000 * SLOW })
+    await page.keyboard.press('Escape')
+    await page.getByTestId('sphinx-enigme').waitFor({ state: 'detached', timeout: 10_000 * SLOW })
+    s = await save()
+    if (s.sphinx.passes !== 0) throw new Error(`le passage de la seconde visite : ${s.sphinx.passes}`)
+  })
+
   await step("question de la pierre d'éveil", async () => {
     xpBefore = await xpOf() // le combat d'avant a déjà rapporté de l'XP
     await page.evaluate(() => window.__aldoria.world.teleport(9, -24.5, 9, -22))
