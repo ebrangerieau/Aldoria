@@ -1058,6 +1058,9 @@ try {
       await page.getByTestId('apparence').waitFor({ state: 'detached', timeout: 10_000 * SLOW })
     }
     const pos = () => page.evaluate(() => { const p = window.__aldoria.world.hero.root.position; return [p.x, p.z].map((v) => Math.round(v * 100) / 100) })
+    // Le seuil du lieu, resté ouvert par l'étape d'avant, recouvre l'interface : « Pas maintenant » rend la main au monde.
+    await page.getByRole('button', { name: 'Pas maintenant' }).click()
+    await page.locator('.dialog').waitFor({ state: 'detached', timeout: 10_000 * SLOW })
     const before = await pos()
     const start = await look()
 

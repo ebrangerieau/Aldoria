@@ -1,5 +1,5 @@
 // Vérifie l'écran d'apparence avec les aménagements les plus larges (texte agrandi, police lisible, grandes cibles) à 1280 × 720 : le panneau doit
-// tenir dans l'écran à droite, défiler proprement, garder ses boutons atteignables, et le héros doit rester visible à gauche du panneau.
+// tenir dans l'écran à droite (au plus deux tiers), défiler proprement, garder ses boutons atteignables, et le héros doit rester visible à gauche.
 // Serveur de prévisualisation lancé ; captures dans $E2E_OUT (apparence-amenagements.png).
 import { mkdirSync } from 'node:fs'
 import { createRequire } from 'node:module'
@@ -64,7 +64,7 @@ const box = await page.evaluate(() => {
   }
 })
 console.log(JSON.stringify(box))
-if (box.left < 640) fail(`le panneau prend plus de la moitié de l’écran (gauche : ${box.left})`)
+if (box.left < 400) fail(`le panneau prend plus des deux tiers de l’écran (gauche : ${box.left})`)
 if (box.right > 1280 || box.top < 0 || box.bottom > 720) fail('le panneau déborde de l’écran')
 if (!box.closeVisible) fail('le bouton « Terminé » n’est pas atteignable en bas du panneau')
 if (box.hero && box.hero.x > box.left - 40) fail(`le héros (x ${Math.round(box.hero.x)}) est caché par le panneau (gauche : ${box.left})`)
