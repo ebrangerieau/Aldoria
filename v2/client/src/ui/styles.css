@@ -590,6 +590,22 @@ html[data-calm='true'] .hero-bubble { animation: bubble-calm 6s linear forwards;
 .tir-stepper button { min-width: 2.6rem; font-size: 1.3rem; }
 .tir-value { min-width: 4.6rem; padding: 0.15rem 0.5rem; border: 2px solid var(--ink); border-radius: 6px; background: var(--parchment-light, #fff8e1); font-size: 1.6rem; font-weight: 700; text-align: center; }
 
+/* --- Balance géante (ui/BalanceEnigma.tsx) : le panneau se range en bas, la balance de la scène reste visible au-dessus ------------------------------------------ */
+.balance-overlay { background: none; pointer-events: none; place-items: end center; padding: 0 1rem 0.8rem; }
+.balance-panel { pointer-events: auto; width: min(1000px, 96vw); max-height: 46vh; overflow-y: auto; scroll-padding-bottom: 5.6rem; }
+.balance-panel .prompt { margin: 0.1rem 0 0.2rem; }
+.balance-state { margin: 0 0 0.3rem; font-weight: 700; }
+.balance-tools { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.3rem 0; }
+.balance-message { min-height: 2.5rem; margin: 0.3rem 0; font-weight: 600; }
+.balance-message.good { color: var(--good-ink); }
+.balance-message.bad { color: var(--bad-ink); }
+/* Texte agrandi : le panneau défile, mais « Essayer sur la balance » reste collé en bas, sous le doigt ; le retour de l'essai passe au-dessus. */
+.balance-controls { position: sticky; bottom: 0; z-index: 1; display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; padding: 0.5rem 0; background: var(--parchment); box-shadow: 0 -8px 8px -8px rgb(0 0 0 / 30%); }
+.balance-label { font-weight: 700; font-size: 1.15rem; }
+.balance-stepper { display: inline-flex; align-items: center; gap: 0.35rem; }
+.balance-stepper button { min-width: 2.6rem; font-size: 1.3rem; }
+.balance-value { min-width: 3.4rem; padding: 0.15rem 0.5rem; border: 2px solid var(--ink); border-radius: 6px; background: var(--parchment-light, #fff8e1); font-size: 1.6rem; font-weight: 700; text-align: center; }
+
 /* --- Prologue (ui/Prologue.tsx) : barres de cinéma, panneau du tableau, interface cachée le temps du récit -------------------------------------------------- */
 .prologue { position: absolute; inset: 0; pointer-events: none; }
 .prologue-bar { position: absolute; left: 0; right: 0; height: 8vh; background: #0b0a10; }

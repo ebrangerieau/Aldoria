@@ -56,6 +56,13 @@ export const PEDESTAL_DISTANCE = 1.7
 export const PEDESTAL_REARM = 2.6
 /** Rayon de l'obstacle d'un piédestal (colonne de pierre). */
 export const PEDESTAL_RADIUS = 0.55
+/** La balance géante de la salle-énigme du mode « balance » : x dans la salle et profondeur de son pied, comme dans la v1 (BALANCE_AT), au fond, loin de l'escalier. */
+export const BALANCE_AT: [number, number] = [7, 5]
+/** Le héros qui s'approche à cette distance du pied de la balance commence l'énigme (v1 : BALANCE_DISTANCE) ; s'il y renonce, il doit s'éloigner d'un mètre de plus avant de revenir. */
+export const BALANCE_DISTANCE = 3.4
+export const BALANCE_REARM = BALANCE_DISTANCE + 1
+/** Où le héros se tient pendant l'énigme : à l'ouest de la balance, un peu en avant (v1 : BALANCE_SPOT), pour ne pas la cacher. */
+export const BALANCE_SPOT: [number, number] = [-4.4, 0.4]
 
 export type Vec3 = [number, number, number]
 
@@ -200,6 +207,17 @@ export class Dungeon {
   /** Les trois piédestaux de la salle `room` (position de la v1, sans miroir). */
   pedestalPoints(room: number): { x: number; z: number }[] {
     return PEDESTAL_SPOTS.map(([x, depth]) => this.point(room, x, depth))
+  }
+
+  /** Le pied de la balance géante de la salle `room` (position de la v1, sans miroir). */
+  balancePoint(room: number): { x: number; z: number } {
+    return this.point(room, BALANCE_AT[0], BALANCE_AT[1])
+  }
+
+  /** Où se tient le héros pendant l'énigme de la balance. */
+  balanceSpot(room: number): { x: number; z: number } {
+    const at = this.balancePoint(room)
+    return { x: at.x + BALANCE_SPOT[0], z: at.z - BALANCE_SPOT[1] }
   }
 
   /** Où apparaît le coffre dans la salle de l'Effaceur. */

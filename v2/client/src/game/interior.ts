@@ -34,18 +34,21 @@ import {
   TransformNode,
   Vector3,
 } from '@babylonjs/core'
+import { BALANCE_ROUNDS } from '../core/balanceEnigma'
+import { ARM, PLATE_R } from '../core/balanceRig'
 import { Combatant, type CombatEvent } from '../core/combat/encounter'
 import { Emitter } from '../core/events'
 import { bossOf } from '../core/quest/boss'
 import type { SaveData } from '../core/save'
 import {
-  AGGRO_DISTANCE, CHEST_RADIUS, CHEST_REACH, Dungeon, ENEMY_RADIUS, PEDESTAL_DISTANCE, PEDESTAL_RADIUS, PEDESTAL_REARM, type Piece,
+  AGGRO_DISTANCE, BALANCE_DISTANCE, BALANCE_REARM, CHEST_RADIUS, CHEST_REACH, Dungeon, ENEMY_RADIUS, PEDESTAL_DISTANCE, PEDESTAL_RADIUS, PEDESTAL_REARM, type Piece,
 } from '../core/world/dungeon'
 import { HERO_HEIGHT, isSkeleton, monsterFit, V1_TO_V2 } from '../core/world/monsters'
 import { angleDelta, RUN_SPEED, step, WALK_SPEED } from '../core/world/movement'
 import { Obstacles } from '../core/world/obstacles'
 import type { EnemySpec, Place } from '../core/world/places'
 import { loadContainer } from './assets'
+import { BalanceRig, type RigView } from './balanceRig'
 import { type Character, loadHero, loadMonster, loadSkeleton, settleOnGround } from './characters'
 import { sparkle } from './effects'
 import type { Interactable } from './GameWorld'
@@ -98,6 +101,18 @@ export interface Pedestal {
   baseY: number
 }
 
+/** La balance géante de la salle-énigme du mode « balance » : trois manches sur la balance elle-même, au lieu des trois piédestaux. */
+export interface BalanceStation {
+  room: number
+  x: number
+  z: number
+  rig: BalanceRig
+  /** Manches gagnées (`BALANCE_ROUNDS` ouvrent la porte). */
+  rounds: number
+  /** Prête à commencer ; après un renoncement, elle ne se réarme qu'une fois le héros éloigné de BALANCE_REARM. */
+  armed: boolean
+}
+
 export type FloatTone = 'good' | 'bad' | 'crit' | 'plain'
 
 export type InteriorEvents = {
@@ -108,6 +123,8 @@ export type InteriorEvents = {
   fight: Enemy
   /** Le héros a approché un piédestal : l'interface pose la question (`solvePedestal` si la réponse est juste, `retryPedestal` sinon). */
   riddle: Pedestal
+  /** Le héros a approché la balance géante : il s'est placé de côté, la caméra la cadre, l'interface mène les manches (`showBalance`, `balanceRoundDone`, `endBalance`). */
+  balance: BalanceStation
   /** Nombre flottant (dégâts, soin), en pixels de l'écran. */
   float: { text: string; tone: FloatTone; x: number; y: number }
   /** La porte `index` (entre la salle `index` et la suivante) s'ouvre. */
@@ -157,6 +174,9 @@ export class InteriorWorld {
   pedestals: Pedestal[] = []
   /** Le piédestal dont la question est ouverte : le héros ne marche plus. */
   riddling: Pedestal | null = null
+  /** La balance géante du lieu (mode « balance » seulement), et celle dont les manches sont en cours : le héros ne marche plus. */
+  balance: BalanceStation | null = null
+  balancing: BalanceStation | null = null
   private crystalTime = 0
   private shadows!: CascadedShadowGenerator
   private focusTarget: Vector3 | null = null
@@ -241,6 +261,7 @@ export class InteriorWorld {
     this.progress('Les ennemis', 0.9)
     await this.buildEnemies()
     this.buildPedestals()
+    this.buildBalance()
     await this.buildChest()
 
     // La sortie : la porte du mur ouest de la première salle.
@@ -352,7 +373,7 @@ export class InteriorWorld {
     stone.diffuseColor = new Color3(0.42, 0.4, 0.46)
     stone.specularColor = Color3.Black()
     for (const [room, spec] of rooms.entries()) {
-      if (spec.kind !== 'enigme') continue
+      if (spec.kind !== 'enigme' || this.options.place.dungeon.enigma.mode === 'balance') continue // la balance géante prend la place des piédestaux
       for (const [k, at] of dungeon.pedestalPoints(room).entries()) {
         const y = dungeon.heightAt(at.x, at.z)
         const column = MeshBuilder.CreateCylinder(`piedestal-${room}-${k}`, { diameterTop: 0.84, diameterBottom: 1.1, height: 1, tessellation: 20 }, scene)
@@ -427,6 +448,113 @@ export class InteriorWorld {
     ped.crystal.rotation.y = 0
     sparkle(this.scene, new Vector3(ped.x, ped.baseY, ped.z), this.options.calm)
     void this.hero.playOnce('cheer', 'idle')
+  }
+
+  // --- L'énigme : la balance géante ---------------------------------------------------------
+
+  /** La balance géante dans la salle-énigme (mode « balance ») : son pied et ses plateaux sont des obstacles ; elle montre d'abord deux plateaux vides. */
+  private buildBalance(): void {
+    const { dungeon } = this
+    const room = this.options.place.dungeon.rooms.findIndex((r) => r.kind === 'enigme')
+    if (this.options.place.dungeon.enigma.mode !== 'balance' || room < 0) return
+    const at = dungeon.balancePoint(room)
+    const rig = BalanceRig.create(this.scene, CRYSTAL_COLORS[this.options.world], (mesh) => this.shadows.addShadowCaster(mesh, false))
+    rig.root.position.set(at.x, dungeon.heightAt(at.x, at.z), at.z)
+    rig.show({ state: { left: { boxes: 0, units: 0 }, right: { boxes: 0, units: 0 } }, names: { box: ['boîte', 'boîtes'], unit: ['bille', 'billes'] }, heavier: 0, shown: null }, true)
+    for (const dx of [-ARM, 0, ARM]) this.obstacles.add({ x: at.x + dx, z: at.z, r: dx === 0 ? 0.9 : PLATE_R })
+    this.balance = { room, x: at.x, z: at.z, rig, rounds: 0, armed: true }
+  }
+
+  /** Les manches de la balance qui restent dans la salle `room` (0 : il n'y a pas de balance, ou elle est résolue). */
+  balanceLeft(room: number): number {
+    const b = this.balance
+    return b && b.room === room ? Math.max(0, BALANCE_ROUNDS - b.rounds) : 0
+  }
+
+  /** Ce que la salle demande encore : des cristaux à éveiller, ou des manches de balance. */
+  riddleLeft(room: number): number {
+    return this.pedestalsLeft(room) + this.balanceLeft(room)
+  }
+
+  /** La balance abordée : celle de la salle du héros, à portée, si elle est armée et pas résolue. */
+  private nearestBalance(): BalanceStation | null {
+    const b = this.balance
+    if (!b || b.rounds >= BALANCE_ROUNDS) return null
+    const p = this.hero.root.position
+    const d = Math.hypot(p.x - b.x, p.z - b.z)
+    if (!b.armed) {
+      b.armed = b.room !== this.room || d > BALANCE_REARM // s'éloigner (ou quitter la salle) pour revenir plus tard
+      return null
+    }
+    return b.room === this.room && d < BALANCE_DISTANCE ? b : null
+  }
+
+  /** Le héros se place à l'ouest de la balance, face à elle ; la caméra la cadre ; l'interface mène alors les manches. */
+  private async beginBalance(b: BalanceStation): Promise<void> {
+    this.balancing = b
+    this.setInputEnabled(false)
+    this.focused = null
+    this.events.emit('focus', null)
+    const spot = this.dungeon.balanceSpot(b.room)
+    const from = this.hero.root.position.clone()
+    const to = new Vector3(spot.x, this.dungeon.heightAt(spot.x, spot.z), spot.z)
+    this.hero.yaw = Math.atan2(to.x - from.x, to.z - from.z)
+    this.hero.play('run')
+    this.savedRadius = this.camera.radius
+    this.radiusGoal = 8.6
+    // La balance haute dans l'image : l'écran du bas porte le panneau de la manche.
+    this.focusTarget = new Vector3(b.x - 1.1, to.y + 0.4, b.z)
+    const duration = 450
+    const started = performance.now()
+    await new Promise<void>((resolve) => {
+      const observer = this.scene.onBeforeRenderObservable.add(() => {
+        const k = Math.min(1, (performance.now() - started) / duration)
+        this.hero.root.position.copyFrom(Vector3.Lerp(from, to, k))
+        if (k >= 1) {
+          this.scene.onBeforeRenderObservable.remove(observer)
+          resolve()
+        }
+      })
+    })
+    this.hero.play('idle')
+    this.hero.yaw = Math.PI / 2 // face à l'est : la balance
+    this.events.emit('balance', b)
+  }
+
+  /** L'interface pousse l'état de la manche : la balance le montre (boîtes, billes, masse essayée, fléau). */
+  showBalance(view: RigView): void {
+    this.balance?.rig.show(view, this.options.calm)
+  }
+
+  /** Une manche gagnée : étincelles sur les deux plateaux, le héros se réjouit. */
+  balanceRoundDone(): void {
+    const b = this.balance
+    if (!b) return
+    b.rounds = Math.min(BALANCE_ROUNDS, b.rounds + 1)
+    for (const left of [true, false]) sparkle(this.scene, b.rig.plateWorld(left).add(new Vector3(0, 0.5, 0)), this.options.calm)
+    void this.hero.playOnce('cheer', 'idle')
+  }
+
+  /** Une attention sur un plateau (retrait des deux côtés) : une petite gerbe. */
+  balanceBurst(): void {
+    const b = this.balance
+    if (!b || this.options.calm) return
+    for (const left of [true, false]) sparkle(this.scene, b.rig.plateWorld(left).add(new Vector3(0, 0.4, 0)), true)
+  }
+
+  /** Fin des manches : la caméra revient derrière le héros, qui reprend la main. Renoncer (`done` faux) : la balance ne se réarme qu'une fois le héros éloigné. */
+  endBalance(done: boolean): void {
+    const b = this.balancing
+    if (!b) return
+    this.balancing = null
+    this.focusTarget = null
+    this.radiusGoal = this.savedRadius
+    if (!done) b.armed = false
+    this.setInputEnabled(true)
+    if (done) {
+      sparkle(this.scene, b.rig.topWorld(), this.options.calm)
+      void this.hero.playOnce('cheer', 'idle')
+    }
   }
 
   // --- Le coffre de l'Effaceur ------------------------------------------------------------
@@ -840,16 +968,17 @@ export class InteriorWorld {
   }
 
   private update(dt: number): void {
-    const free = this.inputEnabled && !this.fighting && !this.riddling
+    const free = this.inputEnabled && !this.fighting && !this.riddling && !this.balancing
     const dir = free ? this.direction() : { x: 0, z: 0, walk: false }
     const p = this.hero.root.position
     const s = step({ x: p.x, z: p.z }, dir, dir.walk ? WALK_SPEED : RUN_SPEED, dt, this.dungeon, this.obstacles)
     const moving = s.moved > 0.001
     p.x = s.x
     p.z = s.z
-    if (!this.fighting) p.y += (s.y - p.y) * Math.min(1, dt * 18)
-    if (this.fighting) {
-      // Le héros reste sur place (beginFight le déplace lui-même, la mise en scène l'anime).
+    const staged = this.fighting !== null || this.balancing !== null
+    if (!staged) p.y += (s.y - p.y) * Math.min(1, dt * 18)
+    if (staged) {
+      // Le héros reste sur place (beginFight et beginBalance le déplacent eux-mêmes, la mise en scène l'anime).
     } else if (moving) {
       this.hero.yaw = this.hero.yaw + angleDelta(this.hero.yaw, Math.atan2(dir.x, dir.z)) * Math.min(1, dt * 12)
       this.hero.play(dir.walk ? 'walk' : 'run')
@@ -870,7 +999,8 @@ export class InteriorWorld {
     }
     this.updateRoom(false)
     this.spinCrystals(dt)
-    if (!this.fighting && !this.riddling) {
+    this.balance?.rig.update(dt)
+    if (!this.fighting && !this.riddling && !this.balancing) {
       const foe = this.nearestFoe()
       if (foe) {
         this.fighting = foe // posé tout de suite : un seul combat à la fois
@@ -880,6 +1010,11 @@ export class InteriorWorld {
       const ped = this.inputEnabled ? this.nearestPedestal() : null
       if (ped) {
         this.beginRiddle(ped)
+        return
+      }
+      const scale = this.inputEnabled ? this.nearestBalance() : null
+      if (scale) {
+        void this.beginBalance(scale)
         return
       }
       this.updateFocus()

@@ -127,8 +127,8 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   `gameMode` « enigme »). Juste : le cristal s'éveille (vert, plus grand, immobile), XP du lieu et de la question (`enigmaXp`). Faux : l'explication
   s'affiche, le piédestal repose jusqu'à ce que le héros s'éloigne de `PEDESTAL_REARM` puis revienne (autre question). Les trois cristaux éveillés
   ouvrent la porte (`openDoor`, « La porte s'ouvre ! ») et un objet attendait au sac (`findItems`, `ENIGMA_ITEMS`). L'introduction de la salle se
-  dit la première fois (`enigmaIntro` : celle de `lieux.json`, sauf pour le mode « balance » dont le texte parle d'une balance géante que la v2 n'a
-  pas encore : `enigme_introductions` de `combat.json`). Aucune salle n'est sauvegardée : les cristaux se rendorment à la visite suivante.
+  dit la première fois (`enigmaIntro` : celle de `lieux.json`). La **Tour des Fractions** (seul lieu au mode « balance ») n'a pas de piédestaux : sa salle-énigme a la balance géante (ci-dessous).
+  Aucune salle n'est sauvegardée : les cristaux se rendorment à la visite suivante.
   **Le héros parle** (`core/heroVoice.ts`, `content/monde/heros.json`, `HeroVoice` gardé par appareil : les dernières phrases ne reviennent pas) :
   bulle `.hero-bubble` en bas à gauche (`data-testid="heros-dit"`, effacée dès qu'une question, un dialogue ou un combat s'ouvre), lue avec la
   « lecture automatique » ; une phrase de départ à l'entrée dans le lieu, puis un mot sur la salle suivante à chaque porte qui s'ouvre (combat
@@ -136,6 +136,22 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   cinq étoiles (touches 1 à 5, « Passer » ou Échap : pas de note), envoyée avec la fin de la session du lieu (`PlaceSession.end(rating)` →
   `Session.end(rating)` → `session/end`, champ `rating`) ; elle sert d'indicateur au parent (critère de la phase 1 : note ≥ 4). Vérifier :
   captures `enigme`, `enigme-eveillee`, `enigme-brouillard` ; parcours `e2e/smoke.mjs` (erreur, réarmement, trois cristaux, porte, bulle, étoiles).
+- **Balance géante** (v1 : `scenes/dungeon/balance_enigma.gd`, `core/world/balance_rig.gd` ; Tour des Fractions, la salle-énigme du mode « balance » ; tests `balance-geante.test.ts`) : **trois manches sur la balance elle-même**
+  au lieu des trois piédestaux. `core/balanceEnigma.ts` (pur) : une manche (`BalanceRound`, état rendu neuf à chaque geste) part de la balance en équilibre de la question (`visual` kind « balance » : `isBalanceItem`) ;
+  l'enfant enlève la même chose des deux côtés (`removeFromBoth`, elle reste en équilibre : c'est le raisonnement de la pré-algèbre), propose une masse pour une boîte (`stepGuess`, de 0 à 40) et essaie (`attempt`) : le fléau penche du côté
+  le plus lourd (`weigh`), chaque boîte affiche la masse essayée, le message dit le côté et le sens de la correction **sans donner la réponse** (« trop lourde, essaie moins »), l'indice sort au troisième essai (ou à la demande), l'explication
+  de la question après une correction. **Seul le premier essai est enregistré comme réponse** (`services.questions.submit(…, 'enigme')`) ; XP de l'énigme (`enigmaXp`) en entier du premier coup, la moitié après correction (`roundXp`).
+  `core/balanceRig.ts` (pur) : dimensions, places des boîtes et des billes sur un plateau, position des plateaux selon l'inclinaison, mouvement du fléau (`tiltAt` : un rebond, en douceur en mode calme). `game/balanceRig.ts` : la balance (socle,
+  colonne, fléau, chaînes, plateaux ; boîtes et billes en *thin instances*, sacs et pièces selon les noms de la question ; nombres sur des plans qui regardent la caméra : l'étiquette de chaque plateau au-dessus du fléau, la masse essayée sur chaque
+  boîte) ; elle ne décide de rien, l'interface lui pousse tout l'état (`show`). `game/interior.ts` : `buildBalance` (la salle-énigme du mode « balance » : pied en `BALANCE_AT`, trois obstacles, **aucun piédestal**), le héros qui
+  s'approche à `BALANCE_DISTANCE` (3,4 m) commence (`beginBalance` : il se place à l'ouest de la balance, face à elle, la caméra la cadre ; événement `balance`), `showBalance`, `balanceRoundDone`, `endBalance(done)` ; renoncer (« Plus tard »,
+  Échap) rend la main et la balance ne se réarme qu'une fois le héros éloigné de `BALANCE_REARM`. `ui/useFight.tsx` (`balanceRef`) mène les trois manches : une question de balance chacune (`riddleItem`) ; **sans question de balance**
+  (paquet sans énigme, hors connexion), la manche est une question ordinaire (`QuestionPanel`) : la porte ne reste jamais fermée faute de balance ; la troisième manche ouvre la porte et rapporte l'objet de l'énigme (`openRiddleDoor`, comme les
+  piédestaux). `ui/BalanceEnigma.tsx` : le panneau du bas (`.balance-overlay`, transparent aux clics), « Essayer sur la balance » collé en bas quand le texte agrandi le fait défiler, flèches ou + et − pour la masse, Entrée essaie, Échap : plus tard.
+  Crochets `&e2e` : `balance` (la manche : `item`, `round`), `world.interior.balance` (`rounds`, `armed`, `rig.snapshot()` : plateaux, étiquettes, masse essayée, fléau, `settled`), `world.interior.balancing`. Vérifier : captures
+  `balance-attente`, `balance-manche`, `balance-penche`, `balance-equilibre`, `balance-brouillard` ; parcours navigateur (la scène comparée au panneau après chaque geste, renoncer puis revenir, retrait des deux côtés, un essai trop fort, un
+  essai trop faible, la bonne masse, XP corrigée < XP du premier coup, indice, porte, balance résolue qui ne se relance pas) ; `node e2e/balance-a11y.mjs` (aménagements les plus larges à 1280 × 720).
+  Le parcours des **piédestaux** (autres lieux) se joue dans le Moulin des Phrases (premier lieu de la région du français, ouvert dès le départ).
 - **Le sac** (`core/inventory.ts` : plume, parchemin, bouclier, potion, 5 au plus de chaque ; gagnés au coffre d'un lieu (2), à l'énigme (1), au coffre de la
   semaine ; rangés dans la partie, `SaveData.items`) : **aucun objet ne fait sauter une question**. `core/bag.ts` (pur, testé) décide : `bagEntries`
   (potion et bouclier avec ce qui empêche de s'en servir : plus d'objet, vie pleine, bouclier déjà levé), `useInCombat` (dépense l'objet et rend

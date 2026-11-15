@@ -26,14 +26,11 @@ describe('énigme à trois piédestaux : règles', () => {
     expect(enigmaXp({ enigma: { ...def.enigma, xp: 12.6 } }, 1)).toBe(13 + 10)
   })
 
-  it('l’introduction est celle du lieu, sauf pour la balance géante (pas encore dans la v2) : trois cristaux', () => {
+  it('l’introduction est toujours celle du lieu ; la Tour des Fractions parle de sa balance géante', () => {
     const tower = DUNGEONS.find((d) => d.code === 'tour_fractions')!
     expect(tower.enigma.mode).toBe('balance')
-    expect(enigmaIntro(tower)).toMatch(/^Trois cristaux bloquent la porte/)
-    expect(enigmaIntro(tower)).not.toContain('géante')
-    const others = DUNGEONS.filter((d) => d.enigma.mode !== 'balance')
-    expect(others).toHaveLength(DUNGEONS.length - 1)
-    for (const d of others) expect(enigmaIntro(d), d.code).toBe(d.enigma.intro)
+    expect(enigmaIntro(tower)).toMatch(/^Une balance géante bloque la porte/)
+    for (const d of DUNGEONS) expect(enigmaIntro(d), d.code).toBe(d.enigma.intro)
   })
 
   it('la question vient des énigmes de la session, à défaut du chapitre', () => {

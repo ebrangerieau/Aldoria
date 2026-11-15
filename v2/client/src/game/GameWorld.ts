@@ -41,7 +41,7 @@ import { fogDensityFactor, fogNote, type RegionLight, regionLights } from '../co
 import { type IslandLayout, SEA_LEVEL, Terrain } from '../core/world/terrain'
 import { type Atmosphere, createAtmosphere } from './atmosphere'
 import { type Character, dress, loadFox, loadHero, loadMonster, loadNpc, settleOnGround, skinnedHeights, tintFox } from './characters'
-import { type Enemy, type FloatTone, InteriorWorld, type Pedestal } from './interior'
+import { type BalanceStation, type Enemy, type FloatTone, InteriorWorld, type Pedestal } from './interior'
 import { TempleWorld } from './temple'
 import { today as localDay } from '../core/dailyChallenge'
 import { beacon, buildDecor, setBeacon } from './decor'
@@ -91,6 +91,8 @@ export type WorldEvents = {
   fight: Enemy
   /** Le héros a approché un piédestal de la salle-énigme : l'interface pose la question (ui/useFight.tsx). */
   riddle: Pedestal
+  /** Le héros a approché la balance géante de la salle-énigme : l'interface mène les trois manches (ui/useFight.tsx). */
+  balance: BalanceStation
   /** Nombre flottant d'un combat (dégâts, soin), en pixels de l'écran. */
   float: { text: string; tone: FloatTone; x: number; y: number }
 }
@@ -1270,6 +1272,7 @@ export class GameWorld {
     interior.events.on('room', (floor) => this.events.emit('floor', floor))
     interior.events.on('fight', (enemy) => this.events.emit('fight', enemy))
     interior.events.on('riddle', (pedestal) => this.events.emit('riddle', pedestal))
+    interior.events.on('balance', (station) => this.events.emit('balance', station))
     interior.events.on('float', (float) => this.events.emit('float', float))
     // L'île se met en pause : plus d'image, plus d'événement de la souris pour sa caméra.
     if (this.islandLoop) this.engine.stopRenderLoop(this.islandLoop)

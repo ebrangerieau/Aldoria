@@ -110,7 +110,7 @@ et le Labyrinthe des Vecteurs (Tom), les premiers de la v1.
   Quaternius (`Fighter.MONSTERS` de la v1 à porter) et squelettes KayKit.
 - **Effaceur** et ses sceaux (`BOSS_HITS`, difficulté d'un cran sous le niveau à un cran au-dessus), répliques d'entrée et de
   défaite, coffre, page rendue, salut de Maître Ysaline au retour, lieu suivant de la région qui s'ouvre.
-- Énigme du lieu avec trois piédestaux (comme la v1) ; la balance géante attendra la phase 2.
+- Énigme du lieu avec trois piédestaux (comme la v1) ; la balance géante de la Tour des Fractions est venue en phase 2 (faite le 15 novembre).
 - Héros qui parle entre deux salles (`content/monde/heros.json`).
 - Note de 1 à 5 en fin de lieu (`session/end`, `rating`).
 - Widgets restants : vecteur (Tom en a besoin dès le Labyrinthe), droite graduée, tableau de signes.
@@ -140,7 +140,7 @@ par ce qui se teste sans moteur.
 Dans l'ordre que les enfants choisiront à la séance de la phase 1 :
 
 - les 30 lieux de quête : **faits** (étapes 1.1 à 1.6, tous jouables avec leur boss, leur coffre et leur énigme) ;
-- balance géante, stand de tir (Lice), pont des fractions : **le pont est fait le 15 novembre** (passerelle sur le plateau de la Citadelle, six ravins à planches fractionnaires, fractions exactes, un passage pour le Sphinx : `core/pont.ts`, `core/lice.ts`, `ui/PontBridge.tsx`) ; **le stand de tir est fait le 15 novembre** (rapporteur géant en 6e, repère de l'arbalète en 2nde : `core/tir.ts`, `ui/TirRange.tsx`) ; reste la balance géante ;
+- balance géante, stand de tir (Lice), pont des fractions : **la balance géante est faite le 15 novembre** (Tour des Fractions : trois manches sur la balance en 3D, `core/balanceEnigma.ts`, `game/balanceRig.ts`, `ui/BalanceEnigma.tsx`) ; **le pont est fait le 15 novembre** (passerelle sur le plateau de la Citadelle, six ravins à planches fractionnaires, fractions exactes, un passage pour le Sphinx : `core/pont.ts`, `core/lice.ts`, `ui/PontBridge.tsx`) ; **le stand de tir est fait le 15 novembre** (rapporteur géant en 6e, repère de l'arbalète en 2nde : `core/tir.ts`, `ui/TirRange.tsx`) ; reste la balance géante ;
 - Clairval en plein air et ses habitants (`villages.json`), quêtes du jour : **faits le 15 novembre** (trois habitants en 6e, quatre à Brumegarde en 2nde, une quête de trois questions par habitant et par jour, un passage pour le Sphinx à la deuxième ; le visuel « table » des enquêtes de Tom : `core/village.ts`, `ui/VillageQuest.tsx`) ; le repère du village sur la mini-carte s'allume tant qu'une quête attend ; reste une voix enregistrée pour chaque habitant ;
 - Pierre du Jour (défi quotidien, série, coffre de la semaine, sans compte à rebours) : **faite le 14 novembre**, pierre sur le chemin de la Citadelle (`core/dailyRun.ts`, `ui/DailyChallenge.tsx`) ;
 - île du Sphinx : **faite le 15 novembre**, temple en 3D compris (scène à part `game/temple.ts`, caméra fixe, Sphinx et renard assis sur le mur, plan à plat réduit à côté) : la barque sur la côte est, les passages gagnés (fin d'un lieu, défi du jour), le Sphinx, trois énigmes de blocs par traversée (`core/sphinx/`, `ui/SphinxVisit.tsx`, `ui/SphinxPuzzle.tsx`) ; 

@@ -598,7 +598,7 @@ try {
   await step('l’énigme : trois piédestaux, une erreur qui réarme, la porte s’ouvre au troisième cristal, le héros parle', async () => {
     await page.evaluate(() => {
       const w = window.__aldoria.world
-      const it = w.interactables.find((i) => i.id === 'tour_fractions')
+      const it = w.interactables.find((i) => i.id === 'moulin_phrases')
       w.teleport(it.x, it.z - 1.5, it.x, it.z)
     })
     await page.getByTestId('invite').filter({ hasText: 'Approcher' }).waitFor({ timeout: 10_000 * SLOW })
@@ -617,7 +617,7 @@ try {
       const e = i.dungeon.entryPoint(3)
       i.teleport(e.x, e.z)
     })
-    await page.getByRole('heading', { name: 'Les Balances du Gardien' }).waitFor({ timeout: 10_000 * SLOW })
+    await page.getByRole('heading', { name: 'Les Fables défaites' }).waitFor({ timeout: 10_000 * SLOW })
     await page.screenshot({ path: `${OUT}/03e0-enigme-intro.png` })
     await page.getByRole('button', { name: "C'est parti" }).click()
     await page.getByRole('dialog').waitFor({ state: 'detached' })
@@ -672,6 +672,156 @@ try {
     await page.keyboard.press('KeyE')
     await page.getByRole('button', { name: 'Sortir' }).click()
     await page.getByTestId('carte').waitFor({ timeout: 10_000 * SLOW })
+    // Le lieu est vraiment refermé avant l'étape suivante (sinon la suivante téléporte le héros de l'île pendant que l'intérieur est encore là).
+    await page.waitForFunction(() => window.__aldoria.world.interior === null, null, { timeout: 15_000 * SLOW })
+  })
+
+  await step('la balance géante (Tour des Fractions) : renoncer puis revenir, enlever des deux côtés, un essai à côté, l’indice, trois manches, la porte s’ouvre', async () => {
+    await page.evaluate(() => {
+      const w = window.__aldoria.world
+      const it = w.interactables.find((i) => i.id === 'tour_fractions')
+      w.teleport(it.x, it.z - 1.5, it.x, it.z)
+    })
+    await page.getByTestId('invite').filter({ hasText: 'Approcher' }).waitFor({ timeout: 10_000 * SLOW })
+    await page.keyboard.press('KeyE')
+    await page.getByRole('button', { name: "J'y vais" }).click()
+    await page.getByTestId('etage').waitFor({ timeout: 60_000 * SLOW })
+    await page.evaluate(() => {
+      const i = window.__aldoria.world.interior
+      for (let d = 0; d < 3; d += 1) i.openDoor(d, false)
+      const e = i.dungeon.entryPoint(3)
+      i.teleport(e.x, e.z)
+    })
+    // L'introduction parle de la balance géante (celle du lieu), pas de cristaux.
+    await page.getByRole('heading', { name: 'Les Balances du Gardien' }).waitFor({ timeout: 10_000 * SLOW })
+    if (!(await page.getByRole('dialog').innerText()).includes('balance géante')) throw new Error('l’introduction devrait parler de la balance géante')
+    await page.getByRole('button', { name: "C'est parti" }).click()
+    await page.getByRole('dialog').waitFor({ state: 'detached' })
+    const state = () => page.evaluate(() => {
+      const i = window.__aldoria.world.interior
+      return { pedestals: i.pedestals.length, rounds: i.balance?.rounds ?? -1, armed: i.balance?.armed, balancing: i.balancing !== null, door: i.dungeon.isDoorOpen(3), rig: i.balance?.rig.snapshot() }
+    })
+    const start = await state()
+    if (start.pedestals !== 0 || start.rounds !== 0) throw new Error(`une balance et aucun piédestal attendus : ${JSON.stringify(start)}`)
+    if (start.door) throw new Error('la porte de l’énigme devrait être fermée tant que la balance n’est pas résolue')
+    if (start.rig.labels.join('|') !== 'vide|vide') throw new Error(`la balance attend, plateaux vides : ${start.rig.labels}`)
+    const xp = async () => Number(((await page.locator('.badge').innerText()).match(/(\d+) XP/) ?? [])[1] ?? 0)
+    const approach = () => page.evaluate(() => {
+      const i = window.__aldoria.world.interior
+      i.teleport(i.balance.x - 1.0, i.balance.z - 3.0) // à portée (3,4 m), devant la balance : le héros ne marche pas dans un plateau
+    })
+    /** La scène montre ce que dit le panneau : plateaux, étiquettes, masse essayée, fléau. */
+    const rigMatches = async (label) => {
+      await page.waitForFunction(() => window.__aldoria.world.interior.balance.rig.snapshot().settled, null, { timeout: 8000 * SLOW })
+      const { round } = await page.evaluate(() => window.__aldoria.balance)
+      const rig = (await state()).rig
+      const want = JSON.stringify([round.state.left, round.state.right])
+      if (JSON.stringify([rig.left, rig.right]) !== want) throw new Error(`${label} : la balance 3D montre ${JSON.stringify([rig.left, rig.right])}, le panneau ${want}`)
+      if (rig.shown !== round.shown) throw new Error(`${label} : masse essayée ${rig.shown} en 3D, ${round.shown} dans le panneau`)
+      const boxes = round.state.left.boxes + round.state.right.boxes
+      if (rig.guessLabels !== (round.shown === null ? 0 : boxes)) throw new Error(`${label} : ${rig.guessLabels} masses écrites sur ${boxes} boîtes`)
+      const tilt = Math.round(rig.goal)
+      if (Math.sign(tilt) !== -round.heavier) throw new Error(`${label} : le fléau penche à ${tilt}° pour un côté plus lourd ${round.heavier}`)
+    }
+    const guess = async (value) => {
+      for (let n = 0; n < 60; n += 1) {
+        const now = Number(await page.getByTestId('balance-valeur').innerText())
+        if (now === value) return
+        await page.keyboard.press(now < value ? 'ArrowUp' : 'ArrowDown')
+      }
+      throw new Error(`la masse proposée n’arrive pas à ${value}`)
+    }
+    const message = () => page.getByTestId('balance-message').innerText()
+    const balance = () => page.evaluate(() => window.__aldoria.balance)
+
+    // Le héros s'approche : il se place de côté, face à la balance, la manche 1 / 3 s'ouvre. Renoncer (« Plus tard », Échap) rend la main.
+    await approach()
+    await page.getByTestId('balance-enigme').waitFor({ timeout: 15_000 * SLOW })
+    if (!(await page.getByRole('heading', { name: /Les Balances du Gardien · 1 \/ 3/ }).count())) throw new Error('le titre devrait dire la manche 1 / 3')
+    await page.waitForFunction(() => window.__aldoria.world.interior.balancing !== null, null, { timeout: 5000 * SLOW })
+    await page.screenshot({ path: `${OUT}/03e2-balance-geante.png` })
+    await page.keyboard.press('Escape')
+    await page.getByTestId('balance-enigme').waitFor({ state: 'detached', timeout: 5000 * SLOW })
+    let s = await state()
+    if (s.balancing || s.rounds !== 0 || s.armed) throw new Error(`après « Plus tard » : la main est rendue, la balance attend que le héros s'éloigne : ${JSON.stringify({ ...s, rig: undefined })}`)
+    await page.waitForTimeout(600 * SLOW)
+    if (await page.getByTestId('balance-enigme').count()) throw new Error('la balance ne doit pas se relancer tant que le héros reste devant')
+    await page.evaluate(() => {
+      const i = window.__aldoria.world.interior
+      i.teleport(i.balance.x - 5.0, i.balance.z - 6.0) // plus loin que le réarmement (4,4 m), dans la même salle
+    })
+    await page.waitForTimeout(400 * SLOW)
+    await approach()
+    await page.getByTestId('balance-enigme').waitFor({ timeout: 15_000 * SLOW })
+
+    // Manche 1 : la balance du panneau est celle de la scène ; enlever des deux côtés ; un essai trop fort puis trop faible ; la bonne masse après correction.
+    await rigMatches('manche 1, au départ')
+    let b = await balance()
+    const x1 = Number(b.item.answer.value)
+    const before = b.round.state
+    if (before.left.units > 0 && before.right.units > 0) {
+      await page.getByTestId('balance-enlever-unites').click()
+      if (!(await message()).includes('Même chose enlevée des deux côtés')) throw new Error(`le retrait des deux côtés : ${await message()}`)
+      b = await balance()
+      if (b.round.state.left.units !== before.left.units - 1 || b.round.state.right.units !== before.right.units - 1) throw new Error('enlever une bille de chaque côté')
+      await rigMatches('manche 1, après un retrait')
+    }
+    await guess(x1 + 2)
+    await page.getByTestId('balance-essayer').click()
+    if (!(await message()).includes('La balance penche')) throw new Error(`un essai trop fort : ${await message()}`)
+    if (!(await message()).includes('Essaie moins')) throw new Error(`le sens de la correction : ${await message()}`)
+    await rigMatches('manche 1, un essai trop fort')
+    await page.screenshot({ path: `${OUT}/03e3-balance-penche.png` })
+    await guess(Math.max(0, x1 - 1))
+    await page.getByTestId('balance-essayer').click()
+    if (!(await message()).includes('Essaie plus')) throw new Error(`un essai trop faible : ${await message()}`)
+    await rigMatches('manche 1, un essai trop faible')
+    const xpBefore = await xp()
+    await guess(x1)
+    await page.getByTestId('balance-essayer').click()
+    if (!(await message()).includes('En équilibre')) throw new Error(`la bonne masse : ${await message()}`)
+    await rigMatches('manche 1, en équilibre')
+    await page.screenshot({ path: `${OUT}/03e4-balance-equilibre.png` })
+    await page.getByRole('heading', { name: /Les Balances du Gardien · 2 \/ 3/ }).waitFor({ timeout: 15_000 * SLOW })
+    const afterCorrected = (await xp()) - xpBefore
+    if (afterCorrected < 5) throw new Error(`une manche corrigée rapporte la moitié de l’XP : +${afterCorrected}`)
+
+    // Manche 2 : du premier coup, toute l'XP.
+    await rigMatches('manche 2, au départ')
+    b = await balance()
+    const xpSecond = await xp()
+    await guess(Number(b.item.answer.value))
+    await page.getByTestId('balance-essayer').click()
+    await page.getByRole('heading', { name: /Les Balances du Gardien · 3 \/ 3/ }).waitFor({ timeout: 15_000 * SLOW })
+    const first = (await xp()) - xpSecond
+    if (first <= afterCorrected) throw new Error(`du premier coup rapporte plus qu’après une correction : +${first} contre +${afterCorrected}`)
+
+    // Manche 3 : l'indice (une seule fois), puis la masse ; la porte s'ouvre et le héros reprend la main.
+    await rigMatches('manche 3, au départ')
+    b = await balance()
+    await page.getByTestId('balance-indice').click()
+    if ((await message()) !== b.item.hint) throw new Error(`l’indice : ${await message()}`)
+    if (!(await page.getByTestId('balance-indice').isDisabled())) throw new Error('l’indice ne se redemande pas')
+    await guess(Number(b.item.answer.value))
+    await page.getByTestId('balance-essayer').click()
+    await page.getByTestId('balance-enigme').waitFor({ state: 'detached', timeout: 15_000 * SLOW })
+    await page.waitForFunction(() => window.__aldoria.world.interior.dungeon.isDoorOpen(3), null, { timeout: 15_000 * SLOW })
+    s = await state()
+    if (s.rounds !== 3 || s.balancing) throw new Error(`trois manches faites, la main rendue : ${JSON.stringify({ ...s, rig: undefined })}`)
+    await page.getByTestId('heros-dit').waitFor({ timeout: 10_000 * SLOW })
+    await page.screenshot({ path: `${OUT}/03e5-balance-porte.png` })
+    // La balance résolue ne se relance plus quand le héros passe devant.
+    await approach()
+    await page.waitForTimeout(600 * SLOW)
+    if (await page.getByTestId('balance-enigme').count()) throw new Error('une balance résolue ne se relance pas')
+    // La sortie, pour la suite du parcours.
+    await page.evaluate(() => window.__aldoria.world.interior.teleport(1.9, -10))
+    await page.getByTestId('invite').filter({ hasText: 'Sortir' }).waitFor({ timeout: 10_000 * SLOW })
+    await page.keyboard.press('KeyE')
+    await page.getByRole('button', { name: 'Sortir' }).click()
+    await page.getByTestId('carte').waitFor({ timeout: 10_000 * SLOW })
+    // Le lieu est vraiment refermé avant l'étape suivante (sinon la suivante téléporte le héros de l'île pendant que l'intérieur est encore là).
+    await page.waitForFunction(() => window.__aldoria.world.interior === null, null, { timeout: 15_000 * SLOW })
   })
 
   await step('le boss : l’Effaceur parle de sa voix enregistrée, huit sceaux, le coffre, la page rendue, le lieu suivant s’ouvre, Maître Ysaline salue', async () => {
