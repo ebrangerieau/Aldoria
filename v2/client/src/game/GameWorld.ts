@@ -28,6 +28,8 @@ import { Emitter } from '../core/events'
 import { ELEMENTS, elementOf, ISLAND_RELICS, MIN_RELICS } from '../core/relics'
 import type { SaveData } from '../core/save'
 import { defaultsFor, fur, type Look } from '../core/wardrobe'
+import { generatorFor } from '../core/lice'
+import { colorFor } from '../core/pont'
 import { questDone, type Villager, villageFor } from '../core/village'
 import type { HeightGrid } from '../core/world/heightGrid'
 import type { Obstacles } from '../core/world/obstacles'
@@ -46,7 +48,7 @@ import { buildGround, buildSea } from './island'
 import { chooseQuality, type Quality } from './quality'
 import { THEMES, type WorldName } from './theme'
 
-export type InteractableKind = 'lieu' | 'pierre' | 'ysaline' | 'sortie' | 'jour' | 'coffre' | 'relique' | 'table' | 'barque' | 'habitant'
+export type InteractableKind = 'lieu' | 'pierre' | 'ysaline' | 'sortie' | 'jour' | 'coffre' | 'relique' | 'table' | 'barque' | 'habitant' | 'pont'
 
 export interface Interactable {
   id: string
@@ -566,6 +568,7 @@ export class GameWorld {
     this.buildRelics()
     this.buildRelicTable()
     this.buildBoat()
+    this.buildBridge()
     // Les cristaux tournent doucement sur eux-mêmes (immobiles en mode calme).
     if (!this.options.calm) {
       this.scene.onBeforeRenderObservable.add(() => {
@@ -654,6 +657,62 @@ export class GameWorld {
     const ready = this.tableReady(this.options.save)
     beacon(this.scene, 'table-reliques', new Vector3(x, y, z), '#c8a2e8', ready)
     this.interactables.push({ id: 'table-reliques', kind: 'table', label: 'La Table des Reliques', x, z, radius: 3.4, open: ready })
+  }
+
+  /**
+   * Le pont des fractions (la Lice, sur le plateau de la Citadelle ; core/pont.ts) : une passerelle de bois entre deux piles de pierre, deux rambardes et, à côté,
+   * un tas de planches aux couleurs des réglettes (une par dénominateur). Il n'existe que pour une classe qui a ce jeu (la 6e). Pas de modèle : des formes simples.
+   * Le héros s'en approche et E ouvre le jeu (`kind: 'pont'`) ; un anneau lumineux le désigne.
+   */
+  private buildBridge(): void {
+    if (!generatorFor('pont', this.options.level)) return
+    const { x, z } = layout.pont
+    const y = this.grid.heightAt(x, z)
+    if (y < 1) return
+    const matte = (name: string, hex: string): StandardMaterial => {
+      const m = new StandardMaterial(name, this.scene)
+      m.diffuseColor = Color3.FromHexString(hex)
+      m.specularColor = new Color3(0.06, 0.06, 0.08)
+      return m
+    }
+    const wood = matte('pont-bois', '#a8703f')
+    const stone = matte('pont-pierre', '#8c8674')
+    const solid = (mesh: Mesh, material: StandardMaterial): Mesh => {
+      mesh.material = material
+      mesh.receiveShadows = true
+      mesh.isPickable = false
+      this.atmosphere.shadows.addShadowCaster(mesh, false)
+      return mesh
+    }
+    // La passerelle suit l'axe est-ouest : deux piles, le tablier posé dessus, une rambarde de chaque côté.
+    for (const side of [-1, 1]) {
+      const pier = MeshBuilder.CreateCylinder(`pont-pile-${side}`, { diameterTop: 1.1, diameterBottom: 1.5, height: 1.5, tessellation: 8 }, this.scene)
+      pier.position.set(x + side * 3.4, y + 0.75, z)
+      solid(pier, stone)
+      this.obstacles.add({ x: x + side * 3.4, z, r: 0.8 })
+    }
+    const deck = MeshBuilder.CreateBox('pont-tablier', { width: 7.4, height: 0.28, depth: 1.7 }, this.scene)
+    deck.position.set(x, y + 1.55, z)
+    solid(deck, wood)
+    for (const side of [-1, 1]) {
+      const rail = MeshBuilder.CreateBox(`pont-rambarde-${side}`, { width: 7.4, height: 0.12, depth: 0.12 }, this.scene)
+      rail.position.set(x, y + 2.35, z + side * 0.78)
+      solid(rail, wood)
+      for (const post of [-3.4, 0, 3.4]) {
+        const stake = MeshBuilder.CreateBox(`pont-poteau-${side}-${post}`, { width: 0.14, height: 0.85, depth: 0.14 }, this.scene)
+        stake.position.set(x + post, y + 1.95, z + side * 0.78)
+        solid(stake, wood)
+      }
+    }
+    // Le tas de planches, au sud de la passerelle : des longueurs de 1/2, 1/3, 1/4, 1/6 de perche aux couleurs de leurs dénominateurs.
+    for (const [i, length] of ['1/2', '1/3', '1/4', '1/6'].entries()) {
+      const fraction = length === '1/2' ? 0.5 : length === '1/3' ? 0.34 : length === '1/4' ? 0.25 : 0.17
+      const plank = MeshBuilder.CreateBox(`pont-planche-${length}`, { width: 7.4 * fraction * 0.9, height: 0.16, depth: 0.5 }, this.scene)
+      plank.position.set(x - 3.2 + 7.4 * fraction * 0.45, y + 0.12 + i * 0.17, z - 3.1)
+      solid(plank, matte(`pont-planche-${length}`, colorFor(length)))
+    }
+    beacon(this.scene, 'pont-fractions', new Vector3(x, y, z - 1.8), '#e09f3e', true)
+    this.interactables.push({ id: 'pont-fractions', kind: 'pont', label: 'Le pont des fractions', x, z: z - 1.8, radius: 4.4, open: true })
   }
 
   /**

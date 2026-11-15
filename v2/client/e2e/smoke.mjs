@@ -1187,6 +1187,77 @@ try {
     }
   })
 
+  await step('le pont des fractions : un pont trop court s’effondre et s’explique, la bonne somme fait traverser, six ravins, le bilan et un passage pour le Sphinx', async () => {
+    const save = () => page.evaluate(() => window.__aldoria.save())
+    const xpBefore = (await save()).xp
+    const bridge = await page.evaluate(() => {
+      const i = window.__aldoria.world.interactables.find((x) => x.id === 'pont-fractions')
+      return i ? { x: i.x, z: i.z } : null
+    })
+    if (!bridge) throw new Error('le pont des fractions manque dans l’île (6e)')
+    await page.evaluate(({ x, z }) => window.__aldoria.world.teleport(x, z - 2, x, z), bridge)
+    await page.getByTestId('invite').filter({ hasText: 'Franchir le pont des fractions' }).waitFor({ timeout: 10_000 * SLOW })
+    await page.keyboard.press('KeyE')
+    await page.getByRole('heading', { name: 'Le pont des fractions' }).waitFor({ timeout: 10_000 * SLOW })
+    await page.screenshot({ path: `${OUT}/09a-pont-intro.png` })
+    await page.getByRole('button', { name: 'Au premier ravin !' }).click()
+    await page.getByTestId('pont-jeu').waitFor({ timeout: 15_000 * SLOW })
+
+    const current = () => page.evaluate(() => window.__aldoria.pont)
+    const stageOf = () => page.getByTestId('pont-ravin').getAttribute('data-stage')
+    /** Pose la solution de la réserve, planche après planche (clic, ou touche chiffre si `keys`), puis le pont. */
+    const solveIt = async (keys = false) => {
+      const p = await current()
+      for (const length of p.solution) {
+        const index = p.stock.findIndex((s) => s.length === length)
+        if (keys) await page.keyboard.press(String(index + 1))
+        else await page.getByTestId(`pont-prendre-${index}`).click()
+      }
+      if (keys) await page.keyboard.press('Enter')
+      else await page.getByTestId('pont-poser').click()
+    }
+
+    // Ravin 1 : un pont trop court (une seule planche, jamais la bonne somme), il s'effondre et le conseil dit la somme posée sans donner la réponse.
+    let p = await current()
+    const wrongIndex = p.stock.findIndex((s) => s.length !== p.gap)
+    await page.getByTestId(`pont-prendre-${wrongIndex}`).click()
+    await page.getByTestId('pont-poser').click()
+    await page.getByTestId('pont-message').filter({ hasText: /Trop (court|long)/ }).waitFor({ timeout: 5000 * SLOW })
+    const advice = await page.getByTestId('pont-message').innerText()
+    if (!advice.includes(`Ta planche mesure ${p.stock[wrongIndex].length}`)) throw new Error(`le conseil dit la somme posée : ${advice}`)
+    await page.screenshot({ path: `${OUT}/09b-pont-effondre.png` })
+    await page.waitForFunction(() => document.querySelector('[data-testid="pont-ravin"]')?.getAttribute('data-stage') === 'edit', null, { timeout: 5000 * SLOW }) // les planches reviennent
+    if ((await page.getByTestId('pont-choix').innerText()) === 'Ton pont : aucune planche') throw new Error('après l’effondrement, le choix reste à corriger (les planches ne disparaissent pas)')
+    // Retirer, puis la bonne somme : le pont tient, le héros traverse, l'XP est rangée tout de suite.
+    await page.getByTestId('pont-retirer').click()
+    if ((await page.getByTestId('pont-choix').innerText()) !== 'Ton pont : aucune planche') throw new Error('Retirer vide le pont')
+    await solveIt()
+    await page.getByTestId('pont-message').filter({ hasText: 'Le pont tient !' }).waitFor({ timeout: 5000 * SLOW })
+    if ((await stageOf()) !== 'juste') throw new Error('le pont qui tient montre la traversée')
+    await page.screenshot({ path: `${OUT}/09c-pont-tient.png` })
+    if (!(await page.getByTestId('pont-score').innerText()).startsWith('0 du premier coup')) throw new Error('un ravin réussi au deuxième essai ne compte pas du premier coup')
+    if ((await save()).xp <= xpBefore) throw new Error('l’XP du pont réussi est rangée tout de suite')
+
+    // Ravins 2 à 6 du premier coup (le troisième au clavier : chiffres, Entrée).
+    for (let round = 2; round <= 6; round += 1) {
+      await page.getByTestId('pont-suite').click()
+      await page.getByRole('heading', { name: new RegExp(`Ravin ${round} / 6`) }).waitFor({ timeout: 8000 * SLOW })
+      await page.getByTestId('pont-ravin').waitFor()
+      if (round === 3) await page.screenshot({ path: `${OUT}/09d-pont-ravin.png` })
+      await solveIt(round === 3)
+      await page.getByTestId('pont-message').filter({ hasText: 'Le pont tient !' }).waitFor({ timeout: 5000 * SLOW })
+    }
+    await page.getByTestId('pont-suite').filter({ hasText: 'Voir le bilan' }).click()
+    await page.getByTestId('pont-bilan').waitFor({ timeout: 8000 * SLOW })
+    const report = await page.getByTestId('pont-bilan').innerText()
+    if (!report.includes('Ravins franchis du premier coup : 5.')) throw new Error(`le bilan du pont : ${report}`)
+    if (!report.includes('Un passage pour la barque du Sphinx')) throw new Error(`six réponses : un passage pour le Sphinx : ${report}`)
+    await page.screenshot({ path: `${OUT}/09e-pont-bilan.png` })
+    await page.getByRole('button', { name: "Retour à l'île" }).click()
+    await page.getByTestId('pont-bilan').waitFor({ state: 'detached', timeout: 5000 * SLOW })
+    if ((await save()).xp < xpBefore + 6 * 13) throw new Error('six ravins rapportent au moins 6 × 13 XP')
+  })
+
   await step('l’apparence : un choix verrouillé l’explique sans rien changer, un déblocage se signale puis se choisit, le héros change à l’écran et la partie le garde', async () => {
     const look = () => page.evaluate(() => ({ ...window.__aldoria.world.look }))
     const savedLook = () => page.evaluate(() => ({ ...window.__aldoria.save().look }))

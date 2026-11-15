@@ -53,6 +53,10 @@ const VIEWS = {
   // L'enquête de Vesna (relevé statistique) et celle du capitaine Brann (tableau croisé) : la première question de la quête, avec son tableau.
   'village-enquete': { query: '&monde=brouillard&classe=2nde', at: [-82.9, 13.5], face: [-84.7, 13.5], beta: 1.25, radius: 6, turn: 0.4, interface: true, talk: 'vesna', accept: true },
   'village-enquete-croisee': { query: '&monde=brouillard&classe=2nde', at: [-87.7, 3.3], face: [-89.5, 3.3], beta: 1.25, radius: 6, turn: 0.4, interface: true, talk: 'brann', accept: true },
+  // Le pont des fractions de la Lice : sa passerelle et son tas de planches sur le plateau de la Citadelle, puis l'écran du jeu (une planche posée, puis la bonne somme).
+  pont: { query: '', at: [-28, 22], face: [-28, 30], beta: 1.15, radius: 12, turn: 0.45 },
+  'pont-jeu': { query: '', at: [-28, 28], face: [-28, 30], beta: 1.2, radius: 6, turn: 0.2, interface: true, lice: 'pont', planks: 2 },
+  'pont-tient': { query: '', at: [-28, 28], face: [-28, 30], beta: 1.2, radius: 6, turn: 0.2, interface: true, lice: 'pont', planks: 'solution' },
   // Une relique de l'île par élément (reliques.json) : le héros à 2,6 m, l'éclat et son anneau devant lui.
   'relique-flamme': { query: '', at: [-62.6, -42], face: [-60, -42], beta: 1.3, radius: 6, turn: 0.35 },
   'relique-onde': { query: '', at: [-148.6, 132], face: [-146, 132], beta: 1.3, radius: 6, turn: 0.35 },
@@ -143,6 +147,19 @@ for (const name of views) {
     await page.getByTestId('invite').filter({ hasText: 'Parler à' }).waitFor({ timeout: 20_000 })
     await page.keyboard.press('KeyE')
     await page.getByTestId('habitant').waitFor()
+  }
+  if (view.lice) {
+    await page.getByTestId('invite').filter({ hasText: 'Franchir le pont' }).waitFor({ timeout: 20_000 })
+    await page.keyboard.press('KeyE')
+    await page.getByRole('button', { name: 'Au premier ravin !' }).click()
+    await page.getByTestId('pont-jeu').waitFor({ timeout: 20_000 })
+    if (view.planks === 'solution') {
+      const p = await page.evaluate(() => window.__aldoria.pont)
+      for (const length of p.solution) await page.getByTestId(`pont-prendre-${p.stock.findIndex((s) => s.length === length)}`).click()
+      await page.getByTestId('pont-poser').click()
+    } else {
+      for (let i = 0; i < view.planks; i += 1) await page.getByTestId('pont-prendre-0').click()
+    }
   }
   if (view.accept) {
     await page.getByRole('button', { name: "Je t'aide !" }).click()

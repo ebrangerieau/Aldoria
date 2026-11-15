@@ -154,8 +154,9 @@ describe('questions jouables (registre des types et des visuels)', () => {
     expect(isPlayable(item({ type: 'sign_table', visual: { kind: 'sign_table' } }))).toBe(true)
   })
 
-  it('ne pose jamais une question dont le visuel manque (pont, rapporteur, repère de tir) ni un type inconnu', () => {
-    for (const kind of ['pont', 'rapporteur', 'repere_tir']) expect(isPlayable(item({ visual: { kind } }))).toBe(false)
+  it('ne pose jamais une question dont le visuel manque (rapporteur, repère de tir : le stand de tir arrive après le pont) ni un type inconnu', () => {
+    for (const kind of ['rapporteur', 'repere_tir']) expect(isPlayable(item({ visual: { kind } }))).toBe(false)
+    expect(isPlayable(item({ visual: { kind: 'pont' } }))).toBe(true) // le Pont des fractions est dessiné (ui/PontBridge.tsx)
     expect(isPlayable(item({ visual: {} }))).toBe(false)
     expect(isPlayable(item({ type: 'drag' as never }))).toBe(false)
   })
@@ -171,7 +172,7 @@ describe('questions jouables (registre des types et des visuels)', () => {
   })
 
   it('ne déclare que des visuels que l’interface dessine', () => {
-    expect([...SUPPORTED_VISUALS].sort()).toEqual(['balance', 'graph', 'grid', 'map', 'number_line', 'robot', 'sign_table', 'table'])
+    expect([...SUPPORTED_VISUALS].sort()).toEqual(['balance', 'graph', 'grid', 'map', 'number_line', 'pont', 'robot', 'sign_table', 'table'])
   })
 })
 

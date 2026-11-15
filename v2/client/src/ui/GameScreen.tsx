@@ -28,6 +28,7 @@ import { RelicTable } from './RelicTable'
 import { Wardrobe } from './Wardrobe'
 import { SphinxVisit } from './SphinxVisit'
 import { VillageQuest } from './VillageQuest'
+import { PontBridge } from './PontBridge'
 import { type Villager, villageFor } from '../core/village'
 import { E2eQuestion } from './E2eQuestion'
 import { give, type ItemId } from '../core/inventory'
@@ -52,6 +53,7 @@ type Modal =
   | { kind: 'sphinx' }
   | { kind: 'wardrobe' }
   | { kind: 'village'; npc: Villager }
+  | { kind: 'pont' }
   | null
 
 /** Accueil de Maître Ysaline : le texte et sa voix enregistrée sont dans content/voix/lignes.json (un seul endroit : modifier ce texte demande de le réenregistrer). */
@@ -214,7 +216,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
 
   // Musique : à l'écran quand l'île est prête, réglée par l'enfant, muette pendant une question.
   const calm = accommodations.calm
-  const musicQuestion = modal?.kind === 'question' || modal?.kind === 'daily' || modal?.kind === 'table' || modal?.kind === 'sphinx' || modal?.kind === 'village' || fight.questionOpen
+  const musicQuestion = modal?.kind === 'question' || modal?.kind === 'daily' || modal?.kind === 'table' || modal?.kind === 'sphinx' || modal?.kind === 'village' || modal?.kind === 'pont' || fight.questionOpen
   useEffect(() => {
     services.music.configure({ muted: !musicOn, volume: musicVolume, calm })
   }, [services, musicOn, musicVolume, calm])
@@ -335,6 +337,8 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
     } else if (target.kind === 'habitant' && target.npc) {
       worldRef.current?.talkTo(target.npc.code)
       setModal({ kind: 'village', npc: target.npc })
+    } else if (target.kind === 'pont') {
+      setModal({ kind: 'pont' })
     } else if (target.kind === 'table') {
       setModal({ kind: 'table' })
     } else if (target.kind === 'barque') {
@@ -548,6 +552,8 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
           <kbd>E</kbd>{' '}
           {focus.kind === 'pierre'
             ? `Toucher ${focus.label.toLowerCase()}`
+            : focus.kind === 'pont'
+              ? 'Franchir le pont des fractions'
             : focus.kind === 'habitant'
               ? `Parler à ${focus.label}`
             : focus.kind === 'jour'
@@ -659,6 +665,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
           onClose={close}
         />
       )}
+      {modal?.kind === 'pont' && <PontBridge services={services} accommodations={accommodations} demo={demo} data={data} onSave={persist} onClose={close} />}
       {modal?.kind === 'sphinx' && <SphinxVisit services={services} data={data} demo={demo} onSave={persist} onClose={close} />}
       {modal?.kind === 'wardrobe' && <Wardrobe data={data} world={(profile.world as WorldName) ?? 'lumineux'} onPick={chooseLook} onClose={() => { close(); canvasRef.current?.focus() }} />}
       {modal?.kind === 'options' && (

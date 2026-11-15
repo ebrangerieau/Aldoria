@@ -35,7 +35,7 @@ export const SUPPORTED_TYPES = new Set(['mcq', 'numeric', 'expression', 'text', 
  * leurs générateurs (`combat=False`) ne servent qu'au pont des fractions et au stand de tir de la Citadelle,
  * jamais dans un lieu ; les 30 lieux sont jouables avec ce qui est dessiné.
  */
-export const SUPPORTED_VISUALS = new Set(['balance', 'number_line', 'grid', 'sign_table', 'map', 'robot', 'graph', 'table'])
+export const SUPPORTED_VISUALS = new Set(['balance', 'number_line', 'grid', 'sign_table', 'map', 'robot', 'graph', 'table', 'pont'])
 
 export function isPlayable(item: Item): boolean {
   if (!SUPPORTED_TYPES.has(item.type)) return false
