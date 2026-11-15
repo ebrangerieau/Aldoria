@@ -509,7 +509,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
             <strong>{profile.name}</strong> · {data.xp} XP{demo && ' · découverte'}
             {!online && <span className="offline" title="Les réponses partiront au retour du réseau"> · hors connexion</span>}
           </div>
-          {companion && !inside && <div className="badge pet-badge" data-testid="compagnon"><span aria-hidden="true">🦊</span> {companion}<span className="sr-only">, ton compagnon</span></div>}
+          {companion && !inside && <div className="pet-badge" data-testid="compagnon"><span aria-hidden="true">🦊</span> {companion}<span className="sr-only">, ton compagnon</span></div>}
         </div>
         <div className="hud-right">
           <div className="hud-buttons">
