@@ -128,7 +128,7 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   s'affiche, le piédestal repose jusqu'à ce que le héros s'éloigne de `PEDESTAL_REARM` puis revienne (autre question). Les trois cristaux éveillés
   ouvrent la porte (`openDoor`, « La porte s'ouvre ! ») et un objet attendait au sac (`findItems`, `ENIGMA_ITEMS`). L'introduction de la salle se
   dit la première fois (`enigmaIntro` : celle de `lieux.json`). La **Tour des Fractions** (seul lieu au mode « balance ») n'a pas de piédestaux : sa salle-énigme a la balance géante (ci-dessous).
-  Aucune salle n'est sauvegardée : les cristaux se rendorment à la visite suivante.
+  Seule la **salle atteinte** est gardée (reprise d'un lieu, ci-dessous) : les cristaux et les manches de la salle en cours reviennent à neuf à la visite suivante.
   **Le héros parle** (`core/heroVoice.ts`, `content/monde/heros.json`, `HeroVoice` gardé par appareil : les dernières phrases ne reviennent pas) :
   bulle `.hero-bubble` en bas à gauche (`data-testid="heros-dit"`, effacée dès qu'une question, un dialogue ou un combat s'ouvre), lue avec la
   « lecture automatique » ; une phrase de départ à l'entrée dans le lieu, puis un mot sur la salle suivante à chaque porte qui s'ouvre (combat
@@ -152,6 +152,13 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   `balance-attente`, `balance-manche`, `balance-penche`, `balance-equilibre`, `balance-brouillard` ; parcours navigateur (la scène comparée au panneau après chaque geste, renoncer puis revenir, retrait des deux côtés, un essai trop fort, un
   essai trop faible, la bonne masse, XP corrigée < XP du premier coup, indice, porte, balance résolue qui ne se relance pas) ; `node e2e/balance-a11y.mjs` (aménagements les plus larges à 1280 × 720).
   Le parcours des **piédestaux** (autres lieux) se joue dans le Moulin des Phrases (premier lieu de la région du français, ouvert dès le départ).
+- **Reprise d'un lieu** (v1 : `SaveManager.set_checkpoint`, `dungeon.gd` `_checkpoint` ; `core/checkpoint.ts`, test `reprise-lieu.test.ts`) : quitter un lieu en plein milieu (la séance se termine) ne fait plus tout recommencer. `SaveData.checkpoints`
+  (code du lieu → salle atteinte, relu par `normalizeCheckpoints` : entiers de 1 à 20, 100 lieux au plus) est posé **dès qu'une porte s'ouvre** (`useFight.rememberRoom` : un combat vaincu, l'énigme résolue ; `withCheckpoint` ne recule
+  jamais et ne dépasse pas la dernière salle) et **effacé quand le lieu est terminé** (`completePlace` : il se rejoue depuis l'entrée). À l'entrée, `checkpointOf` donne la salle de départ : `GameWorld.enterPlace(code, onProgress, startRoom)` →
+  `InteriorWorld` (`startRoom`) ouvre les portes d'avant, ne dresse pas les ennemis des salles franchies, éveille leurs cristaux (`awaken`, sans gerbe) ou donne la balance pour résolue, et place le héros à l'entrée de la salle de reprise ;
+  seule la salle atteinte est gardée (ses ennemis, ses cristaux, ses manches reviennent à neuf, comme dans la v1). Le seuil du lieu ajoute « Tu reprendras à l'étage N. » sous le texte enregistré (la `note` du `Dialog`, jamais lue : la voix enregistrée se lit
+  seule), l'entrée annonce « Reprise : <salle> » (`resumeBanner`) et le héros dit un mot sur la salle. Crochets `&e2e` : `giveCheckpoint(code, salle)` (découverte ; 0 l'efface), `world.interior.startRoom`, `save().checkpoints`. Parcours : la victoire de la
+  salle 1 garde la salle 2, la balance se joue depuis une reprise à la salle de l'énigme, une étape dédiée (seuil, portes, ennemis d'avant absents, bandeau, sortie qui garde le point, lieu sans reprise qui n'en parle pas).
 - **Le sac** (`core/inventory.ts` : plume, parchemin, bouclier, potion, 5 au plus de chaque ; gagnés au coffre d'un lieu (2), à l'énigme (1), au coffre de la
   semaine ; rangés dans la partie, `SaveData.items`) : **aucun objet ne fait sauter une question**. `core/bag.ts` (pur, testé) décide : `bagEntries`
   (potion et bouclier avec ce qui empêche de s'en servir : plus d'objet, vie pleine, bouclier déjà levé), `useInCombat` (dépense l'objet et rend

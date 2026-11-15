@@ -10,6 +10,7 @@
 import type { ApiClient } from './api'
 import { EMPTY_DAILY, normalizeDaily, type DailyState } from './dailyChallenge'
 import { type Beasts, normalizeBestiary } from './bestiary'
+import { type Checkpoints, normalizeCheckpoints } from './checkpoint'
 import { normalizeOwned, type Owned } from './inventory'
 import { normalizeRelics } from './relics'
 import { normalizeLook } from './appearance'
@@ -44,6 +45,8 @@ export interface SaveData {
   quests: Record<string, string>
   /** Bestiaire : créatures vaincues dans les lieux, nom → nombre de victoires (core/bestiary.ts). */
   bestiary: Beasts
+  /** Reprise d'un lieu quitté en route : code du lieu → salle atteinte (core/checkpoint.ts). Effacée quand le lieu est terminé. */
+  checkpoints: Checkpoints
 }
 
 export const EMPTY_SAVE: SaveData = {
@@ -58,6 +61,7 @@ export const EMPTY_SAVE: SaveData = {
   table: '',
   quests: {},
   bestiary: {},
+  checkpoints: {},
 }
 
 /** Partie relue (locale ou du serveur) : les champs absents d'une ancienne partie reprennent leur valeur par défaut. */
@@ -73,6 +77,7 @@ export function normalizeSave(data: Partial<SaveData> | null | undefined): SaveD
     table: typeof given.table === 'string' ? given.table : '',
     quests: normalizeQuests(given.quests),
     bestiary: normalizeBestiary(given.bestiary),
+    checkpoints: normalizeCheckpoints(given.checkpoints),
     // Une partie sans état du Sphinx n'en reçoit pas ici (la classe de l'enfant fixe le palier de départ : `sphinxOf`).
     ...(given.sphinx ? { sphinx: normalizeSphinx(given.sphinx, '6e') } : { sphinx: undefined }),
   }

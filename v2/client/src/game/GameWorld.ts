@@ -1253,9 +1253,9 @@ export class GameWorld {
 
   /**
    * Entre dans le lieu `code` : son intérieur (scène à part, même moteur) remplace l'île à l'écran, qui
-   * est mise en pause. Rend faux si ce lieu n'existe pas pour cette classe. `onProgress` : chargement.
+   * est mise en pause. Rend faux si ce lieu n'existe pas pour cette classe. `onProgress` : chargement. `startRoom` : la salle de reprise d'un lieu quitté en route (core/checkpoint.ts).
    */
-  async enterPlace(code: string, onProgress?: (label: string, ratio: number) => void): Promise<boolean> {
+  async enterPlace(code: string, onProgress?: (label: string, ratio: number) => void, startRoom = 0): Promise<boolean> {
     const place = this.places.find((p) => p.dungeon.code === code)
     if (!place || this.interior || this.temple) return false
     this.setInputEnabled(false)
@@ -1265,6 +1265,7 @@ export class GameWorld {
       look: this.look,
       quality: this.quality,
       calm: this.options.calm,
+      startRoom,
       onProgress,
     })
     interior.events.on('focus', (it) => this.events.emit('focus', it))

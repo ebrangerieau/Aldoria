@@ -16,6 +16,7 @@ import { levelForXp } from '../core/progression'
 import { choose, companionLabel, lookOf, markSeen, progressOf, unlockNews, unseenCount, type LookChoice } from '../core/appearance'
 import { grantRelic, normalizeRelics, relicOf, RELICS } from '../core/relics'
 import { MAX_PASSES, sphinxOf, type SphinxState } from '../core/sphinx/island'
+import { checkpointOf, resumeText } from '../core/checkpoint'
 import { EMPTY_SAVE, SaveGame, type SaveData } from '../core/save'
 import { pageGreeting } from '../core/quest/chest'
 import { regionTitle } from '../core/world/places'
@@ -181,7 +182,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
         world.events.on('stats', setStats)
         world.events.on('interact', (target) => interactRef.current(target))
         setLoading(null)
-        if (params.has('e2e')) (window as unknown as { __aldoria: unknown }).__aldoria = { world, services, save: () => dataRef.current, ...(demo ? { give: (id: ItemId, n = 1) => giveItems(id, n), giveRelics, giveSphinxPasses, giveProgress, giveRegion } : {}) }
+        if (params.has('e2e')) (window as unknown as { __aldoria: unknown }).__aldoria = { world, services, save: () => dataRef.current, ...(demo ? { give: (id: ItemId, n = 1) => giveItems(id, n), giveRelics, giveSphinxPasses, giveProgress, giveRegion, giveCheckpoint } : {}) }
       } catch (error) {
         if (reloadPending()) return // nouvelle version du jeu : la page se recharge
         console.error(error)
@@ -303,6 +304,13 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
     persist({ ...current, xp: current.xp + xp, places: done })
   }
 
+  /** Tests dans le navigateur (?e2e, mode découverte seulement) : le point de reprise d'un lieu (la salle atteinte ; 0 l'efface). */
+  function giveCheckpoint(code: string, room: number) {
+    const current = dataRef.current
+    const { [code]: _gone, ...rest } = current.checkpoints
+    persist({ ...current, checkpoints: room > 0 ? { ...rest, [code]: room } : rest })
+  }
+
   /** Tests dans le navigateur (?e2e, mode découverte seulement) : tous les lieux d'une région sont terminés (la région s'éclaire). */
   function giveRegion(region: string) {
     const world = worldRef.current
@@ -412,7 +420,8 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
       const text = target.open
         ? place.dungeon.threshold
         : `Ce chemin est encore fermé. Il s'ouvrira quand tu auras rapporté la page du lieu précédent de ${regionTitle(place.dungeon.region)}.`
-      const note = target.open ? `${place.dungeon.rooms.length} étapes, une énigme, et un Effaceur à vaincre.` : undefined
+      const resume = resumeText(checkpointOf(dataRef.current, place.dungeon.code, place.dungeon.rooms.length))
+      const note = target.open ? [`${place.dungeon.rooms.length} étapes, une énigme, et un Effaceur à vaincre.`, resume].filter(Boolean).join(' ') : undefined
       setModal({
         kind: 'dialog',
         title: place.dungeon.title,

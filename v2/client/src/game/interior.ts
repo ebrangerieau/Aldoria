@@ -141,6 +141,8 @@ export interface InteriorOptions {
   quality: Quality
   /** Aménagement « mode calme » : pas de flammes qui vacillent. */
   calm: boolean
+  /** Salle où l'on reprend un lieu quitté en route (core/checkpoint.ts) : les portes d'avant sont ouvertes, leurs ennemis vaincus, leur énigme résolue. 0 : l'entrée. */
+  startRoom?: number
   onProgress?: (label: string, ratio: number) => void
 }
 
@@ -189,6 +191,8 @@ export class InteriorWorld {
   private disposers: (() => void)[] = []
   private loop: (() => void) | null = null
   private last = 0
+  /** La salle où l'on commence (0 : l'entrée ; plus : la reprise d'un lieu quitté en route). */
+  readonly startRoom: number
 
   private constructor(
     private readonly engine: AbstractEngine,
@@ -197,6 +201,7 @@ export class InteriorWorld {
   ) {
     this.scene = new Scene(engine)
     this.dungeon = new Dungeon(options.place.dungeon.rooms.length, undefined, options.place.dungeon.v1_decor)
+    this.startRoom = Math.min(Math.max(0, Math.floor(options.startRoom ?? 0)), options.place.dungeon.rooms.length - 1)
   }
 
   static async create(engine: AbstractEngine, canvas: HTMLCanvasElement, options: InteriorOptions): Promise<InteriorWorld> {
@@ -217,7 +222,7 @@ export class InteriorWorld {
     scene.clearColor = new Color4(background.r, background.g, background.b, 1)
     scene.skipPointerMovePicking = true
 
-    const start = dungeon.entryPoint(0)
+    const start = dungeon.entryPoint(this.startRoom)
     this.camera = new ArcRotateCamera('camera-interieur', -Math.PI / 2, 1.05, 11, new Vector3(start.x, start.y + 1.45, start.z), scene)
     this.setupCamera()
 
@@ -247,6 +252,7 @@ export class InteriorWorld {
     this.shadows = shadows
     // Les portes de sortie sont fermées : celles des salles de combat jusqu'à la victoire, celle de l'énigme jusqu'au troisième cristal (seule l'entrée s'ouvre d'elle-même).
     dungeon.lockDoors(place.dungeon.rooms.map((r) => r.kind))
+    for (let door = 0; door < this.startRoom; door += 1) dungeon.openDoor(door) // reprise : les portes d'avant sont déjà franchies
     this.progress('Les salles', 0.1)
     await this.buildPieces(shadows)
     this.progress('Les torches', 0.7)
@@ -330,6 +336,7 @@ export class InteriorWorld {
   private async buildEnemies(): Promise<void> {
     const jobs: Promise<void>[] = []
     this.options.place.dungeon.rooms.forEach((room, index) => {
+      if (index < this.startRoom) return // reprise : les ennemis des salles d'avant sont déjà vaincus
       for (const [k, spec] of (room.enemies ?? []).entries()) jobs.push(this.spawn(index, k, spec))
     })
     await Promise.all(jobs)
@@ -393,7 +400,9 @@ export class InteriorWorld {
         crystal.position.set(at.x, baseY, at.z)
         const obstacle = { x: at.x, z: at.z, r: PEDESTAL_RADIUS }
         this.obstacles.add(obstacle)
-        this.pedestals.push({ id: `piedestal-${room}-${k}`, room, x: at.x, z: at.z, solved: false, armed: true, crystal, material, baseY })
+        const pedestal: Pedestal = { id: `piedestal-${room}-${k}`, room, x: at.x, z: at.z, solved: false, armed: true, crystal, material, baseY }
+        this.pedestals.push(pedestal)
+        if (room < this.startRoom) this.awaken(pedestal) // reprise : l'énigme d'une salle franchie est déjà résolue
       }
     }
   }
@@ -439,13 +448,18 @@ export class InteriorWorld {
     if (this.riddling === ped) this.riddling = null
   }
 
-  /** Bonne réponse : le cristal s'éveille (vert, plus grand, il ne tourne plus), étincelles ; le héros reprend la main. */
-  solvePedestal(ped: Pedestal): void {
+  /** Le cristal est éveillé : vert, plus grand, il ne tourne plus (sans gerbe : la reprise d'un lieu l'éveille aussi). */
+  private awaken(ped: Pedestal): void {
     ped.solved = true
-    if (this.riddling === ped) this.riddling = null
     ped.material.emissiveColor = Color3.FromHexString('#8df0a4')
     ped.crystal.scaling.setAll(1.25)
     ped.crystal.rotation.y = 0
+  }
+
+  /** Bonne réponse : le cristal s'éveille (vert, plus grand, il ne tourne plus), étincelles ; le héros reprend la main. */
+  solvePedestal(ped: Pedestal): void {
+    if (this.riddling === ped) this.riddling = null
+    this.awaken(ped)
     sparkle(this.scene, new Vector3(ped.x, ped.baseY, ped.z), this.options.calm)
     void this.hero.playOnce('cheer', 'idle')
   }
@@ -462,7 +476,8 @@ export class InteriorWorld {
     rig.root.position.set(at.x, dungeon.heightAt(at.x, at.z), at.z)
     rig.show({ state: { left: { boxes: 0, units: 0 }, right: { boxes: 0, units: 0 } }, names: { box: ['boîte', 'boîtes'], unit: ['bille', 'billes'] }, heavier: 0, shown: null }, true)
     for (const foot of footprints(at)) this.obstacles.add(foot)
-    this.balance = { room, x: at.x, z: at.z, rig, rounds: 0, armed: true }
+    const resolved = room < this.startRoom // reprise : l'énigme d'une salle franchie est déjà résolue
+    this.balance = { room, x: at.x, z: at.z, rig, rounds: resolved ? BALANCE_ROUNDS : 0, armed: !resolved }
   }
 
   /** Les manches de la balance qui restent dans la salle `room` (0 : il n'y a pas de balance, ou elle est résolue). */
