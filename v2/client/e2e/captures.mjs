@@ -57,6 +57,13 @@ const VIEWS = {
   pont: { query: '', at: [-28, 22], face: [-28, 30], beta: 1.15, radius: 12, turn: 0.45 },
   'pont-jeu': { query: '', at: [-28, 28], face: [-28, 30], beta: 1.2, radius: 6, turn: 0.2, interface: true, lice: 'pont', planks: 2 },
   'pont-tient': { query: '', at: [-28, 28], face: [-28, 30], beta: 1.2, radius: 6, turn: 0.2, interface: true, lice: 'pont', planks: 'solution' },
+  // Le stand de tir de la Lice (comptoir, piquets et cible peinte), puis l'écran du jeu : un tir raté (la flèche reste dessinée) et une cible touchée.
+  tir: { query: '', at: [28, 22], face: [28, 30], beta: 1.15, radius: 12, turn: 0.45 },
+  'tir-brouillard': { query: '&monde=brouillard&classe=2nde', at: [28, 22], face: [28, 30], beta: 1.15, radius: 12, turn: 0.45 },
+  'tir-jeu': { query: '', at: [28, 28], face: [28, 30], beta: 1.2, radius: 6, turn: 0.2, interface: true, lice: 'tir', shot: 'rate' },
+  'tir-touche': { query: '', at: [28, 28], face: [28, 30], beta: 1.2, radius: 6, turn: 0.2, interface: true, lice: 'tir', shot: 'juste' },
+  'tir-droite': { query: '&monde=brouillard&classe=2nde', at: [28, 28], face: [28, 30], beta: 1.2, radius: 6, turn: 0.2, interface: true, lice: 'tir', shot: 'rate' },
+  'tir-droite-touche': { query: '&monde=brouillard&classe=2nde', at: [28, 28], face: [28, 30], beta: 1.2, radius: 6, turn: 0.2, interface: true, lice: 'tir', shot: 'juste' },
   // Une relique de l'île par élément (reliques.json) : le héros à 2,6 m, l'éclat et son anneau devant lui.
   'relique-flamme': { query: '', at: [-62.6, -42], face: [-60, -42], beta: 1.3, radius: 6, turn: 0.35 },
   'relique-onde': { query: '', at: [-148.6, 132], face: [-146, 132], beta: 1.3, radius: 6, turn: 0.35 },
@@ -148,7 +155,27 @@ for (const name of views) {
     await page.keyboard.press('KeyE')
     await page.getByTestId('habitant').waitFor()
   }
-  if (view.lice) {
+  if (view.lice === 'tir') {
+    await page.getByTestId('invite').filter({ hasText: 'Tirer au stand' }).waitFor({ timeout: 20_000 })
+    await page.keyboard.press('KeyE')
+    await page.getByRole('button', { name: 'À mes cibles !' }).click()
+    await page.getByTestId('tir-jeu').waitFor({ timeout: 20_000 })
+    await page.waitForFunction(() => window.__aldoria.tir?.round === 0, null, { timeout: 10_000 })
+    const t = await page.evaluate(() => window.__aldoria.tir)
+    const press = async (id, times) => { for (let i = 0; i < times; i += 1) await page.getByTestId(id).click() }
+    if (t.mode === 'angle') {
+      // Raté : un pas de plus que la cible (ou un seul, si c'est déjà le cas) ; touché : l'angle de la cible.
+      const steps = view.shot === 'juste' ? t.angle / t.minor : t.angle / t.minor + 1 > 180 / t.minor ? t.angle / t.minor - 1 : t.angle / t.minor + 1
+      await press('tir-valeur-plus', steps)
+    } else if (view.shot === 'juste') {
+      if (t.n >= 1) await press('tir-num-plus', t.n - 1)
+      else await press('tir-num-moins', 1 - t.n)
+      await press('tir-den-plus', t.d - 1)
+    } else if (t.n === 1 && t.d === 1) await press('tir-num-moins', 1) // 1/1 est la bonne droite : un tir à côté, 0
+    await page.getByTestId('tir-tirer').click()
+    await page.getByTestId('tir-message').filter({ hasText: /\S/ }).waitFor({ timeout: 10_000 })
+  }
+  if (view.lice === 'pont') {
     await page.getByTestId('invite').filter({ hasText: 'Franchir le pont' }).waitFor({ timeout: 20_000 })
     await page.keyboard.press('KeyE')
     await page.getByRole('button', { name: 'Au premier ravin !' }).click()

@@ -87,6 +87,12 @@ describe('Mini-carte : repères', () => {
     expect(byId('pierre-maths')?.state).toBe('eveillee')
   })
 
+  it('montre le stand de tir de la Lice quand le monde l’a posé, et seulement alors', () => {
+    const tir = { id: 'tir-stand', kind: 'tir', label: 'Le stand de tir', x: layout.stand_tir.x, z: layout.stand_tir.z - 1.8, open: true }
+    expect(mapMarkers(layout, '6e', [...sources, tir], {}).find((m) => m.id === 'tir-stand')).toMatchObject({ kind: 'tir', state: 'repere', label: 'Le stand de tir' })
+    expect(markers.some((m) => m.kind === 'tir')).toBe(false)
+  })
+
   it('montre la Pierre du Jour à relever, puis relevée', () => {
     expect(byId('pierre-jour')).toMatchObject({ kind: 'jour', state: 'a_faire', label: 'La Pierre du Jour', x: 14, z: 8 })
     const done = mapMarkers(layout, '6e', sources.map((s) => (s.id === 'pierre-jour' ? { ...s, open: false } : s)), {})

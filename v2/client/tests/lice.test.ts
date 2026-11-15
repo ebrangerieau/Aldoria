@@ -71,7 +71,7 @@ describe('Une série de six', () => {
   })
 })
 
-describe('Le pont dans l’île', () => {
+describe('Le pont et le stand de tir dans l’île', () => {
   const layout = ile as unknown as IslandLayout
   const terrain = new Terrain(layout)
   const { x, z } = layout.pont
@@ -86,6 +86,23 @@ describe('Le pont dans l’île', () => {
   it('il est loin du château, de la Table des Reliques, de la Pierre du Jour et de Maître Ysaline (rien ne se chevauche)', () => {
     const far = (other: { x: number; z: number }, min: number) => Math.hypot(x - other.x, z - other.z) >= min
     expect(far(layout.citadelle, 20)).toBe(true)
+    expect(far(layout.table_reliques, 10)).toBe(true)
+    expect(far(layout.pierre_jour, 10)).toBe(true)
+    expect(far(layout.ysaline, 10)).toBe(true)
+    expect(far(layout.depart, 10)).toBe(true)
+  })
+
+  it('le stand de tir se tient lui aussi sur le plateau : à plat (comptoir et cible), atteignable à pied, loin de tout le reste', () => {
+    const { x: sx, z: sz } = layout.stand_tir
+    expect(terrain.heightAt(sx, sz)).toBeGreaterThan(SEA_LEVEL + 0.5)
+    // Le comptoir (z) et la cible (7 m au nord) sont sur le même replat.
+    for (const [px, pz] of [[sx, sz], [sx - 2, sz], [sx + 2, sz], [sx, sz - 3], [sx, sz + 7]]) {
+      expect(Math.abs(terrain.heightAt(px!, pz!) - terrain.heightAt(sx, sz)), `sol plat en (${px}, ${pz})`).toBeLessThan(0.3)
+    }
+    expect(reachableOnFoot(layout, terrain).has(cellKey(sx, sz - 1.8))).toBe(true)
+    const far = (other: { x: number; z: number }, min: number) => Math.hypot(sx - other.x, sz - other.z) >= min
+    expect(far(layout.citadelle, 20)).toBe(true)
+    expect(far(layout.pont, 40)).toBe(true)
     expect(far(layout.table_reliques, 10)).toBe(true)
     expect(far(layout.pierre_jour, 10)).toBe(true)
     expect(far(layout.ysaline, 10)).toBe(true)

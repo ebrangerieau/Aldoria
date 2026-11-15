@@ -9,6 +9,7 @@
   "pierre_jour": { "x": 14, "z": 8 },
   "table_reliques": { "x": -18, "z": 12 },
   "pont": { "x": -28, "z": 30 },
+  "stand_tir": { "x": 28, "z": 30 },
   "barque": { "x": 243, "z": 20, "bateau": { "x": 247, "z": 20 } },
   "ysaline": { "x": -6, "z": -12 },
   "village": { "x": -82, "z": 6, "rayon_plat": 24, "habitants": [ { "dx": 7.5, "dz": 2.7 }, { "dx": -2.7, "dz": 7.5 }, { "dx": -7.5, "dz": -2.7 }, { "dx": 2.7, "dz": -7.5 } ] },

@@ -187,7 +187,16 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   Échap quitte. **Session** (`app/liceSession.ts`) : ferme « monde », ouvre « arene » avec `enigma` (le générateur, deux cibles d'avance), puis rouvre l'île ; en découverte, des cibles prises dans
   `visual_samples.json` (vrais tirages des générateurs, régénérés par `tools/export_visual_samples.py`) remplacent le paquet le temps de la série. Une série menée au bout (six cibles enregistrées) rapporte un
   **passage pour la barque du Sphinx** (`afterActivity`, mode « arene »). Crochet `&e2e` : `pont` (`gap`, `stock`, `solution`). Vérifier : captures `pont`, `pont-jeu`, `pont-tient` ; parcours navigateur (pont trop
-  court, conseil, retrait, bonne somme, six ravins dont un au clavier, bilan, passage). Reste : le stand de tir (même cadre, `rapporteur` et `repere_tir`).
+  court, conseil, retrait, bonne somme, six ravins dont un au clavier, bilan, passage).
+  **Le stand de tir** (`core/tir.ts`, `ui/TirRange.tsx`, `ui/LiceCard.tsx` pour les cartes communes ; `ile.json` : `stand_tir`, `GameWorld.buildRange` : comptoir, piquets et cible peinte, interaction `kind: 'tir'` et repère `tir`
+  sur la mini-carte ; les deux classes) : six tirs calculés, même cadre que le pont (séries, XP, premier tir seul enregistré, passage du Sphinx). **6e** : un rapporteur géant peint au sol, vu d'en haut
+  (`visual = { kind: 'rapporteur', angle, reference, minor, labels, double_scale, distance }`) ; l'enfant règle l'angle (pas de la petite graduation, de 0 à 180) et tire : la flèche part **exactement** dans la direction choisie
+  (`directionOf`), touche si l'angle est celui de la cible (`hitsAngle`) ; raté, elle reste dessinée avec son angle et le conseil dit le sens de la correction, ou « graduation lue du mauvais côté » quand la ligne de départ
+  est à gauche (`angleAdvice`, jamais la réponse). **2nde** : le repère de l'arbalète (`visual = { kind: 'repere_tir', start: [0, b], target: [x, y], width, height }`) ; l'enfant règle le coefficient directeur
+  `n/d` (numérateur −12 à 12, dénominateur 1 à 6) ; le tir touche si la droite passe par la cible **en entiers** (`lineHits`, jamais de flottant), la valeur enregistrée s'écrit `slopeText` (« 2 », « -3/4 ») et
+  la validation du client l'accepte pour toute fraction équivalente ; raté, le conseil donne la hauteur du carreau à l'abscisse de la cible et le sens de la correction (`lineAdvice`). Chaque graduation, chaque
+  point porte son nombre écrit ; les flèches ont une animation (coupée par le mode calme sans cacher le tir). Clavier : flèches pour la valeur, Entrée tire, Échap quitte. Crochet `&e2e` : `tir`.
+  Vérifier : captures `tir`, `tir-brouillard`, `tir-jeu`, `tir-touche`, `tir-droite`, `tir-droite-touche` ; parcours navigateur (un tir à côté puis la correction, six cibles dont une au clavier, bilan, passage ; puis le repère en 2nde).
 - **Musique** (`app/music.ts` joue, `core/music.ts` décide du volume, testé) : morceaux de `deploy/musique/` listés dans
   `content/monde/musique.json` (ordre de lecture, crédit des Options), servis sous `/musique/` par nginx ; `npm run dev` et
   `vite preview` les servent depuis le même dossier (`vite.config.ts`, requêtes `Range` comprises). Elle démarre à l'entrée
@@ -228,8 +237,8 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   (testés), dessin SVG dans `ui/widgets/Visuals.tsx`, réponses dans `ui/widgets/Widgets.tsx`. Aujourd'hui : balance, droite
   graduée, repère quadrillé (vecteurs), tableau de signes, carte à l'échelle, robot sur une grille, courbe : **les 30 lieux sont
   jouables** (chapitre et énigme, mesuré sur les vrais générateurs), et `table` (relevé statistique et tableau croisé des enquêtes de Brumegarde,
-  `TableView` : un vrai tableau HTML, en-têtes lus par un lecteur d'écran, totaux en gras avec leur nom écrit). `pont` (le Pont des fractions, ci-dessous). Restent `rapporteur` et `repere_tir` : leurs générateurs
-  (`combat=False`) ne servent qu'au stand de tir de la Lice, jamais dans un lieu. Ajouter un visuel : le composant, son calcul testé sur de
+  `TableView` : un vrai tableau HTML, en-têtes lus par un lecteur d'écran, totaux en gras avec leur nom écrit). `pont` (le Pont des fractions), `rapporteur` et `repere_tir` (le stand de tir, ci-dessous) : leurs générateurs
+  (`combat=False`) ne servent qu'à la Lice, jamais dans un lieu. Ajouter un visuel : le composant, son calcul testé sur de
   vraies questions (`tests/fixtures/visual_samples.json`, régénéré par `uv run --directory api python ../tools/export_visual_samples.py`),
   puis son nom dans `SUPPORTED_VISUALS`.
 - **Voix enregistrées** (ElevenLabs : Maître Ysaline et le narrateur) : `deploy/voix/` (`manifest.json` : empreinte SHA-256 du

@@ -84,7 +84,7 @@ export function heading(dx: number, dz: number): number {
 
 // --- Repères ------------------------------------------------------------------------------
 
-export type MarkerKind = 'citadelle' | 'village' | 'sphinx' | 'lieu' | 'pierre' | 'jour' | 'table' | 'barque' | 'pont'
+export type MarkerKind = 'citadelle' | 'village' | 'sphinx' | 'lieu' | 'pierre' | 'jour' | 'table' | 'barque' | 'pont' | 'tir'
 export type MarkerState = 'repere' | 'ouvert' | 'ferme' | 'termine' | 'endormie' | 'eveillee' | 'a_faire' | 'faite'
 
 export interface MapMarker extends Point {
@@ -126,6 +126,8 @@ export function mapMarkers(layout: IslandLayout, level: string, sources: MarkerS
       out.push({ id: s.id, kind: 'barque', state: 'repere', label: s.label, x: s.x, z: s.z })
     } else if (s.kind === 'pont') {
       out.push({ id: s.id, kind: 'pont', state: 'repere', label: s.label, x: s.x, z: s.z })
+    } else if (s.kind === 'tir') {
+      out.push({ id: s.id, kind: 'tir', state: 'repere', label: s.label, x: s.x, z: s.z })
     } else if (s.kind === 'table') {
       out.push({ id: s.id, kind: 'table', state: 'repere', label: s.label, x: s.x, z: s.z })
     }

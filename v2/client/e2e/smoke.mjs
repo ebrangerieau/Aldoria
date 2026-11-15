@@ -97,6 +97,112 @@ const answerQuestion = async (correct, useAids = false) => {
   await page.getByRole('button', { name: 'Continuer' }).click()
 }
 
+/**
+ * Le stand de tir (Lice) : va au comptoir, ouvre le jeu, rate une première cible (le conseil dit où la flèche est partie sans donner la réponse), la corrige,
+ * puis réussit les cinq autres du premier coup (la troisième au clavier) et lit le bilan. `droite` : le repère de l'arbalète (2nde), sinon le rapporteur (6e).
+ */
+const playTirSeries = async ({ droite, shots }) => {
+  const save = () => page.evaluate(() => window.__aldoria.save())
+  const xpBefore = (await save()).xp
+  const stand = await page.evaluate(() => {
+    const i = window.__aldoria.world.interactables.find((x) => x.id === 'tir-stand')
+    return i ? { x: i.x, z: i.z } : null
+  })
+  if (!stand) throw new Error('le stand de tir manque dans l’île')
+  await page.evaluate(({ x, z }) => window.__aldoria.world.teleport(x, z - 2, x, z), stand)
+  await page.getByTestId('invite').filter({ hasText: 'Tirer au stand de la Lice' }).waitFor({ timeout: 10_000 * SLOW })
+  await page.keyboard.press('KeyE')
+  await page.getByRole('heading', { name: 'Le stand de tir' }).waitFor({ timeout: 10_000 * SLOW })
+  await page.screenshot({ path: `${OUT}/${shots}a-tir-intro.png` })
+  await page.getByRole('button', { name: 'À mes cibles !' }).click()
+  await page.getByTestId('tir-jeu').waitFor({ timeout: 15_000 * SLOW })
+
+  const aim = async (round, keys = false) => {
+    await page.waitForFunction((r) => window.__aldoria.tir?.round === r, round - 1, { timeout: 8000 * SLOW })
+    const t = await page.evaluate(() => window.__aldoria.tir)
+    if (droite) {
+      // Le numérateur part de 1, le dénominateur de 1.
+      for (let i = 1; i < Math.abs(t.n - 1) + 1; i += 1) {
+        if (keys) await page.keyboard.press(t.n > 1 ? 'ArrowRight' : 'ArrowLeft')
+        else await page.getByTestId(t.n > 1 ? 'tir-num-plus' : 'tir-num-moins').click()
+      }
+      for (let i = 1; i < t.d; i += 1) await page.getByTestId('tir-den-plus').click()
+    } else {
+      for (let i = 0; i < t.angle / t.minor; i += 1) {
+        if (keys) await page.keyboard.press('ArrowRight')
+        else await page.getByTestId('tir-valeur-plus').click()
+      }
+    }
+    return t
+  }
+  const hitIt = async (round, keys = false) => {
+    const t = await aim(round, keys)
+    // Le « + » du dénominateur, cliqué juste avant, garde le focus : Entrée tire quand même (et n'ajoute rien).
+    if (keys) await page.keyboard.press('Enter')
+    else await page.getByTestId('tir-tirer').click()
+    await page.getByTestId('tir-message').filter({ hasText: 'En plein cœur !' }).waitFor({ timeout: 6000 * SLOW })
+    return t
+  }
+
+  // Cible 1 : un premier tir à côté (conseil sans la réponse, flèche conservée), puis la correction.
+  await page.waitForFunction(() => window.__aldoria.tir?.round === 0, null, { timeout: 8000 * SLOW })
+  const first = await page.evaluate(() => window.__aldoria.tir)
+  if (droite) {
+    // Un coefficient jamais juste : la cible est atteinte par n/d ; on tire avec le départ 1/1 si ce n'est pas la bonne droite, sinon avec 0.
+    const wrongN = first.n === 1 && first.d === 1 ? 0 : 1
+    if (wrongN === 0) await page.getByTestId('tir-num-moins').click()
+  } else {
+    const wrongSteps = first.angle === first.minor ? 0 : 1
+    if (wrongSteps === 1) await page.getByTestId('tir-valeur-plus').click()
+  }
+  await page.getByTestId('tir-tirer').click()
+  await page.getByTestId('tir-message').filter({ hasText: droite ? /trop (haut|bas)/ : 'Ta flèche est partie à' }).waitFor({ timeout: 6000 * SLOW })
+  const advice = await page.getByTestId('tir-message').innerText()
+  if (droite) {
+    if (!advice.includes(`À x = `) || !/Essaie un coefficient plus (petit|grand)/.test(advice)) throw new Error(`le conseil du tir de 2nde : ${advice}`)
+  } else if (!/Essaie un angle plus (petit|grand)|de l'autre côté/.test(advice)) throw new Error(`le conseil du tir de 6e : ${advice}`)
+  if ((await page.getByTestId(droite ? 'tir-trace-0' : 'tir-fleche-0').count()) !== 1) throw new Error('le tir raté reste dessiné')
+  await page.screenshot({ path: `${OUT}/${shots}b-tir-rate.png` })
+  // Corrige : on part de la valeur du tir raté, on y ajoute ou retire les pas manquants.
+  if (droite) {
+    const state = async () => ({ n: Number(await page.getByTestId('tir-num').innerText()), d: Number(await page.getByTestId('tir-den').innerText()) })
+    let cur = await state()
+    while (cur.n !== first.n) {
+      await page.getByTestId(cur.n < first.n ? 'tir-num-plus' : 'tir-num-moins').click()
+      cur = await state()
+    }
+    for (let i = 1; i < first.d; i += 1) await page.getByTestId('tir-den-plus').click()
+  } else {
+    let cur = Number((await page.getByTestId('tir-valeur').innerText()).replace('°', ''))
+    while (cur !== first.angle) {
+      await page.getByTestId(cur < first.angle ? 'tir-valeur-plus' : 'tir-valeur-moins').click()
+      cur = Number((await page.getByTestId('tir-valeur').innerText()).replace('°', ''))
+    }
+  }
+  await page.getByTestId('tir-tirer').click()
+  await page.getByTestId('tir-message').filter({ hasText: 'En plein cœur !' }).waitFor({ timeout: 6000 * SLOW })
+  await page.screenshot({ path: `${OUT}/${shots}c-tir-touche.png` })
+  if (!(await page.getByTestId('tir-score').innerText()).startsWith('0 du premier coup')) throw new Error('une cible réussie au deuxième tir ne compte pas du premier coup')
+  if ((await save()).xp <= xpBefore) throw new Error('l’XP de la cible touchée est rangée tout de suite')
+
+  // Cibles 2 à 6 du premier coup (la troisième au clavier : flèches, Entrée).
+  for (let round = 2; round <= 6; round += 1) {
+    await page.getByTestId('tir-suite').click()
+    await page.getByRole('heading', { name: new RegExp(`Cible ${round} / 6`) }).waitFor({ timeout: 8000 * SLOW })
+    if (round === 4) await page.screenshot({ path: `${OUT}/${shots}d-tir-cible.png` })
+    await hitIt(round, round === 3)
+  }
+  await page.getByTestId('tir-suite').filter({ hasText: 'Voir le bilan' }).click()
+  await page.getByTestId('tir-bilan').waitFor({ timeout: 8000 * SLOW })
+  const report = await page.getByTestId('tir-bilan').innerText()
+  if (!report.includes('Cibles touchées du premier coup : 5.')) throw new Error(`le bilan du tir : ${report}`)
+  await page.screenshot({ path: `${OUT}/${shots}e-tir-bilan.png` })
+  await page.getByRole('button', { name: "Retour à l'île" }).click()
+  await page.getByTestId('tir-bilan').waitFor({ state: 'detached', timeout: 5000 * SLOW })
+  if ((await save()).xp < xpBefore + 6 * 13) throw new Error('six cibles rapportent au moins 6 × 13 XP')
+  return report
+}
+
 const step = async (label, fn) => {
   const t = Date.now()
   await fn()
@@ -1258,6 +1364,13 @@ try {
     if ((await save()).xp < xpBefore + 6 * 13) throw new Error('six ravins rapportent au moins 6 × 13 XP')
   })
 
+  await step('le stand de tir (6e) : un tir à côté se corrige, six cibles au rapporteur, le bilan et un passage pour le Sphinx', async () => {
+    await page.evaluate(() => window.__aldoria.giveSphinxPasses(-3)) // réserve vide : un passage de plus se voit
+    const report = await playTirSeries({ droite: false, shots: '09f' })
+    if (!report.includes('Un passage pour la barque du Sphinx')) throw new Error(`six cibles : un passage pour le Sphinx : ${report}`)
+    if ((await page.evaluate(() => window.__aldoria.save().sphinx.passes)) !== 1) throw new Error('le passage du tir est rangé dans la partie')
+  })
+
   await step('l’apparence : un choix verrouillé l’explique sans rien changer, un déblocage se signale puis se choisit, le héros change à l’écran et la partie le garde', async () => {
     const look = () => page.evaluate(() => ({ ...window.__aldoria.world.look }))
     const savedLook = () => page.evaluate(() => ({ ...window.__aldoria.save().look }))
@@ -1436,6 +1549,10 @@ try {
     }
     await enquete('vesna', /./, '11a-enquete-releve.png') // relevé statistique : valeurs et effectifs
     await enquete('brann', /Registre/, '11b-enquete-croisee.png') // tableau croisé, avec ses totaux
+  })
+
+  await step('le stand de tir (2nde) : le repère de l’arbalète, un tir trop haut ou trop bas se corrige, six cibles', async () => {
+    await playTirSeries({ droite: true, shots: '12' })
   })
 } catch (error) {
   const where = error instanceof Error ? (error.stack ?? '').split('\n').find((l) => l.includes('smoke.mjs'))?.trim() ?? '?' : '?'
