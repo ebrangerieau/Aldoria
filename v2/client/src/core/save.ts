@@ -9,6 +9,7 @@
  */
 import type { ApiClient } from './api'
 import { EMPTY_DAILY, normalizeDaily, type DailyState } from './dailyChallenge'
+import { type Beasts, normalizeBestiary } from './bestiary'
 import { normalizeOwned, type Owned } from './inventory'
 import { normalizeRelics } from './relics'
 import { normalizeLook } from './appearance'
@@ -41,6 +42,8 @@ export interface SaveData {
   sphinx?: SphinxState
   /** Quêtes du village : jour (ISO) de la dernière quête faite pour chaque habitant, code → jour (core/village.ts). Une quête par habitant et par jour. */
   quests: Record<string, string>
+  /** Bestiaire : créatures vaincues dans les lieux, nom → nombre de victoires (core/bestiary.ts). */
+  bestiary: Beasts
 }
 
 export const EMPTY_SAVE: SaveData = {
@@ -54,6 +57,7 @@ export const EMPTY_SAVE: SaveData = {
   relics: [],
   table: '',
   quests: {},
+  bestiary: {},
 }
 
 /** Partie relue (locale ou du serveur) : les champs absents d'une ancienne partie reprennent leur valeur par défaut. */
@@ -68,6 +72,7 @@ export function normalizeSave(data: Partial<SaveData> | null | undefined): SaveD
     relics: normalizeRelics(given.relics),
     table: typeof given.table === 'string' ? given.table : '',
     quests: normalizeQuests(given.quests),
+    bestiary: normalizeBestiary(given.bestiary),
     // Une partie sans état du Sphinx n'en reçoit pas ici (la classe de l'enfant fixe le palier de départ : `sphinxOf`).
     ...(given.sphinx ? { sphinx: normalizeSphinx(given.sphinx, '6e') } : { sphinx: undefined }),
   }
