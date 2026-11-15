@@ -1,0 +1,85 @@
+{
+  "description": "Le prologue de la Grande Chronique, joué dans l'île (reprise de scenes/prologue de la v1) : cinq tableaux, un texte par monde lu de la voix enregistrée du narrateur ou de Maître Ysaline (`ligne` + « -lumineux » ou « -brouillard » : ids de content/voix/lignes.json). `plan` : ce que la caméra cadre, en mètres (x vers l'est, z vers le nord) ; `haut` : hauteur au-dessus du sol du point visé ; `alpha` : d'où l'on regarde (-π/2 : du sud vers le nord) ; `beta` : inclinaison (0 : de haut, π/2 : à l'horizontale) ; `rayon` : distance. `lieu` relie le plan à un endroit de ile.json quand il en vise un (vérifié par tests/prologue.test.ts).",
+  "tableaux": [
+    {
+      "id": "chronique",
+      "voix": "narrateur",
+      "ligne": "prologue-chronique",
+      "titre": "La Grande Chronique",
+      "lieu": "citadelle",
+      "plan": {
+        "x": 0,
+        "z": 30,
+        "haut": 12,
+        "alpha": -2.0,
+        "beta": 1.18,
+        "rayon": 78
+      },
+      "qui": "Le narrateur"
+    },
+    {
+      "id": "vol",
+      "voix": "narrateur",
+      "ligne": "prologue-vol",
+      "titre": "Malvrek",
+      "lieu": "tour_oubli",
+      "plan": {
+        "x": 0,
+        "z": 185,
+        "haut": 14,
+        "alpha": -1.5707963,
+        "beta": 1.3,
+        "rayon": 105
+      },
+      "qui": "Le narrateur"
+    },
+    {
+      "id": "oubli",
+      "voix": "narrateur",
+      "ligne": "prologue-oubli",
+      "titre": "Le Brouillard de l'Oubli",
+      "lieu": "svt",
+      "plan": {
+        "x": -112,
+        "z": -112,
+        "haut": 2,
+        "alpha": 0.2,
+        "beta": 1.0,
+        "rayon": 120
+      },
+      "qui": "Le narrateur"
+    },
+    {
+      "id": "ysaline",
+      "voix": "ysaline",
+      "ligne": "prologue-ysaline",
+      "titre": "Maître Ysaline",
+      "lieu": "ysaline",
+      "plan": {
+        "x": -6,
+        "z": -12,
+        "haut": 0.3,
+        "alpha": -1.0,
+        "beta": 1.32,
+        "rayon": 6.5
+      },
+      "qui": "La gardienne de la Chronique"
+    },
+    {
+      "id": "quete",
+      "voix": "ysaline",
+      "ligne": "prologue-quete",
+      "titre": "En route",
+      "lieu": "depart",
+      "plan": {
+        "x": 0,
+        "z": -30,
+        "haut": 1.6,
+        "alpha": -1.5707963,
+        "beta": 1.3,
+        "rayon": 8.5
+      },
+      "qui": "Maître Ysaline"
+    }
+  ]
+}

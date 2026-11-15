@@ -1232,6 +1232,76 @@ try {
     await page.getByRole('dialog').waitFor({ state: 'detached' })
   })
 
+  await step('le prologue : la caméra cadre chaque tableau, la voix enregistrée lit le texte (caché d’abord), le suivant vient après la voix, Suite, Passer, la caméra revient derrière le héros', async () => {
+    const ysaline = await page.evaluate(() => {
+      const i = window.__aldoria.world.interactables.find((x) => x.kind === 'ysaline')
+      return i ? { x: i.x, z: i.z } : null
+    })
+    await page.evaluate(({ x, z }) => window.__aldoria.world.teleport(x, z - 1.5, x, z), ysaline)
+    await page.getByTestId('invite').filter({ hasText: 'Maître Ysaline' }).waitFor({ timeout: 10_000 * SLOW })
+    await page.keyboard.press('KeyE')
+    await page.getByRole('button', { name: 'Revoir l’histoire' }).click()
+    await page.getByTestId('prologue').waitFor({ timeout: 10_000 * SLOW })
+    const heroAt = () => page.evaluate(() => { const p = window.__aldoria.world.hero.root.position; return [p.x, p.z] })
+    const cameraAt = () => page.evaluate(() => { const c = window.__aldoria.world.camera; return { x: c.target.x, z: c.target.z, radius: c.radius } })
+    const titre = () => page.getByTestId('prologue-titre').innerText()
+    const near = (x, z, within) => page.waitForFunction(([tx, tz, d]) => { const c = window.__aldoria.world.camera; return Math.hypot(c.target.x - tx, c.target.z - tz) < d }, [x, z, within], { timeout: 20_000 * SLOW })
+    const hero = await heroAt()
+
+    // Tableau 1 : la Grande Chronique, lue de la voix enregistrée du narrateur ; le texte est caché d'abord, un bouton l'affiche.
+    if (!(await titre()).includes('Grande Chronique')) throw new Error(`premier tableau : ${await titre()}`)
+    if ((await page.getByTestId('prologue-points').locator('li').count()) !== 5) throw new Error('cinq points pour cinq tableaux')
+    if ((await page.getByTestId('prologue-texte').getAttribute('data-visible')) !== 'non') throw new Error('le texte est caché au départ')
+    await page.waitForFunction(() => window.__aldoria.services.voice.trace.some((e) => e.includes('son prologue-chronique-lumineux')), null, { timeout: 15_000 * SLOW })
+    await page.waitForFunction(() => window.__aldoria.services.voice.trace.slice(-6).some((e) => e.endsWith('joue')), null, { timeout: 15_000 * SLOW })
+    await page.getByTestId('prologue-bouton-texte').click()
+    const written = await page.getByTestId('prologue-texte').innerText()
+    if ((await page.getByTestId('prologue-texte').getAttribute('data-visible')) !== 'oui' || !written.includes('Grande Chronique')) throw new Error(`le texte du premier tableau : ${written}`)
+    await near(0, 30, 25) // la caméra cadre la Citadelle
+    await page.screenshot({ path: `${OUT}/05e-prologue-1.png` })
+    await page.getByTestId('prologue-bouton-texte').click()
+    // Le héros ne bouge pas pendant le récit, même si l'on appuie sur une touche d'avance.
+    await page.keyboard.down('KeyW')
+    await page.waitForTimeout(400)
+    await page.keyboard.up('KeyW')
+    // Sans aucun clic, le tableau suivant vient seul quand la voix a fini (Malvrek, la tour de l'Oubli).
+    await page.getByRole('heading', { name: 'Malvrek' }).waitFor({ timeout: 90_000 * SLOW })
+    await near(0, 185, 30)
+    await page.screenshot({ path: `${OUT}/05e-prologue-2.png` })
+
+    // Les tableaux suivants : « Suite » avance, la caméra suit (Brouillard de l'Oubli, Maître Ysaline, le départ).
+    await page.getByTestId('prologue-suite').click()
+    await page.getByRole('heading', { name: /Brouillard de l.Oubli/ }).waitFor({ timeout: 8000 * SLOW })
+    await near(-112, -112, 30)
+    await page.getByTestId('prologue-suite').click()
+    await page.getByRole('heading', { name: 'Maître Ysaline' }).waitFor({ timeout: 8000 * SLOW })
+    await near(-6, -12, 8)
+    await page.screenshot({ path: `${OUT}/05e-prologue-4.png` })
+    await page.getByTestId('prologue-suite').click()
+    await page.getByRole('heading', { name: 'En route' }).waitFor({ timeout: 8000 * SLOW })
+    if ((await page.getByTestId('prologue-suite').innerText()) !== 'En route !') throw new Error('le dernier tableau finit par « En route ! »')
+    await page.screenshot({ path: `${OUT}/05e-prologue-5.png` })
+    await page.getByTestId('prologue-suite').click()
+    await page.getByTestId('prologue').waitFor({ state: 'detached', timeout: 8000 * SLOW })
+
+    // Fini : le prologue est marqué vu, la caméra revient derrière le héros (qui n'a pas bougé), l'interface revient.
+    if (!(await page.evaluate(() => window.__aldoria.save().story.includes('prologue')))) throw new Error('le prologue vu est rangé dans la partie')
+    const [hx, hz] = await heroAt()
+    if (Math.hypot(hx - hero[0], hz - hero[1]) > 0.05) throw new Error(`le héros a bougé pendant le prologue : ${hero} puis ${hx},${hz}`)
+    await page.waitForFunction(() => { const w = window.__aldoria.world; const c = w.camera; const p = w.hero.root.position; return Math.hypot(c.target.x - p.x, c.target.z - p.z) < 3 && c.radius < 18.5 }, null, { timeout: 15_000 * SLOW })
+    if ((await page.evaluate(() => document.documentElement.classList.contains('en-prologue')))) throw new Error('l’interface doit revenir après le prologue')
+    const cam = await cameraAt()
+    if (!(cam.radius < 18.5)) throw new Error(`la caméra revient à sa distance de jeu : ${cam.radius}`)
+
+    // Rejoué à Échap : un tableau, puis Échap le termine.
+    await page.getByTestId('invite').filter({ hasText: 'Maître Ysaline' }).waitFor({ timeout: 10_000 * SLOW })
+    await page.keyboard.press('KeyE')
+    await page.getByRole('button', { name: 'Revoir l’histoire' }).click()
+    await page.getByTestId('prologue').waitFor({ timeout: 8000 * SLOW })
+    await page.keyboard.press('Escape')
+    await page.getByTestId('prologue').waitFor({ state: 'detached', timeout: 8000 * SLOW })
+  })
+
   await step('seuil d’un lieu : Maître Ysaline parle de sa voix enregistrée (ElevenLabs), pas de Piper', async () => {
     const lieu = await page.evaluate(() => {
       const i = window.__aldoria.world.interactables.find((x) => x.kind === 'lieu' && x.open)

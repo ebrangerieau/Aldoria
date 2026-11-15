@@ -1,5 +1,9 @@
+import { readFileSync } from 'node:fs'
+import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 import ile from '@content/monde/ile.json'
+import lignes from '@content/voix/lignes.json'
+import { digest } from '../src/core/recordedVoices'
 import { placesFor, REGIONS } from '../src/core/world/places'
 import { BASE_LIGHT, fogDensityFactor, fogNote, lightText, regionLights } from '../src/core/world/regionLight'
 import { type IslandLayout, Terrain } from '../src/core/world/terrain'
@@ -69,5 +73,16 @@ describe('Régions qui s’éclairent', () => {
     expect(lightText(regionLights(sixth, doneOf(sixth, 'maths', 2)).maths!)).toBe('2 pages sur 3 rapportées')
     expect(lightText(regionLights(sixth, doneOf(sixth, 'maths', 3)).maths!)).toBe('éclairée (3 pages rapportées)')
     expect(lightText(regionLights(sixth, doneOf(sixth, 'anglais', 1)).anglais!)).toBe('éclairée (1 page rapportée)')
+  })
+
+  it('le texte de brouillard de chaque région est celui que Maître Ysaline a enregistré : avec la lecture automatique, il se lit de sa vraie voix', async () => {
+    // Lu à l'exécution (l'image web2 ne contient pas deploy/), comme le test des voix enregistrées.
+    const sounds = fileURLToPath(new URL('../../deploy/voix/', import.meta.url))
+    const manifest = JSON.parse(readFileSync(sounds + 'manifest.json', 'utf-8')) as Record<string, { id: string; voix: string }>
+    for (const [code, region] of Object.entries(REGIONS)) {
+      const line = lignes.find((l) => l.id === `brouillard-${code}`)
+      expect(line?.texte, `texte enregistré de ${code}`).toBe(region.fog)
+      expect(manifest[await digest(region.fog)]?.voix, `voix de ${code}`).toBe('ysaline')
+    }
   })
 })

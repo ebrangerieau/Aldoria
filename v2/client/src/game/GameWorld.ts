@@ -36,6 +36,7 @@ import type { Obstacles } from '../core/world/obstacles'
 import { heading, type MapMarker, mapMarkers, type ReliefPalette } from '../core/world/minimap'
 import { angleDelta, RUN_SPEED, step, WALK_SPEED } from '../core/world/movement'
 import { isOpen, type Place, placesFor, regionTitle } from '../core/world/places'
+import type { Shot } from '../core/prologue'
 import { fogDensityFactor, fogNote, type RegionLight, regionLights } from '../core/world/regionLight'
 import { type IslandLayout, SEA_LEVEL, Terrain } from '../core/world/terrain'
 import { type Atmosphere, createAtmosphere } from './atmosphere'
@@ -123,6 +124,10 @@ const layout = ile as unknown as IslandLayout
 const today = (): string => new Date().toISOString().slice(0, 10)
 /** Écran d'apparence : durée du cadrage de la caméra, et décalage (écran) qui garde le héros à gauche du panneau. */
 const SHOWCASE_MS = 900
+/** Retour de la caméra derrière le héros à la fin du prologue (ms), et distances maximales de la caméra : celle du jeu, celle des cadrages de cinéma. */
+const CINEMATIC_RETURN_MS = 2600
+const GAME_MAX_RADIUS = 18
+const CINEMATIC_MAX_RADIUS = 160
 const SHOWCASE_OFFSET = -1.5
 
 export class GameWorld {
@@ -159,7 +164,9 @@ export class GameWorld {
   private fogTarget = 0
   private lastCameraInput = 0
   /** Cadrage en cours vers un but (écran d'apparence) : la caméra s'en approche pendant `SHOWCASE_MS`, puis la souris reprend la main. */
-  private cameraGoal: { alpha: number; beta: number; radius: number; offsetX: number; until: number } | null = null
+  private cameraGoal: { alpha: number; beta: number; radius: number; offsetX: number; until: number; done?: () => void } | null = null
+  /** Prologue : la caméra quitte le héros et cadre un point de l'île (`setCinematic`) ; null : elle le suit. */
+  private cinematic: Shot | null = null
   private cameraBefore: { beta: number; radius: number } | null = null
   /** Ce qui est réellement à l'écran (`look` est ce qui est voulu) : le modèle du héros et le pelage du renard. `setLook` s'applique à la file, dans l'ordre. */
   private shownModel = ''
@@ -298,7 +305,7 @@ export class GameWorld {
   private setupCamera(): void {
     const camera = this.camera
     camera.lowerRadiusLimit = 3.5
-    camera.upperRadiusLimit = 18
+    camera.upperRadiusLimit = GAME_MAX_RADIUS
     camera.lowerBetaLimit = 0.45
     camera.upperBetaLimit = 1.5
     camera.wheelDeltaPercentage = 0.01
@@ -324,11 +331,21 @@ export class GameWorld {
   private updateCamera(dt: number, moving: boolean): void {
     const camera = this.camera
     const hero = this.hero.root.position
-    const target = new Vector3(hero.x, hero.y + 1.45, hero.z)
+    const shot = this.cinematic
+    const target = shot ? new Vector3(shot.x, this.grid.heightAt(shot.x, shot.z) + shot.haut, shot.z) : new Vector3(hero.x, hero.y + 1.45, hero.z)
     // En place : réaffecter `camera.target` recalculerait les angles depuis l'ancienne position
     // et annulerait chaque frame le mouvement de la souris.
-    camera.target.copyFrom(Vector3.Lerp(camera.target, target, 1 - Math.exp(-10 * dt)))
-    this.followGoal(dt)
+    camera.target.copyFrom(Vector3.Lerp(camera.target, target, 1 - Math.exp(-(shot ? (this.options.calm ? 40 : 1.6) : 10) * dt)))
+    if (shot) {
+      // Cinéma : la caméra glisse d'un cadrage au suivant (d'un coup en mode calme), le héros ne la ramène pas derrière lui.
+      const k = 1 - Math.exp(-(this.options.calm ? 40 : 1.8) * dt)
+      camera.alpha += angleDelta(camera.alpha, shot.alpha) * k
+      camera.beta += (shot.beta - camera.beta) * k
+      camera.radius += (shot.rayon - camera.radius) * k
+      this.lastCameraInput = performance.now()
+    } else {
+      this.followGoal(dt)
+    }
     // Sans action de la souris depuis un moment, la caméra revient doucement derrière le héros.
     if (moving && performance.now() - this.lastCameraInput > 1800) {
       const yaw = this.hero.yaw
@@ -361,6 +378,43 @@ export class GameWorld {
       camera.radius = goal.radius
       camera.targetScreenOffset.x = goal.offsetX
       this.cameraGoal = null
+      goal.done?.()
+    }
+  }
+
+  /**
+   * Prologue : la caméra quitte le héros et cadre un point de l'île (`shot`), en glissant d'un cadrage au suivant ; `null` la ramène derrière le héros, comme avant. Pendant ce
+   * temps la souris ne la tient plus (l'interface a la main : `setInputEnabled(false)`) et sa distance maximale est levée, les cadrages étant bien plus larges que le jeu.
+   */
+  setCinematic(shot: Shot | null): void {
+    if (this.interior) return
+    const camera = this.camera
+    if (shot) {
+      if (!this.cinematic) {
+        this.cameraBefore ??= { beta: camera.beta, radius: camera.radius }
+        this.cameraGoal = null
+        camera.detachControl()
+        camera.upperRadiusLimit = CINEMATIC_MAX_RADIUS
+      }
+      this.cinematic = shot
+      return
+    }
+    if (!this.cinematic) return
+    this.cinematic = null
+    camera.attachControl(this.canvas, true)
+    const behind = Math.atan2(-Math.cos(this.hero.yaw), -Math.sin(this.hero.yaw))
+    const before = this.cameraBefore ?? { beta: 1.22, radius: 8.5 }
+    this.cameraBefore = null
+    // Le retour derrière le héros glisse comme l'écran d'apparence ; la distance maximale du jeu ne revient qu'à l'arrivée (sinon la caméra sauterait).
+    this.cameraGoal = {
+      alpha: behind,
+      beta: before.beta,
+      radius: before.radius,
+      offsetX: 0,
+      until: performance.now() + CINEMATIC_RETURN_MS,
+      done: () => {
+        camera.upperRadiusLimit = GAME_MAX_RADIUS
+      },
     }
   }
 

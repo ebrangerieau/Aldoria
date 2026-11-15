@@ -99,6 +99,15 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   faut le prévenir. Vérifier un Effaceur : captures `boss-*`, `boss-combat-*`, `coffre`, `coffre-ouvert` (`npm run captures`). Les modèles de
   Quaternius sont sombres par construction (couleurs de base très foncées : la gelée verte et le dragon paraissent presque noirs) : ce n'est pas
   un défaut d'éclairage. Le coffre se referme sur la note de plaisir (étape 1.5, ci-dessous) ; il annonce aussi ce que le niveau et le lieu débloquent dans l'apparence (ci-dessous).
+- **Prologue** (reprise de `scenes/prologue` de la v1 ; `core/prologue.ts`, `content/monde/prologue.json`, `ui/Prologue.tsx`, test `prologue.test.ts`) : cinq tableaux joués dans l'île : la Grande Chronique (la Citadelle), le vol de Malvrek (la tour
+  de l'Oubli), le Brouillard de l'Oubli (la Vallée du Vivant), Maître Ysaline (elle-même) puis la quête (le héros, prêt à partir). Chaque tableau a un **plan** de caméra (`Shot` : point de l'île, hauteur, `alpha`, `beta`, `rayon` ; le test
+  vérifie que le point visé est sur la terre ferme, que la caméra reste dans le monde et au-dessus du sol) et un **texte par monde** : le ton de Jules, celui de Tom, repris de `content/voix/lignes.json` (`prologue-<tableau>-<monde>`,
+  **enregistrés** de la voix du narrateur, puis de Maître Ysaline : le test les relie au manifeste). La caméra de cinéma est `GameWorld.setCinematic(shot | null)` : elle quitte le héros, glisse d'un plan au suivant (d'un coup en mode calme),
+  lève la distance maximale de la caméra du jeu (160 m au lieu de 18) et ne la rend qu'à l'arrivée du retour derrière le héros (sinon elle sauterait). Le texte est **caché** d'abord (bouton « Texte » ; `sr-only` pour les lecteurs d'écran),
+  affiché d'office quand la voix s'arrête tout de suite (rien n'a été dit : `SILENT_BELOW`) ; sans clic, le tableau suivant vient **seul après la voix** (`PAUSE_AFTER_VOICE`), ou après `readingTime` si la voix n'a rien dit. « Suite »,
+  « Passer » et Échap (le prologue est alors marqué vu : `STORY_KEY` dans `SaveData.story`), la flèche droite avance. La page passe en mode cinéma (`html.en-prologue` : barre du haut, mini-carte et aides cachées). Il se joue **tout seul la
+  première fois pour un enfant connecté** (`shouldAutoplay`, jamais en mode découverte), et se **revoit** chez Maître Ysaline (« Revoir l'histoire »). Vérifier : captures `prologue-1` à `prologue-5`, `prologue-brouillard` ; parcours
+  navigateur (voix enregistrée jouée, texte caché puis affiché, caméra sur chaque lieu, enchaînement sans clic après la voix, héros immobile, vu rangé dans la partie, caméra et interface de retour).
 - **Régions qui s'éclairent** (PRD V2-09, le brouillard de la carte de la v1 ; `core/world/regionLight.ts`, test `regionLight.test.ts`) : la lumière de chaque région vient **seulement** des lieux de
   la classe et de ceux que la partie a terminés (`regionLights(places, done)`, jamais un compteur à part). Une région sans lieu pour la classe (SVT et SNT en 6e) est sous le **brouillard**
   (lumière 0, `fogNote` : son texte de `regions.json`, affiché sous son nom dans la bannière, `data-testid="region-brume"`) ; une région au programme vaut `BASE_LIGHT` (0,5) sans page,
@@ -108,6 +117,7 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   La **brume locale** : la densité de la brume du monde est multipliée par `fogDensityFactor(lumière)` (1 à 1,8, au carré du manque de lumière) dans la région du héros, en douceur (d'un coup en mode calme).
   Crochets `&e2e` : `world.regionLights()` et, en découverte, `giveRegion(code)` (tous les lieux d'une région). Vérifier : captures `region-brume`, `region-endormie`, `region-eclairee`,
   `region-panorama` ; parcours navigateur (lumière de chaque région d'après la partie, Vallée du Vivant sous le brouillard avec son texte, brume qui s'épaissit puis se lève).
+  **Voix** : le texte de brouillard d'une région est celui que Maître Ysaline a enregistré (`brouillard-<région>` de `lignes.json`, test `regionLight.test.ts`) ; avec la « lecture automatique », entrer dans la région le lit de sa vraie voix (`GameScreen` : effet sur `region.note`, coupé quand le héros s'en va avec `stopIf`).
   **Mini-carte** : chaque région qui manque de lumière y porte un voile de brouillard (`fogDiscs` de `core/world/minimap.ts`, `FOG_OPACITY` 0,62 au carré du manque de lumière, `circle.mark-fog`,
   événement `lights` du monde) qui se lève page après page ; capture `carte-lumiere`.
 - **Énigme, héros qui parle, note de plaisir** (étape 1.5) : la quatrième salle de chaque lieu a **trois piédestaux** (`PEDESTAL_SPOTS` de
