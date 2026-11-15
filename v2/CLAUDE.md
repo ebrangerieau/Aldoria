@@ -240,7 +240,9 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   compagnon n'existe que dans le monde lumineux (`hasPet`). Monde : `game/characters.ts` (`dress` idempotent, `tintCape`, `tintFox`, `loadHero(scene, look)`) ;
   les personnages KayKit partagent **un seul matériau à atlas** : la cape colorée est un clone à couleur unie (`toLinearSpace()` pour un PBR), jamais une
   teinte posée sur le matériau commun ; le renard a ses propres matériaux `Main` / `Main_Light`. `GameWorld.setLook` rhabille le héros (autre silhouette : un
-  nouveau modèle au même endroit, dans le même sens, ombre comprise) ; un lieu recharge son héros avec `this.look`. Écran : `ui/Wardrobe.tsx`, bouton
+  nouveau modèle au même endroit, dans le même sens, ombre comprise) ; **ses demandes se font à la file** (le chargement d'un modèle est asynchrone : sans file,
+  des clics rapprochés laissaient trois héros à l'écran, mesuré), chacune avec le dernier choix, et `shownModel` dit ce qui est vraiment affiché ; un lieu recharge son
+  héros avec `this.look`. Écran : `ui/Wardrobe.tsx`, bouton
   « Apparence » du bandeau (hors intérieur) avec la pastille des nouveautés (`unseenCount`, effacée à l'ouverture par `markSeen`), panneau à droite et
   `GameWorld.setShowcase` qui passe la caméra devant le héros, décalé à gauche du panneau, puis la ramène derrière lui. Un choix verrouillé reste visible avec
   sa condition (« Niveau 5 », « Termine 2 lieux ») ; le toucher l'explique sans rien changer ; jamais la couleur seule (nom, coche, texte de verrou). Le coffre
