@@ -85,7 +85,7 @@ export function heading(dx: number, dz: number): number {
 // --- Repères ------------------------------------------------------------------------------
 
 export type MarkerKind = 'citadelle' | 'village' | 'sphinx' | 'lieu' | 'pierre' | 'jour' | 'table' | 'barque' | 'pont' | 'tir'
-export type MarkerState = 'repere' | 'ouvert' | 'ferme' | 'termine' | 'endormie' | 'eveillee' | 'a_faire' | 'faite'
+export type MarkerState = 'repere' | 'ouvert' | 'ferme' | 'termine' | 'endormie' | 'eveillee' | 'a_faire' | 'faite' | 'quetes'
 
 export interface MapMarker extends Point {
   id: string
@@ -111,7 +111,8 @@ export function mapMarkers(layout: IslandLayout, level: string, sources: MarkerS
   const village = VILLAGES.find((v) => v.level === level)?.title ?? 'Le village'
   const out: MapMarker[] = [
     { id: 'citadelle', kind: 'citadelle', state: 'repere', label: regionTitle('citadelle'), x: layout.citadelle.x, z: layout.citadelle.z },
-    { id: 'village', kind: 'village', state: 'repere', label: village, x: layout.village.x, z: layout.village.z },
+    // Le village s'allume tant qu'un habitant attend de confier sa quête du jour (comme le « ! » au-dessus de sa tête).
+    { id: 'village', kind: 'village', state: sources.some((s) => s.kind === 'habitant' && s.open) ? 'quetes' : 'repere', label: village, x: layout.village.x, z: layout.village.z },
     { id: 'sphinx', kind: 'sphinx', state: 'repere', label: regionTitle('sphinx'), x: layout.sphinx.x, z: layout.sphinx.z },
   ]
   for (const s of sources) {

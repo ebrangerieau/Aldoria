@@ -1254,6 +1254,8 @@ try {
     // Barnabé (révision) : trois bonnes réponses, 50 XP de forfait et 30 de bonus ; la partie garde la quête du jour, le « ! » s'éteint.
     const before = await save()
     if (!(await villager('barnabe')).marker) throw new Error('le « ! » de Barnabé devrait briller avant sa quête')
+    const villageMark = () => page.locator('[data-testid="carte"] g[data-id="village"]').getAttribute('class')
+    if (!(await villageMark())?.includes('mark-quetes')) throw new Error(`le village de la mini-carte devrait s'allumer tant que des quêtes attendent : ${await villageMark()}`)
     const first = await quest('barnabe', [true, true, true], ['3 bonnes réponses sur 3. +80 XP'])
     await page.screenshot({ path: `${OUT}/07b-quete-faite.png` })
     if (first.includes('passage pour la barque')) throw new Error('une seule quête ne rapporte pas de passage')
@@ -1291,6 +1293,7 @@ try {
       const v = await villager(code)
       if (v.open || v.marker) throw new Error(`le « ! » de ${code} doit être éteint`)
     }
+    if ((await villageMark())?.includes('mark-quetes')) throw new Error(`les trois quêtes faites, le village de la mini-carte s'éteint : ${await villageMark()}`)
   })
 
   await step('le pont des fractions : un pont trop court s’effondre et s’explique, la bonne somme fait traverser, six ravins, le bilan et un passage pour le Sphinx', async () => {

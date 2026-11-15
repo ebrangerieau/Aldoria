@@ -153,6 +153,7 @@ html[data-big-targets='true'] .minimap { width: 300px; }
 .mark-barque path { fill: #f3ead2; stroke: #5a3d0c; }
 .mark-table path { fill: #c8a2e8; stroke: #3d2260; }
 .mark-pont path { fill: #e09f3e; stroke: #5a3d0c; }
+.mark-village .mark-badge { fill: #ffd447; stroke: #5a3d0c; stroke-width: 1.2; }
 .mark-tir path { fill: #d9534f; stroke: #5a1a18; }
 .mark-jour path { fill: #ffd447; stroke: #5a3d0c; }
 .mark-jour.mark-faite path { fill: #d9c9a0; stroke: #6b5a3a; }

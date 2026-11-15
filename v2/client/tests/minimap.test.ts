@@ -87,6 +87,17 @@ describe('Mini-carte : repères', () => {
     expect(byId('pierre-maths')?.state).toBe('eveillee')
   })
 
+  it('allume le village tant qu’un habitant attend de confier sa quête du jour, et l’éteint quand toutes sont faites', () => {
+    const habitants = (open: boolean[]) => open.map((o, i) => ({ id: `habitant-${i}`, kind: 'habitant', label: `Habitant ${i}`, x: -82 + i, z: 6, open: o }))
+    const state = (open: boolean[]) => mapMarkers(layout, '6e', [...sources, ...habitants(open)], {}).find((m) => m.id === 'village')?.state
+    expect(state([true, true, true])).toBe('quetes')
+    expect(state([false, true, false])).toBe('quetes')
+    expect(state([false, false, false])).toBe('repere')
+    expect(byId('village')?.state).toBe('repere') // pas d'habitant dans le monde : rien à signaler
+    // Les habitants eux-mêmes ne sont pas des repères : trois points au même endroit ne se liraient pas.
+    expect(mapMarkers(layout, '6e', [...sources, ...habitants([true])], {}).some((m) => m.id.startsWith('habitant'))).toBe(false)
+  })
+
   it('montre le stand de tir de la Lice quand le monde l’a posé, et seulement alors', () => {
     const tir = { id: 'tir-stand', kind: 'tir', label: 'Le stand de tir', x: layout.stand_tir.x, z: layout.stand_tir.z - 1.8, open: true }
     expect(mapMarkers(layout, '6e', [...sources, tir], {}).find((m) => m.id === 'tir-stand')).toMatchObject({ kind: 'tir', state: 'repere', label: 'Le stand de tir' })
