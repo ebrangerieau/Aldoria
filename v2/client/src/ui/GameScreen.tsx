@@ -651,7 +651,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
         onBlock={(blocked) => worldRef.current?.setInputEnabled(!blocked)}
         onEnd={onQuit}
       />
-      {modal?.kind === 'archives' && <Archives services={services} onClose={close} />}
+      {modal?.kind === 'archives' && <Archives services={services} beasts={data.bestiary} onClose={close} />}
       {modal?.kind === 'sac' && <BagView owned={data.items} onClose={() => { close(); canvasRef.current?.focus() }} />}
       {modal?.kind === 'daily' && (
         <DailyChallenge

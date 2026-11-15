@@ -18,6 +18,7 @@ import { applyEvent, type FightHost, type FightView, runFight, viewOf } from '..
 import { combatTexts, pickOne } from '../core/combat/texts'
 import { count, type ItemId } from '../core/inventory'
 import { HeroVoice } from '../core/heroVoice'
+import { recordDefeat } from '../core/bestiary'
 import { chestMessage, completePlace } from '../core/quest/chest'
 import { unlockNews } from '../core/appearance'
 import { afterActivity, passesText, sphinxOf, takePassageNews } from '../core/sphinx/island'
@@ -276,6 +277,12 @@ export function useFight(options: FightOptions) {
     // Le déroulé tourne jusqu'à la victoire ou au repli ; une action en suspens (écran quitté) ne le retient pas.
     const outcome = await runFight(enc, host)
     setPhase('busy')
+    // La créature vaincue entre au bestiaire des Archives (le nom de l'ennemi, comme dans la v1) : rangé tout de suite, avant la suite du récit.
+    if (outcome === 'victory') {
+      const { getSave, persist } = latest.current
+      const save = getSave()
+      persist({ ...save, bestiary: recordDefeat(save.bestiary, enemy.spec.name) })
+    }
     if (outcome === 'victory' && enemy.boss) {
       // L'Effaceur a le dernier mot (le héros ne bouge pas encore), puis le coffre apparaît : la page n'est pas loin.
       show(null)

@@ -225,7 +225,7 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   (`no_speed`) : aucun temps n'est écrit.
 - **Archives** (`core/archives.ts` : lecture de `GET /play/progress`, résumé, dernier état gardé sur l'appareil pour la consultation hors
   connexion ; `ui/Archives.tsx`, bouton « Archives » de l'île) : une à trois étoiles par notion, groupées par matière puis par chapitre. La
-  maîtrise vient toujours du serveur, jamais calculée par le client. Le bestiaire (créatures vaincues) vient avec les rencontres.
+  maîtrise vient toujours du serveur, jamais calculée par le client. **Bestiaire** (onglet « Bestiaire » des Archives ; `core/bestiary.ts`, test `bestiary.test.ts`, `SaveData.bestiary` : nom de la créature → victoires, relu par `normalizeBestiary`, borné à 200 espèces) : chaque combat gagné dans un lieu (Effaceur compris) ajoute une victoire sur le nom de l'ennemi (`useFight` : `recordDefeat`, rangé tout de suite), comme `record_defeat` de la v1 ; les créatures sont listées de la plus souvent vaincue à la moins (`bestiaryLines`), avec un résumé (`bestiarySummary`). Le bestiaire vit dans la partie : il suit l'enfant d'un PC à l'autre, jamais dans l'API des Archives (la maîtrise des notions, elle, vient toujours du serveur). Parcours : l'étape « Archives » compare la liste à la partie ; capture `05c-bestiaire`.
 - **Effets sonores** (`core/sfx.ts` : les dix sons de `public/ressources/sfx`, volume de la v1 ; `app/sfx.ts` : lecteur Web Audio créé au
   premier geste, `services.sfx.play('correct')`) : bonne et mauvaise réponse dans `QuestionPanel` ; les coups, le soin et la victoire du
   combat s'appellent de la même façon. Jamais d'effet lié à la vitesse de réponse ; `&sons=0` les désactive (captures, mesures).

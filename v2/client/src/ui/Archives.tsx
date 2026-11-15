@@ -6,8 +6,10 @@
 import { useEffect, useState } from 'react'
 import type { Services } from '../app/services'
 import { bySubject, countStars, loadArchives, playableNotions, starsText, STATUS_TEXT, summaryText, type ArchivesView } from '../core/archives'
+import { type Beasts, bestiaryLines, bestiarySummary } from '../core/bestiary'
 
-export function Archives({ services, onClose }: { services: Services; onClose: () => void }) {
+export function Archives({ services, beasts, onClose }: { services: Services; beasts: Beasts; onClose: () => void }) {
+  const [tab, setTab] = useState<'notions' | 'bestiaire'>('notions')
   // undefined : en cours de chargement ; null : ni serveur ni état gardé.
   const [view, setView] = useState<ArchivesView | null | undefined>(undefined)
 
@@ -25,7 +27,7 @@ export function Archives({ services, onClose }: { services: Services; onClose: (
     return () => window.removeEventListener('keydown', onKey)
   }, [onClose])
 
-  const summary = view === undefined ? 'Ouverture des Archives…' : view === null ? 'Les Archives sont hors de portée : pas de connexion au serveur.' : summaryText(countStars(view.chapters))
+  const notionsSummary = view === undefined ? 'Ouverture des Archives…' : view === null ? 'Les Archives sont hors de portée : pas de connexion au serveur.' : summaryText(countStars(view.chapters))
 
   return (
     <div className="overlay" role="dialog" aria-modal="true" aria-labelledby="archives-titre" data-testid="archives">
@@ -34,9 +36,14 @@ export function Archives({ services, onClose }: { services: Services; onClose: (
           <h2 id="archives-titre">Les Archives</h2>
           <button type="button" className="secondary" autoFocus onClick={onClose}>Fermer</button>
         </header>
-        <p className="archives-summary" role="status">{summary}</p>
-        {view?.cached && <p className="hint">Dernier état connu : tu n'es pas connecté au serveur.</p>}
-        {view && <ArchivesList view={view} />}
+        <div className="archives-tabs" role="group" aria-label="Que veux-tu voir ?">
+          <button type="button" className="secondary small" aria-pressed={tab === 'notions'} data-testid="archives-notions" onClick={() => setTab('notions')}>Notions</button>
+          <button type="button" className="secondary small" aria-pressed={tab === 'bestiaire'} data-testid="archives-bestiaire" onClick={() => setTab('bestiaire')}>Bestiaire</button>
+        </div>
+        <p className="archives-summary" role="status" data-testid="archives-resume">{tab === 'notions' ? notionsSummary : bestiarySummary(beasts)}</p>
+        {tab === 'notions' && view?.cached && <p className="hint">Dernier état connu : tu n'es pas connecté au serveur.</p>}
+        {tab === 'notions' && view && <ArchivesList view={view} />}
+        {tab === 'bestiaire' && <BestiaryList beasts={beasts} />}
       </section>
     </div>
   )
@@ -78,5 +85,22 @@ export function ArchivesList({ view }: { view: ArchivesView }) {
         </div>
       ))}
     </>
+  )
+}
+
+/** Les créatures vaincues, les plus souvent d'abord : leur nom et le nombre de victoires (jamais la couleur seule). */
+export function BestiaryList({ beasts }: { beasts: Beasts }) {
+  const lines = bestiaryLines(beasts)
+  if (lines.length === 0) return null
+  return (
+    <ul className="bestiary" data-testid="bestiaire-liste">
+      {lines.map((line) => (
+        <li key={line.name} className="bestiary-line" data-count={line.count}>
+          <span className="bestiary-icon" aria-hidden="true">🐉</span>
+          <span className="bestiary-name">{line.name}</span>
+          <span className="bestiary-count" aria-label={`${line.count} victoire${line.count > 1 ? 's' : ''}`}>× {line.count}</span>
+        </li>
+      ))}
+    </ul>
   )
 }
