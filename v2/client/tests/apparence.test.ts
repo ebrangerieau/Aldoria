@@ -154,7 +154,8 @@ describe('Les choix de l’écran d’apparence', () => {
     expect(menu.silhouettes.find((s) => s.id === 'Knight')!.locked).toBeUndefined()
     expect(menu.capeColors.find((c) => c.id === 'or')!.locked).toBe('Termine 3 lieux')
     expect(menu.capeColors.find((c) => c.id === 'vert')!.locked).toBe('Termine 1 lieu')
-    expect(menu.capeColors.every((c) => c.swatch?.startsWith('#'))).toBe(true)
+    expect(menu.capeColors.filter((c) => c.id !== 'origine').every((c) => c.swatch?.startsWith('#'))).toBe(true)
+    expect(menu.capeColors.find((c) => c.id === 'origine')!.swatch).toBeUndefined() // la cape d'origine n'est pas « blanche »
     expect(menu.pet!.names.map((n) => n.id)).toEqual(PET_NAMES)
     expect(menu.pet!.furs.filter((f) => f.selected)).toHaveLength(1)
     expect(menu.hasHead).toBe(true)

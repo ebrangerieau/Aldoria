@@ -141,6 +141,11 @@ export class GameWorld {
   /** Cadrage en cours vers un but (écran d'apparence) : la caméra s'en approche pendant `SHOWCASE_MS`, puis la souris reprend la main. */
   private cameraGoal: { alpha: number; beta: number; radius: number; offsetX: number; until: number } | null = null
   private cameraBefore: { beta: number; radius: number } | null = null
+  /** Ce qui est réellement à l'écran (`look` est ce qui est voulu) : le modèle du héros et le pelage du renard. `setLook` s'applique à la file, dans l'ordre. */
+  private shownModel = ''
+  private shownFur = ''
+  private lookQueue: Promise<void> = Promise.resolve()
+  private closed = false
   private stones = new Map<string, Mesh>()
   /** Les reliques encore à ramasser : leur éclat et leur anneau, par identifiant. */
   private relicMeshes = new Map<string, { gem: Mesh; ring: Mesh }>()
@@ -215,6 +220,7 @@ export class GameWorld {
     this.progress('Le héros', 0.75)
     this.look = lookOf(this.options.save, this.options.world)
     this.hero = await loadHero(scene, this.look)
+    this.shownModel = this.look.model
     this.hero.root.position.set(start.x, grid.heightAt(start.x, start.z), start.z)
     this.hero.yaw = (start.cap * Math.PI) / 180
     for (const m of this.hero.meshes) this.atmosphere.shadows.addShadowCaster(m, false)
@@ -222,6 +228,7 @@ export class GameWorld {
     if (this.options.world === 'lumineux' && this.params.get('renard') !== '0') {
       this.fox = await loadFox(scene)
       tintFox(this.fox, fur(this.look.pet_fur))
+      this.shownFur = this.look.pet_fur
       this.fox.root.position.set(start.x - 1.5, grid.heightAt(start.x - 1.5, start.z - 1.5), start.z - 1.5)
       for (const m of this.fox.meshes) this.atmosphere.shadows.addShadowCaster(m, false)
       const fox = this.fox
@@ -744,24 +751,38 @@ export class GameWorld {
   /**
    * Habille le héros et son renard avec cette apparence (celle de l'écran de personnalisation, déjà validée par `lookOf`). La même silhouette : seulement
    * ses pièces, sa cape et le pelage ; une autre : un nouveau modèle prend la place de l'ancien, au même endroit et dans le même sens (ombre comprise).
-   * Pas pendant un lieu : son héros est rechargé à chaque entrée avec `this.look`.
+   * Les demandes se font l'une après l'autre (le chargement d'un modèle est asynchrone) et chacune habille avec le dernier choix : des clics rapprochés
+   * ne laissent jamais deux héros ni des pièces du mauvais modèle. Pas pendant un lieu : son héros est rechargé à chaque entrée avec `this.look`.
    */
-  async setLook(next: Look): Promise<void> {
-    const previous = this.look
+  setLook(next: Look): Promise<void> {
     this.look = next
-    if (this.fox && next.pet_fur !== previous.pet_fur) tintFox(this.fox, fur(next.pet_fur))
-    if (this.interior) return
-    if (next.model === previous.model) {
-      dress(this.hero, next.model, next)
+    const run = () => this.applyLook()
+    this.lookQueue = this.lookQueue.then(run, run)
+    return this.lookQueue
+  }
+
+  /** Met à l’écran la dernière apparence voulue : le pelage du renard, puis les pièces du héros ou son nouveau modèle. */
+  private async applyLook(): Promise<void> {
+    if (this.closed) return
+    const wanted = this.look
+    if (this.fox && wanted.pet_fur !== this.shownFur) {
+      tintFox(this.fox, fur(wanted.pet_fur))
+      this.shownFur = wanted.pet_fur
+    }
+    if (this.interior) return // `leavePlace` remet l'île à jour
+    if (wanted.model === this.shownModel) {
+      dress(this.hero, wanted.model, wanted)
       return
     }
     const old = this.hero
-    const replacement = await loadHero(this.scene, next)
+    const replacement = await loadHero(this.scene, wanted)
+    if (this.closed) return // le monde s'est fermé pendant le chargement : sa scène n'existe plus
     replacement.root.position.copyFrom(old.root.position)
     replacement.yaw = old.yaw
     for (const m of replacement.meshes) this.atmosphere.shadows.addShadowCaster(m, false)
     for (const m of old.meshes) this.atmosphere.shadows.removeShadowCaster(m, false)
     this.hero = replacement
+    this.shownModel = wanted.model
     old.dispose()
   }
 
@@ -966,9 +987,11 @@ export class GameWorld {
     this.setInputEnabled(true)
     this.events.emit('interior', null)
     this.events.emit('focus', this.focused)
+    void this.setLook(this.look) // une apparence choisie pendant le lieu (jamais par l'écran, mais sans risque) est mise à l'écran
   }
 
   dispose(): void {
+    this.closed = true
     this.interior?.dispose()
     this.interior = null
     for (const d of this.disposers) d()

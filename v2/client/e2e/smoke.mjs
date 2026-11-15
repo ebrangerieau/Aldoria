@@ -1107,6 +1107,28 @@ try {
     await page.waitForTimeout(1200 * SLOW) // le nouveau héros se charge
     if ((await pos()).join() !== before.join()) throw new Error('le nouveau modèle prend la place de l’ancien')
 
+    // Des demandes qui se chevauchent, sans attendre le chargement des modèles (un enfant qui clique vite) : un seul héros reste, celui du dernier choix.
+    await page.evaluate(async () => {
+      const w = window.__aldoria.world
+      const l = { ...w.look }
+      void w.setLook({ ...l, model: 'Barbarian', main: '1H_Axe', off: 'Barbarian_Round_Shield' })
+      void w.setLook({ ...l, model: 'Rogue', main: 'Knife', off: 'Knife_Offhand' })
+      void w.setLook({ ...l })
+      await w.setLook({ ...l, main: '2H_Staff', off: '' })
+    })
+    const shown = await page.evaluate(() => {
+      const w = window.__aldoria.world
+      return {
+        heroes: w.scene.transformNodes.filter((n) => n.name === 'heros').length,
+        parts: w.hero.meshes.filter((m) => m.isEnabled()).map((m) => m.name.replace(/^.*?-/, '').replace(/_primitive\d+$/, '')),
+      }
+    })
+    if (shown.heroes !== 1) throw new Error(`après des demandes rapprochées il reste ${shown.heroes} héros à l'écran`)
+    if (!shown.parts.includes('2H_Staff') || !shown.parts.includes('Mage_Cape') || shown.parts.includes('1H_Wand') || shown.parts.includes('Barbarian_Cape')) {
+      throw new Error(`le héros à l'écran n'est pas celui du dernier choix : ${shown.parts.join(', ')}`)
+    }
+    if ((await pos()).join() !== before.join()) throw new Error('le héros reste à sa place après des changements rapprochés')
+
     // Un bâton à deux mains : la main gauche est libérée et ses choix deviennent impossibles (la raison est dite).
     await page.getByTestId('apparence-arme-2H_Staff').click()
     l = await look()

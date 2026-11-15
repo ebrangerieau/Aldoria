@@ -118,7 +118,8 @@ export function menuOf(look: Look, world: World, progress: Progress): Menu {
       unavailable: twoHanded && id !== '' ? 'Une arme à deux mains occupe les deux mains.' : undefined,
     })),
     hasHead: parts.head !== '',
-    capeColors: CAPE_COLORS.map((c) => ({ id: c.id, name: c.name, selected: c.id === look.cape_color, locked: lockOf(c, progress), swatch: c.color })),
+    // « D'origine » : pas de pastille (la cape d'origine a la couleur de sa silhouette, jamais « blanche »).
+    capeColors: CAPE_COLORS.map((c) => ({ id: c.id, name: c.name, selected: c.id === look.cape_color, locked: lockOf(c, progress), swatch: c.id === 'origine' ? undefined : c.color })),
     pet: hasPet(world)
       ? {
           names: PET_NAMES.map((name) => ({ id: name, name, selected: name === look.pet_name })),
