@@ -13,6 +13,7 @@ import lignes from '@content/voix/lignes.json'
 import { today as localDay } from '../core/dailyChallenge'
 import { DEFAULT_VOLUME, volumeOf } from '../core/music'
 import { levelForXp } from '../core/progression'
+import { unlockNews } from '../core/appearance'
 import { grantRelic, normalizeRelics, relicOf, RELICS } from '../core/relics'
 import { MAX_PASSES, sphinxOf, type SphinxState } from '../core/sphinx/island'
 import { EMPTY_SAVE, SaveGame, type SaveData } from '../core/save'
@@ -214,14 +215,15 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
     return () => services.music.stop()
   }, [services, world])
 
-  /** XP gagnées (combat) : rend le nouveau niveau si on en gagne un. */
-  function grantXp(amount: number): number | null {
-    const next = structuredClone(dataRef.current)
+  /** XP gagnées (combat) : rend le nouveau niveau, et les choix d'apparence qu'il débloque, si on en gagne un. */
+  function grantXp(amount: number): { level: number; news: string[] } | null {
+    const previous = dataRef.current
+    const next = structuredClone(previous)
     const before = levelForXp(next.xp)
     next.xp += Math.max(0, Math.round(amount))
     persist(next)
     const after = levelForXp(next.xp)
-    return after > before ? after : null
+    return after > before ? { level: after, news: unlockNews(previous, next, (profile.world as WorldName) ?? 'lumineux') } : null
   }
 
   function close() {

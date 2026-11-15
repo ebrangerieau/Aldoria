@@ -11,7 +11,9 @@ import type { ApiClient } from './api'
 import { EMPTY_DAILY, normalizeDaily, type DailyState } from './dailyChallenge'
 import { normalizeOwned, type Owned } from './inventory'
 import { normalizeRelics } from './relics'
+import { normalizeLook } from './appearance'
 import { normalizeSphinx, type SphinxState } from './sphinx/island'
+import { defaultLook, type Look } from './wardrobe'
 import type { Store } from './storage'
 
 export const SCHEMA_VERSION = 1
@@ -24,7 +26,8 @@ export interface SaveData {
   stones: Record<string, string>
   /** Étapes de l'histoire déjà vues (prologue, pages rendues…). */
   story: string[]
-  look: { model: string; main: string; off: string; cape: string }
+  /** Apparence du héros et du compagnon (core/wardrobe.ts) : toujours relue par `lookOf` (core/appearance.ts), qui la valide avec ce que l'enfant a débloqué. */
+  look: Look
   /** Pierre du Jour : jours des défis faits, record, série, coffres de la semaine ouverts (core/dailyChallenge.ts). */
   daily: DailyState
   /** Objets du sac (core/inventory.ts). */
@@ -42,7 +45,7 @@ export const EMPTY_SAVE: SaveData = {
   places: {},
   stones: {},
   story: [],
-  look: { model: 'Knight', main: '1H_Sword', off: 'Round_Shield', cape: 'origine' },
+  look: defaultLook('lumineux'),
   daily: EMPTY_DAILY,
   items: {},
   relics: [],
@@ -57,6 +60,7 @@ export function normalizeSave(data: Partial<SaveData> | null | undefined): SaveD
     ...given,
     daily: normalizeDaily(given.daily),
     items: normalizeOwned(given.items),
+    look: normalizeLook(given.look),
     relics: normalizeRelics(given.relics),
     table: typeof given.table === 'string' ? given.table : '',
     // Une partie sans état du Sphinx n'en reçoit pas ici (la classe de l'enfant fixe le palier de départ : `sphinxOf`).
