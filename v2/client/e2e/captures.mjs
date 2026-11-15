@@ -217,12 +217,12 @@ for (const name of views) {
       const i = w.interactables.find((x) => x.kind === 'ysaline')
       w.teleport(i.x, i.z - 1.5, i.x, i.z)
     })
+    // La voix ne finit jamais (avant d'ouvrir le prologue) : le tableau ne change pas tout seul pendant que la caméra arrive, la capture montre le tableau demandé.
+    await page.evaluate(() => { window.__aldoria.services.voice.say = () => new Promise(() => {}) })
     await page.getByTestId('invite').filter({ hasText: 'Maître Ysaline' }).waitFor({ timeout: 20_000 })
     await page.keyboard.press('KeyE')
     await page.getByRole('button', { name: 'Revoir l’histoire' }).click()
     await page.getByTestId('prologue').waitFor()
-    // La voix ne finit jamais : le tableau ne change pas tout seul pendant que la caméra arrive (la capture montre le tableau demandé).
-    await page.evaluate(() => { window.__aldoria.services.voice.say = () => new Promise(() => {}) })
     for (let i = 1; i < view.prologue; i += 1) await page.getByTestId('prologue-suite').click()
     await page.getByTestId('prologue-bouton-texte').click()
     await page.waitForTimeout(view.prologue === 1 ? 8_000 : 25_000) // la caméra glisse d'un plan au suivant (lent en rendu logiciel)
