@@ -106,6 +106,16 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
   })
 
   useEffect(() => applyToDocument(accommodations), [accommodations])
+
+  // Une région sous le brouillard : avec la « lecture automatique », Maître Ysaline lit son texte de sa voix enregistrée (le texte de la bannière est celui qu'elle a enregistré) ;
+  // on ne coupe que cette lecture quand le héros s'en va.
+  const fogNote = region?.note ?? ''
+  useEffect(() => {
+    if (!fogNote || !accommodations.auto_read) return
+    void services.voice.say([fogNote])
+    const token = services.voice.token
+    return () => services.voice.stopIf(token, 'brouillard')
+  }, [fogNote, accommodations.auto_read])
   useEffect(() => {
     services.api.onOnlineChange = setOnline
     services.voice.warm()
