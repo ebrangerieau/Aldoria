@@ -363,7 +363,12 @@ export function TirRange({ services, accommodations, demo, data, onSave, onClose
       } else if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
         e.preventDefault()
         changeMain(-1)
-      } else if (e.key === 'Enter' && !(e.target instanceof HTMLButtonElement)) fire()
+      } else if (e.key === 'Enter') {
+        // Entrée tire, même juste après un clic sur « − » ou « + » (le bouton garde le focus : sans cela, Entrée le presserait encore) ; sur les autres boutons, elle les active.
+        const stepper = e.target instanceof Element && e.target.closest('.tir-stepper') !== null
+        if (stepper) e.preventDefault()
+        if (stepper || !(e.target instanceof HTMLButtonElement)) fire()
+      }
     }
     window.addEventListener('keydown', down)
     return () => window.removeEventListener('keydown', down)

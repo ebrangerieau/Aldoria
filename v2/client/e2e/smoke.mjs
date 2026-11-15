@@ -137,6 +137,7 @@ const playTirSeries = async ({ droite, shots }) => {
   }
   const hitIt = async (round, keys = false) => {
     const t = await aim(round, keys)
+    // Le « + » du dénominateur, cliqué juste avant, garde le focus : Entrée tire quand même (et n'ajoute rien).
     if (keys) await page.keyboard.press('Enter')
     else await page.getByTestId('tir-tirer').click()
     await page.getByTestId('tir-message').filter({ hasText: 'En plein cœur !' }).waitFor({ timeout: 6000 * SLOW })
