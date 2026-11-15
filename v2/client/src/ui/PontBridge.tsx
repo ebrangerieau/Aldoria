@@ -103,6 +103,7 @@ export function PontBridge({ services, accommodations, demo, data, onSave, onClo
   const [feedback, setFeedback] = useState<{ text: string; ok: boolean } | null>(null)
   const [locked, setLocked] = useState(false)
   const sessionRef = useRef<LiceSession | null>(null)
+  const ending = useRef<Promise<void> | null>(null)
   const saved = useRef(data)
   saved.current = data
   const state = useRef<LiceState>(START)
@@ -117,13 +118,20 @@ export function PontBridge({ services, accommodations, demo, data, onSave, onClo
   const spec = item ? pontFrom(item.visual) : null
   const scale = spec ? GAP_W / Math.max(fracValue(spec.gap), 0.01) : 1
 
+  /** Referme la session de la série, une seule fois : la référence est vidée tout de suite (un « Retour à l'île » rapide ne la referme pas deux fois). */
+  function closeSeries(): Promise<void> {
+    if (ending.current) return ending.current
+    const open = sessionRef.current
+    sessionRef.current = null
+    ending.current = open ? open.end() : Promise.resolve()
+    return ending.current
+  }
+
   /** Referme la série (session du temps de jeu) puis rend l'île. */
   async function leave() {
     if (closing.current) return
     closing.current = true
-    const open = sessionRef.current
-    sessionRef.current = null
-    await open?.end()
+    await closeSeries() // si la fin de la série a déjà lancé la fermeture, on l'attend au lieu de la refaire
     onClose()
   }
 
@@ -131,9 +139,7 @@ export function PontBridge({ services, accommodations, demo, data, onSave, onClo
   useEffect(
     () => () => {
       if (timer.current !== null) window.clearTimeout(timer.current)
-      const open = sessionRef.current
-      sessionRef.current = null
-      void open?.end()
+      void closeSeries()
       if (spoke.current !== null) services.voice.stopIf(spoke.current, 'pont des fractions')
     },
     [],
@@ -173,7 +179,7 @@ export function PontBridge({ services, accommodations, demo, data, onSave, onClo
     const lines = [finishText(KIND, final)]
     if (sphinx) lines.push(`Un passage pour la barque du Sphinx ! (${passesText(sphinx.passes)})`)
     services.sfx.play('victory')
-    void sessionRef.current?.end().then(() => { sessionRef.current = null })
+    void closeSeries()
     setPhase({ kind: 'finish', lines })
   }
 
@@ -183,7 +189,7 @@ export function PontBridge({ services, accommodations, demo, data, onSave, onClo
     if (isOver(from) || services.session.timeOver()) return finishSeries(from)
     const next = services.questions.next('enigme')
     if (!next || next.visual?.kind !== 'pont') {
-      void sessionRef.current?.end().then(() => { sessionRef.current = null })
+      void closeSeries()
       return setPhase({ kind: 'notready' })
     }
     setItem(next)
@@ -195,7 +201,7 @@ export function PontBridge({ services, accommodations, demo, data, onSave, onClo
     hintUsed.current = false
     shownAt.current = performance.now()
     setPhase({ kind: 'play' })
-    if (accommodations.auto_read) say(next.prompt)
+    if (accommodations.auto_read) say(next.speech?.prompt ?? next.prompt)
   }
 
   const left = spec ? remaining(spec.stock, chosen) : []
@@ -235,7 +241,11 @@ export function PontBridge({ services, accommodations, demo, data, onSave, onClo
     setStage('tombe')
     setLocked(true)
     let advice = adviceFor(chosen, spec.gap, outcome)
-    if (tries.current >= 3 && !hintUsed.current) advice += ` ${item.hint}`
+    // L'indice sort une fois, au troisième essai raté ; le bouton « Indice » le remontre.
+    if (tries.current >= 3 && !hintUsed.current) {
+      advice += ` ${item.hint}`
+      hintUsed.current = true
+    }
     setFeedback({ text: advice, ok: false })
     timer.current = window.setTimeout(() => {
       timer.current = null
@@ -295,7 +305,7 @@ export function PontBridge({ services, accommodations, demo, data, onSave, onClo
             <div className="pont-head">
               <h2 id="pont-ravin-titre">{TITLES[KIND]} · {roundLabel(KIND, { ...run, round: run.round - (stage === 'juste' ? 1 : 0) })}</h2>
               <span className="pont-score" data-testid="pont-score">{run.firstTry} du premier coup</span>
-              <button type="button" className="secondary small" onClick={() => say(item.prompt)}>🔊 Écouter</button>
+              <button type="button" className="secondary small" onClick={() => say(item.speech?.prompt ?? item.prompt)}>🔊 Écouter</button>
               <button type="button" className="secondary small" data-testid="pont-indice" onClick={showHint}>Indice</button>
               <button type="button" className="secondary small" onClick={() => void leave()}>Quitter <kbd>Échap</kbd></button>
             </div>

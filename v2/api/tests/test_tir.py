@@ -77,3 +77,37 @@ async def test_shooting_range_session(client, login, curriculum):
     shots = [i for i in body["items"] if i["role"] == "enigme"]
     assert len(shots) == 8 and all(i["visual"]["kind"] == "rapporteur" for i in shots)
     assert all(i["generator"] != "6e.angles.tir" for i in body["items"] if i["role"] != "enigme")
+
+
+async def test_crossbow_session_for_tom(client, login, curriculum):
+    headers = await login("tom", "9876")
+    body = (
+        await client.post(
+            f"{API}/session/start",
+            json={"mode": "arene", "enigma": {"generator": "2nde.droites.tir", "count": 8}},
+            headers=headers,
+        )
+    ).json()
+    shots = [i for i in body["items"] if i["role"] == "enigme"]
+    assert len(shots) == 8 and all(i["visual"]["kind"] == "repere_tir" for i in shots)
+    assert all(i["generator"] != "2nde.droites.tir" for i in body["items"] if i["role"] != "enigme")
+
+
+def test_slope_written_by_the_game_is_accepted_for_any_equivalent_fraction():
+    """Le jeu envoie « 2 », « -3/4 », « 0/3 » (slopeText) : toute fraction égale est juste."""
+
+    def fraction(value: str) -> dict:
+        return {
+            "kind": "fraction",
+            "value": value,
+            "accept_equivalent": True,
+            "require_irreducible": False,
+        }
+
+    answer = fraction("-1/4")
+    assert answers.check(answer, "-1/4") and answers.check(answer, "-2/8")
+    assert answers.check(answer, "-3/12") and not answers.check(answer, "-1/3")
+    assert answers.check(fraction("2"), "2") and answers.check(fraction("2"), "4/2")
+    assert not answers.check(fraction("2"), "3")
+    assert answers.check(fraction("0"), "0") and answers.check(fraction("0"), "0/3")
+    assert not answers.check(fraction("0"), "1/3")

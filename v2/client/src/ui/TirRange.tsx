@@ -196,6 +196,7 @@ export function TirRange({ services, accommodations, demo, data, onSave, onClose
   const [done, setDone] = useState(false)
   const [feedback, setFeedback] = useState<{ text: string; ok: boolean } | null>(null)
   const sessionRef = useRef<LiceSession | null>(null)
+  const ending = useRef<Promise<void> | null>(null)
   const saved = useRef(data)
   saved.current = data
   const state = useRef<LiceState>(START)
@@ -212,22 +213,27 @@ export function TirRange({ services, accommodations, demo, data, onSave, onClose
   const line = mode === 'droite' ? lineFrom(item!.visual) : null
   const locked = flying || done
 
+  /** Referme la session de la série, une seule fois : la référence est vidée tout de suite (un « Retour à l'île » rapide ne la referme pas deux fois). */
+  function closeSeries(): Promise<void> {
+    if (ending.current) return ending.current
+    const open = sessionRef.current
+    sessionRef.current = null
+    ending.current = open ? open.end() : Promise.resolve()
+    return ending.current
+  }
+
   /** Referme la série (session du temps de jeu) puis rend l'île. */
   async function leave() {
     if (closing.current) return
     closing.current = true
-    const open = sessionRef.current
-    sessionRef.current = null
-    await open?.end()
+    await closeSeries() // si la fin de la série a déjà lancé la fermeture, on l'attend au lieu de la refaire
     onClose()
   }
 
   useEffect(
     () => () => {
       if (timer.current !== null) window.clearTimeout(timer.current)
-      const open = sessionRef.current
-      sessionRef.current = null
-      void open?.end()
+      void closeSeries()
       if (spoke.current !== null) services.voice.stopIf(spoke.current, 'stand de tir')
     },
     [],
@@ -274,7 +280,7 @@ export function TirRange({ services, accommodations, demo, data, onSave, onClose
     const lines = [finishText(KIND, final)]
     if (sphinx) lines.push(`Un passage pour la barque du Sphinx ! (${passesText(sphinx.passes)})`)
     services.sfx.play('victory')
-    void sessionRef.current?.end().then(() => { sessionRef.current = null })
+    void closeSeries()
     setPhase({ kind: 'finish', lines })
   }
 
@@ -284,7 +290,7 @@ export function TirRange({ services, accommodations, demo, data, onSave, onClose
     if (isOver(from) || services.session.timeOver()) return finishSeries(from)
     const next = services.questions.next('enigme')
     if (!next || rangeOf(next.visual) === null) {
-      void sessionRef.current?.end().then(() => { sessionRef.current = null })
+      void closeSeries()
       return setPhase({ kind: 'notready' })
     }
     setItem(next)
@@ -299,7 +305,7 @@ export function TirRange({ services, accommodations, demo, data, onSave, onClose
     hintUsed.current = false
     shownAt.current = performance.now()
     setPhase({ kind: 'play' })
-    if (accommodations.auto_read) say(next.prompt)
+    if (accommodations.auto_read) say(next.speech?.prompt ?? next.prompt)
   }
 
   function fire() {
@@ -330,7 +336,11 @@ export function TirRange({ services, accommodations, demo, data, onSave, onClose
       }
       services.sfx.play('wrong')
       let advice = protractor ? angleAdvice(angle, protractor) : lineAdvice(numerator, denominator, line!)
-      if (tries.current >= 3 && !hintUsed.current) advice += ` ${item.hint}`
+      // L'indice sort une fois, au troisième essai raté ; le bouton « Indice » le remontre.
+      if (tries.current >= 3 && !hintUsed.current) {
+        advice += ` ${item.hint}`
+        hintUsed.current = true
+      }
       setFeedback({ text: advice, ok: false })
     }, FLIGHT_MS)
   }
@@ -398,7 +408,7 @@ export function TirRange({ services, accommodations, demo, data, onSave, onClose
             <div className="pont-head">
               <h2 id="tir-cible-titre">{TITLES[KIND]} · {roundLabel(KIND, { ...run, round: run.round - (done ? 1 : 0) })}</h2>
               <span className="pont-score" data-testid="tir-score">{run.firstTry} du premier coup</span>
-              <button type="button" className="secondary small" onClick={() => say(item.prompt)}>🔊 Écouter</button>
+              <button type="button" className="secondary small" onClick={() => say(item.speech?.prompt ?? item.prompt)}>🔊 Écouter</button>
               <button type="button" className="secondary small" data-testid="tir-indice" onClick={showHint}>Indice</button>
               <button type="button" className="secondary small" onClick={() => void leave()}>Quitter <kbd>Échap</kbd></button>
             </div>
