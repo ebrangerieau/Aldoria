@@ -44,8 +44,16 @@ if (CPU_SLOWDOWN > 1) {
 // Seule tolérée : l'erreur d'essai levée exprès par `?erreur_test=1` (remontée des erreurs).
 const TEST_ERROR = "Erreur d'essai (erreur_test=1)"
 page.on('pageerror', (e) => { if (!e.message.includes(TEST_ERROR)) problems.push(`erreur de la page : ${e.message}`) })
-page.on('console', (m) => { if (m.type() === 'error' && !m.text().includes(TEST_ERROR)) problems.push(`console : ${m.text()}`) })
-page.on('response', (r) => { if (r.status() >= 400) problems.push(`${r.status()} ${r.url()}`) })
+// Les refus du serveur que l'étape de la connexion expirée provoque exprès (401, 503 sur l'ouverture de la session) : seuls tolérés pendant cette étape.
+let refusalsExpected = false
+page.on('console', (m) => {
+  if (m.type() !== 'error' || m.text().includes(TEST_ERROR)) return
+  if (refusalsExpected && m.text().includes('Failed to load resource')) return
+  problems.push(`console : ${m.text()}`)
+})
+page.on('response', (r) => {
+  if (r.status() >= 400 && !(refusalsExpected && r.url().includes('/play/session/start'))) problems.push(`${r.status()} ${r.url()}`)
+})
 if (VOICE_DELAY > 0) {
   await page.route('**/voix/*.mp3', async (route) => {
     await new Promise((resolve) => setTimeout(resolve, VOICE_DELAY))
@@ -100,6 +108,56 @@ try {
     await page.goto(`${BASE}/`)
     await page.getByTestId('decouvrir').waitFor()
     await page.screenshot({ path: `${OUT}/01-titre.png` })
+  })
+
+  await step('« Continuer, Tom » avec une connexion expirée ou refusée : le code est redemandé, un serveur muet est expliqué, jamais un bouton sans réponse', async () => {
+    const login = (exp) => page.evaluate((expiry) => {
+      const b64 = (o) => btoa(JSON.stringify(o)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
+      const token = `${b64({ alg: 'HS256' })}.${b64({ exp: expiry })}.signature`
+      localStorage.setItem('aldoria2.auth', JSON.stringify({ token, profile: { id: 2, name: 'Tom', level: '2nde', world: 'brouillard', accommodations: {} } }))
+      localStorage.setItem('aldoria2.device', JSON.stringify({ token: 'appareil', family: 'Famille' }))
+    }, exp)
+    const reply = (status) => page.route('**/api/v1/play/session/start', (route) =>
+      route.fulfill({ status, contentType: 'application/json', body: JSON.stringify({ error: { code: 'refuse', message: 'non' } }) }))
+    const toTitle = async () => {
+      await page.reload()
+      await page.getByTestId('jouer').filter({ hasText: 'Continuer, Tom' }).waitFor({ timeout: 10_000 * SLOW })
+    }
+    const now = Math.floor(Date.now() / 1000)
+    refusalsExpected = true
+
+    // 1. Connexion gardée depuis plus de 12 heures : le code est redemandé tout de suite, sans même appeler le serveur.
+    let called = false
+    page.on('request', (r) => { if (r.url().includes('/play/session/start')) called = true })
+    await login(now - 3600)
+    await toTitle()
+    await page.getByTestId('jouer').click()
+    await page.getByRole('heading', { name: 'Bonjour Tom !' }).waitFor({ timeout: 10_000 * SLOW })
+    if (!(await page.getByTestId('code-avis').innerText()).includes('Ta connexion a expiré')) throw new Error('l’enfant doit savoir pourquoi son code est redemandé')
+    if (called) throw new Error('une connexion expirée n’a pas à appeler le serveur')
+    await page.screenshot({ path: `${OUT}/01b-connexion-expiree.png` })
+
+    // 2. Jeton qui semble valide mais que le serveur refuse (401) : même chose.
+    await login(now + 3600)
+    await reply(401)
+    await toTitle()
+    await page.getByTestId('jouer').click()
+    await page.getByRole('heading', { name: 'Bonjour Tom !' }).waitFor({ timeout: 10_000 * SLOW })
+    if (!(await page.getByTestId('code-avis').innerText()).includes('Ta connexion a expiré')) throw new Error('le refus du serveur (401) doit redemander le code avec son explication')
+    await page.unroute('**/api/v1/play/session/start')
+
+    // 3. Serveur en panne (503) : l'écran titre le dit, et le bouton se rend.
+    await login(now + 3600)
+    await reply(503)
+    await toTitle()
+    await page.getByTestId('jouer').click()
+    await page.getByTestId('titre-avis').waitFor({ timeout: 10_000 * SLOW })
+    if (!(await page.getByTestId('titre-avis').innerText()).includes('Le serveur ne répond pas')) throw new Error('un serveur en panne doit être expliqué')
+    if (!(await page.getByTestId('jouer').isEnabled())) throw new Error('le bouton doit se rendre après un échec')
+    await page.screenshot({ path: `${OUT}/01c-serveur-muet.png` })
+    refusalsExpected = false
+    await page.unroute('**/api/v1/play/session/start')
+    await page.evaluate(() => { localStorage.removeItem('aldoria2.auth'); localStorage.removeItem('aldoria2.device') })
   })
 
   await step("chargement de l'île", async () => {

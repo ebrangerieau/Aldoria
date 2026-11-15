@@ -76,9 +76,11 @@ export function ProfilesScreen({ services, onChoose, onUnpaired, onBack }: {
   )
 }
 
-export function PinScreen({ services, profile, onLoggedIn, onBack }: {
+export function PinScreen({ services, profile, notice, onLoggedIn, onBack }: {
   services: Services
   profile: Profile
+  /** Pourquoi le code est redemandé (« Ta connexion a expiré »). */
+  notice?: string
   onLoggedIn: () => void
   onBack: () => void
 }) {
@@ -110,6 +112,7 @@ export function PinScreen({ services, profile, onLoggedIn, onBack }: {
     <main className="screen">
       <div className="panel narrow">
         <h2>Bonjour {profile.name} !</h2>
+        {notice && <p className="hint" role="status" data-testid="code-avis">{notice}</p>}
         <p>Tape ton code secret.</p>
         <div className="pin-dots" aria-label={`${pin.length} chiffres sur 4`}>
           {[0, 1, 2, 3].map((i) => <span key={i} className={i < pin.length ? 'dot full' : 'dot'} />)}

@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { ApiClient } from '../src/core/api'
 import { isPlayable, QuestionService } from '../src/core/questionService'
 import { SaveGame } from '../src/core/save'
-import { Session } from '../src/core/session'
+import { recoveryFor, Session, tokenExpiry } from '../src/core/session'
 import { MemoryStore } from '../src/core/storage'
 import { fakeFetch, PACK_6E } from './support'
 
@@ -177,5 +177,48 @@ describe('SaveGame', () => {
     const put = server.calls.find((c) => c.method === 'PUT')!.body as Record<string, unknown>
     expect(put).toMatchObject({ slot: 'v2', base_revision: 0, schema_version: 1 })
     expect((put.data as { xp: number }).xp).toBe(40)
+  })
+})
+
+/** Un jeton à la forme d'un JWT (en-tête, charge, signature) dont `exp` est en secondes. */
+const jwt = (exp: number | null): string => {
+  const b64 = (o: unknown) => btoa(JSON.stringify(o)).replace(/=/g, '').replace(/\+/g, '-').replace(/\//g, '_')
+  return `${b64({ alg: 'HS256' })}.${b64(exp === null ? {} : { exp })}.signature`
+}
+
+describe('Connexion expirée (« Continuer, Tom » ne doit jamais rester muet)', () => {
+  const NOW = Date.parse('2026-11-15T10:00:00Z')
+
+  it('lit la fin de validité d’un jeton, sans jamais planter sur un jeton d’une autre forme', () => {
+    expect(tokenExpiry(jwt(1_800_000_000))).toBe(1_800_000_000_000)
+    expect(tokenExpiry(jwt(null))).toBeNull()
+    expect(tokenExpiry('jeton')).toBeNull()
+    expect(tokenExpiry('')).toBeNull()
+    expect(tokenExpiry('a.@@@.c')).toBeNull()
+  })
+
+  it('la connexion est expirée une minute avant son heure, jamais pour un jeton illisible ou valide', () => {
+    const { api, session } = setup({})
+    session.profile = PROFILE
+    api.token = jwt(NOW / 1000 + 3600)
+    expect(session.tokenExpired(NOW)).toBe(false)
+    api.token = jwt(NOW / 1000 + 30) // moins d'une minute de marge
+    expect(session.tokenExpired(NOW)).toBe(true)
+    api.token = jwt(NOW / 1000 - 43_200) // gardée depuis douze heures
+    expect(session.tokenExpired(NOW)).toBe(true)
+    api.token = 'jeton-opaque'
+    expect(session.tokenExpired(NOW)).toBe(false) // le serveur dira non si besoin : l'échec est alors expliqué
+  })
+
+  it('une session refusée dit pourquoi : 401 (connexion expirée), 403 (appareil), le reste se réessaie', async () => {
+    for (const [status, recovery] of [[401, 'relogin'], [403, 'unpaired'], [500, 'retry'], [0, 'retry']] as const) {
+      const { api, session } = setup({ 'POST /play/session/start': () => ({ status, body: { error: { code: 'x', message: 'non' } } }) })
+      api.token = jwt(NOW / 1000 + 3600)
+      session.profile = PROFILE
+      const started = await session.start('monde')
+      expect(started.ok).toBe(false)
+      expect(started.status).toBe(status)
+      expect(recoveryFor(started.status ?? 0)).toBe(recovery)
+    }
   })
 })
