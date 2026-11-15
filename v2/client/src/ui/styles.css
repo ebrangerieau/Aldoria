@@ -153,6 +153,7 @@ html[data-big-targets='true'] .minimap { width: 300px; }
 .mark-barque path { fill: #f3ead2; stroke: #5a3d0c; }
 .mark-table path { fill: #c8a2e8; stroke: #3d2260; }
 .mark-pont path { fill: #e09f3e; stroke: #5a3d0c; }
+.mark-tir path { fill: #d9534f; stroke: #5a1a18; }
 .mark-jour path { fill: #ffd447; stroke: #5a3d0c; }
 .mark-jour.mark-faite path { fill: #d9c9a0; stroke: #6b5a3a; }
 .mark-hero { fill: #fff; stroke: var(--ink); stroke-width: 1.4; stroke-linejoin: round; }
@@ -514,3 +515,44 @@ html[data-calm='true'] .hero-bubble { animation: bubble-calm 6s linear forwards;
 .pont-feedback { min-height: 3.2em; margin: 0.2rem 0 0; font-weight: 600; }
 .pont-feedback.good { color: var(--good-ink); }
 .pont-feedback.bad { color: var(--bad-ink); }
+
+/* --- Stand de tir de la Lice (ui/TirRange.tsx) : le rapporteur géant vu d'en haut, le repère de l'arbalète, les flèches qui partent ---------------------- */
+.tir-panel { width: min(860px, 96vw); }
+.tir-scene { display: block; width: 100%; height: auto; max-height: 46vh; border-radius: 8px; }
+.tir-ground { fill: #b9cf8e; }
+.tir-disc { fill: #f8f1da; }
+.tir-rim { fill: none; stroke: var(--ink); stroke-width: 3; }
+.tir-tick { stroke: var(--ink); stroke-width: 2; }
+.tir-diameter { stroke: var(--ink); stroke-width: 2; }
+.tir-start { stroke: #c93c34; stroke-width: 5; stroke-linecap: round; }
+.tir-start-label { fill: #8c1f19; stroke: #f8f1da; stroke-width: 3px; paint-order: stroke; font-size: 15px; font-weight: 700; }
+.tir-number { fill: var(--ink); stroke: #f8f1da; stroke-width: 3px; paint-order: stroke; font-size: 15px; font-weight: 700; }
+.tir-number.dense { font-size: 12px; }
+.tir-number.second { fill: #5b2f7a; font-size: 12px; }
+.tir-archer circle { fill: var(--gold); stroke: var(--ink); stroke-width: 2; }
+.tir-archer circle.core { fill: var(--ink); stroke: none; }
+.tir-target .ring-a { fill: #c93c34; stroke: var(--ink); stroke-width: 1.5; }
+.tir-target .ring-b { fill: #f4efe0; stroke: var(--ink); stroke-width: 1.5; }
+.tir-target .ring-c { fill: #e0b13e; stroke: var(--ink); stroke-width: 1.5; }
+.tir-target[data-hit] { filter: drop-shadow(0 0 7px #ffd447); }
+.tir-shot line { fill: none; stroke-width: 4; stroke-linecap: round; stroke-dasharray: 1 1; stroke-dashoffset: 0; }
+.tir-shot.hit line { stroke: var(--good-ink); }
+.tir-shot.miss line { stroke: var(--bad-ink); }
+.tir-shot.hit circle { fill: var(--good-ink); }
+.tir-shot.miss circle { fill: var(--bad-ink); }
+.tir-shot.fresh line { animation: tir-fly 0.65s ease-out backwards; }
+.tir-shot.fresh circle, .tir-shot.fresh text { animation: tir-land 0.65s linear backwards; }
+.tir-shot-label { fill: var(--bad-ink); stroke: #f8f1da; stroke-width: 3px; paint-order: stroke; font-size: 14px; font-weight: 700; }
+@keyframes tir-fly { from { stroke-dashoffset: 1; } to { stroke-dashoffset: 0; } }
+@keyframes tir-land { 0%, 85% { opacity: 0; } 100% { opacity: 1; } }
+.tir-board { fill: #f6efd8; stroke: var(--ink); stroke-width: 2; }
+.tir-grid { stroke: #cdbf96; stroke-width: 1; }
+.tir-axis { stroke: var(--ink); stroke-width: 2.5; }
+.tir-point-label { fill: var(--ink); stroke: #f6efd8; stroke-width: 3px; paint-order: stroke; font-size: 15px; font-weight: 700; }
+.tir-bow .body { fill: #a8703f; stroke: var(--ink); stroke-width: 1.5; }
+.tir-bow .arc { fill: #5a3d0c; stroke: var(--ink); stroke-width: 1.5; }
+.tir-controls { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.6rem; margin: 0.5rem 0 0.2rem; }
+.tir-label { font-weight: 700; font-size: 1.15rem; }
+.tir-stepper { display: inline-flex; align-items: center; gap: 0.35rem; }
+.tir-stepper button { min-width: 2.6rem; font-size: 1.3rem; }
+.tir-value { min-width: 4.6rem; padding: 0.15rem 0.5rem; border: 2px solid var(--ink); border-radius: 6px; background: var(--parchment-light, #fff8e1); font-size: 1.6rem; font-weight: 700; text-align: center; }

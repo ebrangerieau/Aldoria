@@ -134,6 +134,8 @@ function MarkerShape({ marker }: { marker: MapMarker }) {
       return <path d="M-6.5 1.5 H6.5 L4 5.5 H-4 Z M-0.6 -6 V0.5 H-5 Z M0.8 -4.5 L5 0.5 H0.8 Z" />
     case 'pont':
       return <path d="M-6 4.5 V1.5 Q0 -6 6 1.5 V4.5 H3.6 V2.4 Q0 -2.4 -3.6 2.4 V4.5 Z" />
+    case 'tir':
+      return <path d="M0 -6 A6 6 0 1 1 -0.01 -6 Z M0 -3.4 A3.4 3.4 0 1 0 0.01 -3.4 Z M0 -1.2 A1.2 1.2 0 1 1 -0.01 -1.2 Z" fillRule="evenodd" />
     case 'table':
       return <path d="M-5.5 -2.5 H5.5 V0.5 H3 V5.5 H1.4 V0.5 H-1.4 V5.5 H-3 V0.5 H-5.5 Z" />
     case 'jour':

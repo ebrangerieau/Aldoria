@@ -17,6 +17,7 @@ import { adviceFor, colorFor, fracValue, type Frac, outcomeOf, pontFrom, remaini
 import type { SaveData } from '../core/save'
 import { afterActivity, passesText, sphinxOf, takePassageNews } from '../core/sphinx/island'
 import { E2eQuestion } from './E2eQuestion'
+import { LiceCard } from './LiceCard'
 
 const KIND = 'pont' as const
 /** Le dessin : la rive ouest, le ravin (sa largeur remplit toujours `GAP_W`, quelle que soit la fraction), la rive est. */
@@ -37,24 +38,6 @@ type Phase =
   | { kind: 'finish'; lines: string[] }
 
 type Stage = 'edit' | 'juste' | 'tombe'
-
-function Card({ title, lines, actions, testId = 'pont' }: { title: string; lines: string[]; testId?: string; actions: { label: string; primary?: boolean; run: () => void }[] }) {
-  return (
-    <div className="overlay" role="dialog" aria-modal="true" aria-labelledby="pont-titre" data-testid={testId}>
-      <section className="panel dialog">
-        <h2 id="pont-titre">{title}</h2>
-        {lines.flatMap((line) => line.split('\n')).map((line, i) => <p key={i}>{line}</p>)}
-        <div className="actions">
-          {actions.map((a, i) => (
-            <button key={a.label} type="button" className={a.primary ? 'primary' : 'secondary'} autoFocus={i === actions.length - 1} onClick={a.run}>
-              {a.label}
-            </button>
-          ))}
-        </div>
-      </section>
-    </div>
-  )
-}
 
 /** Le ravin vu de côté : deux rives, le vide entre elles, les planches posées en partant de la rive ouest, le héros qui traverse quand le pont tient. */
 function Chasm({ gap, chosen, stage, scale }: { gap: Frac; chosen: string[]; stage: Stage; scale: number }) {
@@ -290,7 +273,8 @@ export function PontBridge({ services, accommodations, demo, data, onSave, onClo
   return (
     <>
       {phase.kind === 'intro' && (
-        <Card
+        <LiceCard
+          testId="pont"
           title={TITLES[KIND]}
           lines={[introText(KIND, level)]}
           actions={[{ label: 'Plus tard', run: () => void leave() }, { label: START_LABEL[KIND], primary: true, run: () => void begin() }]}
@@ -300,10 +284,10 @@ export function PontBridge({ services, accommodations, demo, data, onSave, onClo
         <div className="overlay" role="status" data-testid="pont"><section className="panel dialog"><p>Les planches se préparent…</p></section></div>
       )}
       {phase.kind === 'unavailable' && (
-        <Card title={TITLES[KIND]} lines={['Il faut une connexion pour préparer les planches.']} actions={[{ label: "Retour à l'île", primary: true, run: () => void leave() }]} />
+        <LiceCard testId="pont" title={TITLES[KIND]} lines={['Il faut une connexion pour préparer les planches.']} actions={[{ label: "Retour à l'île", primary: true, run: () => void leave() }]} />
       )}
-      {phase.kind === 'notready' && <Card title={TITLES[KIND]} lines={[NOT_READY[KIND]]} actions={[{ label: 'Retour', primary: true, run: () => void leave() }]} />}
-      {phase.kind === 'finish' && <Card title={finishTitle(KIND)} lines={phase.lines} actions={[{ label: "Retour à l'île", primary: true, run: () => void leave() }]} testId="pont-bilan" />}
+      {phase.kind === 'notready' && <LiceCard testId="pont" title={TITLES[KIND]} lines={[NOT_READY[KIND]]} actions={[{ label: 'Retour', primary: true, run: () => void leave() }]} />}
+      {phase.kind === 'finish' && <LiceCard testId="pont-bilan" title={finishTitle(KIND)} lines={phase.lines} actions={[{ label: "Retour à l'île", primary: true, run: () => void leave() }]} />}
       {phase.kind === 'play' && item && spec && (
         <div className="overlay pont-overlay" role="dialog" aria-modal="true" aria-labelledby="pont-ravin-titre" data-testid="pont-jeu">
           {e2e && <E2eQuestion item={item} />}

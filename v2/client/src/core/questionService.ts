@@ -31,11 +31,11 @@ export const SUPPORTED_TYPES = new Set(['mcq', 'numeric', 'expression', 'text', 
 /**
  * Visuels que le client v2 sait dessiner (ui/widgets/Visuals.tsx). Une question dont le visuel est
  * absent d'ici n'est jamais posée : sans lui, l'énoncé serait souvent incompréhensible (robot,
- * carte, graphique). À agrandir en même temps que les composants. Restent pont, rapporteur et repere_tir :
- * leurs générateurs (`combat=False`) ne servent qu'au pont des fractions et au stand de tir de la Citadelle,
+ * carte, graphique). À agrandir en même temps que les composants. Pont, rapporteur et repere_tir :
+ * leurs générateurs (`combat=False`) ne servent qu'au pont des fractions et au stand de tir de la Lice (Citadelle),
  * jamais dans un lieu ; les 30 lieux sont jouables avec ce qui est dessiné.
  */
-export const SUPPORTED_VISUALS = new Set(['balance', 'number_line', 'grid', 'sign_table', 'map', 'robot', 'graph', 'table', 'pont'])
+export const SUPPORTED_VISUALS = new Set(['balance', 'number_line', 'grid', 'sign_table', 'map', 'robot', 'graph', 'table', 'pont', 'rapporteur', 'repere_tir'])
 
 export function isPlayable(item: Item): boolean {
   if (!SUPPORTED_TYPES.has(item.type)) return false

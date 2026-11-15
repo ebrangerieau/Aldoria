@@ -48,7 +48,7 @@ import { buildGround, buildSea } from './island'
 import { chooseQuality, type Quality } from './quality'
 import { THEMES, type WorldName } from './theme'
 
-export type InteractableKind = 'lieu' | 'pierre' | 'ysaline' | 'sortie' | 'jour' | 'coffre' | 'relique' | 'table' | 'barque' | 'habitant' | 'pont'
+export type InteractableKind = 'lieu' | 'pierre' | 'ysaline' | 'sortie' | 'jour' | 'coffre' | 'relique' | 'table' | 'barque' | 'habitant' | 'pont' | 'tir'
 
 export interface Interactable {
   id: string
@@ -569,6 +569,7 @@ export class GameWorld {
     this.buildRelicTable()
     this.buildBoat()
     this.buildBridge()
+    this.buildRange()
     // Les cristaux tournent doucement sur eux-mêmes (immobiles en mode calme).
     if (!this.options.calm) {
       this.scene.onBeforeRenderObservable.add(() => {
@@ -713,6 +714,57 @@ export class GameWorld {
     }
     beacon(this.scene, 'pont-fractions', new Vector3(x, y, z - 1.8), '#e09f3e', true)
     this.interactables.push({ id: 'pont-fractions', kind: 'pont', label: 'Le pont des fractions', x, z: z - 1.8, radius: 4.4, open: true })
+  }
+
+  /**
+   * Le stand de tir de la Lice (sur le plateau de la Citadelle, face au pont ; core/tir.ts) : un comptoir de bois où l'on se tient, deux piquets de visée et, plus
+   * loin, une cible peinte sur un poteau (anneaux rouges et blancs, cœur doré). Il existe pour les deux classes (rapporteur en 6e, repère de l'arbalète en 2nde).
+   * Le héros s'en approche et E ouvre le jeu (`kind: 'tir'`) ; un anneau lumineux le désigne. Pas de modèle : des formes simples.
+   */
+  private buildRange(): void {
+    if (!generatorFor('tir', this.options.level)) return
+    const { x, z } = layout.stand_tir
+    const y = this.grid.heightAt(x, z)
+    if (y < 1) return
+    const matte = (name: string, hex: string): StandardMaterial => {
+      const m = new StandardMaterial(name, this.scene)
+      m.diffuseColor = Color3.FromHexString(hex)
+      m.specularColor = new Color3(0.06, 0.06, 0.08)
+      return m
+    }
+    const wood = matte('tir-bois', '#a8703f')
+    const solid = (mesh: Mesh, material: StandardMaterial): Mesh => {
+      mesh.material = material
+      mesh.receiveShadows = true
+      mesh.isPickable = false
+      this.atmosphere.shadows.addShadowCaster(mesh, false)
+      return mesh
+    }
+    // Le comptoir où l'archer se tient, et ses deux piquets.
+    const counter = MeshBuilder.CreateBox('tir-comptoir', { width: 3.4, height: 0.9, depth: 0.7 }, this.scene)
+    counter.position.set(x, y + 0.45, z)
+    solid(counter, wood)
+    this.obstacles.add({ x, z, r: 1.7 })
+    for (const side of [-1, 1]) {
+      const stake = MeshBuilder.CreateBox(`tir-piquet-${side}`, { width: 0.16, height: 1.5, depth: 0.16 }, this.scene)
+      stake.position.set(x + side * 1.9, y + 0.75, z)
+      solid(stake, wood)
+    }
+    // La cible, au nord, face au comptoir : un poteau et quatre disques posés les uns devant les autres (le plus petit, le plus près de l'archer).
+    const targetZ = z + 7
+    const pole = MeshBuilder.CreateCylinder('tir-poteau', { diameter: 0.22, height: 2.2, tessellation: 8 }, this.scene)
+    pole.position.set(x, y + 1.1, targetZ + 0.2)
+    solid(pole, wood)
+    const rings: [number, string][] = [[1.1, '#c93c34'], [0.82, '#f4efe0'], [0.54, '#c93c34'], [0.26, '#e0b13e']]
+    for (const [i, [radius, hex]] of rings.entries()) {
+      const disc = MeshBuilder.CreateCylinder(`tir-anneau-${i}`, { diameter: radius * 2, height: 0.06, tessellation: 24 }, this.scene)
+      disc.rotation.x = Math.PI / 2
+      disc.position.set(x, y + 1.95, targetZ - i * 0.06)
+      solid(disc, matte(`tir-anneau-${i}`, hex))
+    }
+    this.obstacles.add({ x, z: targetZ, r: 0.8 })
+    beacon(this.scene, 'tir-stand', new Vector3(x, y, z - 1.8), '#d9534f', true)
+    this.interactables.push({ id: 'tir-stand', kind: 'tir', label: 'Le stand de tir', x, z: z - 1.8, radius: 4.4, open: true })
   }
 
   /**

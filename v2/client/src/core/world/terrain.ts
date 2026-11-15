@@ -38,6 +38,8 @@ export interface IslandLayout {
   ysaline: Point
   /** Le pont des fractions (la Lice, sur le plateau de la Citadelle). */
   pont: Point
+  /** Le stand de tir (la Lice, de l'autre côté du plateau). */
+  stand_tir: Point
   /** Le puits au centre ; `habitants` : où se tiennent les habitants (écart au puits, dans l'ordre de `villages.json`). */
   village: Point & { rayon_plat: number; habitants: { dx: number; dz: number }[] }
   regions: Record<string, RegionLayout>
