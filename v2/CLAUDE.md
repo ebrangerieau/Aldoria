@@ -217,7 +217,8 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   `n/d` (numérateur −12 à 12, dénominateur 1 à 6) ; le tir touche si la droite passe par la cible **en entiers** (`lineHits`, jamais de flottant), la valeur enregistrée s'écrit `slopeText` (« 2 », « -3/4 ») et
   la validation du client l'accepte pour toute fraction équivalente ; raté, le conseil donne la hauteur du carreau à l'abscisse de la cible et le sens de la correction (`lineAdvice`). Chaque graduation, chaque
   point porte son nombre écrit ; les flèches ont une animation (coupée par le mode calme sans cacher le tir). Clavier : flèches pour la valeur, Entrée tire, Échap quitte. Crochet `&e2e` : `tir`.
-  Vérifier : captures `tir`, `tir-brouillard`, `tir-jeu`, `tir-touche`, `tir-droite`, `tir-droite-touche` ; parcours navigateur (un tir à côté puis la correction, six cibles dont une au clavier, bilan, passage ; puis le repère en 2nde).
+  Vérifier : captures `tir`, `tir-brouillard`, `tir-jeu`, `tir-touche`, `tir-droite`, `tir-droite-touche` ; parcours navigateur (un tir à côté puis la correction, six cibles dont une au clavier, bilan, passage ; puis le repère en 2nde) ;
+  `node e2e/lice-a11y.mjs` (aménagements les plus larges à 1280 × 720 sur le tir, le pont, le prologue, le sac et le bestiaire : à texte agrandi le panneau défile mais **le bouton qui fait avancer** — « Tirer », « Poser le pont » — reste collé en bas, `position: sticky`, avec le retour de l'essai au-dessus).
 - **Musique** (`app/music.ts` joue, `core/music.ts` décide du volume, testé) : morceaux de `deploy/musique/` listés dans
   `content/monde/musique.json` (ordre de lecture, crédit des Options), servis sous `/musique/` par nginx ; `npm run dev` et
   `vite preview` les servent depuis le même dossier (`vite.config.ts`, requêtes `Range` comprises). Elle démarre à l'entrée
