@@ -93,6 +93,19 @@ describe('Voice : arrêter sa propre lecture, jamais celle d’un autre', () => 
     expect(v.trace.length).toBeLessThanOrEqual(40)
   })
 
+  it('le compte des étapes notées ne redescend jamais, même quand le journal déborde (un test n’attend que ce qui suit un repère)', async () => {
+    const v = voice()
+    const start = v.notedCount
+    for (let i = 0; i < 30; i += 1) await v.say(['a'])
+    expect(v.notedCount - start).toBeGreaterThan(40) // plus d'étapes que le journal n'en garde
+    expect(v.trace.length).toBeLessThanOrEqual(40)
+    const mark = v.notedCount
+    await v.say(['b'])
+    const fresh = v.trace.slice(Math.max(0, v.trace.length - (v.notedCount - mark)))
+    expect(fresh.some((line) => line.includes('son b.mp3'))).toBe(true)
+    expect(fresh.some((line) => line.includes('son a.mp3'))).toBe(false) // seulement ce qui suit le repère
+  })
+
   it('le jeton change à chaque lecture et à chaque arrêt', () => {
     const v = voice()
     const start = v.token

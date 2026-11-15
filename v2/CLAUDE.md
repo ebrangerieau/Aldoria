@@ -217,10 +217,12 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   l'environnement, jamais dans le dépôt ; `--essai` liste ce qui serait généré, sans clé). Un nouveau texte de Maître Ysaline
   s'ajoute à `lignes.json` (groupe, id, texte, voix), puis le script génère son son. Crédit ElevenLabs dans les Options.
   **Couper la voix** : un composant qui se ferme ne doit couper que **sa** lecture. `Voice.token` désigne la lecture en cours (juste après `void say(…)`), `Voice.stopIf(token)` n'arrête
-  que si personne n'a parlé depuis (`QuestionPanel` le fait) ; un `voice.stop()` aveugle, arrivé après coup, annule la lecture d'un dialogue qui s'ouvre avant même la demande du son.
-  `Voice.trace` (une quarantaine d'étapes en mémoire, jamais envoyées : « say », « qui a coupé », « son demandé », « joue », « fini ») est lu par le parcours navigateur quand un son
-  attendu n'est pas parti (message d'échec : `journal de la voix`). Réglages du parcours : `E2E_CPU=<facteur>` ralentit le processeur de la page, `E2E_RETARD_VOIX=<ms>` retarde chaque
-  fichier de `/voix/`, `E2E_RETARD_MUSIQUE=<ms>` ceux de `/musique/` (la CI et le VPS sont plus lents que l'aperçu local : un parcours qui passe en local peut échouer là-bas).
+  que si personne n'a parlé depuis (`QuestionPanel` le fait) ; un `voice.stop()` aveugle, arrivé après coup, annulerait la lecture d'un dialogue qui s'ouvre avant même la demande du son.
+  **Vérifier qu'un son enregistré a été joué** : le journal de la voix (`Voice.trace`, une quarantaine d'étapes en mémoire, jamais envoyées : « say », « qui a coupé », « son <fichier> », « joue », « fini » ;
+  `Voice.notedCount` pour n'attendre que ce qui suit un repère) et non une réponse réseau. **Piège rencontré en production** : à la seconde visite d'un lieu, Chromium rejoue un son déjà reçu
+  **sans nouvelle demande** ; le parcours qui exigeait une réponse réseau pour chaque lecture a échoué quatre fois à l'étape du boss alors que le journal montrait le son de défaite demandé, joué et fini
+  (la voix marchait : l'échec était dans le test). `joue` (l'événement `playing` du lecteur) prouve que le fichier est présent, bien typé et décodable. Réglages du parcours : `E2E_CPU=<facteur>` ralentit le
+  processeur de la page, `E2E_RETARD_VOIX=<ms>` retarde chaque fichier de `/voix/`, `E2E_RETARD_MUSIQUE=<ms>` ceux de `/musique/`.
   L'accueil de Maître Ysaline dans l'île (`ile-accueil`) est lu **depuis** `lignes.json` par `GameScreen` : texte et voix au même endroit.
   Les pages rapportées et le prologue parlent de l'île (« le chemin s'éclaire sur l'île »), jamais d'une carte du royaume, que la v2 n'a
   pas ; les `seuil-*` parlent, eux, de vraies cartes (atlas, plans) : ne pas les « corriger ». Les 60 répliques des

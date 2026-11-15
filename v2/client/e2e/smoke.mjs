@@ -516,6 +516,87 @@ try {
     const voixVues = []
     page.on('request', (r) => { if (r.url().includes('/voix/')) voixVues.push(`${r.method()} ${r.url().split('/voix/')[1]}`) })
     page.on('requestfailed', (r) => { if (r.url().includes('/voix/')) voixVues.push(`ÉCHEC ${r.url().split('/voix/')[1]} : ${r.failure()?.errorText}`) })
+    // Le son enregistré a-t-il été joué ? Le journal de la voix du jeu le dit : « son <fichier> » (demandé) puis « joue » (le navigateur l'a décodé et
+    // lancé). On n'exige pas une réponse réseau : à la seconde visite, Chromium rejoue un son déjà reçu sans nouvelle demande (c'est ce qui faisait
+    // échouer ce pas en production, avec le journal montrant le son de défaite joué jusqu'au bout) ; un fichier absent, mal typé ou illisible n'arrive
+    // jamais à « joue » (« erreur du fichier »), et une réponse 4xx est déjà relevée par ailleurs.
+    const heard = async (url) => {
+      const file = url.split('/voix/')[1]
+      const from = await page.evaluate(() => window.__aldoria.services.voice.notedCount)
+      await page.waitForFunction(
+        ([name, start]) => {
+          const voice = window.__aldoria.services.voice
+          const fresh = voice.trace.slice(Math.max(0, voice.trace.length - (voice.notedCount - start)))
+          const at = fresh.findIndex((line) => line.includes(`son ${name}`))
+          return at >= 0 && fresh.slice(at).some((line) => line.endsWith('joue'))
+        },
+        [file, from],
+        { timeout: 15_000 * SLOW },
+      )
+    }
+    const soundOk = async (pending, what) => {
+      await pending.catch(async (error) => {
+        const dialog = await page.getByRole('dialog').first().innerText({ timeout: 2000 }).catch(() => '(aucun dialogue ouvert)')
+        const trace = await page.evaluate(() => window.__aldoria?.services?.voice?.trace?.slice(-14).join(' ; ') ?? '(pas de journal)').catch(() => '(page injoignable)')
+        throw new Error(`${what} : ${error.message.split('\n')[0]} ; demandes de son vues : ${voixVues.slice(-6).join(' | ') || 'aucune'} ; dialogue : ${dialog.replace(/\s+/g, ' ').slice(0, 140)} ; journal de la voix : ${trace}`)
+      })
+    }
+    const xp = async () => Number(((await page.locator('.badge').innerText()).match(/(\d+) XP/) ?? [])[1] ?? 0)
+    const xpBefore = await xp()
+    /** Le héros se place à portée du piédestal `k` (à sa gauche) : sa question s'ouvre toute seule. */
+    const approach = (k) => page.evaluate((k) => {
+      const i = window.__aldoria.world.interior
+      const p = i.pedestals[k]
+      i.teleport(p.x - 1.3, p.z)
+    }, k)
+
+    // Premier piédestal : une erreur. Pas de « Pas vu en classe » sur une énigme ; le piédestal repose tant que le héros reste là.
+    await approach(0)
+    await page.getByRole('dialog').waitFor({ timeout: 10_000 * SLOW })
+    if ((await page.getByRole('button', { name: 'Pas vu en classe' }).count()) > 0) throw new Error('« Pas vu en classe » ne doit pas être proposé sur une énigme')
+    await page.screenshot({ path: `${OUT}/03e1-enigme-question.png` })
+    await answerQuestion(false)
+    await page.waitForTimeout(800 * SLOW)
+    if ((await page.getByRole('dialog').count()) > 0) throw new Error('le piédestal ne doit pas reposer sa question tant que le héros reste devant')
+    if ((await ped())[0].solved) throw new Error('une erreur ne doit pas éveiller le cristal')
+    // Le héros s'éloigne, puis revient : le piédestal pose une autre question.
+    await page.evaluate(() => {
+      const i = window.__aldoria.world.interior
+      i.teleport(i.pedestals[0].x - 1.3, i.pedestals[0].z - 4) // plus loin que PEDESTAL_REARM, dans la même salle
+    })
+    await page.waitForTimeout(300 * SLOW)
+    await approach(0)
+    await page.getByRole('dialog').waitFor({ timeout: 10_000 * SLOW })
+    await answerQuestion(true)
+    await page.waitForFunction(() => window.__aldoria.world.interior.pedestals[0].solved, null, { timeout: 10_000 * SLOW })
+    await page.screenshot({ path: `${OUT}/03e1b-un-cristal.png` })
+    if (await page.evaluate(() => window.__aldoria.world.interior.dungeon.isDoorOpen(3))) throw new Error('un seul cristal ne doit pas ouvrir la porte')
+    for (const k of [1, 2]) {
+      await approach(k)
+      await page.getByRole('dialog').waitFor({ timeout: 10_000 * SLOW })
+      await answerQuestion(true)
+      await page.waitForFunction((k) => window.__aldoria.world.interior.pedestals[k].solved, k, { timeout: 10_000 * SLOW })
+    }
+    // Le troisième cristal ouvre la porte, et le héros dit un mot sur la salle suivante.
+    await page.waitForFunction(() => window.__aldoria.world.interior.dungeon.isDoorOpen(3), null, { timeout: 15_000 * SLOW })
+    await page.screenshot({ path: `${OUT}/03e1c-porte-ouverte.png` })
+    await page.getByTestId('heros-dit').waitFor({ timeout: 10_000 * SLOW })
+    const gained = (await xp()) - xpBefore
+    if (gained < 3 * 10) throw new Error(`les trois bonnes réponses devraient rapporter de l’XP : +${gained}`)
+    // La sortie, pour la suite du parcours.
+    await page.evaluate(() => window.__aldoria.world.interior.teleport(1.9, -10))
+    await page.getByTestId('invite').filter({ hasText: 'Sortir' }).waitFor({ timeout: 10_000 * SLOW })
+    await page.keyboard.press('KeyE')
+    await page.getByRole('button', { name: 'Sortir' }).click()
+    await page.getByTestId('carte').waitFor({ timeout: 10_000 * SLOW })
+  })
+
+  await step('le boss : l’Effaceur parle de sa voix enregistrée, huit sceaux, le coffre, la page rendue, le lieu suivant s’ouvre, Maître Ysaline salue', async () => {
+    // Les demandes de son vues depuis le début de l'étape : si une attente expire, le message dit lesquelles sont parties (aucune : le jeu n'a
+    // rien demandé ; une demande sans réponse : le réseau ou le serveur) et quel dialogue était ouvert.
+    const voixVues = []
+    page.on('request', (r) => { if (r.url().includes('/voix/')) voixVues.push(`${r.method()} ${r.url().split('/voix/')[1]}`) })
+    page.on('requestfailed', (r) => { if (r.url().includes('/voix/')) voixVues.push(`ÉCHEC ${r.url().split('/voix/')[1]} : ${r.failure()?.errorText}`) })
     const heard = (url) => page.waitForResponse((r) => r.url().includes(url), { timeout: 15_000 * SLOW })
     const soundOk = async (pending, what) => {
       const res = await pending.catch(async (error) => {

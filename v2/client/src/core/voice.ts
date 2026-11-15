@@ -29,6 +29,7 @@ export class Voice {
    * son attendu n'est pas parti (« qui a coupé la lecture, ou l'a-t-elle seulement demandé ? »). Du texte lu, seuls les 24 premiers caractères.
    */
   readonly trace: string[] = []
+  private noted = 0
 
   constructor(
     private readonly api: ApiClient,
@@ -73,7 +74,13 @@ export class Voice {
     if ('speechSynthesis' in window) window.speechSynthesis.cancel()
   }
 
+  /** Nombre d'étapes notées depuis le début (le journal n'en garde que quarante) : un test n'attend que celles qui viennent après un repère. */
+  get notedCount(): number {
+    return this.noted
+  }
+
   private note(event: string): void {
+    this.noted += 1
     this.trace.push(event)
     if (this.trace.length > 40) this.trace.shift()
   }
