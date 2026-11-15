@@ -46,8 +46,8 @@ const VIEWS = {
   'apparence-ecran': { query: '', at: [0, -30], face: [0, 30], beta: 1.3, radius: 9, turn: 0, interface: true, progress: [600, 2], wardrobe: true },
   'apparence-ecran-brouillard': { query: '&monde=brouillard&classe=2nde', at: [0, -30], face: [0, 30], beta: 1.3, radius: 9, turn: 0, interface: true, progress: [600, 2], wardrobe: true },
   // Le village (Clairval en 6e, Brumegarde en 2nde) : les habitants autour du puits, chacun avec son « ! » doré tant que sa quête du jour attend.
-  village: { query: '', at: [-62, 8], face: [-82, 6], beta: 1.18, radius: 13, turn: 0.35 },
-  'village-brumegarde': { query: '&monde=brouillard&classe=2nde', at: [-62, 8], face: [-82, 6], beta: 1.18, radius: 13, turn: 0.35 },
+  village: { query: '', at: [-82, 18], face: [-82, 6], beta: 0.95, radius: 17, turn: 0 },
+  'village-brumegarde': { query: '&monde=brouillard&classe=2nde', at: [-82, 18], face: [-82, 6], beta: 0.95, radius: 17, turn: 0 },
   // Le dialogue d'un habitant : le héros devant Barnabé, la demande ouverte (bouton « Parler » par E).
   'village-dialogue': { query: '', at: [-72.5, 8.7], face: [-74.5, 8.7], beta: 1.25, radius: 5, turn: 0.4, interface: true, talk: 'barnabe' },
   // Une relique de l'île par élément (reliques.json) : le héros à 2,6 m, l'éclat et son anneau devant lui.
