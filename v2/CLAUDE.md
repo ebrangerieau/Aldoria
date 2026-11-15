@@ -103,9 +103,9 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   la classe et de ceux que la partie a terminés (`regionLights(places, done)`, jamais un compteur à part). Une région sans lieu pour la classe (SVT et SNT en 6e) est sous le **brouillard**
   (lumière 0, `fogNote` : son texte de `regions.json`, affiché sous son nom dans la bannière, `data-testid="region-brume"`) ; une région au programme vaut `BASE_LIGHT` (0,5) sans page,
   monte de moitié par page rapportée (`endormie`, `eveillee`, `eclairee`), une page rapportée deux fois ne compte qu'une fois. Le **sol** (`game/island.ts` : `buildGround` rend `setLights`)
-  se fane vers un gris bleuté et s'assombrit selon la lumière de la région qui le colore (même pondération que sa teinte, un octet par région et par sommet ; la couleur des facettes est
-  recalculée sans reconstruire le maillage) ; `GameWorld.placeCompleted` rappelle `relight()` : **le monde garde la partie de sa création, il faut le prévenir** (comme pour le lieu suivant).
-  La **brume locale** : la densité de la brume du monde est multipliée par `fogDensityFactor(lumière)` (1 à 1,8) dans la région du héros, en douceur (d'un coup en mode calme).
+  se fane vers un gris bleuté et s'assombrit selon le **carré du manque de lumière** de la région qui le colore (une région qui attend son premier lieu ne se fane qu'un peu : l'île reste
+  accueillante au départ ; le brouillard se fane pleinement ; même pondération que la teinte, un octet par région et par sommet ; la couleur des facettes est recalculée sans reconstruire le maillage) ; `GameWorld.placeCompleted` rappelle `relight()` : **le monde garde la partie de sa création, il faut le prévenir** (comme pour le lieu suivant).
+  La **brume locale** : la densité de la brume du monde est multipliée par `fogDensityFactor(lumière)` (1 à 1,8, au carré du manque de lumière) dans la région du héros, en douceur (d'un coup en mode calme).
   Crochets `&e2e` : `world.regionLights()` et, en découverte, `giveRegion(code)` (tous les lieux d'une région). Vérifier : captures `region-brume`, `region-endormie`, `region-eclairee`,
   `region-panorama` ; parcours navigateur (lumière de chaque région d'après la partie, Vallée du Vivant sous le brouillard avec son texte, brume qui s'épaissit puis se lève).
   Reste : la mini-carte ne montre pas la lumière des régions.

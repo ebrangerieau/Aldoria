@@ -46,8 +46,8 @@ export function regionLights(places: readonly Pick<Place, 'dungeon'>[], done: Re
   return out
 }
 
-/** Facteur de la densité de brume du monde pour un héros dans une région de cette lumière (1 : pas de brume de plus). */
-export const fogDensityFactor = (light: number): number => 1 + FOG_BOOST * (1 - Math.min(1, Math.max(0, light)))
+/** Facteur de la densité de brume du monde pour un héros dans une région de cette lumière (1 : pas de brume de plus ; au carré du manque de lumière, comme le sol : le brouillard épaissit, l'attente à peine). */
+export const fogDensityFactor = (light: number): number => 1 + FOG_BOOST * (1 - Math.min(1, Math.max(0, light))) ** 2
 
 /** Le texte de brouillard d'une région que la classe n'a pas au programme (vide ailleurs, ou hors région). */
 export function fogNote(code: string | null, lights: Record<string, RegionLight>): string {

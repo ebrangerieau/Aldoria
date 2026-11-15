@@ -831,17 +831,17 @@ try {
     if (lit === 0) throw new Error('un lieu terminé doit éclairer sa région')
     // En 6e, la Vallée du Vivant n'a pas de lieu : le héros y entre, l'air s'épaissit et la bannière dit le brouillard.
     if (state.lights.svt?.state !== 'brume') throw new Error(`la Vallée du Vivant devrait être sous le brouillard : ${JSON.stringify(state.lights.svt)}`)
-    const fogBefore = await page.evaluate(() => window.__aldoria.world.scene.fogDensity)
+    const fogBase = await page.evaluate(() => window.__aldoria.world.fogBase())
     await page.evaluate(() => window.__aldoria.world.teleport(-112, -112, -112, -100))
     await page.getByTestId('region-brume').waitFor({ timeout: 10_000 * SLOW })
     const note = await page.getByTestId('region-brume').innerText()
     if (!note.includes('Vallée du Vivant')) throw new Error(`le texte de brouillard de la région : ${note}`)
-    await page.waitForFunction((before) => window.__aldoria.world.scene.fogDensity > before * 1.5, fogBefore, { timeout: 10_000 * SLOW })
+    await page.waitForFunction((base) => window.__aldoria.world.scene.fogDensity > base * 1.6, fogBase, { timeout: 15_000 * SLOW }) // jusqu'à 1,8 fois la brume du monde
     await page.screenshot({ path: `${OUT}/07h-brume.png` })
     // Une région éclairée n'a pas de brouillard : sur la Citadelle, ni texte ni brume de plus.
     await page.evaluate(() => window.__aldoria.world.teleport(0, 20, 0, 30))
     await page.getByTestId('region-brume').waitFor({ state: 'detached', timeout: 10_000 * SLOW })
-    await page.waitForFunction((before) => window.__aldoria.world.scene.fogDensity < before * 1.1, fogBefore, { timeout: 10_000 * SLOW })
+    await page.waitForFunction((base) => window.__aldoria.world.scene.fogDensity < base * 1.1, fogBase, { timeout: 15_000 * SLOW })
   })
 
   let xpBefore = 0

@@ -128,7 +128,8 @@ export function buildGround(scene: Scene, terrain: Terrain, theme: WorldTheme, s
   /** Couleur de chaque sommet selon la lumière des régions, puis moyenne par facette. */
   const paint = (levels: Record<string, number>) => {
     const dim = new Float32Array(count)
-    const missing = regionCodes.map((code) => 1 - Math.min(1, Math.max(0, levels[code] ?? 1))) // une région inconnue du dictionnaire reste éclairée
+    // Le manque de lumière compte au carré : une région au programme sans page (0,5) ne se fane qu'un peu, le brouillard (0) se fane pleinement.
+    const missing = regionCodes.map((code) => (1 - Math.min(1, Math.max(0, levels[code] ?? 1))) ** 2) // une région inconnue du dictionnaire reste éclairée
     if (missing.some((m) => m > 0)) {
       for (let v = 0; v < count; v += 1) {
         let d = 0

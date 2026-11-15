@@ -1033,6 +1033,11 @@ export class GameWorld {
     if (this.options.calm) this.scene.fogDensity = this.fogTarget
   }
 
+  /** Densité de brume du monde, hors de toute région sombre (tests dans le navigateur). */
+  fogBase(): number {
+    return this.baseFog
+  }
+
   /** Lumière et état de chaque région (tests dans le navigateur et lecteurs d'écran). */
   regionLights(): Record<string, RegionLight> {
     return this.lights
