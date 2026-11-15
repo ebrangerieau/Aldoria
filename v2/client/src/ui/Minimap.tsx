@@ -82,6 +82,7 @@ export function Minimap({ world, place }: { world: GameWorld; place: string }) {
           <defs>
             <radialGradient id="minimap-fog">
               <stop offset="0%" className="fog-core" />
+              <stop offset="60%" className="fog-mid" />
               <stop offset="100%" className="fog-edge" />
             </radialGradient>
           </defs>
