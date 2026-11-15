@@ -153,7 +153,7 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
         world.events.on('stats', setStats)
         world.events.on('interact', (target) => interactRef.current(target))
         setLoading(null)
-        if (params.has('e2e')) (window as unknown as { __aldoria: unknown }).__aldoria = { world, services, save: () => dataRef.current, ...(demo ? { give: (id: ItemId, n = 1) => giveItems(id, n), giveRelics, giveSphinxPasses, giveProgress } : {}) }
+        if (params.has('e2e')) (window as unknown as { __aldoria: unknown }).__aldoria = { world, services, save: () => dataRef.current, ...(demo ? { give: (id: ItemId, n = 1) => giveItems(id, n), giveRelics, giveSphinxPasses, giveProgress, giveRegion } : {}) }
       } catch (error) {
         if (reloadPending()) return // nouvelle version du jeu : la page se recharge
         console.error(error)
@@ -273,6 +273,16 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
     const done = { ...current.places }
     for (let i = 0; i < places; i += 1) done[`essai-${i}`] = 1
     persist({ ...current, xp: current.xp + xp, places: done })
+  }
+
+  /** Tests dans le navigateur (?e2e, mode découverte seulement) : tous les lieux d'une région sont terminés (la région s'éclaire). */
+  function giveRegion(region: string) {
+    const world = worldRef.current
+    if (!world) return
+    const done = { ...dataRef.current.places }
+    for (const place of world.places) if (place.dungeon.region === region) done[place.dungeon.code] = 1
+    persist({ ...dataRef.current, places: done })
+    world.placeCompleted(done)
   }
 
   /** L'écran d'apparence s'ouvre : le héros s'arrête, la caméra passe devant lui, les nouveautés sont vues (la pastille du bouton disparaît). */
@@ -554,7 +564,12 @@ export function GameScreen({ services, demo, onQuit }: { services: Services; dem
         </div>
       </div>
 
-      {region?.title && <div key={region.title} className="region-banner" data-testid="region">{region.title}</div>}
+      {region?.title && (
+        <div key={region.title} className="region-banner" data-testid="region">
+          {region.title}
+          {region.note && <span className="region-note" data-testid="region-brume">{region.note}</span>}
+        </div>
+      )}
       {inside && floor && <div className="floor-label" data-testid="etage">{floor}</div>}
       {fight.hud}
 

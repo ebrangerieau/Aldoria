@@ -106,7 +106,7 @@ s'ouvre ; aucune esquive ni action rapide n'est demandée pour répondre.
 | V2-06 | Joueur | retrouver ma partie sur un autre PC | jouer où je veux | P0 (fait, emplacement v2) |
 | V2-07 | Joueur | jouer sans compte pour découvrir l'île | essayer avant de se connecter | P0 (fait, rien n'est enregistré) |
 | V2-08 | Joueur | personnaliser mon héros et retrouver mon renard | avoir un héros à moi | P1 |
-| V2-09 | Joueur | voir les régions s'éclairer quand je rapporte leurs pages | voir ma progression dans le monde | P1 |
+| V2-09 | Joueur | voir les régions s'éclairer quand je rapporte leurs pages | voir ma progression dans le monde | P1 (fait : sol et brume locale) |
 | V2-10 | Parent | voir les séances d'exploration dans le tableau de bord | suivre le jeu v2 comme la v1 | P0 (fait : « Exploration ») |
 | V2-11 | Parent | que la v1 et la v2 cohabitent pendant la transition | ne rien perdre | P0 (fait : emplacements de sauvegarde) |
 

@@ -64,6 +64,11 @@ const VIEWS = {
   'tir-touche': { query: '', at: [28, 28], face: [28, 30], beta: 1.2, radius: 6, turn: 0.2, interface: true, lice: 'tir', shot: 'juste' },
   'tir-droite': { query: '&monde=brouillard&classe=2nde', at: [28, 28], face: [28, 30], beta: 1.2, radius: 6, turn: 0.2, interface: true, lice: 'tir', shot: 'rate' },
   'tir-droite-touche': { query: '&monde=brouillard&classe=2nde', at: [28, 28], face: [28, 30], beta: 1.2, radius: 6, turn: 0.2, interface: true, lice: 'tir', shot: 'juste' },
+  // Les régions s'éclairent page après page (6e) : la Vallée du Vivant n'a pas de lieu (brouillard, avec son texte), les Cimes Fractales avant et après leurs trois pages.
+  'region-brume': { query: '', at: [-112, -104], face: [-112, -112], beta: 1.2, radius: 14, turn: 0.4, interface: true },
+  'region-endormie': { query: '', at: [120, 85], face: [120, 105], beta: 1.15, radius: 18, turn: 0.4 },
+  'region-eclairee': { query: '', at: [120, 85], face: [120, 105], beta: 1.15, radius: 18, turn: 0.4, region: 'maths' },
+  'region-panorama': { query: '', at: [0, -30], face: [0, 30], beta: 1.05, radius: 60, turn: 0.2 },
   // Le sac consulté sur l'île : vide (où trouver des objets), puis garni (quatre objets, ce qu'ils font, où ils servent).
   'sac-vide': { query: '', at: [0, -30], face: [0, 30], beta: 1.25, radius: 6, turn: 0, interface: true, bag: 'vide' },
   'sac-garni': { query: '&monde=brouillard', at: [0, -30], face: [0, 30], beta: 1.25, radius: 6, turn: 0, interface: true, bag: 'garni' },
@@ -148,6 +153,7 @@ for (const name of views) {
     await page.evaluate(async (v) => {
       const w = window.__aldoria.world
       if (v.look) await w.setLook(v.look) // l'apparence de la vue (silhouette, cape, pelage), sans passer par les déblocages
+      if (v.region) window.__aldoria.giveRegion(v.region) // toutes les pages d'une région (elle s'éclaire)
       if (v.progress) window.__aldoria.giveProgress(...v.progress) // niveau et lieux terminés (mode découverte seulement)
       w.teleport(v.at[0], v.at[1], v.face[0], v.face[1])
       w.frame(w.camera.alpha + v.turn, v.beta, v.radius)

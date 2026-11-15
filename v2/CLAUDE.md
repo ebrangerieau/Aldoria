@@ -99,6 +99,16 @@ Adresse du jeu : `?decouverte` (île sans compte, rien n'est enregistré), `&cla
   faut le prévenir. Vérifier un Effaceur : captures `boss-*`, `boss-combat-*`, `coffre`, `coffre-ouvert` (`npm run captures`). Les modèles de
   Quaternius sont sombres par construction (couleurs de base très foncées : la gelée verte et le dragon paraissent presque noirs) : ce n'est pas
   un défaut d'éclairage. Le coffre se referme sur la note de plaisir (étape 1.5, ci-dessous) ; il annonce aussi ce que le niveau et le lieu débloquent dans l'apparence (ci-dessous).
+- **Régions qui s'éclairent** (PRD V2-09, le brouillard de la carte de la v1 ; `core/world/regionLight.ts`, test `regionLight.test.ts`) : la lumière de chaque région vient **seulement** des lieux de
+  la classe et de ceux que la partie a terminés (`regionLights(places, done)`, jamais un compteur à part). Une région sans lieu pour la classe (SVT et SNT en 6e) est sous le **brouillard**
+  (lumière 0, `fogNote` : son texte de `regions.json`, affiché sous son nom dans la bannière, `data-testid="region-brume"`) ; une région au programme vaut `BASE_LIGHT` (0,5) sans page,
+  monte de moitié par page rapportée (`endormie`, `eveillee`, `eclairee`), une page rapportée deux fois ne compte qu'une fois. Le **sol** (`game/island.ts` : `buildGround` rend `setLights`)
+  se fane vers un gris bleuté et s'assombrit selon la lumière de la région qui le colore (même pondération que sa teinte, un octet par région et par sommet ; la couleur des facettes est
+  recalculée sans reconstruire le maillage) ; `GameWorld.placeCompleted` rappelle `relight()` : **le monde garde la partie de sa création, il faut le prévenir** (comme pour le lieu suivant).
+  La **brume locale** : la densité de la brume du monde est multipliée par `fogDensityFactor(lumière)` (1 à 1,8) dans la région du héros, en douceur (d'un coup en mode calme).
+  Crochets `&e2e` : `world.regionLights()` et, en découverte, `giveRegion(code)` (tous les lieux d'une région). Vérifier : captures `region-brume`, `region-endormie`, `region-eclairee`,
+  `region-panorama` ; parcours navigateur (lumière de chaque région d'après la partie, Vallée du Vivant sous le brouillard avec son texte, brume qui s'épaissit puis se lève).
+  Reste : la mini-carte ne montre pas la lumière des régions.
 - **Énigme, héros qui parle, note de plaisir** (étape 1.5) : la quatrième salle de chaque lieu a **trois piédestaux** (`PEDESTAL_SPOTS` de
   `core/world/dungeon.ts`, positions de la v1, `Dungeon.pedestalPoints`), un cristal chacun (`game/interior.ts` : `Pedestal`, `buildPedestals`,
   événement `riddle`). Le héros qui s'approche à `PEDESTAL_DISTANCE` reçoit une question et ne marche plus (`riddling`) ; `ui/useFight.tsx`

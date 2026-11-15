@@ -813,6 +813,37 @@ try {
     if ((await page.getByRole('heading', { name: 'Maître Ysaline' }).count()) > 0) throw new Error('Maître Ysaline ne devrait pas saluer une seconde fois')
   })
 
+  await step('les régions s’éclairent : chaque page rapportée monte la lumière de sa région, les régions hors programme restent sous le brouillard et le disent', async () => {
+    const state = await page.evaluate(() => {
+      const w = window.__aldoria.world
+      return { lights: w.regionLights(), done: window.__aldoria.save().places, places: w.places.map((p) => ({ code: p.dungeon.code, region: p.dungeon.region })) }
+    })
+    let lit = 0
+    for (const [code, region] of Object.entries(state.lights)) {
+      const own = state.places.filter((p) => p.region === code)
+      const finished = own.filter((p) => (state.done[p.code] ?? 0) > 0).length
+      if (region.total !== own.length || region.done !== finished) throw new Error(`région ${code} : ${region.done}/${region.total} pour ${finished}/${own.length} dans la partie`)
+      const expected = own.length === 0 ? 0 : 0.5 + (0.5 * finished) / own.length
+      if (Math.abs(region.light - expected) > 1e-9) throw new Error(`région ${code} : lumière ${region.light} au lieu de ${expected}`)
+      if ((own.length === 0) !== (region.state === 'brume')) throw new Error(`région ${code} : état ${region.state} pour ${own.length} lieux`)
+      if (finished > 0) lit += 1
+    }
+    if (lit === 0) throw new Error('un lieu terminé doit éclairer sa région')
+    // En 6e, la Vallée du Vivant n'a pas de lieu : le héros y entre, l'air s'épaissit et la bannière dit le brouillard.
+    if (state.lights.svt?.state !== 'brume') throw new Error(`la Vallée du Vivant devrait être sous le brouillard : ${JSON.stringify(state.lights.svt)}`)
+    const fogBefore = await page.evaluate(() => window.__aldoria.world.scene.fogDensity)
+    await page.evaluate(() => window.__aldoria.world.teleport(-112, -112, -112, -100))
+    await page.getByTestId('region-brume').waitFor({ timeout: 10_000 * SLOW })
+    const note = await page.getByTestId('region-brume').innerText()
+    if (!note.includes('Vallée du Vivant')) throw new Error(`le texte de brouillard de la région : ${note}`)
+    await page.waitForFunction((before) => window.__aldoria.world.scene.fogDensity > before * 1.5, fogBefore, { timeout: 10_000 * SLOW })
+    await page.screenshot({ path: `${OUT}/07h-brume.png` })
+    // Une région éclairée n'a pas de brouillard : sur la Citadelle, ni texte ni brume de plus.
+    await page.evaluate(() => window.__aldoria.world.teleport(0, 20, 0, 30))
+    await page.getByTestId('region-brume').waitFor({ state: 'detached', timeout: 10_000 * SLOW })
+    await page.waitForFunction((before) => window.__aldoria.world.scene.fogDensity < before * 1.1, fogBefore, { timeout: 10_000 * SLOW })
+  })
+
   let xpBefore = 0
   const xpOf = async () => Number(((await page.locator('.badge').innerText()).match(/(\d+) XP/) ?? [])[1] ?? 0)
   await step('la Table des Reliques : un conflit signalé, un indice contre un parchemin, le carré résolu, la récompense du jour une seule fois', async () => {
