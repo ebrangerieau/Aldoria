@@ -92,6 +92,13 @@ const VIEWS = {
   'relique-histoire': { query: '', at: [203.4, -10], face: [206, -10], beta: 1.3, radius: 6, turn: 0.35 },
   'relique-snt': { query: '', at: [123.4, -138], face: [126, -138], beta: 1.3, radius: 6, turn: 0.35 },
   'relique-brouillard': { query: '&monde=brouillard&classe=2nde', at: [-62.6, -42], face: [-60, -42], beta: 1.3, radius: 6, turn: 0.35 },
+  // Le temple du Sphinx en 3D : `temple` = { palier, avant: 'accueil' (le Sphinx accueille, avant la première énigme), pas: nombre de pas de la solution joués au clavier }.
+  'temple-accueil': { query: '', at: [0, -30], face: [0, 30], beta: 1.25, radius: 6, turn: 0, interface: true, temple: { palier: 1, avant: 'accueil' } },
+  'temple-1': { query: '', at: [0, -30], face: [0, 30], beta: 1.25, radius: 6, turn: 0, interface: true, temple: { palier: 1 } },
+  'temple-1-pas': { query: '', at: [0, -30], face: [0, 30], beta: 1.25, radius: 6, turn: 0, interface: true, temple: { palier: 1, pas: 12 } },
+  'temple-3': { query: '', at: [0, -30], face: [0, 30], beta: 1.25, radius: 6, turn: 0, interface: true, temple: { palier: 3, pas: 20 } },
+  'temple-6': { query: '', at: [0, -30], face: [0, 30], beta: 1.25, radius: 6, turn: 0, interface: true, temple: { palier: 6 } },
+  'temple-brouillard': { query: '&monde=brouillard&classe=2nde', at: [0, -30], face: [0, 30], beta: 1.25, radius: 6, turn: 0, interface: true, temple: { palier: 4, pas: 14 } },
   // Intérieur d'un lieu : `lieu` (code), `salle` (0 à 5), `at` : [x dans la salle, profondeur], caméra : écart au sud, inclinaison, distance.
   interieur: { query: '', lieu: 'tour_fractions', salle: 0, at: [6, 9], turn: 0, beta: 1.05, radius: 12, interface: true },
   escalier: { query: '', lieu: 'tour_fractions', salle: 0, at: [13.5, 10], turn: -0.4, beta: 1.0, radius: 11, interface: true },
@@ -226,6 +233,28 @@ for (const name of views) {
     for (let i = 1; i < view.prologue; i += 1) await page.getByTestId('prologue-suite').click()
     await page.getByTestId('prologue-bouton-texte').click()
     await page.waitForTimeout(view.prologue === 1 ? 8_000 : 25_000) // la caméra glisse d'un plan au suivant (lent en rendu logiciel)
+  }
+  if (view.temple) {
+    await page.evaluate((palier) => {
+      window.__aldoria.giveSphinxPasses(1, { tier: palier })
+      const w = window.__aldoria.world
+      const boat = w.interactables.find((i) => i.id === 'barque')
+      w.teleport(boat.x - 1.8, boat.z, boat.x + 4, boat.z)
+    }, view.temple.palier)
+    await page.getByTestId('invite').filter({ hasText: 'Monter dans la barque du Sphinx' }).waitFor({ timeout: 20_000 })
+    await page.keyboard.press('KeyE')
+    await page.getByRole('button', { name: 'Traverser' }).click()
+    await page.getByRole('button', { name: 'Au premier bloc !' }).waitFor({ timeout: 60_000 })
+    if (view.temple.avant !== 'accueil') {
+      await page.getByRole('button', { name: 'Au premier bloc !' }).click()
+      await page.getByTestId('sphinx-enigme').waitFor()
+      const keys = { l: 'ArrowLeft', r: 'ArrowRight', u: 'ArrowUp', d: 'ArrowDown' }
+      const solution = await page.evaluate(() => window.__aldoria.sphinx.solution)
+      for (const c of solution.slice(0, view.temple.pas ?? 0)) {
+        await page.keyboard.press(keys[c.toLowerCase()])
+        await page.waitForTimeout(120)
+      }
+    }
   }
   if (view.bag) {
     if (view.bag === 'garni') await page.evaluate(() => { window.__aldoria.give('plume', 3); window.__aldoria.give('parchemin', 1); window.__aldoria.give('potion', 2) })

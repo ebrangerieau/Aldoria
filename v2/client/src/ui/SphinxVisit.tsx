@@ -7,6 +7,8 @@ import { useEffect, useRef, useState } from 'react'
 import { startSphinxSession, type SphinxSession } from '../app/sphinxSession'
 import type { Services } from '../app/services'
 import type { SaveData } from '../core/save'
+import type { GameWorld } from '../game/GameWorld'
+import type { TempleWorld } from '../game/temple'
 import {
   nextPuzzle, levelAt, passesText, recordSolved, spendPassage, sphinxOf, THRESHOLD, VISIT_PUZZLES, type SphinxLevel, type SphinxState,
 } from '../core/sphinx/island'
@@ -15,6 +17,7 @@ import { SphinxPuzzle, type Played } from './SphinxPuzzle'
 
 type Phase =
   | { kind: 'dock' }
+  | { kind: 'sailing' }
   | { kind: 'welcome'; first: boolean }
   | { kind: 'puzzle'; round: number; tier: number; level: SphinxLevel }
   | { kind: 'celebrate'; round: number; lines: string[] }
@@ -39,8 +42,10 @@ function Card({ title, lines, actions, note }: { title: string; lines: string[];
   )
 }
 
-export function SphinxVisit({ services, data, demo, onSave, onClose }: {
+export function SphinxVisit({ services, world, data, demo, onSave, onClose }: {
   services: Services
+  /** Le monde de l'île : la salle du temple s'ouvre dans son moteur (null : le plan à plat suffit). */
+  world: GameWorld | null
   data: SaveData
   demo: boolean
   onSave: (next: SaveData) => void
@@ -54,6 +59,10 @@ export function SphinxVisit({ services, data, demo, onSave, onClose }: {
   const solvedNow = useRef(0)
   const session = useRef<SphinxSession | null>(null)
   const closing = useRef(false)
+  const crossing = useRef(false)
+  const alive = useRef(true)
+  /** La salle 3D du temple, ouverte à la traversée et fermée au retour (null : elle n'a pas pu s'ouvrir, le plan à plat est alors plein écran). */
+  const [temple, setTemple] = useState<TempleWorld | null>(null)
 
   const passes = sphinxOf(data, level).passes
   const store = (next: SphinxState, story?: string[]) => {
@@ -70,24 +79,39 @@ export function SphinxVisit({ services, data, demo, onSave, onClose }: {
     const open = session.current
     session.current = null
     await open?.end()
+    world?.leaveTemple()
     onClose()
   }
 
   // Le composant disparaît pendant une traversée (changement de joueur, fin de séance) : la session ne reste pas ouverte.
-  useEffect(
-    () => () => {
+  useEffect(() => {
+    alive.current = true
+    return () => {
+      alive.current = false
       const open = session.current
       session.current = null
       void open?.end()
-    },
-    [],
-  )
+      world?.leaveTemple()
+    }
+  }, [])
 
   async function cross() {
+    if (crossing.current) return
     const spent = spendPassage(state.current)
     if (!spent.ok) return
+    crossing.current = true
     store(spent.state)
-    session.current = await startSphinxSession(services, demo)
+    setPhase({ kind: 'sailing' })
+    const started = await startSphinxSession(services, demo)
+    const opened = world ? await world.enterTemple() : null
+    if (!alive.current || closing.current) {
+      // Quitté (changement de joueur, fin de séance) pendant la traversée : ni la session ni la salle ouvertes à l'instant ne restent.
+      if (opened) world?.leaveTemple()
+      void started.end()
+      return
+    }
+    session.current = started
+    setTemple(opened)
     const first = !saved.current.story.includes(STORY_KEY)
     setPhase({ kind: 'welcome', first })
   }
@@ -122,6 +146,9 @@ export function SphinxVisit({ services, data, demo, onSave, onClose }: {
       />
     )
   }
+  if (phase.kind === 'sailing') {
+    return <Card title="La traversée" lines={['La barque file vers l’île du Sphinx…']} actions={[]} />
+  }
   if (phase.kind === 'welcome') {
     const { first } = phase
     return (
@@ -145,7 +172,7 @@ export function SphinxVisit({ services, data, demo, onSave, onClose }: {
   }
   if (phase.kind === 'puzzle') {
     const { round, tier, level: puzzle } = phase
-    return <SphinxPuzzle key={round} level={puzzle} tier={tier} round={round} onSolved={(played) => solved(round, puzzle, played)} onQuit={() => void leave()} />
+    return <SphinxPuzzle key={round} temple={temple} level={puzzle} tier={tier} round={round} onSolved={(played) => solved(round, puzzle, played)} onQuit={() => void leave()} />
   }
   if (phase.kind === 'celebrate') {
     const last = phase.round >= VISIT_PUZZLES - 1
